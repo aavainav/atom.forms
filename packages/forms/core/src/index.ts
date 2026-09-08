@@ -20,7 +20,7 @@ export { FListGroupItem } from "./components/list-group-item";
 export { FLoadingIndicator } from "./components/loading-indicator";
 export { FModal } from "./components/modal";
 export { FNotification } from "./components/notification";
-export { useFOffCanvas, FOffCanvas, FOffCanvasContext } from "./components/off-canvas";
+export { FOffCanvas } from "./components/off-canvas";
 
 export { FPage } from "./components/page";
 export { FPageCollection } from "./components/page-collection";

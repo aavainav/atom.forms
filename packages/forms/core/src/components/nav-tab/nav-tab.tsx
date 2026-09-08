@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FNavTabsContext } from "./context";
 
 import { FSpinner } from "../spinner";
 import { FTab } from "./tab";
@@ -69,29 +68,29 @@ export default function FNavTab({ id, defaultTab, pairs, style = "tabs" }: IFNav
     const [activeTab, setActiveTab] = useState(defaultTab ?? "");
 
     return (
-        <FNavTabsContext.Provider value={{ activeTab, setActiveTab }}>
-            <div id={id}>
-                <ul className={`nav nav-${style}`}>
-                    {pairs.map(pair => (
-                        <FNavTab.Tab
-                            key={pair.tab.name}
-                            id={pair.tab.name}
-                            title={pair.tab.title}
-                            disabled={pair.tab.disabled}
-                        />
-                    ))}
-                </ul>
-                <div className="tab-content">
-                    {pairs.map(pair => (
-                        <FNavTab.Pane key={pair.tab.name} id={pair.tab.name}>
-                            <React.Suspense fallback={<FSpinner size="sm" variant="secondary" />}>
-                                {React.createElement(pair.pane.content, pair.pane.props)}
-                            </React.Suspense>
-                        </FNavTab.Pane>
-                    ))}
-                </div>
+        <div id={id}>
+            <ul className={`nav nav-${style}`}>
+                {pairs.map(pair => (
+                    <FNavTab.Tab
+                        key={pair.tab.name}
+                        id={pair.tab.name}
+                        title={pair.tab.title}
+                        disabled={pair.tab.disabled}
+                        activeTab={activeTab}
+                        onSelect={setActiveTab}
+                    />
+                ))}
+            </ul>
+            <div className="tab-content">
+                {pairs.map(pair => (
+                    <FNavTab.Pane key={pair.tab.name} id={pair.tab.name} activeTab={activeTab}>
+                        <React.Suspense fallback={<FSpinner size="sm" variant="secondary" />}>
+                            {React.createElement(pair.pane.content, pair.pane.props)}
+                        </React.Suspense>
+                    </FNavTab.Pane>
+                ))}
             </div>
-        </FNavTabsContext.Provider>
+        </div>
     );
 }
 

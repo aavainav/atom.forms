@@ -16,14 +16,15 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/services/navigation.ts](src/services/navigation.ts) | `INavigationService` (`navigateTo`, `currentLocation`, `router`) / `INavigationRegistrationService` (`registerRoute`, `registerChildRoute`). |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. |
+| [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showViolations` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` — renders `ReportViewerForm` when handed an `initialForm`, otherwise `<Outlet />`. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation. **Both `ReportViewer` and `ReportViewerPanel` render this**, so every host wires a form identically. |
 | [src/components/report-viewer-loader.tsx](src/components/report-viewer-loader.tsx) | The generic data-driven index route: resolves data from the route context and loads whatever form the data names. |
 | [src/components/report-viewer-panel.tsx](src/components/report-viewer-panel.tsx) | Router-agnostic entry point for a host that already has its data. Its `options` carry the form identity plus `isReadOnly` and `showOptions`. Also imports `@forms/core/theme/_main.scss`. |
 | [src/components/report-viewer-layout.tsx](src/components/report-viewer-layout.tsx) | Bare `<Outlet />` for the `report-viewer` route. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: the three built-ins plus whatever `registerOption` added, in one ordered list. |
-| [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification`. |
-| [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleViolation`s. |
+| [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
+| [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleViolation`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
 ## The host data boundary
 

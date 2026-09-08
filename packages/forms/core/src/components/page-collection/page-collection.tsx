@@ -1,5 +1,5 @@
 import React from "react";
-import { FNavTab, FNavTabsContext } from "../nav-tab";
+import { FNavTab } from "../nav-tab";
 
 import { IControllerManager } from "../../controllers/controller-manager";
 import { IPageBinding } from "../../controllers/form-controller";
@@ -79,30 +79,38 @@ export default function FPageCollection({ controllers, groups, isReadOnly, water
         );
     }
 
+    // the resolved active tab, not the raw activeId state, is what's handed down: if the active page was deleted,
+    // this falls back to the first entry without ever needing to correct the stored activeId itself
+    const resolvedActiveTab = activeEntry?.page.id ?? "";
+
     return (
         <div className="page-collection">
-            <FNavTabsContext.Provider value={{ activeTab: activeEntry?.page.id ?? "", setActiveTab: setActiveId }}>
-                <ul className="nav nav-tabs">
-                    {entries.map((entry, index) => (
-                        <FNavTab.Tab key={entry.page.id} id={entry.page.id ?? ""} title={`Page ${index + 1}`} />
-                    ))}
-                </ul>
-                <div className="tab-content">
-                    {entries.map((entry) => (
-                        <FNavTab.Pane key={entry.page.id} id={entry.page.id ?? ""}>
-                            <FPage
-                                formType={form.type}
-                                watermark={pageWatermark}
-                                onAddPage={isReadOnly ? undefined : () => controller.addPage(entry.group.pageDefinition)}
-                                // the controller asks its confirm-delete policy, so the confirmation cannot be skipped by a host that forgets to supply one
-                                onDeletePage={isReadOnly ? undefined : () => controller.removePage(entry.group.pageDefinition, entry.page.id!)}
-                            >
-                                {entry.group.children(entry.binding)}
-                            </FPage>
-                        </FNavTab.Pane>
-                    ))}
-                </div>
-            </FNavTabsContext.Provider>
+            <ul className="nav nav-tabs">
+                {entries.map((entry, index) => (
+                    <FNavTab.Tab
+                        key={entry.page.id}
+                        id={entry.page.id ?? ""}
+                        title={`Page ${index + 1}`}
+                        activeTab={resolvedActiveTab}
+                        onSelect={setActiveId}
+                    />
+                ))}
+            </ul>
+            <div className="tab-content">
+                {entries.map((entry) => (
+                    <FNavTab.Pane key={entry.page.id} id={entry.page.id ?? ""} activeTab={resolvedActiveTab}>
+                        <FPage
+                            formType={form.type}
+                            watermark={pageWatermark}
+                            onAddPage={isReadOnly ? undefined : () => controller.addPage(entry.group.pageDefinition)}
+                            // the controller asks its confirm-delete policy, so the confirmation cannot be skipped by a host that forgets to supply one
+                            onDeletePage={isReadOnly ? undefined : () => controller.removePage(entry.group.pageDefinition, entry.page.id!)}
+                        >
+                            {entry.group.children(entry.binding)}
+                        </FPage>
+                    </FNavTab.Pane>
+                ))}
+            </div>
         </div>
     );
 }

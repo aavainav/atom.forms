@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useService } from "@common/react";
-import { FButton, FIcon, FOffCanvasContext, FTooltip, IControllerManager, IRuleViolation } from "@forms/core";
+import { FButton, FIcon, FTooltip, IControllerManager, IRuleViolation } from "@forms/core";
 
-import { Validation } from "../validation";
 import { INotificationService } from "../../services";
+import { IValidationService } from "../../services/validation";
 
 interface IValidateOptionProps {
     /** The controllers belonging to the form being validated. */
@@ -13,9 +13,7 @@ interface IValidateOptionProps {
 /** Defines the option for validating the current report. */
 export const ValidateOption = ({ controllers }: IValidateOptionProps): React.JSX.Element => {
     const notificationService = useService<INotificationService>(INotificationService);
-
-    const [violations, setViolations] = useState<Array<IRuleViolation>>([]);
-    const [showViolations, setShowViolations] = useState(false);
+    const validationService = useService<IValidationService>(IValidationService);
 
     const handleValidate = (): void => {
         const formController = controllers.getFormController();
@@ -25,9 +23,8 @@ export const ValidateOption = ({ controllers }: IValidateOptionProps): React.JSX
         rulesController.validate();
 
         const violationCollection = rulesController.getViolationCollection();
-        const result = violationCollection.getViolations();
-        setViolations(result);
-        if (result.length > 0) setShowViolations(true);
+        const result: ReadonlyArray<IRuleViolation> = violationCollection.getViolations();
+        validationService.showViolations(result);
 
         formController.update(form => form.validate(violationCollection));
 
@@ -39,15 +36,10 @@ export const ValidateOption = ({ controllers }: IValidateOptionProps): React.JSX
     };
 
     return (
-        <>
-            <FTooltip title="Validate" placement="top">
-                <FButton id="validate-button" variant="light" type="button" onClick={handleValidate}>
-                    <FIcon icon="shield-check" />
-                </FButton>
-            </FTooltip>
-            <FOffCanvasContext.Provider value={{ showOffCanvas: showViolations, hideOffCanvas: () => setShowViolations(false) }}>
-                <Validation violations={violations} />
-            </FOffCanvasContext.Provider>
-        </>
+        <FTooltip title="Validate" placement="top">
+            <FButton id="validate-button" variant="light" type="button" onClick={handleValidate}>
+                <FIcon icon="shield-check" />
+            </FButton>
+        </FTooltip>
     );
 }

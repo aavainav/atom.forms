@@ -16,10 +16,12 @@ import {
     IReportViewerRegistrationService,
     IReportViewerRoute,
     IReportViewerService,
+    IValidationService,
     ModalService,
     NavigationService,
     NotificationService,
     ReportViewerService,
+    ValidationService,
 } from "./services";
 
 export const IReportViewerConfiguration = createConfig<IReportViewerConfiguration>();
@@ -61,6 +63,7 @@ export class ReportViewerModule implements IModule {
     configureServices(registration: IServiceRegistration): void {
         registration.register<IModalService, ModalService>(IModalService, ModalService);
         registration.register<INotificationService, NotificationService>(INotificationService, NotificationService);
+        registration.register<IValidationService, ValidationService>(IValidationService, ValidationService);
 
         const navigationServiceFactory = new SingletonServiceFactory(NavigationService);
         registration.registerSingleton<INavigationService, NavigationService>(INavigationService, navigationServiceFactory);
