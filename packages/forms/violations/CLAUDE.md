@@ -1,0 +1,110 @@
+# `@forms/violations`
+
+The registry and service for the violations a citation can be written for, plus the picker that puts them on a
+form. Two halves in one package, the way `@forms/printing` is: a registry shaped like
+[`@forms/value-lists`](../value-lists/), and a capability that registers its own button and panel with the report
+viewer so nothing there has to import this.
+
+Depends on `@shrub/core`, `@common/react`, `@common/event-emitter`, `@forms/core`, `@forms/catalog`,
+`@forms/report-viewer`. Module dependencies: `ReportViewerModule`, `FormCatalogModule`.
+
+## Files
+
+| Path | Contents |
+| --- | --- |
+| [src/module.ts](src/module.ts) | `ViolationsModule` + `IViolationsConfiguration` (`registerList`, `registerViolations`). Registers the option at order 150 and the panel, both gated by `canShow`. |
+| [src/services/violation.ts](src/services/violation.ts) | `IViolationService` (read) / `IViolationRegistrationService` (write) / `ViolationService`. Holds both the lists and the per-form bindings. |
+| [src/services/violation-picker.ts](src/services/violation-picker.ts) | `IViolationPickerService` — `openPicker()` / `onOpenPicker`. Event only; the panel owns whether it is showing. |
+| [src/models/violation.ts](src/models/violation.ts) | `IViolation`, `ViolationRow`, `toViolations(rows)`. |
+| [src/models/violation-list.ts](src/models/violation-list.ts) | `ViolationList` — a loaded list, its lazy code index, and `search`. |
+| [src/models/violation-list-definition.ts](src/models/violation-list-definition.ts) | `IViolationListDefinition`: `{ id, load() }`. |
+| [src/models/violation-binding.ts](src/models/violation-binding.ts) | `IViolationBinding` — the per-form seam. |
+| [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` in the options bar. Raises the event, nothing more. |
+| [src/components/violations-panel.tsx](src/components/violations-panel.tsx) | The manager — owns `isOpen` and the ticked set, loads the list, calls the form's `apply`. |
+| [src/components/violation-picker-list.tsx](src/components/violation-picker-list.tsx) | The searchable, tickable, draggable list. |
+| [src/violations.ts](src/violations.ts) | `ViolationListId` and `standardViolationLists`. **Both empty, deliberately** — see below. |
+| [scripts/generate-violation-lists.mjs](scripts/generate-violation-lists.mjs) | The generator, also exposed to form packages as the `generate-violation-lists` bin. |
+
+## Core ideas
+
+**The picker never writes a field.** The word "violation" does not name the same box on any two of these forms: the
+S438 writes its `violation-section`, the Georgia UTC writes its **`offense-section`** — its own `violation-section`
+holds the speed detection gear — and the two Oklahoma forms split the charge across a violation block and a block
+carrying the money. So a form registers an `IViolationBinding` saying which list it draws on and handing over an
+`apply`, and it owns both where a charge lands and how a second charge becomes a second page.
+
+**Lists are addressed by id, and registering over an id replaces the list.** That is the extension seam, the same
+one value lists have: an agency serves its own current code list by registering a definition under the id the
+bundled one used. Ids are namespaced by owner (`sc-s438:violation`, `ok-traffic:violation`), because the registry
+is one global namespace and otherwise whichever jurisdiction loaded last would claim `violation`.
+
+**This package bundles no lists at all.** `standardViolationLists` is empty and `ViolationListId` has no entries,
+which is the point rather than an omission: a violation code list belongs to the agency writing the citations and
+there is no national one, so every list is declared in the form package that draws on it.
+
+## The citations-only gate
+
+`canShow` on both the option and the panel is two conditions:
+
+```ts
+!!violationService.getBinding(catalogItem) && catalogItem.ctor.prototype instanceof CitationForm
+```
+
+The registration is the working half — a form that declared no binding has nowhere to put a charge — while the
+`CitationForm` check states the rule the feature is bound by rather than leaving it to be inferred from which
+forms happened to register. A catalog item carries no `type`, so the form family is read off its `ctor`.
+
+## Why an off canvas and not a modal
+
+A modal's backdrop covers the form, and a violation has to be draggable out of the picker and onto the citation
+behind it. The panel is therefore an `FOffCanvas` with `placement="end"` — the validation panel holds the start
+edge, and both can be open at once.
+
+It is registered through `IReportViewerConfiguration.registerPanel` rather than rendered from the option, because
+the options bar is `position-fixed` and so a stacking context: anything fixed inside it is ranked only against the
+bar's own contents however high its z-index. `registerPanel` mounts it at the report viewer's root instead, beside
+`ModalManager` and `ValidationManager`. This is the same trap `@forms/printing` documents for its modal.
+
+## Loading and caching
+
+- `ViolationService` caches the **promise** per id, so a picker opened twice before the first load settles shares
+  one load; a rejected load is evicted so the next request retries.
+- The panel loads the list when it is **first opened**, not when the form loads, so the chunk carrying a
+  jurisdiction's code list is never fetched by an officer who does not open the picker.
+- `ViolationList` builds its code index lazily. `search` matches over code, statute and description, and orders
+  matches whose code or statute **starts with** the term ahead of the rest — an officer typing a section number
+  knows which charge they want.
+- The picker filters the loaded list in the component rather than going back through the service, because a search
+  runs per keystroke and the rows are already in hand.
+
+## The generator
+
+`yarn generate` → `node ./scripts/generate-violation-lists.mjs --data ./data --out ./src/generated --row-import ../models/violation`
+
+Form packages run the same script through the `generate-violation-lists` bin with the default
+`--row-import @forms/violations`. The lists to emit are declared by `<data>/lists.json`, so the script carries no
+knowledge of the package running it.
+
+Source rows are `{code, description, statute?, fine?, points?, isLocalOrdinance?, requiresCourtAppearance?}` and
+are emitted as `ViolationRow` tuples **trimmed to their last present field**, so a list carrying neither fines nor
+points costs two entries a row. A gap in the middle is held open with an `undefined`; a run of absent fields at the
+end is dropped. The generator rejects a field of the wrong type, an empty string, and any key that is not a field
+of a violation.
+
+The dynamic-import rule from `@forms/value-lists` applies here too: **never statically import anything under
+`src/generated/`**, including a type-only import a later edit might turn into a value import, or the list folds
+back into the entry chunk and the code split silently stops working.
+
+## Recipes
+
+**Add a list owned by a form**: JSON in that package's `data/` (or an inline `load` where there is nothing to
+generate from) → `data/lists.json` → `yarn generate` → an id in its `src/violations.ts` → register it from the
+form module's `configure` through `IViolationsConfiguration.registerList`.
+
+**Put the picker on a form**: mark the form's shared sections `{ isShared: true }` in its schema → add an
+`applyViolations(controllers, violations)` to its service → subclass `ViolationDropzone` and register it in the
+page model's `initialize()` → wrap the charge section in `<FDropzone>` → `registerViolations` from `configure` →
+make the mapper handle repeating pages. See [`@forms/s438`](../south-carolina/s438/) for the worked example.
+
+**Serve a list from a host**: `registerList` a definition under the same id from a module that depends on the one
+that registered it. Later registration wins, and anything cached under the id is dropped.

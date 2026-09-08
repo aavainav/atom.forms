@@ -32,7 +32,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | --- | --- |
 | [src/models/definition.ts](src/models/definition.ts) | `Definition` base: `id` (uuid), `name`, `valueType` ctor, `parent`, `children`. |
 | [src/models/form-definition.ts](src/models/form-definition.ts) · [page-definition.ts](src/models/page-definition.ts) · [section-definition.ts](src/models/section-definition.ts) · [field-definition.ts](src/models/field-definition.ts) | The four definition types. Each registers itself with its parent in its constructor. `FieldDefinition` also carries `label` and `isDeprecated`. |
-| [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. |
+| [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. `section` takes an optional `ISectionDefinitionOptions` — today just `isShared`. |
 | [src/models/schema.ts](src/models/schema.ts) | `Schema` base — self-registers with `FormModel` in the constructor. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
 | [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setReadOnly`, `setStatus`, `clean`, `validate`. |
@@ -41,7 +41,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. |
 | [src/models/form-factory.ts](src/models/form-factory.ts) | `FormFactory` interface: `createForm()` + `getPageTypes()`. |
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
-| [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`. |
+| [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | `ControllerManager` and the four controllers. See below. |
 | [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, and `usePrintState(controller)`. |
 | [src/mapping/](src/mapping/) | `FormMapper` base and the common `ICrash` / `IReportViewerData` contracts. |
@@ -74,6 +74,9 @@ and re-broadcasts each one's `onChanged` through `onControllerChanged`.
   - **Always compute from the argument** the update callback hands you, never from a section/page captured during
     render — a captured one may already be stale.
   - `addPage`/`removePage` (removal goes through the `ConfirmPageDelete` policy set by `ReportViewerForm`).
+    `addPage` copies the page definition's **shared** sections from the first page onto the new one, field by
+    field — not by carrying the section across, since every field's uuid is the DOM id of the input rendered for
+    it and pages print together.
 - **`ValueListController`** caches option lists by key. Caches the *promise*, not the result, so concurrent selects
   share one load; a rejection is evicted so the next request retries.
 - **`DragAndDropController`** relays `onDragStart`/`onDragEnd` between `FDraggableItem` and `FDropzone`. Stateless.
@@ -83,11 +86,34 @@ and re-broadcasts each one's `onChanged` through `onControllerChanged`.
   and `begin`s the state; core only renders it. `state` is stored by reference and replaced only in `begin`/`end`,
   since it is a `useSyncExternalStore` snapshot.
 - **`RulesController`** (in `models/validation/`) runs the rule collection and holds the resulting
-  `ViolationCollection`. The manager reassigns its `form` and `ruleCollection` on every `getRulesController()` call,
+  `RuleIssueCollection`. The manager reassigns its `form` and `ruleCollection` on every `getRulesController()` call,
   because the form it was constructed with is already stale.
 
 `loadForm(form)` compares by `form.id` — re-seeding the same form on every render is a no-op; a genuinely different
 form disposes the form and rules controllers.
+
+## Shared sections
+
+A section declared `DefinitionFactory.section(name, page, Ctor, { isShared: true })` holds the same values on
+**every instance of its page**. It exists because a citation page repeats once per violation and only the charge
+is meant to differ: the violator, vehicle and officer boxes read the same on all of them.
+
+One flag, three consumers, and **no change to any component**:
+
+- `PageBinding.getSection` hands back a `SharedSectionBinding` for a shared definition, whose `update` runs against
+  every page's own copy of the section. A section component keeps calling `binding.setValue(...)` and the write
+  fans out, because the flag is on the definition rather than in the call.
+- `FormController.addPage` seeds a new page's shared sections from the first page.
+- `RulesController` evaluates a rule reading only shared sections once, not once per page.
+
+**The update is run per page rather than one result being written into all of them.** Every `FieldModel` carries a
+uuid used as its DOM id, so a section shared by reference would repeat those ids across pages — which collides for
+real under `FPageCollection`'s print branch, where the pages render together rather than as tab panes. Running the
+update per page converges the values while leaving each page its own field identities, which works because a field
+is set to an absolute value rather than by a delta.
+
+A mapper does **not** get this for free: a page it creates goes through `pageDefinition.createPage` rather than the
+form controller, so `populate` has to write the shared sections onto every page itself.
 
 ## Validation
 
@@ -102,13 +128,16 @@ returns a copy gated by a `Condition`.
 | `PatternFieldRule` | Strips a global flag (`lastIndex` would leak between pages). Registers under `new.target.name`, so subclasses get their own name. |
 | `AlphanumericFieldRule` | A `PatternFieldRule` subclass. |
 | `RequiredSelectionRule` | At least one of a checkbox group; reports **once**, against the anchor field. |
-| `CompositeRule` | `LogicalOperator.and` reports every violation; `or` reports nothing if any rule passes. Statics `and`/`or`. Its rules need not share a field. |
+| `CompositeRule` | `LogicalOperator.and` reports every issue; `or` reports nothing if any rule passes. Statics `and`/`or`. Its rules need not share a field. |
 
 Conditions: `FieldValueCondition` (`equals`/`notEquals`/`isEmpty`/`isNotEmpty`; unwraps `IOptionValue` before
 comparing) and `CompositeCondition` (`all`/`any`).
 
 `RulesController.validate()` evaluates each rule **once per page instance** of `rule.getPageDefinition()`, building
-a `RuleContext(form, page)`. That is what keeps a multi-field rule comparing fields from the *same* copy of a
+a `RuleContext(form, page)` — except a rule that answers `isShared()`, which is evaluated against the first page
+alone. `FieldRule.isShared()` reads its field's section; `CompositeRule` and `RequiredSelectionRule` answer true
+only when every field they read is shared. Without it a required violator name would be reported once per page on
+a citation carrying three violations, all of them the same issue. That is what keeps a multi-field rule comparing fields from the *same* copy of a
 repeatable page. `RuleContext.getField` resolves within the bound page, falling back to the first instance on the
 form when the field belongs to another page definition. `FormModel.getPagesFor` returns `[]` (rather than throwing)
 for a page the form has no instances of, so such a rule is skipped.
@@ -122,8 +151,13 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`, `FLabel`,
   `FInputGroup`.
 - Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FIcon`, `FModal`,
-  `FNotification`, `FLoadingIndicator`, `FAsyncLoader`.
+  `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`.
 - Import: `FDraggableItem`, `FDropzone`.
+
+`FOffCanvas` takes a `placement` of `"start"` (the default, where the validation panel sits) or `"end"`. Two panels
+that can be open at once need different edges, or they cover each other. It is plain markup with no backdrop and
+no portal, so it has to be rendered somewhere that is not itself a stacking context — which is why
+`@forms/report-viewer` grew `registerPanel`.
 
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab

@@ -10,6 +10,7 @@ task recipes; open that one rather than reading the package's source to orient.
 | [core/](core/) | `@forms/core` | Form model/definition/entity tree, field models, validation rules, controllers, `F*` React components. No shrub module. |
 | [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version. Definition data only, never mapping. |
 | [value-lists/](value-lists/) | `@forms/value-lists` | Value-list registry + service, the code generator, and the national (jurisdiction-free) lists. |
+| [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the picker that puts them on a form. Citations only; bundles no lists of its own. |
 | [report-viewer/](report-viewer/) | `@forms/report-viewer` | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications, mappers. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, bootstrapper. |
@@ -24,14 +25,16 @@ Dependency direction (nothing points back up):
 
 ```
 core  ←  catalog  ←  report-viewer  ←  workbench
-  ↑         ↑             ↑    ↑         ↑
+  ↑         ↑             ↑    ↑  ↑      ↑
   │         │             │  printing    │
+  │         │             │  violations  │
   └─────────┴─────value-lists──┴──┴──────┴───── form packages (south-carolina/*, oklahoma/*, georgia/*)
 ```
 
-`printing` sits above `report-viewer` and below the form packages: it registers its button with the report viewer
-through `registerOption` rather than being imported by it, and a form package depends on it only to declare the
-copies it can be printed as.
+`printing` and `violations` both sit above `report-viewer` and below the form packages: each registers its button
+with the report viewer through `registerOption` rather than being imported by it, and a form package depends on
+one only to declare what it contributes — the copies it can be printed as, or the violation list it draws on and
+how a chosen violation lands on its fields.
 
 ## The five layers of a form package
 
@@ -51,7 +54,7 @@ in one is a change in all three in the same places.
 ## Conventions that hold everywhere
 
 - **Everything is immutable.** `FormModel`, `PageModel`, `SectionModel`, `FieldModel`, `PageCollection`,
-  `RuleCollection`, `ViolationCollection`, `Dropzone` all return a new instance from every setter. `withChanges`
+  `RuleCollection`, `RuleIssueCollection`, `Dropzone` all return a new instance from every setter. `withChanges`
   (`core/src/utils/clone.ts`) is the clone helper. A setter whose result you discard did nothing.
 - **Class and interface members are alphabetical** within a group (properties, then public methods; abstract and
   `private`/`protected` helpers last). Insert new members at their alphabetical position.
@@ -59,6 +62,11 @@ in one is a change in all three in the same places.
   mapping. A mapper's `extract`/`populate` pair for a section sit adjacent so a missed field shows in one diff.
 - **State is per form instance**, held by `ControllerManager`/`FormController` in the React layer — never attached
   to the immutable `FormModel`.
+- **A section declared `{ isShared: true }` holds the same values on every instance of its page.** Every citation
+  page repeats once per violation, and the violator, vehicle and officer sections are shared so that only the
+  charge differs between pages. A write through a shared section's binding fans out to every page, `addPage` seeds
+  a new page from the first, and a rule reading only shared sections is evaluated once rather than once per page.
+  Nothing in a section component changes — the flag is on the *definition*.
 - **Prefer `@common/event-emitter` over React Context** for cross-component broadcast, and model-owned state plus
   explicit props over Context for things like enabled/read-only.
 - **Doc comments are JSDoc `/** */`**, not `//`. Trivial single-field getters are one-liners with no doc comment.

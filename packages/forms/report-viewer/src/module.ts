@@ -13,6 +13,7 @@ import {
     INavigationService,
     INotificationService,
     IReportViewerOption,
+    IReportViewerPanel,
     IReportViewerRegistrationService,
     IReportViewerRoute,
     IReportViewerService,
@@ -38,6 +39,8 @@ export interface IReportViewerConfiguration {
     registerMapper: <TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>) => void;
     /** Registers an option to render in the report viewer's options bar, alongside the built-in validate and save. */
     registerOption: (option: IReportViewerOption) => void;
+    /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs rather than inside the options bar. */
+    registerPanel: (panel: IReportViewerPanel) => void;
 }
 
 /** Defines the report viewer module. This module handles displaying and interacting with reports. */
@@ -57,6 +60,7 @@ export class ReportViewerModule implements IModule {
             registerDataWriter: writer => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerDataWriter(writer),
             registerMapper: (identity, mapper) => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerMapper(identity, mapper),
             registerOption: option => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerOption(option),
+            registerPanel: panel => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerPanel(panel),
         }));
     }
 

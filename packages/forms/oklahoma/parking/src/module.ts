@@ -1,6 +1,7 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
+import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
 import { OKParkingFormFactory } from "./form-factory";
@@ -10,6 +11,7 @@ import { OKParkingFormSchema } from "./models/parking-form-schema";
 import { IOKParkingOptions } from "./options";
 import { IOKParkingService, OKParkingService } from "./services";
 import { okParkingValueLists } from "./value-lists";
+import { OKParkingViolationListId, okParkingViolationLists } from "./violations";
 
 export const IOKParkingConfiguration = createConfig<IOKParkingConfiguration>();
 export interface IOKParkingConfiguration {
@@ -18,7 +20,7 @@ export interface IOKParkingConfiguration {
 /** Defines the Oklahoma City parking violation module. */
 export class OKParkingModule implements IModule {
     readonly name = "ok-parking-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule];
+    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule, ViolationsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IOKParkingOptions>(IOKParkingOptions);
@@ -28,7 +30,7 @@ export class OKParkingModule implements IModule {
         registration.register<IOKParkingService, OKParkingService>(IOKParkingService, OKParkingService);
     }
 
-    async configure({ config }: IModuleConfigurator): Promise<void> {
+    async configure({ config, services }: IModuleConfigurator): Promise<void> {
         const name = "OKC Parking Violation";
         const description = "Oklahoma City Municipal Court parking violation - the citation left on the vehicle, the complaint and warrant page the counselor and clerk endorse, and the registered owner and vehicle detail.";
         const version = "1.0";
@@ -53,6 +55,20 @@ export class OKParkingModule implements IModule {
         reportViewer.registerMapper({ name, version }, new OKParkingMapper());
 
         new OKParkingFormSchema();
+
+        // the list this form draws its violations from, and how a chosen violation lands on it; the code goes in
+        // the violation block and the scheduled fine in the payment block beneath it
+        const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
+
+        for (const definition of okParkingViolationLists) {
+            violations.registerList(definition);
+        }
+
+        violations.registerViolations({ name, version }, {
+            listId: OKParkingViolationListId.violation,
+            pageName: "citation-page",
+            apply: (controllers, chosen) => services.get<IOKParkingService>(IOKParkingService).applyViolations(controllers, chosen)
+        });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({

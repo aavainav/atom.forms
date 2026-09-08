@@ -2,6 +2,7 @@ import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { S438FormSchema } from "../s438-form-schema";
 import { FrontPageOwnerDropzone } from "./dropzones/front-page-owner-dropzone";
 import { FrontPageVehicleDropzone } from "./dropzones/front-page-vehicle-dropzone";
+import { FrontPageViolationDropzone } from "./dropzones/front-page-violation-dropzone";
 import { FrontPageViolatorDropzone } from "./dropzones/front-page-violator-dropzone";
 import { ArrestingOfficerSectionModel } from "./arresting-officer-section";
 import { CourtSectionModel } from "./court-section";
@@ -32,17 +33,19 @@ export class FrontPageModel extends PageModel implements IFrontPageModel {
     public readonly arrestingOfficerSection: SectionDefinition<ArrestingOfficerSectionModel> = this.schema.arrestingOfficerSection;
     public readonly footerSection: SectionDefinition<FooterSectionModel> = this.schema.footerSection;
 
-    /** Initializes the page and registers its person/vehicle dropzones. */
+    /** Initializes the page and registers its person/vehicle/violation dropzones. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
         const violatorDropzone = new FrontPageViolatorDropzone(page, page.schema);
         const ownerDropzone = new FrontPageOwnerDropzone(page, page.schema);
         const vehicleDropzone = new FrontPageVehicleDropzone(page, page.schema);
+        const violationDropzone = new FrontPageViolationDropzone(page, page.schema);
 
         page = page.setDropzone(violatorDropzone);
         page = page.setDropzone(ownerDropzone);
         page = page.setDropzone(vehicleDropzone);
+        page = page.setDropzone(violationDropzone);
 
         return page;
     }

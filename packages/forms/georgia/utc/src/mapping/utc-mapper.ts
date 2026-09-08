@@ -19,7 +19,7 @@ import { SummonsSectionModel } from "../models/citation-page/summons-section";
 import { VehicleSectionModel } from "../models/citation-page/vehicle-section";
 import { ViolationSectionModel } from "../models/citation-page/violation-section";
 import { ViolatorSectionModel } from "../models/citation-page/violator-section";
-import { IGAUTCData } from "./utc-data";
+import { IGAUTCData, IGAUTCViolationData } from "./utc-data";
 
 /**
  * Maps the Georgia uniform traffic citation to and from the data contract it publishes.
@@ -35,7 +35,8 @@ import { IGAUTCData } from "./utc-data";
 export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
     public extract(form: GAUTCFormModel): IGAUTCData {
-        const citationPage = form.getCitationPage();
+        const citationPages = form.getCitationPageCollection().getPages<CitationPageModel>();
+        const citationPage = citationPages[0];
         const courtPage = form.getCourtPage();
         const data: FormValues<IGAUTCData> = {};
 
@@ -57,7 +58,22 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.extractDisposition(courtPage.getDispositionSection(), data);
         this.extractJudgment(courtPage.getJudgmentSection(), data);
 
+        if (citationPages.length > 1) {
+            data.additionalViolations = citationPages.slice(1).map(page => this.extractViolationRecord(page));
+        }
+
         return data;
+    }
+
+    /** Returns one further charge's Section II values, as the record carried for each citation page beyond the first. */
+    private extractViolationRecord(page: CitationPageModel): IGAUTCViolationData {
+        const violation: FormValues<IGAUTCViolationData> = {};
+
+        this.extractViolation(page.getViolationSection(), violation);
+        this.extractDui(page.getDuiSection(), violation);
+        this.extractOffense(page.getOffenseSection(), violation);
+
+        return violation;
     }
 
     /**
@@ -65,8 +81,8 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
      * from the data contract, and a field the data does not mention keeps the value it already holds - which is
      * how the date and time the form stamps on itself survive a partial record.
      */
-    public populate(form: GAUTCFormModel, data: IGAUTCData): GAUTCFormModel {
-        return this.populateCourtPage(this.populateCitationPage(form, data), data);
+    public async populate(form: GAUTCFormModel, data: IGAUTCData): Promise<GAUTCFormModel> {
+        return this.populateCourtPage(await this.populateCitationPage(form, data), data);
     }
 
     private extractCertification(section: CertificationSectionModel, data: FormValues<IGAUTCData>): void {
@@ -211,7 +227,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         return this.write(updated, section.trialNotGuilty, data.dispositionTrialNotGuilty);
     }
 
-    private extractDui(section: DuiSectionModel, data: FormValues<IGAUTCData>): void {
+    private extractDui(section: DuiSectionModel, data: FormValues<IGAUTCViolationData>): void {
         this.read(data, "duiCharged", section.getCharged());
         this.read(data, "duiTestAdministeredBy", section.getTestAdministeredBy());
         this.read(data, "duiTestBlood", section.getTestBlood());
@@ -221,7 +237,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "duiTestUrine", section.getTestUrine());
     }
 
-    private populateDui(section: DuiSectionModel, data: IGAUTCData): DuiSectionModel {
+    private populateDui(section: DuiSectionModel, data: IGAUTCViolationData): DuiSectionModel {
         let updated = this.write(section, section.charged, data.duiCharged);
         updated = this.write(updated, section.testAdministeredBy, data.duiTestAdministeredBy);
         updated = this.write(updated, section.testBlood, data.duiTestBlood);
@@ -289,7 +305,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         return this.write(updated, section.street, data.locationStreet);
     }
 
-    private extractOffense(section: OffenseSectionModel, data: FormValues<IGAUTCData>): void {
+    private extractOffense(section: OffenseSectionModel, data: FormValues<IGAUTCViolationData>): void {
         this.read(data, "offenseCodeSection", section.getCodeSection());
         this.read(data, "offenseCompanionCaseNo", section.getCompanionCaseNo());
         this.read(data, "offenseCompanionCaseYes", section.getCompanionCaseYes());
@@ -300,7 +316,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "offenseStateLaw", section.getStateLaw());
     }
 
-    private populateOffense(section: OffenseSectionModel, data: IGAUTCData): OffenseSectionModel {
+    private populateOffense(section: OffenseSectionModel, data: IGAUTCViolationData): OffenseSectionModel {
         let updated = this.write(section, section.codeSection, data.offenseCodeSection);
         updated = this.write(updated, section.companionCaseNo, data.offenseCompanionCaseNo);
         updated = this.write(updated, section.companionCaseYes, data.offenseCompanionCaseYes);
@@ -455,7 +471,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         return this.write(updated, section.year, data.vehicleYear);
     }
 
-    private extractViolation(section: ViolationSectionModel, data: FormValues<IGAUTCData>): void {
+    private extractViolation(section: ViolationSectionModel, data: FormValues<IGAUTCViolationData>): void {
         this.read(data, "violationCalibrationCheck", section.getCalibrationCheck());
         this.read(data, "violationClockedByOther", section.getClockedByOther());
         this.read(data, "violationClockedByPatrolVehicle", section.getClockedByPatrolVehicle());
@@ -469,7 +485,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "violationVascar", section.getVascar());
     }
 
-    private populateViolation(section: ViolationSectionModel, data: IGAUTCData): ViolationSectionModel {
+    private populateViolation(section: ViolationSectionModel, data: IGAUTCViolationData): ViolationSectionModel {
         let updated = this.write(section, section.calibrationCheck, data.violationCalibrationCheck);
         updated = this.write(updated, section.clockedByOther, data.violationClockedByOther);
         updated = this.write(updated, section.clockedByPatrolVehicle, data.violationClockedByPatrolVehicle);
@@ -536,24 +552,50 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     /** Returns a new form with the data applied to its twelve citation page sections. */
-    private populateCitationPage(form: GAUTCFormModel, data: IGAUTCData): GAUTCFormModel {
-        const collection = form.getCitationPageCollection();
-        const page = collection.getFirstPage<CitationPageModel>();
+    /**
+     * Returns a form with the data applied to its citation pages, creating a page per further violation.
+     *
+     * The shared sections are written onto every page rather than only the first: a page created here does not go
+     * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
+     * `additionalViolations` are left alone rather than removed, so a record naming fewer charges than the form
+     * holds never silently discards a page an officer added.
+     */
+    private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData): Promise<GAUTCFormModel> {
+        const additional = data.additionalViolations ?? [];
 
-        let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data));
-        updated = updated.set(updated.violatorSection, this.populateViolator(updated.getViolatorSection(), data));
-        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-        updated = updated.set(updated.statusSection, this.populateStatus(updated.getStatusSection(), data));
-        updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), data));
-        updated = updated.set(updated.duiSection, this.populateDui(updated.getDuiSection(), data));
-        updated = updated.set(updated.offenseSection, this.populateOffense(updated.getOffenseSection(), data));
-        updated = updated.set(updated.conditionsSection, this.populateConditions(updated.getConditionsSection(), data));
-        updated = updated.set(updated.locationSection, this.populateLocation(updated.getLocationSection(), data));
-        updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
-        updated = updated.set(updated.summonsSection, this.populateSummons(updated.getSummonsSection(), data));
-        updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data));
+        let form2 = form;
 
-        return form.set(form.citationPage, collection.replace(0, updated));
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        while (form2.getCitationPageCollection().pages.length < additional.length + 1) {
+            form2 = form2.addPage(await form2.citationPage.createPage(form2).initialize(), form2.citationPage);
+        }
+
+        let collection = form2.getCitationPageCollection();
+
+        collection.getPages<CitationPageModel>().forEach((page, index) => {
+            let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data));
+            updated = updated.set(updated.violatorSection, this.populateViolator(updated.getViolatorSection(), data));
+            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
+            updated = updated.set(updated.statusSection, this.populateStatus(updated.getStatusSection(), data));
+            updated = updated.set(updated.conditionsSection, this.populateConditions(updated.getConditionsSection(), data));
+            updated = updated.set(updated.locationSection, this.populateLocation(updated.getLocationSection(), data));
+            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
+            updated = updated.set(updated.summonsSection, this.populateSummons(updated.getSummonsSection(), data));
+            updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data));
+
+            // Section II is what differs page to page; the first charge comes from the flat fields and the rest
+            // from the array, and a page the data does not reach keeps what it holds
+            const violation = index === 0 ? data : additional[index - 1];
+            if (violation) {
+                updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), violation));
+                updated = updated.set(updated.duiSection, this.populateDui(updated.getDuiSection(), violation));
+                updated = updated.set(updated.offenseSection, this.populateOffense(updated.getOffenseSection(), violation));
+            }
+
+            collection = collection.replace(index, updated);
+        });
+
+        return form2.set(form2.citationPage, collection);
     }
 
     /** Returns a new form with the data applied to its four court page sections. */

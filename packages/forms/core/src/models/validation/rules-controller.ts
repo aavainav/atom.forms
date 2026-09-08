@@ -4,15 +4,15 @@ import { FormModel } from "../form";
 import { Rule } from "./rule";
 import { RuleCollection } from "./rule-collection";
 import { RuleContext } from "./rule-context";
-import { ViolationCollection } from "./violation-collection";
+import { RuleIssueCollection } from "./rule-issue-collection";
 
 type RuleConstructor<T> = new (...args: any[]) => T;
 
 export interface IRulesController extends IController {
     /** The form model that this rules controller is associated with. */
     readonly form: FormModel;
-    /** The collection of violations for the form. */
-    readonly violationCollection: ViolationCollection;
+    /** The collection of issues for the form. */
+    readonly issueCollection: RuleIssueCollection;
     /** The collection of rules that help validate the form. */
     readonly ruleCollection: RuleCollection;
 
@@ -22,8 +22,8 @@ export interface IRulesController extends IController {
     getRuleCollection(): RuleCollection;
     /** Gets the rule type by name. */
     getTypeByName(name: string): RuleConstructor<Rule>;
-    /** Gets the violation collection. */
-    getViolationCollection(): ViolationCollection;
+    /** Gets the issue collection. */
+    getIssueCollection(): RuleIssueCollection;
     /** Validates the current form against the rule collection. */
     validate(): void;
 }
@@ -39,8 +39,8 @@ export function RegisterRule(name: string) {
 }
 
 /**
- * The `RulesController` class is responsible for managing validation rules and their associated violations
- * for a given form. It provides methods to validate fields, manage rule violations, and interact with
+ * The `RulesController` class is responsible for managing validation rules and their associated issues
+ * for a given form. It provides methods to validate fields, manage rule issues, and interact with
  * the form's structure.
  *
  * The form and rule collection are reassigned by the controller manager each time the controller is requested,
@@ -53,13 +53,13 @@ export class RulesController implements IRulesController {
 
     form: FormModel;
 
-    violationCollection: ViolationCollection;
+    issueCollection: RuleIssueCollection;
     ruleCollection: RuleCollection;
 
     constructor(form: FormModel, ruleCollection: RuleCollection = new RuleCollection([])) {
         this.form = form;
         this.ruleCollection = ruleCollection;
-        this.violationCollection = new ViolationCollection();
+        this.issueCollection = new RuleIssueCollection();
     }
 
     get onChanged(): IEvent<void> {
@@ -83,28 +83,32 @@ export class RulesController implements IRulesController {
         return type;
     }
 
-    public getViolationCollection(): ViolationCollection {
-        return this.violationCollection;
+    public getIssueCollection(): RuleIssueCollection {
+        return this.issueCollection;
     }
 
     public validate(): void {
-        let violationCollection = new ViolationCollection();
+        let issueCollection = new RuleIssueCollection();
 
         for (const rule of this.ruleCollection.getRules()) {
+            const pages = this.form.getPagesFor(rule.getPageDefinition());
+
             // a rule is evaluated once per page instance, so a rule reading several fields always compares
-            // fields from the same page rather than fields from different copies of a repeatable page.
-            for (const page of this.form.getPagesFor(rule.getPageDefinition())) {
-                for (const violation of rule.validate(new RuleContext(this.form, page))) {
-                    violationCollection = violationCollection.addViolation(violation);
+            // fields from the same page rather than fields from different copies of a repeatable page. a rule
+            // reading only shared sections is the exception: every page holds the same values there, so evaluating
+            // it per page would report the same issue once for each of them.
+            for (const page of rule.isShared() ? pages.slice(0, 1) : pages) {
+                for (const issue of rule.validate(new RuleContext(this.form, page))) {
+                    issueCollection = issueCollection.addIssue(issue);
                 }
             }
         }
 
-        this.violationCollection = violationCollection;
+        this.issueCollection = issueCollection;
         this._changed.emit();
     }
 
     public dispose(): void {
-        this.violationCollection = new ViolationCollection();
+        this.issueCollection = new RuleIssueCollection();
     }
 }

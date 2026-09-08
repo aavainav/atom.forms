@@ -4,6 +4,7 @@ import { IControllerManager, IPageBinding, FDropzone } from "@forms/core";
 
 import { CitationPageModel } from "../../models/citation-page/citation-page";
 import { CitationPageVehicleDropzone } from "../../models/citation-page/dropzones/citation-page-vehicle-dropzone";
+import { CitationPageViolationDropzone } from "../../models/citation-page/dropzones/citation-page-violation-dropzone";
 import { CitationPageViolatorDropzone } from "../../models/citation-page/dropzones/citation-page-violator-dropzone";
 import { IGAUTCService } from "../../services";
 
@@ -66,7 +67,13 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
             <StatusSection binding={binding.getSection(citationPage.statusSection)} />
             <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
             <DuiSection binding={binding.getSection(citationPage.duiSection)} />
-            <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
+            <FDropzone
+                controller={dragAndDropController}
+                dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
+                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolationDropzone(page, dropzone))}
+            >
+                <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
+            </FDropzone>
             <ConditionsSection binding={binding.getSection(citationPage.conditionsSection)} />
             <LocationSection binding={binding.getSection(citationPage.locationSection)} valueListController={valueListController} />
             <OfficerSection binding={binding.getSection(citationPage.officerSection)} />

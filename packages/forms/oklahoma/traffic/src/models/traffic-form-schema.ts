@@ -236,12 +236,12 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
 
     readonly complaintPage: PageDefinition<ComplaintPageModel> = DefinitionFactory.page<ComplaintPageModel>("complaint-page", this.formDefinition, ComplaintPageModel);
 
-    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.complaintPage, HeaderSectionModel);
+    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.complaintPage, HeaderSectionModel, { isShared: true });
     readonly headerFields = defineFields(this.headerSection, {
         headerCitationNumber: { label: "Citation Number", ctor: StringFieldModel }
     });
 
-    readonly defendantSection: SectionDefinition<DefendantSectionModel> = DefinitionFactory.section<DefendantSectionModel>("defendant-section", this.complaintPage, DefendantSectionModel);
+    readonly defendantSection: SectionDefinition<DefendantSectionModel> = DefinitionFactory.section<DefendantSectionModel>("defendant-section", this.complaintPage, DefendantSectionModel, { isShared: true });
     readonly defendantFields = defineFields(this.defendantSection, {
         defendantLastName: { label: "Last", ctor: StringFieldModel },
         defendantFirstName: { label: "First", ctor: StringFieldModel },
@@ -252,7 +252,7 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
         defendantZipCode: { label: "Zip", ctor: StringFieldModel }
     });
 
-    readonly licenseSection: SectionDefinition<LicenseSectionModel> = DefinitionFactory.section<LicenseSectionModel>("license-section", this.complaintPage, LicenseSectionModel);
+    readonly licenseSection: SectionDefinition<LicenseSectionModel> = DefinitionFactory.section<LicenseSectionModel>("license-section", this.complaintPage, LicenseSectionModel, { isShared: true });
     readonly licenseFields = defineFields(this.licenseSection, {
         licenseIdentifier: { label: "ID", ctor: StringFieldModel, name: "license-id" },
         licenseClass: { label: "Class", ctor: StringFieldModel },
@@ -261,7 +261,7 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
         licenseExpires: { label: "DL Expire", ctor: StringFieldModel }
     });
 
-    readonly descriptionSection: SectionDefinition<DescriptionSectionModel> = DefinitionFactory.section<DescriptionSectionModel>("description-section", this.complaintPage, DescriptionSectionModel);
+    readonly descriptionSection: SectionDefinition<DescriptionSectionModel> = DefinitionFactory.section<DescriptionSectionModel>("description-section", this.complaintPage, DescriptionSectionModel, { isShared: true });
     readonly descriptionFields = defineFields(this.descriptionSection, {
         descriptionDateOfBirth: { label: "DOB", ctor: StringFieldModel },
         descriptionRace: { label: "Race", ctor: StringFieldModel },
@@ -271,7 +271,7 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
         descriptionWeight: { label: "WT (lb.)", ctor: NumberFieldModel }
     });
 
-    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.complaintPage, VehicleSectionModel);
+    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.complaintPage, VehicleSectionModel, { isShared: true });
     readonly vehicleFields = defineFields(this.vehicleSection, {
         vehicleYear: { label: "YR", ctor: NumberFieldModel },
         vehicleMake: { label: "Make", ctor: OptionFieldModel },
@@ -316,7 +316,7 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
         violationInformationLidarDistance: { label: "Lidar Dist", ctor: StringFieldModel, name: "lidar-distance" }
     });
 
-    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.complaintPage, OfficerSectionModel);
+    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.complaintPage, OfficerSectionModel, { isShared: true });
     readonly officerFields = defineFields(this.officerSection, {
         officerComplainantSignature: { label: "Complainant Signature", ctor: StringFieldModel },
         officerName: { label: "Officer", ctor: StringFieldModel },
@@ -327,14 +327,14 @@ export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema 
         officerSecondBodyWornCamera: { label: "BWC Video", ctor: OptionFieldModel }
     });
 
-    readonly swornSection: SectionDefinition<SwornSectionModel> = DefinitionFactory.section<SwornSectionModel>("sworn-section", this.complaintPage, SwornSectionModel);
+    readonly swornSection: SectionDefinition<SwornSectionModel> = DefinitionFactory.section<SwornSectionModel>("sworn-section", this.complaintPage, SwornSectionModel, { isShared: true });
     readonly swornFields = defineFields(this.swornSection, {
         swornName: { label: "Name", ctor: StringFieldModel },
         swornDate: { label: "Date", ctor: StringFieldModel },
         swornTitle: { label: "Title", ctor: StringFieldModel }
     });
 
-    readonly arraignmentSection: SectionDefinition<ArraignmentSectionModel> = DefinitionFactory.section<ArraignmentSectionModel>("arraignment-section", this.complaintPage, ArraignmentSectionModel);
+    readonly arraignmentSection: SectionDefinition<ArraignmentSectionModel> = DefinitionFactory.section<ArraignmentSectionModel>("arraignment-section", this.complaintPage, ArraignmentSectionModel, { isShared: true });
     readonly arraignmentFields = defineFields(this.arraignmentSection, {
         arraignmentCourtDate: { label: "Arraignment Court Date", ctor: StringFieldModel },
         arraignmentCourtTime: { label: "Time", ctor: StringFieldModel },

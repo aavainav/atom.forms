@@ -1,0 +1,12 @@
+[
+    { "code": "56-1-20", "statute": "56-1-20", "description": "Driving without a licence", "points": 0 },
+    { "code": "56-1-460", "statute": "56-1-460", "description": "Driving under suspension", "points": 6, "requiresCourtAppearance": true },
+    { "code": "56-3-110", "statute": "56-3-110", "description": "Operating an unregistered vehicle", "points": 0 },
+    { "code": "56-5-750", "statute": "56-5-750", "description": "Failure to stop for a law enforcement vehicle", "points": 6, "requiresCourtAppearance": true },
+    { "code": "56-5-1520", "statute": "56-5-1520", "description": "Exceeding the posted speed limit", "points": 2 },
+    { "code": "56-5-1930", "statute": "56-5-1930", "description": "Following too closely", "points": 4 },
+    { "code": "56-5-2930", "statute": "56-5-2930", "description": "Driving under the influence", "points": 6, "requiresCourtAppearance": true },
+    { "code": "56-5-3890", "statute": "56-5-3890", "description": "Unlawful use of a wireless electronic communication device", "points": 0 },
+    { "code": "56-5-6520", "statute": "56-5-6520", "description": "Failure to wear a seat belt", "points": 0 },
+    { "code": "56-10-520", "statute": "56-10-520", "description": "Operating an uninsured vehicle", "points": 0, "requiresCourtAppearance": true }
+]

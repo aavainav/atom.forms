@@ -1,18 +1,18 @@
 import React from "react";
 
-import { IRuleViolation, RuleViolationSeverity } from "@forms/core";
+import { IRuleIssue, RuleIssueSeverity } from "@forms/core";
 
 interface IValidationErrorEntryProps {
-    /** The rule violation to display. */
-    readonly violation: IRuleViolation;
+    /** The rule issue to display. */
+    readonly issue: IRuleIssue;
 }
 
 /** Defines a validation error entry for a field. */
-export const ValidationErrorEntry = ({ violation }: IValidationErrorEntryProps): React.JSX.Element => {
+export const ValidationErrorEntry = ({ issue }: IValidationErrorEntryProps): React.JSX.Element => {
     return (
         <div className="mb-2">
-            <div className="fw-bold">{violation.field.label}</div>
-            <div className={violation.severity === RuleViolationSeverity.error ? "text-danger" : "text-warning"}>{violation.message}</div>
+            <div className="fw-bold">{issue.field.label}</div>
+            <div className={issue.severity === RuleIssueSeverity.error ? "text-danger" : "text-warning"}>{issue.message}</div>
         </div>
     );
 }

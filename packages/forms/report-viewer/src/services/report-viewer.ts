@@ -61,6 +61,8 @@ export interface IReportViewerService {
     getData: (context: IFormDataContext) => Promise<IReportViewerData | undefined>;
     /** Gets the options registered for the given form, in the order they are rendered in the options bar. */
     getOptions: (catalogItem: IFormCatalogItem) => Array<IReportViewerOption>;
+    /** Gets the panels registered for the given form, which are mounted at the report viewer's root. */
+    getPanels: (catalogItem: IFormCatalogItem) => Array<IReportViewerPanel>;
     /** Loads the catalog form matching `identity` (or, when omitted, the given data's `name`/`version`) and populates it with that data. */
     loadForm: (data: IReportViewerData | undefined, identity?: IFormReportIdentity) => Promise<IInitialForm | undefined>;
     /**
@@ -88,6 +90,23 @@ export interface IReportViewerOption {
     /** The component rendered for the option. */
     readonly Component: ComponentType<IReportViewerOptionProps>;
     /** Whether the option is offered for the given form; it is always offered when omitted. */
+    readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
+}
+
+/**
+ * Defines a panel rendered at the report viewer's root, alongside the modal, notification and validation managers.
+ *
+ * A panel is what an option opens when what it opens is not a modal: an off canvas is `position: fixed`, and the
+ * options bar is itself `position-fixed` and so a stacking context, which means a panel rendered from inside the
+ * bar is ranked only within it however high its z-index. Registering the panel here puts it outside the bar, and
+ * lets a package own a panel without the report viewer taking a dependency on that package.
+ */
+export interface IReportViewerPanel {
+    /** Identifies the panel; registering the same id twice throws. */
+    readonly id: string;
+    /** The component rendered for the panel. It is mounted for as long as the form is, and decides for itself whether it is showing. */
+    readonly Component: ComponentType<IReportViewerOptionProps>;
+    /** Whether the panel is mounted for the given form; it is always mounted when omitted. */
     readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
 }
 
@@ -127,6 +146,8 @@ export interface IReportViewerRegistrationService {
     registerMapper: <TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>) => void;
     /** Registers an option to render in the report viewer's options bar. Only one option may be registered per id. */
     registerOption: (option: IReportViewerOption) => void;
+    /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs. Only one panel may be registered per id. */
+    registerPanel: (panel: IReportViewerPanel) => void;
 }
 
 @Singleton
@@ -134,6 +155,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
     private readonly _forms: Map<string, IFormRegistration> = new Map<string, IFormRegistration>();
     private readonly _mappers: Map<string, IFormMapper<FormModel, IReportViewerData>> = new Map<string, IFormMapper<FormModel, IReportViewerData>>();
     private readonly _options: Map<string, IReportViewerOption> = new Map<string, IReportViewerOption>();
+    private readonly _panels: Map<string, IReportViewerPanel> = new Map<string, IReportViewerPanel>();
     private readonly _dataReader?: IFormDataReader;
     private readonly _dataWriter?: IFormDataWriter;
 
@@ -169,6 +191,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         return Array.from(this._options.values())
             .filter(option => !option.canShow || option.canShow(catalogItem))
             .sort((a, b) => a.order - b.order);
+    }
+
+    getPanels(catalogItem: IFormCatalogItem): Array<IReportViewerPanel> {
+        // panels are not ordered: each one positions itself against an edge of the viewport rather than sharing a
+        // strip with the others, so there is nothing for an order to mean
+        return Array.from(this._panels.values()).filter(panel => !panel.canShow || panel.canShow(catalogItem));
     }
 
     async loadForm(data: IReportViewerData | undefined, identity?: IFormReportIdentity): Promise<IInitialForm | undefined> {
@@ -270,6 +298,14 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         }
 
         this._options.set(option.id, option);
+    }
+
+    registerPanel(panel: IReportViewerPanel): void {
+        if (this._panels.has(panel.id)) {
+            throw new Error(`A panel with the id of ${panel.id} has already been registered with the report viewer.`);
+        }
+
+        this._panels.set(panel.id, panel);
     }
 
     /** Gets the mapper registered for the given form, if one was registered. */

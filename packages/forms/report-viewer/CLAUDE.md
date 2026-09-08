@@ -10,13 +10,13 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `ReportViewerModule` + `IReportViewerConfiguration` (`registerForm`, `registerRoute`, `registerDataReader`, `registerDataWriter`, `registerMapper`). Registers the `report-viewer` layout route, its index route, and the `*` not-found route. |
+| [src/module.ts](src/module.ts) | `ReportViewerModule` + `IReportViewerConfiguration` (`registerForm`, `registerRoute`, `registerDataReader`, `registerDataWriter`, `registerMapper`, `registerOption`, `registerPanel`). Registers the `report-viewer` layout route, its index route, and the `*` not-found route. |
 | [src/options.ts](src/options.ts) | `IReportViewerOptions`: `data?` (static report data) and `isReadOnly?`. Bound to module settings. |
 | [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerService`, `IReportViewerRegistrationService`, `IFormDataReader`, `IFormDataWriter`, `IInitialForm`, `IFormDataContext`. |
 | [src/services/navigation.ts](src/services/navigation.ts) | `INavigationService` (`navigateTo`, `currentLocation`, `router`) / `INavigationRegistrationService` (`registerRoute`, `registerChildRoute`). |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. |
-| [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showViolations` — event only, same shape as notification; `ValidationManager` listens. |
+| [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` — renders `ReportViewerForm` when handed an `initialForm`, otherwise `<Outlet />`. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation. **Both `ReportViewer` and `ReportViewerPanel` render this**, so every host wires a form identically. |
 | [src/components/report-viewer-loader.tsx](src/components/report-viewer-loader.tsx) | The generic data-driven index route: resolves data from the route context and loads whatever form the data names. |
@@ -24,7 +24,8 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/components/report-viewer-layout.tsx](src/components/report-viewer-layout.tsx) | Bare `<Outlet />` for the `report-viewer` route. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: the three built-ins plus whatever `registerOption` added, in one ordered list. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
-| [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleViolation`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
+| [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts whatever `registerPanel` added, for this form, alongside the three built-in managers. |
+| [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
 ## The host data boundary
 
@@ -89,7 +90,25 @@ registerOption({ id, order, Component, canShow? })
 get. Duplicate ids throw. `canShow(catalogItem)` filters per form; an option without one is always offered.
 
 This exists so a package adding a capability supplies its own button rather than the report viewer taking a
-dependency on that package: `@forms/printing` registers the print option at order 300, and nothing here imports it.
+dependency on that package: `@forms/printing` registers the print option at order 300 and `@forms/violations` the
+violations option at 150, and nothing here imports either.
+
+## The panel seam — where an off canvas goes
+
+```ts
+registerPanel({ id, Component, canShow? })
+```
+
+Registered panels are mounted by `PanelManager` at the report viewer's root, beside `ModalManager`,
+`NotificationManager` and `ValidationManager`, and are handed the same `IReportViewerOptionProps` the options get.
+Duplicate ids throw. There is no `order`: a panel positions itself against an edge of the viewport rather than
+sharing a strip, so there is nothing for an order to mean.
+
+**A panel cannot be rendered from the option that opens it.** The options bar is `position-fixed` and therefore a
+stacking context, which ranks anything fixed inside it only against the bar's own contents however high its
+z-index — the same trap that put the print dialog behind `IModalService` rather than inside `PrintOption`. A panel
+is mounted for as long as the form is and decides for itself whether it is showing, which is what lets the option
+be a plain button raising an event on a service.
 
 ## Routing
 

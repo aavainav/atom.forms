@@ -14,15 +14,22 @@ reach for this package as the template for a form whose answers are checkboxes r
 ```
 citation-page  12 sections: header, violator, vehicle, status, violation, dui, offense,
                             conditions, location, officer, summons, certification
+               repeats: one citation page per violation the citation is written for
 court-page      4 sections: court-action, plea, disposition, judgment
 ```
+
+**`violation`, `dui` and `offense` are per-page; every other citation-page section is `{ isShared: true }`.** Those
+three are Section II, and they belong to one charge: the offense is the charge itself, and the speed detection
+boxes and the DUI test are the evidence for it — the radar reading belongs to the speeding ticket and the breath
+test to the DUI one, not to every ticket written at the stop. The conditions bar and the status boxes describe the
+stop and so are shared.
 
 The citation page is the five sections the paper numbers I through V, split where a printed section holds more than
 one block of boxes: Section I becomes violator + vehicle + status, and Section II becomes violation + dui + offense
 + conditions. The court page is the reverse of the court's copy, completed by the clerk and the judge.
 
-2 dropzones, both on the citation page: `CitationPageViolatorDropzone` (person), `CitationPageVehicleDropzone`
-(make + model + year).
+3 dropzones, all on the citation page: `CitationPageViolatorDropzone` (person), `CitationPageVehicleDropzone`
+(make + model + year), `CitationPageViolationDropzone` (onto the **offense** section).
 
 ## Files
 
@@ -89,6 +96,17 @@ The vehicle make/model dependency is the usual one: `parentValue={make.getValue(
 `setOptionWithDependents(binding, section.make, [section.model])` for clearing, and
 `service.resolveVehicleDropzone(dropzone)` awaited in `citation-page.tsx` before the drop is applied, because a drop
 carries make and model as *names* with no codes.
+
+## The violation picker
+
+The list is `ga-utc:violation`, written **inline** in [src/violations.ts](src/violations.ts) as this form's value
+lists are — Atlanta publishes no machine-readable offence code list, so it is the Title 40 sections the ticket is
+most often written under and needs checking against the current Code.
+
+`GAUTCService.applyViolations` writes the **offense** section, not the one this form calls "violation". A violation
+carrying `isLocalOrdinance` goes through the section's own `selectAuthority` rather than being written as two
+independent boxes, because state law / local ordinance is an exclusive pair; a violation saying neither leaves both
+clear, which is how the citation records an unanswered question.
 
 ## Decisions worth knowing before you change something
 

@@ -9,8 +9,8 @@ import type { SectionModel } from "./section";
 import type { SectionDefinition } from "./section-definition";
 import { ISchema } from "./schema";
 import { RuleCollection } from "./validation/rule-collection";
-import { RuleViolationSeverity } from "./validation/rule-violation";
-import { ViolationCollection } from "./validation/violation-collection";
+import { RuleIssueSeverity } from "./validation/rule-issue";
+import { RuleIssueCollection } from "./validation/rule-issue-collection";
 import { withChanges } from "../utils/clone";
 
 export type FormModelConstructor<TForm extends FormModel> = new () => TForm;
@@ -71,8 +71,8 @@ export interface IFormModel extends IEntity<PageDefinition> {
     setStatus(status: FormStatus): this;
     /** Marks every field on the form as not dirty. */
     clean(): this;
-    /** Applies the given violation collection, setting the has error state for every field on the form. */
-    validate(violationCollection: ViolationCollection): this;
+    /** Applies the given issue collection, setting the has error state for every field on the form. */
+    validate(issueCollection: RuleIssueCollection): this;
     /** Releases resources held by the form model, such as registered schemas and definitions. */
     dispose(): void;
 }
@@ -197,12 +197,12 @@ export class FormModel extends Entity<PageDefinition> implements IFormModel {
         return this.mapFields(field => field.setIsDirty(false));
     }
 
-    public validate(violationCollection: ViolationCollection): this {
+    public validate(issueCollection: RuleIssueCollection): this {
         const erroredFields = new Set(
-            violationCollection
-                .getViolations()
-                .filter(violation => violation.severity === RuleViolationSeverity.error)
-                .map(violation => violation.field)
+            issueCollection
+                .getIssues()
+                .filter(issue => issue.severity === RuleIssueSeverity.error)
+                .map(issue => issue.field)
         );
 
         return this.mapFields(field => field.setHasError(erroredFields.has(field)));

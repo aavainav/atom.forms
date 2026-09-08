@@ -1,7 +1,60 @@
 import { IOptionValue } from "@forms/core";
 
+/**
+ * Represents the violation, offense and violation-information boxes that belong to one charge, and so differ
+ * from one complaint page to the next.
+ *
+ * The date, time, county and location are held here alongside the codes because the citation prints them in
+ * the same block; a stop writes the same four onto every page it produces.
+ */
+export interface IOKTrafficViolationData {
+    /** "Amount Due", from the offense section of the complaint page. */
+    readonly offenseAmountDue?: number;
+    /** "Amount Due If Paid On or Before", from the offense section of the complaint page. Held as `YYYY-MM-DD`. */
+    readonly offenseDueDate?: string;
+    /** "Offense Notes", from the offense section of the complaint page. */
+    readonly offenseNotes?: string;
+    /** "By Act Of", from the violation section of the complaint page. */
+    readonly violationByActOf?: string;
+    /** "County", from the violation section of the complaint page. */
+    readonly violationCounty?: IOptionValue;
+    /** "On (date)", from the violation section of the complaint page. Held as `YYYY-MM-DD`. */
+    readonly violationDate?: string;
+    /** "Actual Spd", from the violation information section of the complaint page. */
+    readonly violationInformationActualSpeed?: number;
+    /** "HFS", from the violation information section of the complaint page. */
+    readonly violationInformationHighFatalitySpeed?: IOptionValue;
+    /** "Incident #", from the violation information section of the complaint page. */
+    readonly violationInformationIncidentNumber?: string;
+    /** "Lidar Dist", from the violation information section of the complaint page. */
+    readonly violationInformationLidarDistance?: string;
+    /** "Offense Level", from the violation information section of the complaint page. */
+    readonly violationInformationOffenseLevel?: string;
+    /** "Spd Det", from the violation information section of the complaint page. */
+    readonly violationInformationSpeedDetection?: string;
+    /** "Limit", from the violation information section of the complaint page. */
+    readonly violationInformationSpeedLimit?: number;
+    /** "Is Block", from the violation section of the complaint page. */
+    readonly violationIsBlock?: IOptionValue;
+    /** "At or near (Location)", from the violation section of the complaint page. */
+    readonly violationLocation?: string;
+    /** "Muni Code", from the violation section of the complaint page. */
+    readonly violationMunicipalCode?: string;
+    /** "Off Code", from the violation section of the complaint page. */
+    readonly violationOffenseCode?: string;
+    /** "At (time)", from the violation section of the complaint page. */
+    readonly violationTime?: string;
+}
+
 /** Represents the data contract for the Oklahoma City traffic citation record. */
-export interface IOKTrafficData {
+export interface IOKTrafficData extends IOKTrafficViolationData {
+    /**
+     * The violations beyond the first, one per further complaint page.
+     *
+     * The first violation stays in the flat fields rather than moving into this array, so a record written
+     * before a citation could carry more than one charge round trips through here unchanged.
+     */
+    readonly additionalViolations?: ReadonlyArray<IOKTrafficViolationData>;
     /** "Arraignment Court Date", from the arraignment section of the complaint page. Held as `YYYY-MM-DD`. */
     readonly arraignmentCourtDate?: string;
     /** "Time" of the arraignment, from the arraignment section of the complaint page. */
@@ -58,12 +111,6 @@ export interface IOKTrafficData {
     readonly licenseState?: IOptionValue;
     /** "Officer Notes", from the notes section of the supplement page. */
     readonly notesOfficerNotes?: string;
-    /** "Amount Due" if paid on or before the arraignment date, from the offense section of the complaint page. */
-    readonly offenseAmountDue?: number;
-    /** The date the fine must be paid on or before, from the offense section of the complaint page. Held as `YYYY-MM-DD`. */
-    readonly offenseDueDate?: string;
-    /** "OFFENSE NOTES", from the offense section of the complaint page. */
-    readonly offenseNotes?: string;
     /** "BWC Video" for the issuing officer, from the officer section of the complaint page. */
     readonly officerBodyWornCamera?: IOptionValue;
     /** "Comm. Number" of the issuing officer, from the officer section of the complaint page. */
@@ -152,36 +199,6 @@ export interface IOKTrafficData {
     readonly vehicleVin?: string;
     /** "YR", from the vehicle section of the complaint page. */
     readonly vehicleYear?: number;
-    /** "BY ACT OF", from the violation section of the complaint page. */
-    readonly violationByActOf?: string;
-    /** "County", from the violation section of the complaint page. */
-    readonly violationCounty?: IOptionValue;
-    /** "On (date)", from the violation section of the complaint page. Held as `YYYY-MM-DD`. */
-    readonly violationDate?: string;
-    /** "Actual Spd", from the violation information section of the complaint page. */
-    readonly violationInformationActualSpeed?: number;
-    /** "HFS", whether the offense occurred on a high fatality speed corridor, from the complaint page. */
-    readonly violationInformationHighFatalitySpeed?: IOptionValue;
-    /** "Incident #", from the violation information section of the complaint page. */
-    readonly violationInformationIncidentNumber?: string;
-    /** "Lidar Dist", from the violation information section of the complaint page. */
-    readonly violationInformationLidarDistance?: string;
-    /** "Offense Level", from the violation information section of the complaint page. */
-    readonly violationInformationOffenseLevel?: string;
-    /** "Spd Det", how the speed was measured, from the violation information section of the complaint page. */
-    readonly violationInformationSpeedDetection?: string;
-    /** "Limit", the posted speed limit, from the violation information section of the complaint page. */
-    readonly violationInformationSpeedLimit?: number;
-    /** "Is Block", whether the location is a block address, from the violation section of the complaint page. */
-    readonly violationIsBlock?: IOptionValue;
-    /** "At or near (Location)", from the violation section of the complaint page. */
-    readonly violationLocation?: string;
-    /** "MUNI CODE", from the violation section of the complaint page. */
-    readonly violationMunicipalCode?: string;
-    /** "OFF CODE", from the violation section of the complaint page. */
-    readonly violationOffenseCode?: string;
-    /** "At (time)", from the violation section of the complaint page. */
-    readonly violationTime?: string;
     /** "APPROVED", whether a warrant was recommended, from the warrant section of the warrant page. */
     readonly warrantApproved?: boolean;
     /** "Assistant Municipal Counselor" who approved the warrant, from the warrant section of the warrant page. */

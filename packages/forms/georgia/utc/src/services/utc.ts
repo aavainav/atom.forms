@@ -1,8 +1,10 @@
-import { Dropzone, IOptionValue, PersonDropzoneFields, VehicleDropzoneFields } from "@forms/core";
+import { Dropzone, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
+import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { CitationPageModel } from "../models/citation-page/citation-page";
+import { GAUTCFormSchema } from "../models/utc-form-schema";
 import { GAUTCValueListId } from "../value-lists";
 
 export const IGAUTCService = createService<IGAUTCService>("forms-ga-utc-service");
@@ -18,6 +20,10 @@ export const IGAUTCService = createService<IGAUTCService>("forms-ga-utc-service"
 export interface IGAUTCService {
     /** Returns a new citation page with the dropped vehicle data applied to the vehicle boxes of Section I. */
     applyVehicleDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
+    /** Returns a new citation page with the dropped violation data applied to the offense boxes of Section II. */
+    applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
+    /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
     /** Returns a new citation page with the dropped person data applied to Section I. */
     applyViolatorDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Loads the options for the citation's county box - the three counties the form prints beside it. */
@@ -66,6 +72,62 @@ export class GAUTCService implements IGAUTCService {
         });
 
         return page.set(page.violatorSection, updatedSection).setDropzone(dropzone);
+    }
+
+    applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel {
+        const offenseSection = page.getOffenseSection();
+        const updatedSection = dropzone.applyTo(offenseSection, {
+            [ViolationDropzoneFields.description]: offenseSection.description,
+            [ViolationDropzoneFields.statute]: offenseSection.codeSection
+        });
+
+        return page.set(page.offenseSection, updatedSection).setDropzone(dropzone);
+    }
+
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
+        if (!violations.length) {
+            return;
+        }
+
+        const controller = controllers.getFormController();
+        const schema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+
+        const pages = controller.form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+        // the chosen violations go into the first page with no offence on it, and then onto pages after that, so
+        // picking again adds to the citation rather than rewriting it
+        const empty = pages.findIndex(page => page.getOffenseSection().getCodeSection().getIsEmpty() && page.getOffenseSection().getDescription().getIsEmpty());
+        const start = empty < 0 ? pages.length : empty;
+
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        for (let index = pages.length; index < start + violations.length; index++) {
+            await controller.addPage(schema.citationPage);
+        }
+
+        controller.update(form => {
+            let collection = form.get<PageCollection>(schema.citationPage);
+
+            violations.forEach((violation, offset) => {
+                const index = start + offset;
+                const page = collection.pages[index] as CitationPageModel;
+                const section = page.getOffenseSection();
+
+                let updated = section
+                    .set(section.codeSection, section.getCodeSection().setValue(violation.statute ?? violation.code))
+                    .set(section.description, section.getDescription().setValue(violation.description));
+
+                // state law and local ordinance are an exclusive pair, so the answer goes through the section's own
+                // select method rather than being written as two independent boxes; a violation saying neither
+                // leaves both clear, which is how the citation records an unanswered question
+                if (violation.isLocalOrdinance !== undefined) {
+                    updated = updated.selectAuthority(violation.isLocalOrdinance ? updated.localOrdinance : updated.stateLaw);
+                }
+
+                collection = collection.replace(index, page.set(page.offenseSection, updated));
+            });
+
+            return form.set(schema.citationPage, collection);
+        });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

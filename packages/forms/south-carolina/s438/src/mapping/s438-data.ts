@@ -1,5 +1,38 @@
+/**
+ * Represents one further violation the citation was written for, beyond the one the flat fields carry.
+ *
+ * The S438 prints one charge per ticket, so a stop producing three charges produces three front pages. The
+ * violator, vehicle, owner, court, location and officer details are the same on all of them and stay flat on the
+ * record; only these fields differ page to page.
+ */
+export interface IS438ViolationData {
+    /** The blood alcohol level recorded for the violation. */
+    readonly violationBloodAlcoholLevel?: string;
+    /** Checked when no court appearance is required for the violation. */
+    readonly violationCourtAppearanceRequiredNo?: boolean;
+    /** Checked when a court appearance is required for the violation; paired with `violationCourtAppearanceRequiredNo`, and a record answering neither leaves both false. */
+    readonly violationCourtAppearanceRequiredYes?: boolean;
+    /** The date of the violation. */
+    readonly violationDateOfViolation?: string;
+    /** The description of the violation. */
+    readonly violationDescription?: string;
+    /** The South Carolina points the violation carries. */
+    readonly violationScPoints?: number;
+    /** The section number of the violation. */
+    readonly violationSectionNumber?: string;
+    /** The time of the violation. */
+    readonly violationTimeOfViolation?: string;
+}
+
 /** Represents the data contract for the SC S438 (Uniform Traffic Ticket) citation record. */
 export interface IS438Data {
+    /**
+     * The violations beyond the first, one per further front page the citation carries.
+     *
+     * The first violation stays in the flat `violation*` fields rather than being moved into this array, so a
+     * record written before a citation could carry more than one charge round trips through here unchanged.
+     */
+    readonly additionalViolations?: ReadonlyArray<IS438ViolationData>;
     /** The bail deposited with the arresting officer. */
     readonly arrestingOfficerBailDeposited?: string;
     /** The bond amount the arresting officer requested. */

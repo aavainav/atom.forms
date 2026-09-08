@@ -5,8 +5,6 @@ import { IDragAndDropController } from "../../controllers/drag-and-drop-controll
 import { IDraggableItem } from "../../models/import/draggable-item";
 import { Dropzone } from "../../models/import/dropzone";
 import { DropzoneHelper } from "../../models/import/dropzone-helper";
-import { IImportablePerson } from "../../models/import/importable-person";
-import { IImportableVehicle } from "../../models/import/importable-vehicle";
 
 import { buildClasses } from "../../utils/class-names";
 
@@ -14,13 +12,13 @@ interface IFDropzoneProps {
     /** The form's drag-and-drop controller, used to track the item currently being dragged. */
     readonly controller: IDragAndDropController;
     /** The dropzone this drop target renders; its own type decides which dragged items it accepts. */
-    readonly dropzone: Dropzone<IImportablePerson | IImportableVehicle>;
+    readonly dropzone: Dropzone;
     /** Invoked with the updated dropzone once an item has been dropped; the caller is responsible for storing it back onto the owning page. */
-    onDrop?: (dropzone: Dropzone<IImportablePerson | IImportableVehicle>) => void;
+    onDrop?: (dropzone: Dropzone) => void;
 }
 
 export default function FDropzone({ controller, dropzone, children, onDrop }: React.PropsWithChildren<IFDropzoneProps>): React.JSX.Element {
-    const [draggingItem, setDraggingItem] = useState<IDraggableItem<IImportablePerson | IImportableVehicle>>();
+    const [draggingItem, setDraggingItem] = useState<IDraggableItem>();
 
     useEffect(() => {
         const startListener = controller.onDragStart(setDraggingItem);
@@ -43,9 +41,10 @@ export default function FDropzone({ controller, dropzone, children, onDrop }: Re
             return;
         }
 
-        const item = JSON.parse(data) as IDraggableItem<IImportablePerson | IImportableVehicle>;
+        const item = JSON.parse(data) as IDraggableItem;
 
-        if (DropzoneHelper.isValidType<IImportablePerson>(item as IDraggableItem<IImportablePerson>) || DropzoneHelper.isValidType<IImportableVehicle>(item as IDraggableItem<IImportableVehicle>)) {
+        // the helper picks the schema off the item's own type, so this asks once rather than once per importable
+        if (DropzoneHelper.isValidType(item)) {
             onDrop?.(dropzone.onDrop(item.data));
         }
     };

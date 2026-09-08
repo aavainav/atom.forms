@@ -11,12 +11,16 @@ fields. The largest of the Oklahoma forms.
 ```
 complaint-page   11 sections: header, defendant, license, description, vehicle, violation,
                               offense, violation-information, officer, sworn, arraignment
+                 repeats: one complaint page per violation the citation is written for
 warrant-page      3 sections: complaint, certification, warrant
 supplement-page   4 sections: witness, registered-owner, status, notes
 ```
 
-2 dropzones, both on the complaint page: `ComplaintPageDefendantDropzone` (person),
-`ComplaintPageVehicleDropzone` (make + model + year).
+**`violation`, `offense` and `violation-information` are per-page; the other eight complaint-page sections are
+`{ isShared: true }`.** The warrant and supplement pages appear once each.
+
+3 dropzones, all on the complaint page: `ComplaintPageDefendantDropzone` (person),
+`ComplaintPageVehicleDropzone` (make + model + year), `ComplaintPageViolationDropzone`.
 
 ## Files
 
@@ -78,6 +82,19 @@ The one dependent pair on the form, and both fields sit on the **same** section,
   `complaint-page.tsx` awaits `service.resolveVehicleDropzone(dropzone)` before applying it. The make resolves
   first — a model name only identifies a model underneath a make. An unrecognized name is **cleared** rather than
   carried onto the form.
+
+## The violation picker
+
+The list is `ok-traffic:violation`, written **inline** in [src/violations.ts](src/violations.ts) — Oklahoma City
+publishes no machine-readable offence code list, so the codes and scheduled fines need checking against the
+current municipal code.
+
+`OKTrafficService.applyViolations` spreads one violation across two sections, because the paper does: the code
+goes in the violation block's **Muni Code** and the statute in its **Off Code**, while the fine goes to the offense
+block's **Amount Due**. The citation prints no box for the charge in words at all, so the description lands in
+**Offense Notes**, the only place on the paper it can be read. The date, time, county and location are carried
+across from the first page, since they sit in the violation section rather than a shared one and one stop produces
+one of each.
 
 ## Decisions worth knowing before you change something
 

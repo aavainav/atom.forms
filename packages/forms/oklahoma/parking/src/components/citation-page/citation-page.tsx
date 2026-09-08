@@ -4,6 +4,7 @@ import { IControllerManager, IPageBinding, FDropzone, FLabel } from "@forms/core
 
 import { CitationPageModel } from "../../models/citation-page/citation-page";
 import { CitationPageVehicleDropzone } from "../../models/citation-page/dropzones/citation-page-vehicle-dropzone";
+import { CitationPageViolationDropzone } from "../../models/citation-page/dropzones/citation-page-violation-dropzone";
 import { IOKParkingService } from "../../services";
 
 import { CourtSection } from "./court-section";
@@ -36,7 +37,13 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                 <div className="fw-bold">Oklahoma City Municipal Court</div>
             </div>
 
-            <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
+            <FDropzone
+                controller={dragAndDropController}
+                dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
+                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okParkingService.applyViolationDropzone(page, dropzone))}
+            >
+                <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
+            </FDropzone>
             <PaymentSection binding={binding.getSection(citationPage.paymentSection)} />
             <CourtSection binding={binding.getSection(citationPage.courtSection)} />
 

@@ -2,6 +2,7 @@ import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IPrintingConfiguration, PrintingModule } from "@forms/printing";
 import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
+import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
 import { OKTrafficFormFactory } from "./form-factory";
@@ -11,6 +12,7 @@ import { OKTrafficFormSchema } from "./models/traffic-form-schema";
 import { IOKTrafficOptions } from "./options";
 import { IOKTrafficService, OKTrafficService } from "./services";
 import { okTrafficValueLists } from "./value-lists";
+import { OKTrafficViolationListId, okTrafficViolationLists } from "./violations";
 
 export const IOKTrafficConfiguration = createConfig<IOKTrafficConfiguration>();
 export interface IOKTrafficConfiguration {
@@ -19,7 +21,7 @@ export interface IOKTrafficConfiguration {
 /** Defines the Oklahoma City traffic citation module. */
 export class OKTrafficModule implements IModule {
     readonly name = "ok-traffic-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, PrintingModule, ValueListsModule];
+    readonly dependencies = [ReportViewerModule, FormCatalogModule, PrintingModule, ValueListsModule, ViolationsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IOKTrafficOptions>(IOKTrafficOptions);
@@ -29,7 +31,7 @@ export class OKTrafficModule implements IModule {
         registration.register<IOKTrafficService, OKTrafficService>(IOKTrafficService, OKTrafficService);
     }
 
-    async configure({ config }: IModuleConfigurator): Promise<void> {
+    async configure({ config, services }: IModuleConfigurator): Promise<void> {
         const name = "OKC Traffic Citation";
         const description = "Oklahoma City Municipal Court traffic citation - the complaint and information sworn by the issuing officer, the warrant page the counselor and clerk endorse, and the witness, registered owner and status supplement.";
         const version = "1.0";
@@ -74,6 +76,20 @@ export class OKTrafficModule implements IModule {
         ]);
 
         new OKTrafficFormSchema();
+
+        // the list this form draws its charges from, and how a chosen violation lands on it; the codes go in the
+        // violation block and the description and fine into the offense block beneath it
+        const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
+
+        for (const definition of okTrafficViolationLists) {
+            violations.registerList(definition);
+        }
+
+        violations.registerViolations({ name, version }, {
+            listId: OKTrafficViolationListId.violation,
+            pageName: "complaint-page",
+            apply: (controllers, chosen) => services.get<IOKTrafficService>(IOKTrafficService).applyViolations(controllers, chosen)
+        });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({

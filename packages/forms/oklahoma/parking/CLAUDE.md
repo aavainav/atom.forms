@@ -11,11 +11,27 @@ list. Sits between [s438](../../south-carolina/s438/) and
 
 ```
 citation-page   5 sections: violation, payment, court, vehicle, officer        (the copy left on the vehicle)
+                repeats: one citation page per violation the ticket is written for
 complaint-page  3 sections: complaint, certification, warrant                  (counselor and clerk endorsements)
 detail-page     4 sections: record, registered-owner, vehicle-detail, notes    (owner and vehicle description)
 ```
 
-2 dropzones: `CitationPageVehicleDropzone` (make only), `DetailPageOwnerDropzone` (registered owner).
+**`violation` and `payment` are per-page; `court`, `vehicle` and `officer` are `{ isShared: true }`.** The fine is
+per violation, so it travels with the charge rather than with the vehicle it was left on.
+
+3 dropzones: `CitationPageVehicleDropzone` (make only), `CitationPageViolationDropzone`,
+`DetailPageOwnerDropzone` (registered owner).
+
+## The violation picker
+
+The list is `ok-parking:violation`, written **inline** in [src/violations.ts](src/violations.ts) — Oklahoma City
+publishes no machine-readable parking code list, so the codes and scheduled fines need checking against the current
+municipal code.
+
+`OKParkingService.applyViolations` writes the code and description into the violation block and the fine into the
+**payment** block beneath it; a violation carrying no fine leaves the amount for the clerk. The date, time and
+location are carried across from the first page, since they sit in the violation section rather than a shared one
+and one ticket run produces one of each.
 
 ## Files
 

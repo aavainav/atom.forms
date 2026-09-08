@@ -2,7 +2,7 @@ import type { FieldModel, TValueType } from "../../field";
 import type { FieldDefinition } from "../../field-definition";
 import { FieldRule, IFieldRule } from "../field-rule";
 import { RegisterRule } from "../rules-controller";
-import { IRuleViolation, RuleViolationSeverity } from "../rule-violation";
+import { IRuleIssue, RuleIssueSeverity } from "../rule-issue";
 
 /** Defines the bounds a date field's value must fall within. */
 export interface IDateRange {
@@ -27,23 +27,23 @@ export class DateRangeFieldRule extends FieldRule implements IDateRangeFieldRule
 
     readonly range: IDateRange;
 
-    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, range: IDateRange, message?: string, severity?: RuleViolationSeverity) {
+    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, range: IDateRange, message?: string, severity?: RuleIssueSeverity) {
         super(DateRangeFieldRule.name, fieldDefinition, message ?? DateRangeFieldRule.defaultMessage, severity);
 
         this.range = range;
     }
 
     /** Creates a rule that rejects a date later than the day validation runs. */
-    public static notInFuture(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleViolationSeverity): DateRangeFieldRule {
+    public static notInFuture(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleIssueSeverity): DateRangeFieldRule {
         return new DateRangeFieldRule(fieldDefinition, { notInFuture: true }, message, severity);
     }
 
     /** Creates a rule that rejects a date earlier than the given minimum. */
-    public static notBefore(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimum: Date, message?: string, severity?: RuleViolationSeverity): DateRangeFieldRule {
+    public static notBefore(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimum: Date, message?: string, severity?: RuleIssueSeverity): DateRangeFieldRule {
         return new DateRangeFieldRule(fieldDefinition, { minimum }, message, severity);
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleViolation> {
+    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
         // an empty value is the required rule's concern, and an unparseable one the format rule's.
         if (field.getIsEmpty()) {
             return [];

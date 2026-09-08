@@ -1,6 +1,7 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
+import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
 import { GAUTCFormFactory } from "./form-factory";
@@ -10,6 +11,7 @@ import { GAUTCFormSchema } from "./models/utc-form-schema";
 import { IGAUTCOptions } from "./options";
 import { IGAUTCService, GAUTCService } from "./services";
 import { gaUtcValueLists } from "./value-lists";
+import { GAUTCValueViolationListId, gaUtcViolationLists } from "./violations";
 
 export const IGAUTCConfiguration = createConfig<IGAUTCConfiguration>();
 export interface IGAUTCConfiguration {
@@ -18,7 +20,7 @@ export interface IGAUTCConfiguration {
 /** Defines the Georgia uniform traffic citation module. */
 export class GAUTCModule implements IModule {
     readonly name = "ga-utc-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule];
+    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule, ViolationsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IGAUTCOptions>(IGAUTCOptions);
@@ -28,7 +30,7 @@ export class GAUTCModule implements IModule {
         registration.register<IGAUTCService, GAUTCService>(IGAUTCService, GAUTCService);
     }
 
-    async configure({ config }: IModuleConfigurator): Promise<void> {
+    async configure({ config, services }: IModuleConfigurator): Promise<void> {
         const name = "GA Uniform Traffic Citation";
         const description = "Georgia uniform traffic citation, summons, and accusation as issued by the City of Atlanta Department of Police - the face of the citation the officer serves, and the reverse of the court's copy the clerk and judge complete.";
         const version = "1.0";
@@ -53,6 +55,20 @@ export class GAUTCModule implements IModule {
         reportViewer.registerMapper({ name, version }, new GAUTCMapper());
 
         new GAUTCFormSchema();
+
+        // the list this form draws its charges from, and how a chosen violation lands on it. the charge goes onto
+        // the offense section rather than the one this form calls "violation", which holds the speed detection gear.
+        const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
+
+        for (const definition of gaUtcViolationLists) {
+            violations.registerList(definition);
+        }
+
+        violations.registerViolations({ name, version }, {
+            listId: GAUTCValueViolationListId.violation,
+            pageName: "citation-page",
+            apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen)
+        });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({

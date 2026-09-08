@@ -4,7 +4,7 @@ import { FormDefinition } from "./form-definition";
 import { FormModel, FormModelConstructor } from "./form";
 import { PageDefinition } from "./page-definition";
 import { PageModel, PageModelConstructor } from "./page";
-import { SectionDefinition } from "./section-definition";
+import { ISectionDefinitionOptions, SectionDefinition } from "./section-definition";
 import { SectionModel, SectionModelConstructor } from "./section";
 
 /** Describes a single field to be created by `defineFields`. */
@@ -35,8 +35,8 @@ export class DefinitionFactory {
         return new PageDefinition<TPage>(name, form, ctor);
     }
 
-    static section<TSection extends SectionModel>(name: string, page: PageDefinition<PageModel>, ctor: SectionModelConstructor<TSection>): SectionDefinition<TSection> {
-        return new SectionDefinition<TSection>(name, page, ctor);
+    static section<TSection extends SectionModel>(name: string, page: PageDefinition<PageModel>, ctor: SectionModelConstructor<TSection>, options?: ISectionDefinitionOptions): SectionDefinition<TSection> {
+        return new SectionDefinition<TSection>(name, page, ctor, options);
     }
 }
 

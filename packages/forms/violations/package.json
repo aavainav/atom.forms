@@ -1,0 +1,27 @@
+{
+    "name": "@forms/violations",
+    "description": "The registry and generated data for the violations a citation can be written for, plus the picker that puts them on a form.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "bin": {
+        "generate-violation-lists": "./scripts/generate-violation-lists.mjs"
+    },
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+        "generate": "node ./scripts/generate-violation-lists.mjs --data ./data --out ./src/generated --row-import ../models/violation"
+    },
+    "dependencies": {
+        "@common/event-emitter": "1.0.0",
+        "@common/react": "1.0.0",
+        "@forms/catalog": "1.0.0",
+        "@forms/core": "1.0.0",
+        "@forms/report-viewer": "1.0.0",
+        "@shrub/core": "0.5.91"
+    }
+}

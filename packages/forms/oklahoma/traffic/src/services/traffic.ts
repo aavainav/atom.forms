@@ -1,8 +1,10 @@
-import { Dropzone, IOptionValue, PersonDropzoneFields, VehicleDropzoneFields } from "@forms/core";
+import { Dropzone, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
+import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { ComplaintPageModel } from "../models/complaint-page/complaint-page";
+import { OKTrafficFormSchema } from "../models/traffic-form-schema";
 import { OKTrafficValueListId } from "../value-lists";
 
 export const IOKTrafficService = createService<IOKTrafficService>("forms-ok-traffic-service");
@@ -20,6 +22,10 @@ export interface IOKTrafficService {
     applyDefendantDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
     /** Returns a new complaint page with the dropped vehicle data applied to the vehicle section. */
     applyVehicleDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
+    /** Returns a new complaint page with the dropped violation data applied to the violation boxes. */
+    applyViolationDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
+    /** Writes the chosen violations onto the form, one complaint page each, and adds the pages the extra ones need. */
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the defendant's sex field. */
@@ -68,6 +74,80 @@ export class OKTrafficService implements IOKTrafficService {
         });
 
         return page.set(page.vehicleSection, updatedSection).setDropzone(dropzone);
+    }
+
+    applyViolationDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel {
+        const violationSection = page.getViolationSection();
+        const updatedSection = dropzone.applyTo(violationSection, {
+            [ViolationDropzoneFields.code]: violationSection.municipalCode,
+            [ViolationDropzoneFields.statute]: violationSection.offenseCode
+        });
+
+        return page.set(page.violationSection, updatedSection).setDropzone(dropzone);
+    }
+
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
+        if (!violations.length) {
+            return;
+        }
+
+        const controller = controllers.getFormController();
+        const schema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+
+        const pages = controller.form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+
+        // the chosen violations go into the first page with no code on it, and then onto pages after that, so
+        // picking again adds to the citation rather than rewriting it
+        const empty = pages.findIndex(page => page.getViolationSection().getMunicipalCode().getIsEmpty() && page.getViolationSection().getOffenseCode().getIsEmpty());
+        const start = empty < 0 ? pages.length : empty;
+
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        for (let index = pages.length; index < start + violations.length; index++) {
+            await controller.addPage(schema.complaintPage);
+        }
+
+        // the date, time, county and location sit in the violation section alongside the codes, so they are not
+        // carried across by the shared-section copy; one stop produces one of each however many charges come out
+        // of it, so they are taken from the first page
+        const first = controller.form.get<PageCollection>(schema.complaintPage).pages[0] as ComplaintPageModel;
+        const source = first.getViolationSection();
+        const date = source.getDate().getValue();
+        const time = source.getTime().getValue();
+        const county = source.getCounty().getValue();
+        const location = source.getLocation().getValue();
+
+        controller.update(form => {
+            let collection = form.get<PageCollection>(schema.complaintPage);
+
+            violations.forEach((violation, offset) => {
+                const index = start + offset;
+                const page = collection.pages[index] as ComplaintPageModel;
+                const section = page.getViolationSection();
+
+                const updated = section
+                    .set(section.municipalCode, section.getMunicipalCode().setValue(violation.code))
+                    .set(section.offenseCode, section.getOffenseCode().setValue(violation.statute ?? violation.code))
+                    .set(section.date, section.getDate().setValue(date))
+                    .set(section.time, section.getTime().setValue(time))
+                    .set(section.county, section.getCounty().setValue(county))
+                    .set(section.location, section.getLocation().setValue(location));
+
+                let result = page.set(page.violationSection, updated);
+
+                // the citation has no box for the charge in words, so the description goes into the offense notes
+                // beneath it, which is the only place on the paper it can be read
+                const offense = result.getOffenseSection();
+                let offenseUpdated = offense.set(offense.notes, offense.getNotes().setValue(violation.description));
+
+                if (violation.fine !== undefined) {
+                    offenseUpdated = offenseUpdated.set(offense.amountDue, offenseUpdated.getAmountDue().setValue(violation.fine));
+                }
+
+                collection = collection.replace(index, result.set(result.offenseSection, offenseUpdated));
+            });
+
+            return form.set(schema.complaintPage, collection);
+        });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

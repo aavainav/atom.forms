@@ -5,6 +5,7 @@ import { IControllerManager, IPageBinding, FDropzone } from "@forms/core";
 import { FrontPageModel } from "../../models/front-page/front-page";
 import { FrontPageOwnerDropzone } from "../../models/front-page/dropzones/front-page-owner-dropzone";
 import { FrontPageVehicleDropzone } from "../../models/front-page/dropzones/front-page-vehicle-dropzone";
+import { FrontPageViolationDropzone } from "../../models/front-page/dropzones/front-page-violation-dropzone";
 import { FrontPageViolatorDropzone } from "../../models/front-page/dropzones/front-page-violator-dropzone";
 import { IS438CitationService } from "../../services";
 
@@ -43,7 +44,13 @@ export default function FrontPage({ controllers, binding, isReadOnly }: IFrontPa
             >
                 <ViolatorSection binding={binding.getSection(frontPage.violatorSection)} />
             </FDropzone>
-            <ViolationSection binding={binding.getSection(frontPage.violationSection)} />
+            <FDropzone
+                controller={dragAndDropController}
+                dropzone={frontPage.getDropzone(FrontPageViolationDropzone)}
+                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolationDropzone(page, dropzone))}
+            >
+                <ViolationSection binding={binding.getSection(frontPage.violationSection)} />
+            </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageVehicleDropzone)}

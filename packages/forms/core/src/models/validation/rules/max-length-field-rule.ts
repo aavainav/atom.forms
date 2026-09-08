@@ -2,7 +2,7 @@ import type { FieldModel, TValueType } from "../../field";
 import type { FieldDefinition } from "../../field-definition";
 import { FieldRule, IFieldRule } from "../field-rule";
 import { RegisterRule } from "../rules-controller";
-import { IRuleViolation, RuleViolationSeverity } from "../rule-violation";
+import { IRuleIssue, RuleIssueSeverity } from "../rule-issue";
 
 /** Defines a validation rule that enforces a minimum and maximum length constraint on a field's value. */
 export interface IMaxLengthFieldRule extends IFieldRule {
@@ -19,14 +19,14 @@ export class MaxLengthFieldRule extends FieldRule implements IMaxLengthFieldRule
     readonly minimumLength: number;
     readonly maximumLength: number;
 
-    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimumLength: number, maximumLength: number, message?: string, severity?: RuleViolationSeverity) {
+    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimumLength: number, maximumLength: number, message?: string, severity?: RuleIssueSeverity) {
         super(MaxLengthFieldRule.name, fieldDefinition, message ?? MaxLengthFieldRule.defaultMessage, severity);
 
         this.minimumLength = minimumLength;
         this.maximumLength = maximumLength;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleViolation> {
+    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
         const valueLength = (field.value as string)?.length ?? 0;
 
         if (valueLength < this.minimumLength || valueLength > this.maximumLength) {

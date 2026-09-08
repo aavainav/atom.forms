@@ -2,6 +2,7 @@ import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 import { ComplaintPageDefendantDropzone } from "./dropzones/complaint-page-defendant-dropzone";
 import { ComplaintPageVehicleDropzone } from "./dropzones/complaint-page-vehicle-dropzone";
+import { ComplaintPageViolationDropzone } from "./dropzones/complaint-page-violation-dropzone";
 import { ArraignmentSectionModel } from "./arraignment-section";
 import { DefendantSectionModel } from "./defendant-section";
 import { DescriptionSectionModel } from "./description-section";
@@ -42,6 +43,7 @@ export class ComplaintPageModel extends PageModel implements IComplaintPageModel
 
         page = page.setDropzone(new ComplaintPageDefendantDropzone(page, page.schema));
         page = page.setDropzone(new ComplaintPageVehicleDropzone(page, page.schema));
+        page = page.setDropzone(new ComplaintPageViolationDropzone(page, page.schema));
 
         return page;
     }

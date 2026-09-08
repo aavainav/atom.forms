@@ -10,7 +10,7 @@ import { VehicleSectionModel } from "../models/front-page/vehicle-section";
 import { ViolationLocationSectionModel } from "../models/front-page/violation-location-section";
 import { ViolationSectionModel } from "../models/front-page/violation-section";
 import { ViolatorSectionModel } from "../models/front-page/violator-section";
-import { IS438Data } from "./s438-data";
+import { IS438Data, IS438ViolationData } from "./s438-data";
 
 /**
  * Maps the SC S438 citation form to and from the data contract it publishes.
@@ -20,9 +20,15 @@ import { IS438Data } from "./s438-data";
  * The header section carries no fields of its own and so appears in neither direction.
  */
 export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
-    /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
+    /**
+     * Returns the form's current values as its data contract, emitting only the fields this form owns.
+     *
+     * The shared sections are read from the first page alone: every front page holds the same values there, so
+     * reading them per page would be reading the same answer several times over.
+     */
     public extract(form: S438FormModel): IS438Data {
-        const page = form.getFrontPageCollection().getFirstPage<FrontPageModel>();
+        const pages = form.getFrontPageCollection().getPages<FrontPageModel>();
+        const page = pages[0];
         const data: FormValues<IS438Data> = {};
 
         this.extractViolator(page.getViolatorSection(), data);
@@ -34,28 +40,58 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.extractArrestingOfficer(page.getArrestingOfficerSection(), data);
         this.extractFooter(page.getFooterSection(), data);
 
+        if (pages.length > 1) {
+            data.additionalViolations = pages.slice(1).map(additional => this.extractAdditionalViolation(additional.getViolationSection()));
+        }
+
         return data;
     }
 
     /**
-     * Returns a new form with the given data applied to its front page. Every field of the form is reachable
-     * from the data contract, and a field the data does not mention keeps the value it already holds - which is
-     * how the date of violation and ticket number the form stamps on itself survive a partial record.
+     * Returns a new form with the given data applied to its front pages, creating a page per further violation.
+     *
+     * This is asynchronous because creating a page means awaiting its `initialize`, which is what gives the page
+     * its sections. Pages beyond the end of `additionalViolations` are left alone rather than removed, so a record
+     * naming fewer violations than the form holds never silently discards a page an officer added.
+     *
+     * Every field of the form is reachable from the data contract, and a field the data does not mention keeps the
+     * value it already holds - which is how the date of violation and ticket number the form stamps on itself
+     * survive a partial record.
      */
-    public populate(form: S438FormModel, data: IS438Data): S438FormModel {
-        const collection = form.getFrontPageCollection();
-        const page = collection.getFirstPage<FrontPageModel>();
+    public async populate(form: S438FormModel, data: IS438Data): Promise<S438FormModel> {
+        const additional = data.additionalViolations ?? [];
 
-        let updated = page.set(page.violatorSection, this.populateViolator(page.getViolatorSection(), data));
-        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-        updated = updated.set(updated.ownerSection, this.populateOwner(updated.getOwnerSection(), data));
-        updated = updated.set(updated.courtSection, this.populateCourt(updated.getCourtSection(), data));
-        updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), data));
-        updated = updated.set(updated.violationLocationSection, this.populateViolationLocation(updated.getViolationLocationSection(), data));
-        updated = updated.set(updated.arrestingOfficerSection, this.populateArrestingOfficer(updated.getArrestingOfficerSection(), data));
-        updated = updated.set(updated.footerSection, this.populateFooter(updated.getFooterSection(), data));
+        let updated = form;
 
-        return form.set(form.frontPage, collection.replace(0, updated));
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        while (updated.getFrontPageCollection().pages.length < additional.length + 1) {
+            updated = updated.addPage(await updated.frontPage.createPage(updated).initialize(), updated.frontPage);
+        }
+
+        let collection = updated.getFrontPageCollection();
+
+        collection.getPages<FrontPageModel>().forEach((page, index) => {
+            // the shared sections are written onto every page rather than only the first: a page created here does
+            // not go through the form controller, which is what would otherwise have copied them across
+            let result = page.set(page.violatorSection, this.populateViolator(page.getViolatorSection(), data));
+            result = result.set(result.vehicleSection, this.populateVehicle(result.getVehicleSection(), data));
+            result = result.set(result.ownerSection, this.populateOwner(result.getOwnerSection(), data));
+            result = result.set(result.courtSection, this.populateCourt(result.getCourtSection(), data));
+            result = result.set(result.violationLocationSection, this.populateViolationLocation(result.getViolationLocationSection(), data));
+            result = result.set(result.arrestingOfficerSection, this.populateArrestingOfficer(result.getArrestingOfficerSection(), data));
+            result = result.set(result.footerSection, this.populateFooter(result.getFooterSection(), data));
+
+            // the violation is the one section that differs page to page; the first comes from the flat fields and
+            // the rest from the array, and a page the data does not reach keeps what it holds
+            const violation = index === 0 ? data : additional[index - 1];
+            if (violation) {
+                result = result.set(result.violationSection, this.populateViolation(result.getViolationSection(), violation));
+            }
+
+            collection = collection.replace(index, result);
+        });
+
+        return updated.set(updated.frontPage, collection);
     }
 
     private extractViolator(section: ViolatorSectionModel, data: FormValues<IS438Data>): void {
@@ -178,7 +214,7 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         return this.write(updated, section.zipCode, data.courtZipCode);
     }
 
-    private extractViolation(section: ViolationSectionModel, data: FormValues<IS438Data>): void {
+    private extractViolation(section: ViolationSectionModel, data: FormValues<IS438ViolationData>): void {
         this.read(data, "violationBloodAlcoholLevel", section.getBloodAlcoholLevel());
         this.read(data, "violationCourtAppearanceRequiredNo", section.getCourtAppearanceRequiredNo());
         this.read(data, "violationCourtAppearanceRequiredYes", section.getCourtAppearanceRequiredYes());
@@ -189,11 +225,23 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "violationTimeOfViolation", section.getTimeOfViolation());
     }
 
+    /** Returns one further violation's values, as the record carried for each front page beyond the first. */
+    private extractAdditionalViolation(section: ViolationSectionModel): IS438ViolationData {
+        const violation: FormValues<IS438ViolationData> = {};
+
+        this.extractViolation(section, violation);
+
+        return violation;
+    }
+
     /**
      * The court appearance yes/no pair is written independently rather than as one answer, so data answering
      * neither stays unanswered rather than being pushed into a "no".
+     *
+     * It takes the violation half of the contract rather than the whole record, so the same pair of methods serves
+     * the first violation, which sits flat on the record, and the rest, which sit in `additionalViolations`.
      */
-    private populateViolation(section: ViolationSectionModel, data: IS438Data): ViolationSectionModel {
+    private populateViolation(section: ViolationSectionModel, data: IS438ViolationData): ViolationSectionModel {
         let updated = this.write(section, section.bloodAlcoholLevel, data.violationBloodAlcoholLevel);
         updated = this.write(updated, section.courtAppearanceRequiredNo, data.violationCourtAppearanceRequiredNo);
         updated = this.write(updated, section.courtAppearanceRequiredYes, data.violationCourtAppearanceRequiredYes);

@@ -21,6 +21,7 @@ export { FLoadingIndicator } from "./components/loading-indicator";
 export { FModal } from "./components/modal";
 export { FNotification } from "./components/notification";
 export { FOffCanvas } from "./components/off-canvas";
+export type { FOffCanvasPlacement } from "./components/off-canvas";
 
 export { FPage } from "./components/page";
 export { FPageCollection } from "./components/page-collection";
@@ -57,8 +58,10 @@ export type { IDraggableItem, DraggableItemType } from "./models/import/draggabl
 export type { IDropzone, DropzoneConstructor } from "./models/import/dropzone";
 export type { IPersonDropzone } from "./models/import/person-dropzone";
 export type { IVehicleDropzone } from "./models/import/vehicle-dropzone";
+export type { IViolationDropzone } from "./models/import/violation-dropzone";
 export type { IImportablePerson } from "./models/import/importable-person";
 export type { IImportableVehicle } from "./models/import/importable-vehicle";
+export type { IImportableViolation } from "./models/import/importable-violation";
 
 export type { ICrash } from "./mapping/data/crash";
 export type { IReportViewerData } from "./mapping/data/report-data";
@@ -77,7 +80,7 @@ export type { ICrashForm } from "./models/crash-form";
 
 export type { IDefinition } from "./models/definition";
 export type { IFieldDefinition } from "./models/field-definition";
-export type { ISectionDefinition } from "./models/section-definition";
+export type { ISectionDefinition, ISectionDefinitionOptions } from "./models/section-definition";
 export type { IPageDefinition } from "./models/page-definition";
 export type { IFormDefinition, FormDefinitionConstructor } from "./models/form-definition";
 
@@ -85,7 +88,7 @@ export type { ICondition, Condition } from "./models/validation/condition";
 export type { IFieldRule, FieldRule } from "./models/validation/field-rule";
 export type { IRule, Rule } from "./models/validation/rule";
 export type { IRuleContext } from "./models/validation/rule-context";
-export type { IRuleViolation } from "./models/validation/rule-violation";
+export type { IRuleIssue } from "./models/validation/rule-issue";
 export type { ICompositeCondition } from "./models/validation/conditions/composite-condition";
 export type { IFieldValueCondition } from "./models/validation/conditions/field-value-condition";
 export type { IAlphanumericFieldRule } from "./models/validation/rules/alphanumeric-field-rule";
@@ -115,6 +118,7 @@ export { FormMapper } from "./mapping/form-mapper";
 export { Dropzone } from "./models/import/dropzone";
 export { PersonDropzone, PersonDropzoneFields } from "./models/import/person-dropzone";
 export { VehicleDropzone, VehicleDropzoneFields } from "./models/import/vehicle-dropzone";
+export { ViolationDropzone, ViolationDropzoneFields } from "./models/import/violation-dropzone";
 
 export { ControllerKey, ControllerManager, DragAndDropController, FormController, PrintController, ValueListController } from "./controllers";
 export type { ConfirmPageDelete, IController, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormController, IPageBinding, IPrintController, IPrintState, ISectionBinding, IValueListController, PrintLayout } from "./controllers";
@@ -125,6 +129,7 @@ export { setOptionWithDependents } from "./utils/dependent-fields";
 
 export { schema as ImportablePersonSchema, validateImportablePerson } from "./models/import/importable-person";
 export { schema as ImportableVehicleSchema, validateImportableVehicle } from "./models/import/importable-vehicle";
+export { schema as ImportableViolationSchema, validateImportableViolation } from "./models/import/importable-violation";
 
 export { CitationForm } from "./models/citation-form";
 export { CrashForm } from "./models/crash-form";
@@ -141,7 +146,7 @@ export { DefinitionFactory, defineFields } from "./models/definition-factory";
 export { LogicalOperator } from "./models/validation/logical-operator";
 export { RuleCollection } from "./models/validation/rule-collection";
 export { RuleContext } from "./models/validation/rule-context";
-export { RuleViolationSeverity } from "./models/validation/rule-violation";
+export { RuleIssueSeverity } from "./models/validation/rule-issue";
 export type { IRulesController } from "./models/validation/rules-controller";
 export { RulesController } from "./models/validation/rules-controller";
 

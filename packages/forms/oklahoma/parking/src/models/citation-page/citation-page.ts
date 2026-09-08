@@ -1,6 +1,7 @@
 import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 import { CitationPageVehicleDropzone } from "./dropzones/citation-page-vehicle-dropzone";
+import { CitationPageViolationDropzone } from "./dropzones/citation-page-violation-dropzone";
 import { CourtSectionModel } from "./court-section";
 import { OfficerSectionModel } from "./officer-section";
 import { PaymentSectionModel } from "./payment-section";
@@ -28,6 +29,7 @@ export class CitationPageModel extends PageModel implements ICitationPageModel {
         let page = await super.initialize();
 
         page = page.setDropzone(new CitationPageVehicleDropzone(page, page.schema));
+        page = page.setDropzone(new CitationPageViolationDropzone(page, page.schema));
 
         return page;
     }

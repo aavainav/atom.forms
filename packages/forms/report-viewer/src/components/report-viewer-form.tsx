@@ -4,6 +4,7 @@ import { useFormController, IControllerManager, ControllerManager } from "@forms
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
+import { PanelManager } from "./panel";
 import { ReportViewerOptions } from "./report-viewer-options";
 import { ValidationManager } from "./validation";
 import { IInitialForm, IModalService } from "../services";
@@ -45,6 +46,7 @@ export function ReportViewerForm({ controllers, initialForm, isReadOnly, showOpt
             <ModalManager />
             <NotificationManager />
             <ValidationManager />
+            <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} />
             <initialForm.Component controllers={formControllers} isReadOnly={isReadOnly} />
             {showOptions && <ReportViewerOptions catalogItem={initialForm.catalogItem} controllers={formControllers} />}
         </>

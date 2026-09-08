@@ -1,2 +1,2 @@
-export type { IOKTrafficData } from "./traffic-data";
+export type { IOKTrafficData, IOKTrafficViolationData } from "./traffic-data";
 export { OKTrafficMapper } from "./traffic-mapper";

@@ -1,2 +1,2 @@
-export type { IOKParkingData } from "./parking-data";
+export type { IOKParkingData, IOKParkingViolationData } from "./parking-data";
 export { OKParkingMapper } from "./parking-mapper";

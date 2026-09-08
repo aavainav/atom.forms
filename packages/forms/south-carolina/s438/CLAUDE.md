@@ -3,18 +3,24 @@
 Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Route `sc/s438`. Module name `s438-citation-form`.
 Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2025"`.
 
-The **simplest** of the three form packages: two pages, both fixed (no repeating pages), no value lists, a synchronous
-mapper. Reach for this one as the template for a new fixed-page form.
+The simplest of the citation packages: two page types, no value lists. Reach for this one as the template for
+putting the violation picker on a form — it is where that pattern was worked out first.
 
 ## Structure
 
 ```
 front-page   9 sections: header, violator, vehicle, owner, court, violation,
                          violation-location, arresting-officer, footer
+             repeats: one front page per violation the citation is written for
 notice-page  0 sections (static printed notice text)
 ```
 
-3 dropzones, all on the front page: violator (person), owner (person), vehicle.
+**Every section but `violation` is `{ isShared: true }`.** The S438 prints one charge per ticket, so a stop
+producing three charges produces three front pages, and the violator, vehicle, owner, court, location and officer
+boxes read the same on all of them — a write to any of those fans out to every page. Only the violation section
+differs. The violation *location* is shared: one stop happens in one place.
+
+4 dropzones, all on the front page: violator (person), owner (person), vehicle, violation.
 
 ## Files
 
@@ -28,9 +34,10 @@ notice-page  0 sections (static printed notice text)
 | [src/models/front-page/](src/models/front-page/) | `front-page.ts` + one file per section + `dropzones/`. |
 | [src/models/notice-page/notice-page.ts](src/models/notice-page/notice-page.ts) | Sectionless page model. |
 | [src/components/](src/components/) | `s438-citation-form.tsx` (root), `s438-citation-form-loader.tsx` (route), and `front-page/`+`notice-page/` mirroring the models tree. |
-| [src/mapping/s438-data.ts](src/mapping/s438-data.ts) | `IS438Data` — a **flat** contract, every field optional. |
-| [src/mapping/s438-mapper.ts](src/mapping/s438-mapper.ts) | `S438Mapper extends FormMapper<S438FormModel, IS438Data>`. `populate` is **synchronous** (returns the form, not a promise) because no page repeats. |
-| [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — the three `apply*Dropzone` methods. No value-list methods; this form has no option fields. |
+| [src/mapping/s438-data.ts](src/mapping/s438-data.ts) | `IS438Data` — flat, every field optional, plus `additionalViolations` for the charges beyond the first. `IS438ViolationData` is the per-page half. |
+| [src/mapping/s438-mapper.ts](src/mapping/s438-mapper.ts) | `S438Mapper extends FormMapper<S438FormModel, IS438Data>`. `populate` is **async**, since the front page repeats and creating one means awaiting `initialize`. |
+| [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — four `apply*Dropzone` methods plus `applyViolations`. No value-list methods; this form has no option fields. |
+| [src/violations.ts](src/violations.ts) · [data/](data/) · [src/generated/](src/generated/) | The `sc-s438:violation` list. |
 
 ## Notable specifics
 
@@ -53,7 +60,29 @@ notice-page  0 sections (static printed notice text)
   number and no ticket-number source is wired up yet.
 - `VehicleSectionModel.make` is a `StringFieldModel` here (free text), so the vehicle dropzone applies the dropped
   make and year directly with no value-list resolution — contrast the other two forms.
-- `IS438Data` is completely flat: no nested arrays, so `extract`/`populate` operate on the first (only) front page.
+- `IS438Data` keeps the first charge in its **flat** `violation*` fields and carries the rest in
+  `additionalViolations`, so a record written before a citation could hold more than one charge round trips
+  unchanged. `extract` reads the shared sections from the first page only; `populate` writes them onto **every**
+  page, because a page it creates goes through `createPage` rather than the form controller and so is not seeded
+  for it. Pages beyond the end of `additionalViolations` are left alone, not removed.
+
+## The violation picker
+
+The list is `sc-s438:violation`, generated from [data/violations.json](data/violations.json) — a **starter set**,
+not an authoritative one: the SCDPS publishes no machine-readable code list with the S438, so the point values and
+court-appearance flags need checking against the current Code. An agency serving its own list registers over the
+id, which replaces this outright.
+
+`S438CitationService.applyViolations` is what the picker calls. It:
+
+1. finds the first front page with **no charge on it** — no section number and no description — and starts there,
+   so picking again adds to the citation rather than rewriting it, while the first pick still fills the page the
+   form opened with;
+2. `await`s `controller.addPage` for each violation beyond that, which seeds the new page's shared sections;
+3. writes each violation's statute, description, points and court-appearance answer into that page's violation
+   section, **carrying the date and time of violation across from the first page**. Those two sit inside the
+   violation section rather than a shared one, so the shared-section copy does not move them, and one stop
+   produces one date and time however many charges come out of it.
 
 ## Recipes
 

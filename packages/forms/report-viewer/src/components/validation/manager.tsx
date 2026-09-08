@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useService } from "@common/react";
-import { IRuleViolation } from "@forms/core";
+import { IRuleIssue } from "@forms/core";
 
 import Validation from "./validation";
 import { IValidationService } from "../../services/validation";
@@ -9,13 +9,13 @@ import { IValidationService } from "../../services/validation";
 export default function ValidationManager(): React.JSX.Element {
     const validationService = useService<IValidationService>(IValidationService);
 
-    const [violations, setViolations] = useState<ReadonlyArray<IRuleViolation>>([]);
+    const [issues, setIssues] = useState<ReadonlyArray<IRuleIssue>>([]);
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        const listener = validationService.onShowViolations(result => {
-            setViolations(result);
-            // only new violations force the panel open; re-validating a clean report updates an already-open
+        const listener = validationService.onShowIssues(result => {
+            setIssues(result);
+            // only new issues force the panel open; re-validating a clean report updates an already-open
             // panel's content without forcing it open, and a clean first validation never auto-opens it
             if (result.length > 0) {
                 setIsOpen(true);
@@ -25,5 +25,5 @@ export default function ValidationManager(): React.JSX.Element {
         return () => listener.remove();
     }, [validationService]);
 
-    return <Validation violations={violations} isOpen={isOpen} onClose={() => setIsOpen(false)} />;
+    return <Validation issues={issues} isOpen={isOpen} onClose={() => setIsOpen(false)} />;
 }

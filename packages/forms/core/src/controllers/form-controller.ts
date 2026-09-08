@@ -83,6 +83,46 @@ class SectionBinding<TSection extends SectionModel> implements ISectionBinding<T
     }
 }
 
+/**
+ * Binds a section that holds the same values on every instance of its page, so a write lands on all of them.
+ *
+ * The update is run against each page's own copy of the section rather than one result being written into all of
+ * them: every field carries a uuid used as its DOM id, and a section shared by reference would repeat those ids on
+ * every page -- which collides for real during a print, where the pages render together rather than as tab panes.
+ * Running the update per page converges their values while leaving each page its own field identities, because a
+ * field is set to an absolute value rather than by a delta.
+ */
+class SharedSectionBinding<TSection extends SectionModel> implements ISectionBinding<TSection> {
+    constructor(
+        private readonly controller: IFormController,
+        private readonly page: IPageBinding<PageModel>,
+        readonly sectionDefinition: SectionDefinition<TSection>) {
+    }
+
+    public get(): TSection {
+        // every instance holds the same values, so this page's copy is as good as any and needs no lookup
+        return this.page.get().get<TSection>(this.sectionDefinition);
+    }
+
+    public update(update: (section: TSection) => TSection): void {
+        this.controller.update(form => {
+            const pageDefinition = this.page.pageDefinition;
+            let pageCollection = form.get<PageCollection>(pageDefinition);
+
+            for (let index = 0; index < pageCollection.pages.length; index++) {
+                const page = pageCollection.pages[index];
+                pageCollection = pageCollection.replace(index, page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
+            }
+
+            return form.set(pageDefinition, pageCollection);
+        });
+    }
+
+    public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
+        this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
+    }
+}
+
 class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
     private readonly sections: Map<string, ISectionBinding<any>> = new Map<string, ISectionBinding<any>>();
 
@@ -119,7 +159,12 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
         let binding = this.sections.get(sectionDefinition.id);
 
         if (!binding) {
-            binding = new SectionBinding<TSection>(this, sectionDefinition);
+            // a shared section is written through to every instance of the page, so the section it is bound to is
+            // the one the definition names rather than the one sitting on this particular page
+            binding = sectionDefinition.isShared
+                ? new SharedSectionBinding<TSection>(this.controller, this, sectionDefinition)
+                : new SectionBinding<TSection>(this, sectionDefinition);
+
             this.sections.set(sectionDefinition.id, binding);
         }
 
@@ -170,7 +215,7 @@ export class FormController<TForm extends FormModel = FormModel> implements IFor
     public async addPage(pageDefinition: PageDefinition): Promise<void> {
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         const page = await pageDefinition.createPage(this._form).initialize();
-        this.update(form => form.addPage(page, pageDefinition));
+        this.update(form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition));
     }
 
     public async removePage(pageDefinition: PageDefinition, pageId: string): Promise<boolean> {
@@ -218,4 +263,43 @@ export class FormController<TForm extends FormModel = FormModel> implements IFor
     private getBindingKey(pageDefinition: PageDefinition<PageModel>, pageId: string): string {
         return `${pageDefinition.id}:${pageId}`;
     }
+}
+
+/**
+ * Copies the values of the page definition's shared sections from the first page in the collection onto a page
+ * about to be added.
+ *
+ * A page arrives from `createPage` empty, so without this a new page would show blank shared sections until an
+ * edit to one of them happened to converge every instance.
+ *
+ * The values are copied field by field rather than by carrying the whole section across, so the new page keeps the
+ * fields `initialize` gave it and with them their own uuids -- the ids the rendered inputs and their labels are
+ * addressed by, which must stay distinct across pages that print together.
+ */
+function copySharedSections<TPage extends PageModel>(form: FormModel, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
+    const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);
+    if (!shared.length) {
+        return page;
+    }
+
+    // the first page of a collection has nothing to copy from, and is itself what every later page copies
+    const source = form.get<PageCollection>(pageDefinition).pages[0];
+    if (!source) {
+        return page;
+    }
+
+    return shared.reduce((result, sectionDefinition) => {
+        const from = source.get<SectionModel>(sectionDefinition);
+
+        const section = sectionDefinition.children.reduce((target, child) => {
+            const fieldDefinition = child as FieldDefinition<FieldModel<TValueType>>;
+            const field = from.get<FieldModel<TValueType>>(fieldDefinition);
+
+            return target.set(
+                fieldDefinition,
+                target.get<FieldModel<TValueType>>(fieldDefinition).setValue(field.getValue()).setIsEnabled(field.getIsEnabled()));
+        }, result.get<SectionModel>(sectionDefinition));
+
+        return result.set(sectionDefinition, section);
+    }, page);
 }

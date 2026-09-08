@@ -22,7 +22,7 @@ import { NotesSectionModel } from "../models/supplement-page/notes-section";
 import { RegisteredOwnerSectionModel } from "../models/supplement-page/registered-owner-section";
 import { StatusSectionModel } from "../models/supplement-page/status-section";
 import { WitnessSectionModel } from "../models/supplement-page/witness-section";
-import { IOKTrafficData } from "./traffic-data";
+import { IOKTrafficData, IOKTrafficViolationData } from "./traffic-data";
 
 /**
  * Maps the Oklahoma City traffic citation form to and from the data contract it publishes.
@@ -30,12 +30,14 @@ import { IOKTrafficData } from "./traffic-data";
  * Each section's read sits directly above its write below, so a field added to one direction and forgotten in
  * the other shows up in the same diff. Keeping the two directions in step is what makes the round trip hold.
  *
- * Every page appears once, so populating creates no pages and answers with the form rather than a promise.
+ * The complaint page repeats once per charge the citation is written for, so populating may have to create pages
+ * and therefore answers with a promise; the warrant and supplement pages appear once each.
  */
 export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
     public extract(form: OKTrafficFormModel): IOKTrafficData {
-        const complaintPage = form.getComplaintPage();
+        const complaintPages = form.getComplaintPageCollection().getPages<ComplaintPageModel>();
+        const complaintPage = complaintPages[0];
         const warrantPage = form.getWarrantPage();
         const supplementPage = form.getSupplementPage();
         const data: FormValues<IOKTrafficData> = {};
@@ -61,7 +63,22 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.extractStatus(supplementPage.getStatusSection(), data);
         this.extractNotes(supplementPage.getNotesSection(), data);
 
+        if (complaintPages.length > 1) {
+            data.additionalViolations = complaintPages.slice(1).map(page => this.extractViolationRecord(page));
+        }
+
         return data;
+    }
+
+    /** Returns one further charge's values, as the record carried for each complaint page beyond the first. */
+    private extractViolationRecord(page: ComplaintPageModel): IOKTrafficViolationData {
+        const violation: FormValues<IOKTrafficViolationData> = {};
+
+        this.extractViolation(page.getViolationSection(), violation);
+        this.extractOffense(page.getOffenseSection(), violation);
+        this.extractViolationInformation(page.getViolationInformationSection(), violation);
+
+        return violation;
     }
 
     /**
@@ -69,31 +86,56 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
      * and a field the data does not mention keeps the value it already holds - which is how the date and time of
      * the offense the form stamps on itself survive a partial record.
      */
-    public populate(form: OKTrafficFormModel, data: IOKTrafficData): OKTrafficFormModel {
-        let updated = this.populateComplaintPage(form, data);
+    public async populate(form: OKTrafficFormModel, data: IOKTrafficData): Promise<OKTrafficFormModel> {
+        let updated = await this.populateComplaintPage(form, data);
         updated = this.populateWarrantPage(updated, data);
 
         return this.populateSupplementPage(updated, data);
     }
 
-    /** Returns a form with the complaint page's half of the data contract applied. */
-    private populateComplaintPage(form: OKTrafficFormModel, data: IOKTrafficData): OKTrafficFormModel {
-        const collection = form.getComplaintPageCollection();
-        const page = collection.getFirstPage<ComplaintPageModel>();
+    /**
+     * Returns a form with the complaint page's half of the data contract applied, creating a page per further
+     * violation.
+     *
+     * The shared sections are written onto every page rather than only the first: a page created here does not go
+     * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
+     * `additionalViolations` are left alone rather than removed.
+     */
+    private async populateComplaintPage(form: OKTrafficFormModel, data: IOKTrafficData): Promise<OKTrafficFormModel> {
+        const additional = data.additionalViolations ?? [];
 
-        let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data));
-        updated = updated.set(updated.defendantSection, this.populateDefendant(updated.getDefendantSection(), data));
-        updated = updated.set(updated.licenseSection, this.populateLicense(updated.getLicenseSection(), data));
-        updated = updated.set(updated.descriptionSection, this.populateDescription(updated.getDescriptionSection(), data));
-        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-        updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), data));
-        updated = updated.set(updated.offenseSection, this.populateOffense(updated.getOffenseSection(), data));
-        updated = updated.set(updated.violationInformationSection, this.populateViolationInformation(updated.getViolationInformationSection(), data));
-        updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
-        updated = updated.set(updated.swornSection, this.populateSworn(updated.getSwornSection(), data));
-        updated = updated.set(updated.arraignmentSection, this.populateArraignment(updated.getArraignmentSection(), data));
+        let result = form;
 
-        return form.set(form.complaintPage, collection.replace(0, updated));
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        while (result.getComplaintPageCollection().pages.length < additional.length + 1) {
+            result = result.addPage(await result.complaintPage.createPage(result).initialize(), result.complaintPage);
+        }
+
+        let collection = result.getComplaintPageCollection();
+
+        collection.getPages<ComplaintPageModel>().forEach((page, index) => {
+            let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data));
+            updated = updated.set(updated.defendantSection, this.populateDefendant(updated.getDefendantSection(), data));
+            updated = updated.set(updated.licenseSection, this.populateLicense(updated.getLicenseSection(), data));
+            updated = updated.set(updated.descriptionSection, this.populateDescription(updated.getDescriptionSection(), data));
+            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
+            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
+            updated = updated.set(updated.swornSection, this.populateSworn(updated.getSwornSection(), data));
+            updated = updated.set(updated.arraignmentSection, this.populateArraignment(updated.getArraignmentSection(), data));
+
+            // the violation, offense and violation-information blocks are what differ page to page; the first
+            // charge comes from the flat fields and the rest from the array
+            const violation = index === 0 ? data : additional[index - 1];
+            if (violation) {
+                updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), violation));
+                updated = updated.set(updated.offenseSection, this.populateOffense(updated.getOffenseSection(), violation));
+                updated = updated.set(updated.violationInformationSection, this.populateViolationInformation(updated.getViolationInformationSection(), violation));
+            }
+
+            collection = collection.replace(index, updated);
+        });
+
+        return result.set(result.complaintPage, collection);
     }
 
     /** Returns a form with the warrant page's half of the data contract applied. */
@@ -215,7 +257,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         return this.write(updated, section.year, data.vehicleYear);
     }
 
-    private extractViolation(section: ViolationSectionModel, data: FormValues<IOKTrafficData>): void {
+    private extractViolation(section: ViolationSectionModel, data: FormValues<IOKTrafficViolationData>): void {
         this.read(data, "violationByActOf", section.getByActOf());
         this.read(data, "violationCounty", section.getCounty());
         this.read(data, "violationDate", section.getDate());
@@ -226,7 +268,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "violationTime", section.getTime());
     }
 
-    private populateViolation(section: ViolationSectionModel, data: IOKTrafficData): ViolationSectionModel {
+    private populateViolation(section: ViolationSectionModel, data: IOKTrafficViolationData): ViolationSectionModel {
         let updated = this.write(section, section.byActOf, data.violationByActOf);
         updated = this.write(updated, section.county, data.violationCounty);
         updated = this.write(updated, section.date, data.violationDate);
@@ -238,20 +280,20 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         return this.write(updated, section.time, data.violationTime);
     }
 
-    private extractOffense(section: OffenseSectionModel, data: FormValues<IOKTrafficData>): void {
+    private extractOffense(section: OffenseSectionModel, data: FormValues<IOKTrafficViolationData>): void {
         this.read(data, "offenseAmountDue", section.getAmountDue());
         this.read(data, "offenseDueDate", section.getDueDate());
         this.read(data, "offenseNotes", section.getNotes());
     }
 
-    private populateOffense(section: OffenseSectionModel, data: IOKTrafficData): OffenseSectionModel {
+    private populateOffense(section: OffenseSectionModel, data: IOKTrafficViolationData): OffenseSectionModel {
         let updated = this.write(section, section.amountDue, data.offenseAmountDue);
         updated = this.write(updated, section.dueDate, data.offenseDueDate);
 
         return this.write(updated, section.notes, data.offenseNotes);
     }
 
-    private extractViolationInformation(section: ViolationInformationSectionModel, data: FormValues<IOKTrafficData>): void {
+    private extractViolationInformation(section: ViolationInformationSectionModel, data: FormValues<IOKTrafficViolationData>): void {
         this.read(data, "violationInformationActualSpeed", section.getActualSpeed());
         this.read(data, "violationInformationHighFatalitySpeed", section.getHighFatalitySpeed());
         this.read(data, "violationInformationIncidentNumber", section.getIncidentNumber());
@@ -261,7 +303,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "violationInformationSpeedLimit", section.getSpeedLimit());
     }
 
-    private populateViolationInformation(section: ViolationInformationSectionModel, data: IOKTrafficData): ViolationInformationSectionModel {
+    private populateViolationInformation(section: ViolationInformationSectionModel, data: IOKTrafficViolationData): ViolationInformationSectionModel {
         let updated = this.write(section, section.actualSpeed, data.violationInformationActualSpeed);
         updated = this.write(updated, section.highFatalitySpeed, data.violationInformationHighFatalitySpeed);
         updated = this.write(updated, section.incidentNumber, data.violationInformationIncidentNumber);

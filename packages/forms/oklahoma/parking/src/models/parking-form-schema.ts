@@ -167,20 +167,20 @@ export class OKParkingFormSchema extends Schema implements IOKParkingFormSchema 
         paymentIncreasedAmountDue: { label: "Amount Due (Fine After Arraignment Date)", ctor: NumberFieldModel }
     });
 
-    readonly courtSection: SectionDefinition<CourtSectionModel> = DefinitionFactory.section<CourtSectionModel>("court-section", this.citationPage, CourtSectionModel);
+    readonly courtSection: SectionDefinition<CourtSectionModel> = DefinitionFactory.section<CourtSectionModel>("court-section", this.citationPage, CourtSectionModel, { isShared: true });
     readonly courtFields = defineFields(this.courtSection, {
         courtDate: { label: "Court Date", ctor: StringFieldModel },
         courtTime: { label: "Court Time", ctor: StringFieldModel }
     });
 
-    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.citationPage, VehicleSectionModel);
+    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.citationPage, VehicleSectionModel, { isShared: true });
     readonly vehicleFields = defineFields(this.vehicleSection, {
         vehicleLicenseNumber: { label: "Vehicle License Number", ctor: StringFieldModel },
         vehicleMake: { label: "Vehicle Make", ctor: OptionFieldModel },
         vehicleMeterNumber: { label: "Meter #", ctor: StringFieldModel }
     });
 
-    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.citationPage, OfficerSectionModel);
+    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.citationPage, OfficerSectionModel, { isShared: true });
     readonly officerFields = defineFields(this.officerSection, {
         officerName: { label: "Officer", ctor: StringFieldModel },
         officerCommissionNumber: { label: "Comm. Number", ctor: StringFieldModel }

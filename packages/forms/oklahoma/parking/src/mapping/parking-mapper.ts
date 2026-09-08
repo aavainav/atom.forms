@@ -16,7 +16,7 @@ import { NotesSectionModel } from "../models/detail-page/notes-section";
 import { RecordSectionModel } from "../models/detail-page/record-section";
 import { RegisteredOwnerSectionModel } from "../models/detail-page/registered-owner-section";
 import { VehicleDetailSectionModel } from "../models/detail-page/vehicle-detail-section";
-import { IOKParkingData } from "./parking-data";
+import { IOKParkingData, IOKParkingViolationData } from "./parking-data";
 
 /**
  * Maps the Oklahoma City parking violation form to and from the data contract it publishes.
@@ -29,7 +29,8 @@ import { IOKParkingData } from "./parking-data";
 export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
     public extract(form: OKParkingFormModel): IOKParkingData {
-        const citationPage = form.getCitationPage();
+        const citationPages = form.getCitationPageCollection().getPages<CitationPageModel>();
+        const citationPage = citationPages[0];
         const complaintPage = form.getComplaintPage();
         const detailPage = form.getDetailPage();
         const data: FormValues<IOKParkingData> = {};
@@ -49,7 +50,21 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.extractVehicleDetail(detailPage.getVehicleDetailSection(), data);
         this.extractNotes(detailPage.getNotesSection(), data);
 
+        if (citationPages.length > 1) {
+            data.additionalViolations = citationPages.slice(1).map(page => this.extractViolationRecord(page));
+        }
+
         return data;
+    }
+
+    /** Returns one further violation's values, as the record carried for each citation page beyond the first. */
+    private extractViolationRecord(page: CitationPageModel): IOKParkingViolationData {
+        const violation: FormValues<IOKParkingViolationData> = {};
+
+        this.extractViolation(page.getViolationSection(), violation);
+        this.extractPayment(page.getPaymentSection(), violation);
+
+        return violation;
     }
 
     /**
@@ -57,25 +72,50 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
      * and a field the data does not mention keeps the value it already holds - which is how the date and time of
      * violation the form stamps on itself survive a partial record.
      */
-    public populate(form: OKParkingFormModel, data: IOKParkingData): OKParkingFormModel {
-        let updated = this.populateCitationPage(form, data);
+    public async populate(form: OKParkingFormModel, data: IOKParkingData): Promise<OKParkingFormModel> {
+        let updated = await this.populateCitationPage(form, data);
         updated = this.populateComplaintPage(updated, data);
 
         return this.populateDetailPage(updated, data);
     }
 
-    /** Returns a form with the citation page's half of the data contract applied. */
-    private populateCitationPage(form: OKParkingFormModel, data: IOKParkingData): OKParkingFormModel {
-        const collection = form.getCitationPageCollection();
-        const page = collection.getFirstPage<CitationPageModel>();
+    /**
+     * Returns a form with the citation page's half of the data contract applied, creating a page per further
+     * violation.
+     *
+     * The shared sections are written onto every page rather than only the first: a page created here does not go
+     * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
+     * `additionalViolations` are left alone rather than removed.
+     */
+    private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData): Promise<OKParkingFormModel> {
+        const additional = data.additionalViolations ?? [];
 
-        let updated = page.set(page.violationSection, this.populateViolation(page.getViolationSection(), data));
-        updated = updated.set(updated.paymentSection, this.populatePayment(updated.getPaymentSection(), data));
-        updated = updated.set(updated.courtSection, this.populateCourt(updated.getCourtSection(), data));
-        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-        updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
+        let result = form;
 
-        return form.set(form.citationPage, collection.replace(0, updated));
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        while (result.getCitationPageCollection().pages.length < additional.length + 1) {
+            result = result.addPage(await result.citationPage.createPage(result).initialize(), result.citationPage);
+        }
+
+        let collection = result.getCitationPageCollection();
+
+        collection.getPages<CitationPageModel>().forEach((page, index) => {
+            let updated = page.set(page.courtSection, this.populateCourt(page.getCourtSection(), data));
+            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
+            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
+
+            // the violation and payment blocks are what differ page to page; the first comes from the flat fields
+            // and the rest from the array, and a page the data does not reach keeps what it holds
+            const violation = index === 0 ? data : additional[index - 1];
+            if (violation) {
+                updated = updated.set(updated.violationSection, this.populateViolation(updated.getViolationSection(), violation));
+                updated = updated.set(updated.paymentSection, this.populatePayment(updated.getPaymentSection(), violation));
+            }
+
+            collection = collection.replace(index, updated);
+        });
+
+        return result.set(result.citationPage, collection);
     }
 
     /** Returns a form with the complaint page's half of the data contract applied. */
@@ -103,7 +143,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         return form.set(form.detailPage, collection.replace(0, updated));
     }
 
-    private extractViolation(section: ViolationSectionModel, data: FormValues<IOKParkingData>): void {
+    private extractViolation(section: ViolationSectionModel, data: FormValues<IOKParkingViolationData>): void {
         this.read(data, "violationCode", section.getCode());
         this.read(data, "violationDate", section.getDate());
         this.read(data, "violationDescription", section.getDescription());
@@ -111,7 +151,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "violationTime", section.getTime());
     }
 
-    private populateViolation(section: ViolationSectionModel, data: IOKParkingData): ViolationSectionModel {
+    private populateViolation(section: ViolationSectionModel, data: IOKParkingViolationData): ViolationSectionModel {
         let updated = this.write(section, section.code, data.violationCode);
         updated = this.write(updated, section.date, data.violationDate);
         updated = this.write(updated, section.description, data.violationDescription);
@@ -120,14 +160,14 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         return this.write(updated, section.time, data.violationTime);
     }
 
-    private extractPayment(section: PaymentSectionModel, data: FormValues<IOKParkingData>): void {
+    private extractPayment(section: PaymentSectionModel, data: FormValues<IOKParkingViolationData>): void {
         this.read(data, "paymentAmountDue", section.getAmountDue());
         this.read(data, "paymentDueDate", section.getDueDate());
         this.read(data, "paymentIncreasedAmountDue", section.getIncreasedAmountDue());
         this.read(data, "paymentIncreasedDueDate", section.getIncreasedDueDate());
     }
 
-    private populatePayment(section: PaymentSectionModel, data: IOKParkingData): PaymentSectionModel {
+    private populatePayment(section: PaymentSectionModel, data: IOKParkingViolationData): PaymentSectionModel {
         let updated = this.write(section, section.amountDue, data.paymentAmountDue);
         updated = this.write(updated, section.dueDate, data.paymentDueDate);
         updated = this.write(updated, section.increasedAmountDue, data.paymentIncreasedAmountDue);

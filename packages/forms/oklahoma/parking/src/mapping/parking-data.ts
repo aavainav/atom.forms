@@ -1,7 +1,42 @@
 import { IOptionValue } from "@forms/core";
 
+/**
+ * Represents the violation and payment boxes that belong to one violation, and so differ from one citation
+ * page to the next.
+ *
+ * The date, time and location are held here alongside the code because the citation prints them in the same
+ * block; a ticket run writes the same three onto every page it produces.
+ */
+export interface IOKParkingViolationData {
+    /** "Amount Due" if paid on or before the court date, from the payment section of the citation page. */
+    readonly paymentAmountDue?: number;
+    /** The date the fine must be paid on or before, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
+    readonly paymentDueDate?: string;
+    /** "Amount Due" once the court date has passed, from the payment section of the citation page. */
+    readonly paymentIncreasedAmountDue?: number;
+    /** The date after which the increased amount applies, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
+    readonly paymentIncreasedDueDate?: string;
+    /** "Code", from the violation section of the citation page. */
+    readonly violationCode?: string;
+    /** "On (date)", from the violation section of the citation page. Held as `YYYY-MM-DD`. */
+    readonly violationDate?: string;
+    /** "Violation", from the violation section of the citation page. */
+    readonly violationDescription?: string;
+    /** "At or near (Location)", from the violation section of the citation page. */
+    readonly violationLocation?: string;
+    /** "At (time)", from the violation section of the citation page. */
+    readonly violationTime?: string;
+}
+
 /** Represents the data contract for the Oklahoma City parking violation record. */
-export interface IOKParkingData {
+export interface IOKParkingData extends IOKParkingViolationData {
+    /**
+     * The violations beyond the first, one per further citation page.
+     *
+     * The first violation stays in the flat fields rather than moving into this array, so a record written
+     * before a citation could carry more than one violation round trips through here unchanged.
+     */
+    readonly additionalViolations?: ReadonlyArray<IOKParkingViolationData>;
     /** "Signature of Clerk", from the certification section of the complaint page. */
     readonly certificationClerkSignature?: string;
     /** "Date" the clerk certified the record, from the certification section of the complaint page. */
@@ -40,14 +75,6 @@ export interface IOKParkingData {
     readonly ownerSuffix?: string;
     /** "Zip", from the registered owner section of the detail page. */
     readonly ownerZipCode?: string;
-    /** "Amount Due" if paid on or before the court date, from the payment section of the citation page. */
-    readonly paymentAmountDue?: number;
-    /** The date the fine must be paid on or before, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
-    readonly paymentDueDate?: string;
-    /** "Amount Due" once the court date has passed, from the payment section of the citation page. */
-    readonly paymentIncreasedAmountDue?: number;
-    /** The date after which the increased amount applies, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
-    readonly paymentIncreasedDueDate?: string;
     /** "Beat", from the record section of the detail page. */
     readonly recordBeat?: string;
     /** "Parking Citation Number", from the record section of the detail page. */
@@ -78,16 +105,6 @@ export interface IOKParkingData {
     readonly vehicleVin?: string;
     /** "Veh Yr", from the vehicle detail section of the detail page. */
     readonly vehicleYear?: number;
-    /** "Code", from the violation section of the citation page. */
-    readonly violationCode?: string;
-    /** "On (date)", from the violation section of the citation page. Held as `YYYY-MM-DD`. */
-    readonly violationDate?: string;
-    /** "Violation", from the violation section of the citation page. */
-    readonly violationDescription?: string;
-    /** "At or near (Location)", from the violation section of the citation page. */
-    readonly violationLocation?: string;
-    /** "At (time)", from the violation section of the citation page. */
-    readonly violationTime?: string;
     /** "APPROVED", whether a warrant was recommended, from the warrant section of the complaint page. */
     readonly warrantApproved?: boolean;
     /** "Assistant Municipal Counselor" who approved the warrant, from the warrant section of the complaint page. */

@@ -1,6 +1,68 @@
 import { IOptionValue } from "@forms/core";
 
 /**
+ * Represents the Section II boxes that belong to one charge, and so differ from one citation page to the next.
+ *
+ * The offense is the charge itself; the speed detection boxes and the DUI test sit alongside it because they are
+ * the evidence for that particular charge - the radar reading belongs to the speeding ticket and the breath test
+ * to the DUI one, not to every ticket written at the stop.
+ */
+export interface IGAUTCViolationData {
+    /** Section II - the "DUI" box, ticked when the citation charges driving under the influence. */
+    readonly duiCharged?: boolean;
+    /** Section II - who administered the chemical test. */
+    readonly duiTestAdministeredBy?: string;
+    /** Section II - the "Blood" test box. */
+    readonly duiTestBlood?: boolean;
+    /** Section II - the "Breath" test box. */
+    readonly duiTestBreath?: boolean;
+    /** Section II - the "Other" test box. */
+    readonly duiTestOther?: boolean;
+    /** Section II - the result of the chemical test. */
+    readonly duiTestResults?: string;
+    /** Section II - the "Urine" test box. */
+    readonly duiTestUrine?: boolean;
+    /** Section II - "Code Section" of the offense charged. */
+    readonly offenseCodeSection?: string;
+    /** Section II - the "No" half of the companion case pair. */
+    readonly offenseCompanionCaseNo?: boolean;
+    /** Section II - the "Yes" half of the companion case pair. */
+    readonly offenseCompanionCaseYes?: boolean;
+    /** Section II - "Citation No. / Name" of the companion case. */
+    readonly offenseCompanionCitation?: string;
+    /** Section II - "Offense (Other than above)". */
+    readonly offenseDescription?: string;
+    /** Section II - the "Local Ordinance" half of the authority pair. */
+    readonly offenseLocalOrdinance?: boolean;
+    /** Section II - "Remarks / Victim Name / #". */
+    readonly offenseRemarks?: string;
+    /** Section II - the "State Law" half of the authority pair. */
+    readonly offenseStateLaw?: boolean;
+    /** Section II - "Calibration/Check" of the speed detection device. */
+    readonly violationCalibrationCheck?: string;
+    /** Section II - the "Other" half of the clocked-by pair. */
+    readonly violationClockedByOther?: boolean;
+    /** Section II - the "Patrol Vehicle" half of the clocked-by pair. */
+    readonly violationClockedByPatrolVehicle?: boolean;
+    /** Section II - "MPH", the speed the violator was clocked at. */
+    readonly violationClockedSpeed?: number;
+    /** Section II - "Driver Requested Accuracy Check". */
+    readonly violationDriverRequestedAccuracyCheck?: boolean;
+    /** Section II - the "Laser" speed detection box. */
+    readonly violationLaser?: boolean;
+    /** Section II - the "Radar" speed detection box. */
+    readonly violationRadar?: boolean;
+    /** Section II - "Serial #" of the speed detection device. */
+    readonly violationSerialNumber?: string;
+    /** Section II - "Zone", the posted speed limit. */
+    readonly violationSpeedZone?: number;
+    /** Section II - "2-Lane Road". */
+    readonly violationTwoLaneRoad?: boolean;
+    /** Section II - the "VASCAR" speed detection box. */
+    readonly violationVascar?: boolean;
+}
+
+/**
  * Represents the data contract for a Georgia uniform traffic citation, summons, and accusation record.
  *
  * Flat and entirely optional, in the shape a host maps its own record into. Every field is named for the box it
@@ -10,7 +72,17 @@ import { IOptionValue } from "@forms/core";
  * carrying neither half of a YES/NO pair is a question the officer did not answer, which is not the same as a no.
  * Option boxes carry an `IOptionValue`, the code and description together, since that is what the field holds.
  */
-export interface IGAUTCData {
+export interface IGAUTCData extends IGAUTCViolationData {
+    /**
+     * The violations beyond the first, one per further citation page.
+     *
+     * The citation prints one offense, so a stop producing three charges produces three citation pages. Everything
+     * about the violator, vehicle, conditions, location and officer is the same on all of them and stays flat on
+     * the record; only the Section II boxes - the offense, the speed detection and the DUI test - differ page to
+     * page. The first violation stays in the flat fields rather than moving into this array, so a record written
+     * before a citation could carry more than one charge round trips through here unchanged.
+     */
+    readonly additionalViolations?: ReadonlyArray<IGAUTCViolationData>;
     /** Section V - the arresting officer's signature on the certification. */
     readonly certificationOfficerSignature?: string;
     /** Section V - "Signature and Title" of the officer the certification was sworn before. */
@@ -125,20 +197,6 @@ export interface IGAUTCData {
     readonly dispositionTrialJury?: boolean;
     /** Disposition - trial "Not Guilty". One of the trial group. */
     readonly dispositionTrialNotGuilty?: boolean;
-    /** Section II - the "DUI" box itself, independent of which test was administered. */
-    readonly duiCharged?: boolean;
-    /** Section II - "TEST ADMINISTERED BY (if Applicable)". */
-    readonly duiTestAdministeredBy?: string;
-    /** Section II - DUI test administered "BLOOD". One of the test group. */
-    readonly duiTestBlood?: boolean;
-    /** Section II - DUI test administered "BREATH". One of the test group. */
-    readonly duiTestBreath?: boolean;
-    /** Section II - DUI test administered "OTHER". One of the test group. */
-    readonly duiTestOther?: boolean;
-    /** Section II - "DUI Test Results". */
-    readonly duiTestResults?: string;
-    /** Section II - DUI test administered "URINE". One of the test group. */
-    readonly duiTestUrine?: boolean;
     /** Header - the "AM" half of the offense time. Paired with `headerPm`. */
     readonly headerAm?: boolean;
     /** Header - "CICA Number". */
@@ -175,22 +233,6 @@ export interface IGAUTCData {
     readonly locationCounty?: IOptionValue;
     /** Section III - "Street No., Highway, Road, Street, Intersection, or Private Property". */
     readonly locationStreet?: string;
-    /** Section II - the "Code Section" the offense is charged under. */
-    readonly offenseCodeSection?: string;
-    /** Section II - the "No" half of "COMPANION CASE". Paired with `offenseCompanionCaseYes`. */
-    readonly offenseCompanionCaseNo?: boolean;
-    /** Section II - the "Yes" half of "COMPANION CASE". Paired with `offenseCompanionCaseNo`. */
-    readonly offenseCompanionCaseYes?: boolean;
-    /** Section II - "CITATION No. / NAME" of the companion case. */
-    readonly offenseCompanionCitation?: string;
-    /** Section II - "OFFENSE: (Other than above)". The citation holds one offense, so a record carrying several supplies the one it is issued for. */
-    readonly offenseDescription?: string;
-    /** Section II - "Local Ordinance". Paired with `offenseStateLaw`. */
-    readonly offenseLocalOrdinance?: boolean;
-    /** Section II - "REMARKS / VICTIM NAME / #". */
-    readonly offenseRemarks?: string;
-    /** Section II - "State Law". Paired with `offenseLocalOrdinance`. */
-    readonly offenseStateLaw?: boolean;
     /** Section III - the issuing officer's "APD ID No.". */
     readonly officerApdIdNumber?: string;
     /** Section III - the issuing officer's "Assignment". */
@@ -299,28 +341,6 @@ export interface IGAUTCData {
     readonly vehicleRegistrationYear?: string;
     /** Section I - "Veh. Yr.". An unanswered year is left absent rather than reported as 0. */
     readonly vehicleYear?: number;
-    /** Section II - "Calibration/Check" of the speed detection device. */
-    readonly violationCalibrationCheck?: string;
-    /** Section II - clocked by "OTHER". Paired with `violationClockedByPatrolVehicle`. */
-    readonly violationClockedByOther?: boolean;
-    /** Section II - clocked by "PATROL VEHICLE". Paired with `violationClockedByOther`. */
-    readonly violationClockedByPatrolVehicle?: boolean;
-    /** Section II - the speed clocked, in MPH. An unanswered speed is left absent rather than reported as 0. */
-    readonly violationClockedSpeed?: number;
-    /** Section II - "DRIVER REQUESTED ACCURACY CHECK". An independent flag. */
-    readonly violationDriverRequestedAccuracyCheck?: boolean;
-    /** Section II - speed detection "LASER". One of the speed detection group. */
-    readonly violationLaser?: boolean;
-    /** Section II - speed detection "RADAR". One of the speed detection group. */
-    readonly violationRadar?: boolean;
-    /** Section II - the "Serial #" of the speed detection device. */
-    readonly violationSerialNumber?: string;
-    /** Section II - the posted limit of the zone the speed was clocked in. An unanswered zone is left absent rather than reported as 0. */
-    readonly violationSpeedZone?: number;
-    /** Section II - "2-LANE ROAD". An independent flag. */
-    readonly violationTwoLaneRoad?: boolean;
-    /** Section II - speed detection "VASCAR". One of the speed detection group. */
-    readonly violationVascar?: boolean;
     /** Section I - the violator's "Current Address". */
     readonly violatorAddress?: string;
     /** Section I - the violator's "Apt.". */

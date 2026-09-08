@@ -141,9 +141,9 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
 
     readonly frontPage: PageDefinition<FrontPageModel> = DefinitionFactory.page<FrontPageModel>("front-page", this.formDefinition, FrontPageModel);
 
-    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.frontPage, HeaderSectionModel);
+    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.frontPage, HeaderSectionModel, { isShared: true });
 
-    readonly violatorSection: SectionDefinition<ViolatorSectionModel> = DefinitionFactory.section<ViolatorSectionModel>("violator-section", this.frontPage, ViolatorSectionModel);
+    readonly violatorSection: SectionDefinition<ViolatorSectionModel> = DefinitionFactory.section<ViolatorSectionModel>("violator-section", this.frontPage, ViolatorSectionModel, { isShared: true });
     readonly violatorFields = defineFields(this.violatorSection, {
         violatorFirstName: { label: "First Name", ctor: StringFieldModel },
         violatorMiddleName: { label: "Middle Name", ctor: StringFieldModel },
@@ -166,7 +166,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         violatorEyeColor: { label: "Eye Color", ctor: StringFieldModel }
     });
 
-    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.frontPage, VehicleSectionModel);
+    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.frontPage, VehicleSectionModel, { isShared: true });
     readonly vehicleFields = defineFields(this.vehicleSection, {
         vehicleLicenseNumber: { label: "License Number", ctor: StringFieldModel },
         vehicleLicenseState: { label: "License State", ctor: StringFieldModel },
@@ -183,7 +183,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         vehicleOther: { label: "Other", ctor: BooleanFieldModel }
     });
 
-    readonly ownerSection: SectionDefinition<OwnerSectionModel> = DefinitionFactory.section<OwnerSectionModel>("owner-section", this.frontPage, OwnerSectionModel);
+    readonly ownerSection: SectionDefinition<OwnerSectionModel> = DefinitionFactory.section<OwnerSectionModel>("owner-section", this.frontPage, OwnerSectionModel, { isShared: true });
     readonly ownerFields = defineFields(this.ownerSection, {
         ownerFirstName: { label: "First Name", ctor: StringFieldModel },
         ownerMiddleName: { label: "Middle Name", ctor: StringFieldModel },
@@ -194,7 +194,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         ownerZipCode: { label: "Zip Code", ctor: StringFieldModel }
     });
 
-    readonly courtSection: SectionDefinition<CourtSectionModel> = DefinitionFactory.section<CourtSectionModel>("court-section", this.frontPage, CourtSectionModel);
+    readonly courtSection: SectionDefinition<CourtSectionModel> = DefinitionFactory.section<CourtSectionModel>("court-section", this.frontPage, CourtSectionModel, { isShared: true });
     readonly courtFields = defineFields(this.courtSection, {
         courtName: { label: "Name of Trial Court", ctor: StringFieldModel },
         courtStreetAddress: { label: "Street Address", ctor: StringFieldModel },
@@ -217,7 +217,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         violationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel }
     });
 
-    readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel> = DefinitionFactory.section<ViolationLocationSectionModel>("violation-location-section", this.frontPage, ViolationLocationSectionModel);
+    readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel> = DefinitionFactory.section<ViolationLocationSectionModel>("violation-location-section", this.frontPage, ViolationLocationSectionModel, { isShared: true });
     readonly violationLocationFields = defineFields(this.violationLocationSection, {
         violationLocation: { label: "Violation Location", ctor: StringFieldModel },
         violationLocationCounty: { label: "County", ctor: StringFieldModel, name: "violation-county" },
@@ -226,7 +226,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         violationLocationCity: { label: "City", ctor: StringFieldModel, name: "violation-city" }
     });
 
-    readonly arrestingOfficerSection: SectionDefinition<ArrestingOfficerSectionModel> = DefinitionFactory.section<ArrestingOfficerSectionModel>("arresting-officer-section", this.frontPage, ArrestingOfficerSectionModel);
+    readonly arrestingOfficerSection: SectionDefinition<ArrestingOfficerSectionModel> = DefinitionFactory.section<ArrestingOfficerSectionModel>("arresting-officer-section", this.frontPage, ArrestingOfficerSectionModel, { isShared: true });
     readonly arrestingOfficerFields = defineFields(this.arrestingOfficerSection, {
         arrestingOfficerName: { label: "Name and Rank of Arresting Officer", ctor: StringFieldModel },
         arrestingOfficerRank: { label: "Rank", ctor: StringFieldModel },
@@ -236,7 +236,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         arrestingOfficerBondAmountRequested: { label: "Bond Amount Requested", ctor: StringFieldModel }
     });
 
-    readonly footerSection: SectionDefinition<FooterSectionModel> = DefinitionFactory.section<FooterSectionModel>("footer-section", this.frontPage, FooterSectionModel);
+    readonly footerSection: SectionDefinition<FooterSectionModel> = DefinitionFactory.section<FooterSectionModel>("footer-section", this.frontPage, FooterSectionModel, { isShared: true });
     readonly footerFields = defineFields(this.footerSection, {
         footerTicketNumber: { label: "Ticket Number", ctor: StringFieldModel }
     });

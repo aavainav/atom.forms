@@ -1,6 +1,7 @@
 import { DraggableItemType } from "./draggable-item";
 import { IImportablePerson } from "./importable-person";
 import { IImportableVehicle } from "./importable-vehicle";
+import { IImportableViolation } from "./importable-violation";
 import { DropzoneHelper } from "./dropzone-helper";
 import { FieldModel, TValueType } from "../field";
 import { FieldDefinition } from "../field-definition";
@@ -12,7 +13,7 @@ import { withChanges } from "../../utils/clone";
 export type DropzoneConstructor<TDropzone extends Dropzone = Dropzone> = new (...args: any[]) => TDropzone;
 
 /** Defines a drop target that accepts an importable item and maps it onto a set of fields. */
-export interface IDropzone<T = IImportablePerson | IImportableVehicle> {
+export interface IDropzone<T = IImportablePerson | IImportableVehicle | IImportableViolation> {
     /** The page the dropzone belongs to. */
     readonly page: PageModel;
     /** The section the dropzone belongs to. */
@@ -42,7 +43,7 @@ export interface IDropzone<T = IImportablePerson | IImportableVehicle> {
 }
 
 /** Represents an abstract base class for a dropzone that handles drag-and-drop for a specific importable item type. */
-export abstract class Dropzone<T = IImportablePerson | IImportableVehicle> implements IDropzone<T> {
+export abstract class Dropzone<T = IImportablePerson | IImportableVehicle | IImportableViolation> implements IDropzone<T> {
     public readonly page: PageModel;
     public readonly section: SectionModel;
     public readonly fields: Record<string, FieldModel<TValueType> | undefined> = {};

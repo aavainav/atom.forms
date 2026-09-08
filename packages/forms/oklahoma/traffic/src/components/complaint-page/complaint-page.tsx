@@ -5,6 +5,7 @@ import { IControllerManager, IPageBinding, FDropzone } from "@forms/core";
 import { ComplaintPageModel } from "../../models/complaint-page/complaint-page";
 import { ComplaintPageDefendantDropzone } from "../../models/complaint-page/dropzones/complaint-page-defendant-dropzone";
 import { ComplaintPageVehicleDropzone } from "../../models/complaint-page/dropzones/complaint-page-vehicle-dropzone";
+import { ComplaintPageViolationDropzone } from "../../models/complaint-page/dropzones/complaint-page-violation-dropzone";
 import { IOKTrafficService } from "../../services";
 
 import { ArraignmentSection } from "./arraignment-section";
@@ -65,7 +66,13 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
                 <VehicleSection binding={binding.getSection(complaintPage.vehicleSection)} valueListController={valueListController} />
             </FDropzone>
 
-            <ViolationSection binding={binding.getSection(complaintPage.violationSection)} valueListController={valueListController} />
+            <FDropzone
+                controller={dragAndDropController}
+                dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
+                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
+            >
+                <ViolationSection binding={binding.getSection(complaintPage.violationSection)} valueListController={valueListController} />
+            </FDropzone>
             <OffenseSection binding={binding.getSection(complaintPage.offenseSection)} />
             <ViolationInformationSection binding={binding.getSection(complaintPage.violationInformationSection)} valueListController={valueListController} />
             <OfficerSection binding={binding.getSection(complaintPage.officerSection)} valueListController={valueListController} />

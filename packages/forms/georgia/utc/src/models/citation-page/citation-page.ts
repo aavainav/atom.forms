@@ -1,6 +1,7 @@
 import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { CitationPageVehicleDropzone } from "./dropzones/citation-page-vehicle-dropzone";
+import { CitationPageViolationDropzone } from "./dropzones/citation-page-violation-dropzone";
 import { CitationPageViolatorDropzone } from "./dropzones/citation-page-violator-dropzone";
 import { CertificationSectionModel } from "./certification-section";
 import { ConditionsSectionModel } from "./conditions-section";
@@ -49,6 +50,7 @@ export class CitationPageModel extends PageModel implements ICitationPageModel {
 
         page = page.setDropzone(new CitationPageViolatorDropzone(page, page.schema));
         page = page.setDropzone(new CitationPageVehicleDropzone(page, page.schema));
+        page = page.setDropzone(new CitationPageViolationDropzone(page, page.schema));
 
         return page;
     }

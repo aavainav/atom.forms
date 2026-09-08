@@ -3,7 +3,7 @@ import type { FieldDefinition } from "../field-definition";
 import type { IRuleContext } from "./rule-context";
 import type { PageDefinition } from "../page-definition";
 import { IRule, Rule } from "./rule";
-import { IRuleViolation, RuleViolationSeverity } from "./rule-violation";
+import { IRuleIssue, RuleIssueSeverity } from "./rule-issue";
 
 /** Defines a validation rule that validates a single field. */
 export interface IFieldRule extends IRule {
@@ -15,7 +15,7 @@ export interface IFieldRule extends IRule {
 export abstract class FieldRule extends Rule implements IFieldRule {
     readonly fieldDefinition: FieldDefinition<FieldModel<TValueType>>;
 
-    constructor(name: string, fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleViolationSeverity) {
+    constructor(name: string, fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleIssueSeverity) {
         super(name, message, severity);
 
         this.fieldDefinition = fieldDefinition;
@@ -25,12 +25,16 @@ export abstract class FieldRule extends Rule implements IFieldRule {
         return this.fieldDefinition.getPageDefinition();
     }
 
-    protected evaluate(context: IRuleContext): Array<IRuleViolation> {
+    public isShared(): boolean {
+        return this.fieldDefinition.getSectionDefinition().isShared;
+    }
+
+    protected evaluate(context: IRuleContext): Array<IRuleIssue> {
         const field = context.getField(this.fieldDefinition);
 
         return field ? this.validateField(field) : [];
     }
 
-    /** Validates the field this rule is bound to, returning any resulting violations. */
-    protected abstract validateField(field: FieldModel<TValueType>): Array<IRuleViolation>;
+    /** Validates the field this rule is bound to, returning any resulting issues. */
+    protected abstract validateField(field: FieldModel<TValueType>): Array<IRuleIssue>;
 }

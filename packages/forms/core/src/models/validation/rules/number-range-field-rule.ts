@@ -2,7 +2,7 @@ import type { FieldModel, TValueType } from "../../field";
 import type { FieldDefinition } from "../../field-definition";
 import { FieldRule, IFieldRule } from "../field-rule";
 import { RegisterRule } from "../rules-controller";
-import { IRuleViolation, RuleViolationSeverity } from "../rule-violation";
+import { IRuleIssue, RuleIssueSeverity } from "../rule-issue";
 
 /** Defines a validation rule that enforces a minimum and maximum numeric value on a field. */
 export interface INumberRangeFieldRule extends IFieldRule {
@@ -20,14 +20,14 @@ export class NumberRangeFieldRule extends FieldRule implements INumberRangeField
     readonly minimum: number;
     readonly maximum: number;
 
-    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimum: number, maximum: number, message?: string, severity?: RuleViolationSeverity) {
+    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, minimum: number, maximum: number, message?: string, severity?: RuleIssueSeverity) {
         super(NumberRangeFieldRule.name, fieldDefinition, message ?? NumberRangeFieldRule.defaultMessage, severity);
 
         this.minimum = minimum;
         this.maximum = maximum;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleViolation> {
+    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
         // an empty value is the required rule's concern, and a non-numeric one the format rule's.
         if (field.getIsEmpty()) {
             return [];

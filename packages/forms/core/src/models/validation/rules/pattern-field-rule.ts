@@ -2,7 +2,7 @@ import type { FieldModel, TValueType } from "../../field";
 import type { FieldDefinition } from "../../field-definition";
 import { FieldRule, IFieldRule } from "../field-rule";
 import { RegisterRule } from "../rules-controller";
-import { IRuleViolation, RuleViolationSeverity } from "../rule-violation";
+import { IRuleIssue, RuleIssueSeverity } from "../rule-issue";
 
 /** Defines a validation rule that enforces a regular expression against a field's value. */
 export interface IPatternFieldRule extends IFieldRule {
@@ -18,7 +18,7 @@ export class PatternFieldRule extends FieldRule implements IPatternFieldRule {
 
     readonly pattern: RegExp;
 
-    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, pattern: RegExp, message?: string, severity?: RuleViolationSeverity) {
+    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, pattern: RegExp, message?: string, severity?: RuleIssueSeverity) {
         // `new.target` is the constructor that was actually invoked, so a derived rule registers under its own name.
         super(new.target.name, fieldDefinition, message ?? PatternFieldRule.defaultMessage, severity);
 
@@ -26,7 +26,7 @@ export class PatternFieldRule extends FieldRule implements IPatternFieldRule {
         this.pattern = pattern.global ? new RegExp(pattern.source, pattern.flags.replace("g", "")) : pattern;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleViolation> {
+    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
         // an empty value is the required rule's concern, not the pattern's.
         if (field.getIsEmpty()) {
             return [];

@@ -2,7 +2,7 @@ import type { FieldModel, TValueType } from "../../field";
 import type { FieldDefinition } from "../../field-definition";
 import { IPatternFieldRule, PatternFieldRule } from "./pattern-field-rule";
 import { RegisterRule } from "../rules-controller";
-import { RuleViolationSeverity } from "../rule-violation";
+import { RuleIssueSeverity } from "../rule-issue";
 
 /** Defines a validation rule that restricts a field's value to letters and numbers. */
 export interface IAlphanumericFieldRule extends IPatternFieldRule {
@@ -14,7 +14,7 @@ export class AlphanumericFieldRule extends PatternFieldRule implements IAlphanum
     static readonly defaultMessage = "This field may only contain letters and numbers.";
     static readonly pattern = /^[A-Za-z0-9]*$/;
 
-    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleViolationSeverity) {
+    constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleIssueSeverity) {
         super(fieldDefinition, AlphanumericFieldRule.pattern, message ?? AlphanumericFieldRule.defaultMessage, severity);
     }
 }

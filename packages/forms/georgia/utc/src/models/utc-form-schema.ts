@@ -296,7 +296,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
 
     readonly citationPage: PageDefinition<CitationPageModel> = DefinitionFactory.page<CitationPageModel>("citation-page", this.formDefinition, CitationPageModel);
 
-    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.citationPage, HeaderSectionModel);
+    readonly headerSection: SectionDefinition<HeaderSectionModel> = DefinitionFactory.section<HeaderSectionModel>("header-section", this.citationPage, HeaderSectionModel, { isShared: true });
     readonly headerFields = defineFields(this.headerSection, {
         headerCicaNumber: { label: "CICA Number", ctor: StringFieldModel },
         headerNcicNumber: { label: "NCIC Number", ctor: StringFieldModel },
@@ -310,7 +310,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         headerPm: { label: "PM", ctor: BooleanFieldModel }
     });
 
-    readonly violatorSection: SectionDefinition<ViolatorSectionModel> = DefinitionFactory.section<ViolatorSectionModel>("violator-section", this.citationPage, ViolatorSectionModel);
+    readonly violatorSection: SectionDefinition<ViolatorSectionModel> = DefinitionFactory.section<ViolatorSectionModel>("violator-section", this.citationPage, ViolatorSectionModel, { isShared: true });
     readonly violatorFields = defineFields(this.violatorSection, {
         violatorLicenseClass: { label: "License Class or Type", ctor: StringFieldModel },
         violatorLicenseState: { label: "State", ctor: OptionFieldModel, name: "violator-license-state" },
@@ -336,7 +336,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         violatorEye: { label: "Eye", ctor: StringFieldModel }
     });
 
-    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.citationPage, VehicleSectionModel);
+    readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.citationPage, VehicleSectionModel, { isShared: true });
     readonly vehicleFields = defineFields(this.vehicleSection, {
         vehicleYear: { label: "Veh. Yr.", ctor: NumberFieldModel },
         vehicleMake: { label: "Make", ctor: OptionFieldModel },
@@ -347,7 +347,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         vehicleRegistrationState: { label: "State", ctor: OptionFieldModel, name: "vehicle-registration-state" }
     });
 
-    readonly statusSection: SectionDefinition<StatusSectionModel> = DefinitionFactory.section<StatusSectionModel>("status-section", this.citationPage, StatusSectionModel);
+    readonly statusSection: SectionDefinition<StatusSectionModel> = DefinitionFactory.section<StatusSectionModel>("status-section", this.citationPage, StatusSectionModel, { isShared: true });
     readonly statusFields = defineFields(this.statusSection, {
         statusCdlYes: { label: "Yes", ctor: BooleanFieldModel, name: "status-cdl-yes" },
         statusCdlNo: { label: "No", ctor: BooleanFieldModel, name: "status-cdl-no" },
@@ -397,7 +397,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         offenseRemarks: { label: "Remarks / Victim Name / #", ctor: StringFieldModel }
     });
 
-    readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = DefinitionFactory.section<ConditionsSectionModel>("conditions-section", this.citationPage, ConditionsSectionModel);
+    readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = DefinitionFactory.section<ConditionsSectionModel>("conditions-section", this.citationPage, ConditionsSectionModel, { isShared: true });
     readonly conditionsFields = defineFields(this.conditionsSection, {
         conditionsWeatherClear: { label: "Clear", ctor: BooleanFieldModel },
         conditionsWeatherCloudy: { label: "Cloudy", ctor: BooleanFieldModel },
@@ -422,14 +422,14 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         conditionsHazardousMaterial: { label: "Hazardous Material Violation", ctor: BooleanFieldModel }
     });
 
-    readonly locationSection: SectionDefinition<LocationSectionModel> = DefinitionFactory.section<LocationSectionModel>("location-section", this.citationPage, LocationSectionModel);
+    readonly locationSection: SectionDefinition<LocationSectionModel> = DefinitionFactory.section<LocationSectionModel>("location-section", this.citationPage, LocationSectionModel, { isShared: true });
     readonly locationFields = defineFields(this.locationSection, {
         locationCity: { label: "In the City of", ctor: StringFieldModel },
         locationCounty: { label: "County of", ctor: OptionFieldModel },
         locationStreet: { label: "Street No., Highway, Road, Street, Intersection, or Private Property", ctor: StringFieldModel }
     });
 
-    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.citationPage, OfficerSectionModel);
+    readonly officerSection: SectionDefinition<OfficerSectionModel> = DefinitionFactory.section<OfficerSectionModel>("officer-section", this.citationPage, OfficerSectionModel, { isShared: true });
     readonly officerFields = defineFields(this.officerSection, {
         officerName: { label: "Officer Name (Print)", ctor: StringFieldModel },
         officerApdIdNumber: { label: "APD ID No.", ctor: StringFieldModel },
@@ -445,7 +445,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         officerSecondTime: { label: "Time", ctor: StringFieldModel }
     });
 
-    readonly summonsSection: SectionDefinition<SummonsSectionModel> = DefinitionFactory.section<SummonsSectionModel>("summons-section", this.citationPage, SummonsSectionModel);
+    readonly summonsSection: SectionDefinition<SummonsSectionModel> = DefinitionFactory.section<SummonsSectionModel>("summons-section", this.citationPage, SummonsSectionModel, { isShared: true });
     readonly summonsFields = defineFields(this.summonsSection, {
         summonsAppearanceDay: { label: "Day", ctor: StringFieldModel, name: "summons-appearance-day" },
         summonsAppearanceMonth: { label: "Month", ctor: StringFieldModel, name: "summons-appearance-month" },
@@ -464,7 +464,7 @@ export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
         summonsSignature: { label: "Signature", ctor: StringFieldModel, name: "summons-signature" }
     });
 
-    readonly certificationSection: SectionDefinition<CertificationSectionModel> = DefinitionFactory.section<CertificationSectionModel>("certification-section", this.citationPage, CertificationSectionModel);
+    readonly certificationSection: SectionDefinition<CertificationSectionModel> = DefinitionFactory.section<CertificationSectionModel>("certification-section", this.citationPage, CertificationSectionModel, { isShared: true });
     readonly certificationFields = defineFields(this.certificationSection, {
         certificationOfficerSignature: { label: "Signature", ctor: StringFieldModel },
         certificationSwornDay: { label: "Day", ctor: StringFieldModel, name: "certification-sworn-day" },
