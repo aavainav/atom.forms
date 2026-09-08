@@ -1,0 +1,10 @@
+[
+    {"value":"00","description":"NOT TRANSPORTED"},
+    {"value":"10","description":"EMS AIR"},
+    {"value":"11","description":"EMS GROUND"},
+    {"value":"12","description":"EMS UNK MODE"},
+    {"value":"20","description":"LAW ENFORCEMENT"},
+    {"value":"40","description":"TRANSPORTED UNK TYPE"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

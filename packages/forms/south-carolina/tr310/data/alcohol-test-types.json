@@ -1,0 +1,7 @@
+[
+    {"value":"1","description":"BREATH (ALCOHOL ONLY)"},
+    {"value":"2","description":"BLOOD"},
+    {"value":"3","description":"URINE"},
+    {"value":"7","description":"NOT APPLICABLE"},
+    {"value":"8","description":"OTHER"}
+]

@@ -1,0 +1,20 @@
+@use "../variables";
+
+.f-crash.f-page {
+    width: 1024px !important;
+}
+
+.f-citation.f-page {
+    width: 640px !important;
+}
+
+.f-none.f-page {
+    width: 640px !important;
+}
+
+.f-page {
+    box-shadow: 2px 2px 0 rgb(0, 0, 0);
+    padding: variables.$page-padding;
+    // the page is the containing block for its watermark, which is stamped corner to corner across it
+    position: relative;
+}

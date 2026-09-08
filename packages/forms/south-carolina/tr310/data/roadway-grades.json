@@ -1,0 +1,9 @@
+[
+    {"value":"01","description":"LEVEL"},
+    {"value":"02","description":"UPHILL"},
+    {"value":"03","description":"HILLCREST"},
+    {"value":"04","description":"DOWNHILL"},
+    {"value":"05","description":"SAG (BOTTOM)"},
+    {"value":"77","description":"NOT APPLICABLE"},
+    {"value":"99","description":"UNKNOWN"}
+]

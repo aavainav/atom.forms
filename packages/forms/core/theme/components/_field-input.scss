@@ -1,0 +1,14 @@
+@use "sass:color";
+@use "../variables";
+
+.f-field-input.form-control:active {
+    box-shadow: 0 0 0 0.25rem color.change(variables.$primary, $alpha: 0.25) !important;
+}
+
+.f-field-input.form-control:focus {
+    box-shadow: 0 0 0 0.25rem color.change(variables.$primary, $alpha: 0.25) !important;
+}
+
+.f-field-input.form-control.is-invalid {
+    box-shadow: 0 0 0 0.25rem color.change(variables.$danger, $alpha: 0.25);
+}

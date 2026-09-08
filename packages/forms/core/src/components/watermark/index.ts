@@ -1,0 +1,1 @@
+export { getStatusWatermark, default as FWatermark } from "./watermark";

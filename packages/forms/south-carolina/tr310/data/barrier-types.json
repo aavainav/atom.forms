@@ -1,0 +1,8 @@
+[
+    {"value":"00","description":"NO BARRIER"},
+    {"value":"01","description":"CABLE"},
+    {"value":"02","description":"CONCRETE/JERSEY"},
+    {"value":"03","description":"EARTH EMBANKMENT"},
+    {"value":"04","description":"GUARDRAIL"},
+    {"value":"88","description":"OTHER"}
+]

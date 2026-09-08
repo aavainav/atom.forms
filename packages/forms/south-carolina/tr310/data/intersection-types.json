@@ -1,0 +1,12 @@
+[
+    {"value":"00","description":"NOT AN INTERSECTION"},
+    {"value":"01","description":"T INTERSECTION"},
+    {"value":"02","description":"Y INTERSECTION"},
+    {"value":"03","description":"L INTERSECTION"},
+    {"value":"04","description":"FOUR LEG INTERSECTION"},
+    {"value":"05","description":"FIVE LEG OR MORE"},
+    {"value":"06","description":"ROUNDABOUT"},
+    {"value":"07","description":"TRAFFIC CIRCLE"},
+    {"value":"88","description":"OTHER INTERSECTION TYPE"},
+    {"value":"99","description":"UNKNOWN"}
+]

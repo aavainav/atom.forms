@@ -1,0 +1,15 @@
+[
+    {"value":"01","description":"CLEAR (NO ADVERSE CONDITION)"},
+    {"value":"02","description":"RAIN"},
+    {"value":"03","description":"CLOUDY"},
+    {"value":"04","description":"SLEET, HAIL"},
+    {"value":"05","description":"SNOW"},
+    {"value":"06","description":"FOG, MIST"},
+    {"value":"07","description":"BLOWING SNOW"},
+    {"value":"08","description":"BLOWING SAND SOIL DIRT DUST"},
+    {"value":"09","description":"SEVERE CROSSWINDS"},
+    {"value":"10","description":"FREEZING RAIN"},
+    {"value":"11","description":"SMOG, SMOKE"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

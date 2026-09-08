@@ -1,0 +1,10 @@
+[
+    {"value":"1","description":"SHOULDER/MEDIAN WORK"},
+    {"value":"2","description":"LANE SHIFT"},
+    {"value":"3","description":"LANE CLOSURE"},
+    {"value":"4","description":"INTERMITTENT/MOVING WORK"},
+    {"value":"5","description":"CROSSOVER"},
+    {"value":"7","description":"NOT APPLICABLE"},
+    {"value":"8","description":"OTHER"},
+    {"value":"9","description":"NON HIGHWAY WORK"}
+]

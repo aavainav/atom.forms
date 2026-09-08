@@ -1,0 +1,6 @@
+[
+    {"value":"1","description":"IN TRANSPORT"},
+    {"value":"2","description":"PARKED MV"},
+    {"value":"3","description":"WORKING VEHICLE/EQUIPMENT"},
+    {"value":"9","description":"UNKNOWN"}
+]

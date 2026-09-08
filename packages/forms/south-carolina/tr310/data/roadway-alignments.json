@@ -1,0 +1,7 @@
+[
+    {"value":"01","description":"STRAIGHT"},
+    {"value":"02","description":"CURVE LEFT"},
+    {"value":"03","description":"CURVE RIGHT"},
+    {"value":"77","description":"NOT APPLICABLE"},
+    {"value":"99","description":"UNKNOWN"}
+]

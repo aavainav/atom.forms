@@ -1,0 +1,6 @@
+[
+    {"value":"00","description":"NOT DISTRACTED"},
+    {"value":"01","description":"MOBILE ELECTRONIC DEVICE RELATED"},
+    {"value":"88","description":"OTHER DISTRACTIONS"},
+    {"value":"99","description":"UNKNOWN IF DISTRACTED"}
+]

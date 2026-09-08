@@ -1,0 +1,14 @@
+[
+    {
+        "source": "counties.json",
+        "output": "counties.ts",
+        "export": "counties",
+        "doc": [
+            "The Oklahoma counties an offense can be recorded in.",
+            "",
+            "The codes are the counties' alphabetical positions, 1 through 77, which is how Oklahoma numbers them on a",
+            "license plate. Should Oklahoma City's own county code set turn out to differ, this file is the only thing",
+            "that changes: edit data/counties.json, run yarn generate, and nothing that reads the list moves."
+        ]
+    }
+]

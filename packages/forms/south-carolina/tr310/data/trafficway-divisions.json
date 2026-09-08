@@ -1,0 +1,8 @@
+[
+    {"value":"01","description":"NOT DIVIDED"},
+    {"value":"02","description":"NOT DIVIDED, WITH CONTINUOUS LEFT TURN LANE"},
+    {"value":"03","description":"DIVIDED, FLUSH MEDIAN (GREATER THAN 4FT WIDE)"},
+    {"value":"04","description":"DIVIDED, RAISED MEDIAN (CURBED)"},
+    {"value":"05","description":"DIVIDED, DEPRESSED MEDIAN"},
+    {"value":"99","description":"UNKNOWN"}
+]

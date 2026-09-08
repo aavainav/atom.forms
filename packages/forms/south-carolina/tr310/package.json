@@ -1,0 +1,23 @@
+{
+    "name": "@forms/tr310",
+    "description": "The South Carolina TR-310 traffic collision report form.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+        "generate": "generate-value-lists --data ./data --out ./src/generated"
+    },
+    "dependencies": {
+        "@forms/catalog": "1.0.0",
+        "@forms/core": "1.0.0",
+        "@forms/report-viewer": "1.0.0",
+        "@forms/value-lists": "1.0.0",
+        "@forms/workbench": "1.0.0"
+    }
+}

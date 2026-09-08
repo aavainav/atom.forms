@@ -1,0 +1,13 @@
+[
+    {"value":"00","description":"NON-JUNCTION"},
+    {"value":"01","description":"ACCELERATION/DECELERATION LANE"},
+    {"value":"02","description":"CROSSOVER RELATED"},
+    {"value":"03","description":"DRIVEWAY ACCESS OR RELATED"},
+    {"value":"04","description":"ENTRANCE/EXIT RAMP OR RELATED"},
+    {"value":"05","description":"INTERSECTION OR RELATED"},
+    {"value":"07","description":"RAILWAY GRADE CROSSING"},
+    {"value":"08","description":"SHARED USE PATH OR TRAIL"},
+    {"value":"12","description":"THROUGH ROADWAY"},
+    {"value":"88","description":"OTHER WITHIN INTERCHANGE AREA"},
+    {"value":"99","description":"UNKNOWN"}
+]

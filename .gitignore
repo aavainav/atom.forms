@@ -1,0 +1,8 @@
+.claude
+node_modules/
+dist/
+
+**/tsconfig.tsbuildinfo
+build.log
+lerna-debug.log
+yarn-error.log

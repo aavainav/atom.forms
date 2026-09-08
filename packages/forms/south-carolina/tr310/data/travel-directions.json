@@ -1,0 +1,8 @@
+[
+    {"value":"N","description":"NORTH"},
+    {"value":"S","description":"SOUTH"},
+    {"value":"E","description":"EAST"},
+    {"value":"W","description":"WEST"},
+    {"value":"U","description":"UNKNOWN"},
+    {"value":"R","description":"NOT ON ROADWAY"}
+]

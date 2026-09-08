@@ -1,0 +1,7 @@
+[
+    {"value":"00","description":"NONE"},
+    {"value":"01","description":"ALCOHOL"},
+    {"value":"02","description":"DRUGS"},
+    {"value":"03","description":"ALCOHOL & DRUGS"},
+    {"value":"99","description":"UNKNOWN"}
+]

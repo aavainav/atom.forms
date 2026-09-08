@@ -1,0 +1,15 @@
+@use "../variables";
+
+.f-field-checkbox {
+    .f-field-checkbox-input {
+        border-color: variables.$dark;
+    }
+
+    .f-field-checkbox-input.is-invalid {
+        border-color: variables.$danger;
+    }
+
+    .f-field-checkbox-label {
+        font-size: variables.$font-size-6 !important;
+    }
+}

@@ -1,0 +1,15 @@
+[
+    {"value":"00","description":"NONE USED"},
+    {"value":"11","description":"SHOULDER BELT ONLY"},
+    {"value":"12","description":"LAP BELT ONLY"},
+    {"value":"13","description":"SHOULDER & LAP BELT"},
+    {"value":"21","description":"CHILD RESTRAINT (TYPE UNKNOWN)"},
+    {"value":"22","description":"BOOSTER SEAT"},
+    {"value":"23","description":"CHILD SAFETY SEAT (FORWARD FACING)"},
+    {"value":"24","description":"CHILD SAFETY SEAT (REAR FACING)"},
+    {"value":"38","description":"RACING-STYLE HARNESS USED"},
+    {"value":"40","description":"RESTRAINT USED-TYPE UNKNOWN"},
+    {"value":"77","description":"NOT APPLICABLE"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

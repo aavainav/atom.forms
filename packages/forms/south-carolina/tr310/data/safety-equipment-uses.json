@@ -1,0 +1,6 @@
+[
+    {"value":"Y","description":"YES"},
+    {"value":"N","description":"NO"},
+    {"value":"U","description":"UNKNOWN"},
+    {"value":"7","description":"NOT APPLICABLE"}
+]

@@ -1,0 +1,14 @@
+[
+    {"value":"A","description":"ASIAN OR PACIFIC ISLANDER"},
+    {"value":"B","description":"AFRICAN AMERICAN"},
+    {"value":"H","description":"HISPANIC"},
+    {"value":"I","description":"ALASKAN NATIVE OR AMERICAN INDIAN"},
+    {"value":"O","description":"OTHER"},
+    {"value":"W","description":"WHITE"},
+    {"value":"AI","description":"ALASKAN OR AMERICAN INDIAN"},
+    {"value":"AP","description":"ASIAN OR PACIFIC ISLANDER"},
+    {"value":"BK","description":"BLACK"},
+    {"value":"U","description":"UNKNOWN"},
+    {"value":"MR","description":"MULTI-RACIAL"},
+    {"value":"AO","description":"ALL OTHERS"}
+]

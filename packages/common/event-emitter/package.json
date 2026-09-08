@@ -1,0 +1,15 @@
+{
+    "name": "@common/event-emitter",
+    "description": "A package for emitting and handling events.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo"
+    }
+}

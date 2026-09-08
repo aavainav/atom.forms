@@ -1,0 +1,32 @@
+{
+    "name": "root",
+    "private": true,
+    "workspaces": [
+        "packages/common/*",
+        "packages/examples/*",
+        "packages/forms/*",
+        "packages/forms/*/**"
+    ],
+    "resolutions": {
+        "vite": "^8.x.x"
+    },
+    "scripts": {
+        "bootstrap": "yarn install",
+        "build": "lerna run build --stream",
+        "build-forms": "lerna run build-forms --stream",
+        "clean": "lerna run clean --stream --parallel",
+        "dev-forms": "cd ./packages/examples/01-forms && yarn run dev",
+        "preview": "cd ./packages/examples/01-forms && yarn run preview"
+    },
+    "dependencies": {
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "rimraf": "^6.1.3",
+        "typescript": "^6.0.3"
+    },
+    "devDependencies": {
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "lerna": "^10.0.0"
+    }
+}

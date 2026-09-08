@@ -1,0 +1,11 @@
+[
+    {"value":"61","description":"VEHICLE ON RAILS (TRAIN)"},
+    {"value":"62","description":"ANIMAL DRAWN VEHICLE"},
+    {"value":"63","description":"ANIMAL (RIDDEN)"},
+    {"value":"64","description":"PEDESTRIAN"},
+    {"value":"65","description":"OTHER PEDESTRIAN (WHEELCHAIR, SKATER, ETC.)"},
+    {"value":"66","description":"BICYCLIST"},
+    {"value":"67","description":"OTHER CYCLIST"},
+    {"value":"68","description":"PERSON IN OR ON BUILDING"},
+    {"value":"69","description":"UNKNOWN NON-MOTORIST"}
+]

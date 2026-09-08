@@ -1,0 +1,16 @@
+[
+    {"value":"01","description":"GORE"},
+    {"value":"02","description":"SEPARATOR"},
+    {"value":"03","description":"MEDIAN"},
+    {"value":"04","description":"ROADSIDE"},
+    {"value":"05","description":"ROADWAY"},
+    {"value":"06","description":"SIDEWALK"},
+    {"value":"09","description":"IN PARKING LANE OR ZONE"},
+    {"value":"10","description":"OUTSIDE TRAFFICWAY"},
+    {"value":"11","description":"OFF ROADWAY, UNKNOWN LOCATION"},
+    {"value":"12","description":"ON SHOULDER, LEFT SIDE"},
+    {"value":"13","description":"ON SHOULDER, RIGHT SIDE"},
+    {"value":"14","description":"PEDESTRIAN REFUGE ISLAND OR TRAFFIC ISLAND"},
+    {"value":"15","description":"CONTINUOUS LEFT TURN LANE"},
+    {"value":"99","description":"UNKNOWN"}
+]

@@ -1,0 +1,59 @@
+import React from "react";
+import { useService } from "@common/react";
+import { IControllerManager, IPageBinding, FDropzone } from "@forms/core";
+
+import { PersonPageModel } from "../../models/person-page/person-page";
+import { PersonPagePersonDropzone } from "../../models/person-page/dropzones/person-page-person-dropzone";
+import { ITR310Service } from "../../services";
+
+import { PersonHeaderSection } from "./person-header-section";
+import { PersonSection } from "./person-section";
+import { DriverLicenseSection } from "./driver-license-section";
+import { DriverActionsSection } from "./driver-actions-section";
+import { OccupantSection } from "./occupant-section";
+import { NonMotoristSection } from "./non-motorist-section";
+import { InjurySection } from "./injury-section";
+import { SafetyEquipmentSection } from "./safety-equipment-section";
+import { AlcoholDrugsSection } from "./alcohol-drugs-section";
+import { PassengersSection } from "./passengers-section";
+import { PersonOfficerSection } from "./person-officer-section";
+
+interface IPersonPageProps {
+    /** The controllers belonging to the form this page is part of. */
+    readonly controllers: IControllerManager;
+    /** Binds this page instance to the form controller. */
+    readonly binding: IPageBinding<PersonPageModel>;
+    /** When true, the drag-and-drop import target is not offered. */
+    readonly isReadOnly?: boolean;
+}
+
+/** Defines one person page of the TR-310, recording a driver or a non-motorist and the passengers riding with them. */
+export default function PersonPage({ controllers, binding, isReadOnly }: IPersonPageProps): React.JSX.Element {
+    const dragAndDropController = controllers.getDragAndDropController();
+    const valueListController = controllers.getValueListController();
+
+    const tr310Service = useService<ITR310Service>(ITR310Service);
+    const page = binding.get();
+
+    return (
+        <>
+            <PersonHeaderSection binding={binding.getSection(page.personHeaderSection)} valueListController={valueListController} />
+            <FDropzone
+                controller={dragAndDropController}
+                dropzone={page.getDropzone(PersonPagePersonDropzone)}
+                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((current) => tr310Service.applyPersonDropzone(current, dropzone))}
+            >
+                <PersonSection binding={binding.getSection(page.personSection)} valueListController={valueListController} />
+            </FDropzone>
+            <DriverLicenseSection binding={binding.getSection(page.driverLicenseSection)} valueListController={valueListController} />
+            <DriverActionsSection binding={binding.getSection(page.driverActionsSection)} valueListController={valueListController} />
+            <OccupantSection binding={binding.getSection(page.occupantSection)} valueListController={valueListController} />
+            <NonMotoristSection binding={binding.getSection(page.nonMotoristSection)} valueListController={valueListController} />
+            <InjurySection binding={binding.getSection(page.injurySection)} valueListController={valueListController} />
+            <SafetyEquipmentSection binding={binding.getSection(page.safetyEquipmentSection)} valueListController={valueListController} />
+            <AlcoholDrugsSection binding={binding.getSection(page.alcoholDrugsSection)} valueListController={valueListController} />
+            <PassengersSection binding={binding.getSection(page.passengersSection)} valueListController={valueListController} />
+            <PersonOfficerSection binding={binding.getSection(page.personOfficerSection)} />
+        </>
+    );
+}

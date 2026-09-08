@@ -1,0 +1,11 @@
+[
+    {"value":"01","description":"AMPHETAMINES"},
+    {"value":"02","description":"COCAINE"},
+    {"value":"03","description":"MARIJUANA"},
+    {"value":"04","description":"OPIATES"},
+    {"value":"05","description":"PCP"},
+    {"value":"06","description":"OTHER DRUG"},
+    {"value":"07","description":"OTHER CONTROLLED SUBSTANCE"},
+    {"value":"77","description":"NEGATIVE"},
+    {"value":"99","description":"UNKNOWN"}
+]

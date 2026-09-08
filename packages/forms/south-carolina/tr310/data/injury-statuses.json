@@ -1,0 +1,7 @@
+[
+    {"value":"0","description":"NO APPARENT INJURY"},
+    {"value":"1","description":"POSSIBLE INJURY"},
+    {"value":"2","description":"SUSPECTED MINOR INJURY"},
+    {"value":"3","description":"SUSPECTED SERIOUS INJURY"},
+    {"value":"4","description":"FATAL"}
+]

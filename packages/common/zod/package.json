@@ -1,0 +1,18 @@
+{
+    "name": "@common/zod",
+    "description": "A shared package for zod schema parsing and validation utilities.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo"
+    },
+    "dependencies": {
+        "zod": "4.3.6"
+    }
+}

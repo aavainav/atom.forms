@@ -1,0 +1,9 @@
+[
+    {"value":"1","description":"BEFORE 1ST SIGN"},
+    {"value":"2","description":"ADVANCED WARNING AREA"},
+    {"value":"3","description":"TRANSITION AREA"},
+    {"value":"4","description":"ACTIVITY AREA"},
+    {"value":"5","description":"TERMINATION AREA"},
+    {"value":"7","description":"NOT APPLICABLE"},
+    {"value":"9","description":"UNKNOWN"}
+]

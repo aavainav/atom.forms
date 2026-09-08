@@ -1,0 +1,47 @@
+import { IDefinition, Definition } from "./definition";
+import { Entity } from "./entity";
+import { IFieldDefinition } from "./field-definition";
+import { PageModel } from "./page";
+import { PageDefinition } from "./page-definition";
+import { SectionModel, SectionModelConstructor } from "./section";
+
+/** Defines the definition of a section within a form. */
+export interface ISectionDefinition extends IDefinition {
+    /** Creates a new section model instance from this definition. */
+    createNew(parent: Entity<Definition>): SectionModel;
+    /** Returns the page definition that this section belongs to. */
+    getPageDefinition(): PageDefinition<PageModel>;
+    /** Registers a field definition as a child of this section. */
+    registerField(fieldDefinition: IFieldDefinition): void;
+}
+
+/** Represents the definition of a section within a form. */
+export class SectionDefinition<TSection extends SectionModel = SectionModel> extends Definition implements ISectionDefinition {
+    constructor(
+        name: string,
+        pageDefinition: PageDefinition<PageModel>,
+        ctor: SectionModelConstructor<TSection>
+    ) {
+        super(
+            name,
+            ctor,
+            pageDefinition
+        );
+
+        pageDefinition.registerSection(this);
+
+        SectionModel.registerDefinition(ctor, this);
+    }
+
+    public createNew(parent: Entity<Definition>): TSection {
+        return Entity.create(this.valueType as SectionModelConstructor<TSection>, parent);
+    }
+
+    public getPageDefinition(): PageDefinition<PageModel> {
+        return this.parent as PageDefinition<PageModel>;
+    }
+
+    public registerField(fieldDefinition: IFieldDefinition): void {
+        this.registerChild(fieldDefinition);
+    }
+}

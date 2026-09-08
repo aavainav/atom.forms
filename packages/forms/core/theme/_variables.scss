@@ -1,0 +1,104 @@
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+
+// General Variables
+
+// The theme/colors were generated using the following tools:
+// https://huemint.com/bootstrap-basic/
+// https://themestr.app/theme
+// https://bootstrap.build/app
+
+// TODO: should we modify/generate the other BS colors? Especially the gray's?
+// https://getbootstrap.com/docs/5.0/customize/color/#theme-colors
+
+// Color System
+$primary:                                       #517bf0;
+$secondary:                                     #2c3e50;
+$success:                                       #3ab881;
+$danger:                                        #db5860;
+$info:                                          #0397d7;
+$warning:                                       #ffc067;
+$light:                                         #f8fbfd;
+$dark:                                          #262626;
+
+// Font              
+$font-family-base:                              "Raleway", sans-serif, Arial, helvetica;
+$font-size-base:                                .9375rem;
+$font-size-sm:                                  $font-size-base * .88;
+$font-weight-bold:                              700;
+$font-weight-normal:                            300;
+
+// Font size
+$font-size-1:                                   2rem;
+$font-size-2:                                   1.75rem;
+$font-size-3:                                   1.5rem;
+$font-size-4:                                   1.25rem;
+$font-size-5:                                   1rem;
+$font-size-6:                                   0.65rem;
+
+// Links
+$link-decoration:                               none;
+
+// Margin
+$margin-0:                                      0;
+$margin-xxs:                                    0.45rem;
+$margin-xs:                                     0.75rem;
+$margin-sm:                                     1rem;
+$margin-md:                                     2rem;
+$margin-lg:                                     3rem;
+$margin-xl:                                     4rem;
+$margin-xxl:                                    5rem;
+$margin-xxxl:                                   8rem;
+
+// Options
+$min-contrast-ratio:                            3.35;
+
+// Padding
+$padding-0:                                     0;
+$padding-xxs:                                   0.45rem;
+$padding-xs:                                    0.75rem;
+$padding-sm:                                    1rem;
+$padding-md:                                    2rem;
+$padding-lg:                                    3rem;
+$padding-xl:                                    4rem;
+$padding-xxl:                                   5rem;
+$padding-xxxl:                                  8rem;
+
+// Breakpoints
+$device-breakpoint-xs:                          575.98px;
+$device-breakpoint-sm:                          767.98px;
+$device-breakpoint-md:                          991.98px;
+$device-breakpoint-lg:                          1199.98px;
+
+// 
+
+// Dropzone
+$dropzone-dragging:                             #b5ffdf;
+$dropzone-invalid:                              #ffb9be;
+
+// Page
+$page-padding:                                  25px;
+
+// Theme
+$theme-colors: (
+    "primary": $primary,
+    "secondary": $secondary,
+    "success": $success,
+    "danger": $danger,
+    "info": $info,
+    "warning": $warning,
+    "light": $light,
+    "dark": $dark
+);
+
+// Toast
+$toast-z-index:                                 1090;
+
+// Tooltip
+$tooltip-bg:                                    rgba(44, 62, 80, 1);
+$tooltip-arrow-color:                           $tooltip-bg;
+
+// Watermark
+$watermark-color:                               rgba(0, 0, 0, 0.12);

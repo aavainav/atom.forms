@@ -1,0 +1,23 @@
+@use "../variables";
+
+.f-watermark {
+    inset: 0;
+    overflow: hidden;
+    // the watermark sits over the page content, so it must not swallow clicks meant for the fields beneath it
+    pointer-events: none;
+    position: absolute;
+    user-select: none;
+    z-index: 1;
+}
+
+.f-watermark-content {
+    color: variables.$watermark-color;
+    // the base size only anchors the measurement; the component scales the text to span the page's diagonal
+    font-size: 4rem;
+    font-weight: variables.$font-weight-bold;
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform-origin: center;
+    white-space: nowrap;
+}

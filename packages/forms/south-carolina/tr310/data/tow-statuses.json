@@ -1,0 +1,6 @@
+[
+    {"value":"1","description":"YES, DISABLED"},
+    {"value":"2","description":"YES, NOT DISABLED"},
+    {"value":"3","description":"NO"},
+    {"value":"9","description":"UNKNOWN"}
+]

@@ -1,0 +1,13 @@
+@use "../variables";
+
+.f-field-control-label {
+    font-size: variables.$font-size-6 !important;
+}
+
+.f-field-control-content {
+    height: 100%;
+
+    > * {
+        height: 100%;
+    }
+}

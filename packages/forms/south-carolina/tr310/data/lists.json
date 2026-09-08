@@ -1,0 +1,355 @@
+[
+    {
+        "source": "counties.json",
+        "output": "counties.ts",
+        "export": "counties",
+        "doc": "The South Carolina counties a collision can be recorded in."
+    },
+    {
+        "source": "genders.json",
+        "output": "genders.ts",
+        "export": "genders",
+        "doc": "The sexes a person on the report can be recorded as."
+    },
+    {
+        "source": "yes-no.json",
+        "output": "yes-no.ts",
+        "export": "yesNo",
+        "doc": "The plain yes/no answer the form codes as 1 and 2, used by hit and run and by whether a person contributed to the collision."
+    },
+    {
+        "source": "yes-no-unknown.json",
+        "output": "yes-no-unknown.ts",
+        "export": "yesNoUnknown",
+        "doc": [
+            "The yes/no/unknown answer the form codes as 1, 2 and 9.",
+            "",
+            "Work Zone Related prints this legend; the secondary crash, private property and total damage boxes",
+            "print none but are coded the same way by the source system, so they share this list rather than each",
+            "carrying an untyped code of its own."
+        ]
+    },
+    {
+        "source": "trafficway-directions.json",
+        "output": "trafficway-directions.ts",
+        "export": "trafficwayDirections",
+        "doc": "Whether the trafficway the collision occurred on carries one way or two."
+    },
+    {
+        "source": "trafficway-divisions.json",
+        "output": "trafficway-divisions.ts",
+        "export": "trafficwayDivisions",
+        "doc": "How the trafficway the collision occurred on is divided."
+    },
+    {
+        "source": "barrier-types.json",
+        "output": "barrier-types.ts",
+        "export": "barrierTypes",
+        "doc": "The type of barrier present at the collision location."
+    },
+    {
+        "source": "intersection-types.json",
+        "output": "intersection-types.ts",
+        "export": "intersectionTypes",
+        "doc": "The type of intersection the collision occurred at, or that it occurred at none."
+    },
+    {
+        "source": "light-conditions.json",
+        "output": "light-conditions.ts",
+        "export": "lightConditions",
+        "doc": "The light condition at the time of the collision."
+    },
+    {
+        "source": "weather-conditions.json",
+        "output": "weather-conditions.ts",
+        "export": "weatherConditions",
+        "doc": "The weather at the time of the collision; the form records up to two."
+    },
+    {
+        "source": "road-surface-conditions.json",
+        "output": "road-surface-conditions.ts",
+        "export": "roadSurfaceConditions",
+        "doc": "The condition of the road surface at the time of the collision."
+    },
+    {
+        "source": "manners-of-collision.json",
+        "output": "manners-of-collision.ts",
+        "export": "mannersOfCollision",
+        "doc": "How the units came together, or that the collision did not involve a motor vehicle in transport."
+    },
+    {
+        "source": "first-harmful-events.json",
+        "output": "first-harmful-events.ts",
+        "export": "firstHarmfulEvents",
+        "doc": [
+            "The first event in the collision that caused injury or damage.",
+            "",
+            "This is not the same list as the unit page's sequence of events, which adds the non-harmful 01-10 codes",
+            "this one does not carry, so the two are kept apart rather than merged and filtered."
+        ]
+    },
+    {
+        "source": "first-harmful-event-locations.json",
+        "output": "first-harmful-event-locations.ts",
+        "export": "firstHarmfulEventLocations",
+        "doc": "Where on or off the trafficway the first harmful event occurred."
+    },
+    {
+        "source": "relations-to-junction.json",
+        "output": "relations-to-junction.ts",
+        "export": "relationsToJunction",
+        "doc": "The collision's relation to a junction, or that it occurred at none."
+    },
+    {
+        "source": "roadway-contributing-factors.json",
+        "output": "roadway-contributing-factors.ts",
+        "export": "roadwayContributingFactors",
+        "doc": "The roadway or environmental conditions contributing to the collision; the form records up to two."
+    },
+    {
+        "source": "school-bus-relations.json",
+        "output": "school-bus-relations.ts",
+        "export": "schoolBusRelations",
+        "doc": "Whether a school bus was directly or indirectly involved in the collision."
+    },
+    {
+        "source": "work-zone-crash-locations.json",
+        "output": "work-zone-crash-locations.ts",
+        "export": "workZoneCrashLocations",
+        "doc": "Which part of the work zone the collision occurred in."
+    },
+    {
+        "source": "work-zone-types.json",
+        "output": "work-zone-types.ts",
+        "export": "workZoneTypes",
+        "doc": "The type of work zone the collision occurred in."
+    },
+    {
+        "source": "work-zone-presences.json",
+        "output": "work-zone-presences.ts",
+        "export": "workZonePresences",
+        "doc": "Whether someone was present in the work zone; the worker present and law enforcement boxes print the same legend and share this list."
+    },
+    {
+        "source": "person-types.json",
+        "output": "person-types.ts",
+        "export": "personTypes",
+        "doc": "Whether the person the page records is a motor vehicle driver or a non-motorist."
+    },
+    {
+        "source": "license-jurisdictions.json",
+        "output": "license-jurisdictions.ts",
+        "export": "licenseJurisdictions",
+        "doc": "The kind of jurisdiction that issued the driver's license."
+    },
+    {
+        "source": "driver-distractions.json",
+        "output": "driver-distractions.ts",
+        "export": "driverDistractions",
+        "doc": "What the driver was distracted by at the time of the collision."
+    },
+    {
+        "source": "driver-actions.json",
+        "output": "driver-actions.ts",
+        "export": "driverActions",
+        "doc": "The driver's actions at the time of the collision; the form records up to four, in order."
+    },
+    {
+        "source": "ejections.json",
+        "output": "ejections.ts",
+        "export": "ejections",
+        "doc": "Whether and how far the person was ejected from the vehicle."
+    },
+    {
+        "source": "medical-facility-transports.json",
+        "output": "medical-facility-transports.ts",
+        "export": "medicalFacilityTransports",
+        "doc": "How the person was transported to a medical facility, or that they were not."
+    },
+    {
+        "source": "air-bag-deployments.json",
+        "output": "air-bag-deployments.ts",
+        "export": "airBagDeployments",
+        "doc": "Which air bags deployed for the person's seating position."
+    },
+    {
+        "source": "restraint-devices.json",
+        "output": "restraint-devices.ts",
+        "export": "restraintDevices",
+        "doc": "The restraint the person was using at the time of the collision."
+    },
+    {
+        "source": "non-motorist-unit-types.json",
+        "output": "non-motorist-unit-types.ts",
+        "export": "nonMotoristUnitTypes",
+        "doc": "What the non-motorist was travelling as, from a pedestrian to a vehicle on rails."
+    },
+    {
+        "source": "non-motorist-distractions.json",
+        "output": "non-motorist-distractions.ts",
+        "export": "nonMotoristDistractions",
+        "doc": "What the non-motorist was distracted by at the time of the collision."
+    },
+    {
+        "source": "injury-statuses.json",
+        "output": "injury-statuses.ts",
+        "export": "injuryStatuses",
+        "doc": "The severity of the person's injury, from none apparent to fatal."
+    },
+    {
+        "source": "contributing-actions.json",
+        "output": "contributing-actions.ts",
+        "export": "contributingActions",
+        "doc": "The person's actions or circumstances contributing to the collision; the form records up to two."
+    },
+    {
+        "source": "actions-prior-to-impact.json",
+        "output": "actions-prior-to-impact.ts",
+        "export": "actionsPriorToImpact",
+        "doc": "What the person was doing immediately before the impact."
+    },
+    {
+        "source": "safety-equipment-uses.json",
+        "output": "safety-equipment-uses.ts",
+        "export": "safetyEquipmentUses",
+        "doc": "The yes/no/unknown/not-applicable answer every safety equipment box on the person page takes."
+    },
+    {
+        "source": "suspected-substance-uses.json",
+        "output": "suspected-substance-uses.ts",
+        "export": "suspectedSubstanceUses",
+        "doc": "What the officer suspects the person had been using."
+    },
+    {
+        "source": "test-statuses.json",
+        "output": "test-statuses.ts",
+        "export": "testStatuses",
+        "doc": "Whether a test was given, refused or is pending; the alcohol and drug test status boxes print the same legend and share this list."
+    },
+    {
+        "source": "alcohol-test-types.json",
+        "output": "alcohol-test-types.ts",
+        "export": "alcoholTestTypes",
+        "doc": "The kind of alcohol test administered."
+    },
+    {
+        "source": "drug-test-types.json",
+        "output": "drug-test-types.ts",
+        "export": "drugTestTypes",
+        "doc": "The kind of drug test administered."
+    },
+    {
+        "source": "drug-test-results.json",
+        "output": "drug-test-results.ts",
+        "export": "drugTestResults",
+        "doc": "The substance the drug test found, or that it found none."
+    },
+    {
+        "source": "unit-statuses.json",
+        "output": "unit-statuses.ts",
+        "export": "unitStatuses",
+        "doc": "What the unit was doing at the time of the collision - in transport, parked, or working."
+    },
+    {
+        "source": "damage-extents.json",
+        "output": "damage-extents.ts",
+        "export": "damageExtents",
+        "doc": "How badly the unit was damaged."
+    },
+    {
+        "source": "cdl-requirements.json",
+        "output": "cdl-requirements.ts",
+        "export": "cdlRequirements",
+        "doc": "Whether the unit required a commercial driver's license to operate."
+    },
+    {
+        "source": "tow-statuses.json",
+        "output": "tow-statuses.ts",
+        "export": "towStatuses",
+        "doc": "Whether the unit was towed, and whether it was disabled."
+    },
+    {
+        "source": "travel-directions.json",
+        "output": "travel-directions.ts",
+        "export": "travelDirections",
+        "doc": "The compass direction the unit was travelling in, or that it was not on the roadway."
+    },
+    {
+        "source": "speed-relations.json",
+        "output": "speed-relations.ts",
+        "export": "speedRelations",
+        "doc": "How speed was involved in the collision, if it was."
+    },
+    {
+        "source": "damage-areas.json",
+        "output": "damage-areas.ts",
+        "export": "damageAreas",
+        "doc": [
+            "Where the unit was damaged.",
+            "",
+            "Codes 01 through 12 are the clock positions on the vehicle diagram printed beside the boxes; the rest",
+            "are the named areas the legend lists. The initial point of contact and each of the twelve other areas",
+            "of damage draw on this same list."
+        ]
+    },
+    {
+        "source": "unit-types.json",
+        "output": "unit-types.ts",
+        "export": "unitTypes",
+        "doc": "The type of unit, covering both the motor vehicles and the other vehicles the legend lists."
+    },
+    {
+        "source": "emergency-vehicle-uses.json",
+        "output": "emergency-vehicle-uses.ts",
+        "export": "emergencyVehicleUses",
+        "doc": "How the unit was being used as an emergency vehicle, if it was."
+    },
+    {
+        "source": "special-functions.json",
+        "output": "special-functions.ts",
+        "export": "specialFunctions",
+        "doc": "The special function the motor vehicle was serving, or that it served none."
+    },
+    {
+        "source": "sequence-of-events.json",
+        "output": "sequence-of-events.ts",
+        "export": "sequenceOfEvents",
+        "doc": [
+            "The events in the collision, in the order they occurred; the form records up to four plus the most",
+            "harmful one.",
+            "",
+            "This carries the non-harmful 01-10 codes the collision page's first harmful event list does not, which",
+            "is why the two are separate lists over overlapping data."
+        ]
+    },
+    {
+        "source": "roadway-grades.json",
+        "output": "roadway-grades.ts",
+        "export": "roadwayGrades",
+        "doc": "The grade of the roadway where the unit was travelling."
+    },
+    {
+        "source": "roadway-alignments.json",
+        "output": "roadway-alignments.ts",
+        "export": "roadwayAlignments",
+        "doc": "The alignment of the roadway where the unit was travelling."
+    },
+    {
+        "source": "vehicle-actions-prior-to-impact.json",
+        "output": "vehicle-actions-prior-to-impact.ts",
+        "export": "vehicleActionsPriorToImpact",
+        "doc": "What the vehicle was doing immediately before the impact."
+    },
+    {
+        "source": "traffic-control-devices.json",
+        "output": "traffic-control-devices.ts",
+        "export": "trafficControlDevices",
+        "doc": "The traffic control devices in place where the collision occurred; the form records up to four."
+    },
+    {
+        "source": "vehicle-contributing-circumstances.json",
+        "output": "vehicle-contributing-circumstances.ts",
+        "export": "vehicleContributingCircumstances",
+        "doc": "The condition of the vehicle contributing to the collision, or that none did."
+    }
+]

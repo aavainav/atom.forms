@@ -1,0 +1,1 @@
+export { default as FLabel } from "./form-label";

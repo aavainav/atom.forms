@@ -1,0 +1,7 @@
+[
+    {"value":"1","description":"NOT EJECTED"},
+    {"value":"2","description":"PARTIALLY EJECTED"},
+    {"value":"3","description":"TOTALLY EJECTED"},
+    {"value":"7","description":"NOT APPLICABLE"},
+    {"value":"9","description":"UNKNOWN"}
+]

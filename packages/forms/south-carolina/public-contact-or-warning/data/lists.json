@@ -1,0 +1,20 @@
+[
+    {
+        "source": "counties.json",
+        "output": "counties.ts",
+        "export": "counties",
+        "doc": "The South Carolina counties a contact can be recorded in."
+    },
+    {
+        "source": "race-ethnicities.json",
+        "output": "race-ethnicities.ts",
+        "export": "raceEthnicities",
+        "doc": [
+            "The race/ethnicity codes, in the order the source list carries them rather than alphabetically.",
+            "",
+            "The order is load-bearing rather than cosmetic: this is a merged legacy code list carrying genuine",
+            "duplicates - A and AP both read ASIAN OR PACIFIC ISLANDER, as do I/AI, B/BK and O/AO - and a lookup by",
+            "description stops on the first match. Re-sorting it would change which code a dropped name resolves to."
+        ]
+    }
+]

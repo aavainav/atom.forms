@@ -1,0 +1,18 @@
+[
+    {"value":"00","description":"NO IMPROPER ACTION"},
+    {"value":"01","description":"INATTENTIVE DISTRACTED"},
+    {"value":"02","description":"DART/DASH"},
+    {"value":"03","description":"IN ROADWAY IMPROPERLY"},
+    {"value":"04","description":"NOT VISIBLE (DARK CLOTHING, NO LIGHTING, ETC)"},
+    {"value":"05","description":"DISREGARD SIGNS, SIGNALS, ETC."},
+    {"value":"06","description":"WRONG WAY RIDING OR WALKING"},
+    {"value":"07","description":"FAILURE TO YIELD RIGHT OF WAY"},
+    {"value":"08","description":"IMPROPER PASSING"},
+    {"value":"09","description":"IMPROPER TURN/MERGE"},
+    {"value":"10","description":"DISABLED VEHICLE RELATED"},
+    {"value":"11","description":"ENTERING/EXITING PARKED/STANDING VEHICLE"},
+    {"value":"12","description":"FLEEING OR EVADING LAW ENFORCEMENT"},
+    {"value":"55","description":"PASSENGER CROSSING"},
+    {"value":"88","description":"OTHER IMPROPER ACTION"},
+    {"value":"99","description":"UNKNOWN"}
+]

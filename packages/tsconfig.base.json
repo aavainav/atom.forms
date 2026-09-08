@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noEmitOnError": true,
+        "inlineSourceMap": true,
+        "ignoreDeprecations": "5.0",
+        "strict": true,
+        "stripInternal": true,
+        "moduleResolution": "bundler",
+        "module": "commonjs",
+        "target": "esnext",
+        "lib": ["dom", "esnext"]
+    }
+}

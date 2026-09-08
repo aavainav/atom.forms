@@ -1,0 +1,22 @@
+{
+    "name": "@forms/value-lists",
+    "description": "The registry and generated data for the value lists backing the form option fields.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "bin": {
+        "generate-value-lists": "./scripts/generate-value-lists.mjs"
+    },
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+        "generate": "node ./scripts/generate-value-lists.mjs --data ./data --out ./src/generated --row-import ../models/value-list-option"
+    },
+    "dependencies": {
+        "@shrub/core": "0.5.91"
+    }
+}

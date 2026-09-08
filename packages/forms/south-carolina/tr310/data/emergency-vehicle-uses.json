@@ -1,0 +1,8 @@
+[
+    {"value":"01","description":"NON-EMERGENCY, NON-TRANSPORT"},
+    {"value":"02","description":"NON EMERGENCY TRANSPORT"},
+    {"value":"03","description":"EMERGENCY OPERATION, WARNING EQUIPMENT NOT IN USE"},
+    {"value":"04","description":"EMERGENCY OPERATION, WARNING EQUIPMENT IN USE"},
+    {"value":"77","description":"NOT APPLICABLE"},
+    {"value":"99","description":"UNKNOWN"}
+]

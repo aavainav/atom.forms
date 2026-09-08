@@ -1,0 +1,129 @@
+import React from "react";
+import { FNavTab, FNavTabsContext } from "../nav-tab";
+
+import { IControllerManager } from "../../controllers/controller-manager";
+import { IPageBinding } from "../../controllers/form-controller";
+
+import { useForm } from "../../hooks/use-form";
+import { usePrintState } from "../../hooks/use-print-state";
+
+import { PageCollection } from "../../models/page-collection";
+import { PageDefinition } from "../../models/page-definition";
+import { PageModel } from "../../models/page";
+
+import { buildClasses } from "../../utils/class-names";
+
+import { FPage } from "../page/page";
+import { getStatusWatermark } from "../watermark";
+
+interface IPageCollectionGroup<TPage extends PageModel = PageModel> {
+    /** The page definition identifying a certain page type, e.g. the front page; its pages are looked up on the form directly. */
+    readonly pageDefinition: PageDefinition<TPage>;
+    /** Renders the page for the given binding, which is scoped to that one page instance. */
+    readonly children: (binding: IPageBinding<TPage>) => React.ReactNode;
+}
+
+interface IFPageCollectionProps {
+    /** The controllers belonging to the form these pages belong to; the form controller owns the form and the print controller decides whether the pages render for print. */
+    readonly controllers: IControllerManager;
+    /** The page collections to render as one continuous tab strip, in display order. */
+    readonly groups: ReadonlyArray<IPageCollectionGroup<any>>;
+    /** When true, the add/delete page affordances are not offered. */
+    readonly isReadOnly?: boolean;
+    /** The content stamped diagonally across every page in the collection, overriding the watermark the form's status would otherwise carry. */
+    readonly watermark?: React.ReactNode;
+}
+
+interface IPageEntry {
+    readonly group: IPageCollectionGroup<any>;
+    readonly page: PageModel;
+    readonly binding: IPageBinding<any>;
+}
+
+/** A page collection is a group of related pages rendered together as a single continuous tab strip. Pages are numbered by position across all `groups` combined, not per group — e.g. adding a second front page numbers it "Page 2", even though front pages are their own group. While a print is in progress the tab strip gives way to the pages that print is for, laid out flat. */
+export default function FPageCollection({ controllers, groups, isReadOnly, watermark }: IFPageCollectionProps): React.JSX.Element {
+    const controller = controllers.getFormController();
+    const form = useForm(controller);
+    const printState = usePrintState(controllers.getPrintController());
+
+    // a read-only form is a record of something already settled, so its status is stamped across it; an editable form is
+    // still being written and carries none. an explicitly supplied watermark wins over the status-derived one.
+    const pageWatermark = watermark ?? (isReadOnly ? getStatusWatermark(form.status) : undefined);
+
+    const toEntries = (source: ReadonlyArray<IPageCollectionGroup<any>>): Array<IPageEntry> => source.flatMap((group) => {
+        const pageCollection = form.get<PageCollection>(group.pageDefinition);
+        return pageCollection.pages.map((page) => ({
+            group,
+            page,
+            binding: controller.getPageBinding(group.pageDefinition, page.id!)
+        }));
+    });
+
+    const entries: Array<IPageEntry> = toEntries(groups);
+
+    const [activeId, setActiveId] = React.useState<string | undefined>(entries[0]?.page.id);
+
+    const activeEntry = entries.find((entry) => entry.page.id === activeId) ?? entries[0];
+
+    if (printState) {
+        // the pages are rendered flat rather than as panes, since a print needs every page of the copy in the
+        // document at once; the add and delete affordances go with the tab strip, as neither belongs on paper
+        return (
+            <div className={buildClasses("f-print", `f-print--${printState.layout}`)} style={getPrintStyle(printState.scale)}>
+                {toEntries(selectPrintGroups(groups, printState.pageNames)).map((entry) => (
+                    <FPage key={entry.page.id} formType={form.type} watermark={pageWatermark}>
+                        {entry.group.children(entry.binding)}
+                    </FPage>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="page-collection">
+            <FNavTabsContext.Provider value={{ activeTab: activeEntry?.page.id ?? "", setActiveTab: setActiveId }}>
+                <ul className="nav nav-tabs">
+                    {entries.map((entry, index) => (
+                        <FNavTab.Tab key={entry.page.id} id={entry.page.id ?? ""} title={`Page ${index + 1}`} />
+                    ))}
+                </ul>
+                <div className="tab-content">
+                    {entries.map((entry) => (
+                        <FNavTab.Pane key={entry.page.id} id={entry.page.id ?? ""}>
+                            <FPage
+                                formType={form.type}
+                                watermark={pageWatermark}
+                                onAddPage={isReadOnly ? undefined : () => controller.addPage(entry.group.pageDefinition)}
+                                // the controller asks its confirm-delete policy, so the confirmation cannot be skipped by a host that forgets to supply one
+                                onDeletePage={isReadOnly ? undefined : () => controller.removePage(entry.group.pageDefinition, entry.page.id!)}
+                            >
+                                {entry.group.children(entry.binding)}
+                            </FPage>
+                        </FNavTab.Pane>
+                    ))}
+                </div>
+            </FNavTabsContext.Provider>
+        </div>
+    );
+}
+
+/** Builds the inline style carrying the scale the printed pages are shrunk by; the stylesheet falls back to their natural size when none was measured. */
+function getPrintStyle(scale?: number): React.CSSProperties | undefined {
+    // a custom property is not part of CSSProperties, so the literal is asserted into it
+    return scale === undefined ? undefined : ({ "--f-print-scale": scale } as React.CSSProperties);
+}
+
+/**
+ * Narrows the groups to the pages a print is for, in the order it names them. Selection is by page definition
+ * *name* rather than by the definition itself, so a printable copy can be declared as plain strings by a form
+ * module; a name matching a repeating page type contributes every instance of it.
+ */
+function selectPrintGroups(groups: ReadonlyArray<IPageCollectionGroup<any>>, pageNames?: ReadonlyArray<string>): ReadonlyArray<IPageCollectionGroup<any>> {
+    if (!pageNames) {
+        return groups;
+    }
+
+    return pageNames
+        .map((pageName) => groups.find((group) => group.pageDefinition.name === pageName))
+        .filter((group): group is IPageCollectionGroup<any> => group !== undefined);
+}

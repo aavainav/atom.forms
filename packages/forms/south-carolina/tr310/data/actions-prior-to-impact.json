@@ -1,0 +1,15 @@
+[
+    {"value":"22","description":"ENTERING/CROSSING ROADWAY"},
+    {"value":"23","description":"DISABLED VEHICLE RELATED"},
+    {"value":"24","description":"PUSHING VEHICLE"},
+    {"value":"25","description":"WAITING TO CROSS ROADWAY"},
+    {"value":"26","description":"WORKING"},
+    {"value":"27","description":"MOVEMENT WITH TRAFFIC"},
+    {"value":"28","description":"MOVEMENT AGAINST TRAFFIC"},
+    {"value":"29","description":"MOVEMENT ON SIDEWALK"},
+    {"value":"30","description":"INCIDENT RESPONSE"},
+    {"value":"31","description":"ADJACENT TO ROADWAY (SHOULDER, MEDIAN)"},
+    {"value":"32","description":"IN ROADWAY OTHER"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

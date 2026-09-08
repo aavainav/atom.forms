@@ -1,0 +1,48 @@
+.f-print {
+    display: flex;
+    gap: 0.25in;
+}
+
+.f-print--side-by-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.f-print--top-down {
+    align-items: center;
+    flex-direction: column;
+}
+
+// these hold in both media rather than only under print, so that the pages the print service measures are laid out
+// exactly as the ones it is about to hand the printer. a rule that applied only when printing would move the
+// pages after they had been measured, and the scale chosen to fit them onto a sheet would be measured against a
+// layout that no longer existed. the drop shadow is screen chrome — on paper it prints as a grey smear down two
+// edges of every page — and break-inside is inert outside of print.
+.f-print .f-page {
+    box-shadow: none;
+    break-inside: avoid;
+    margin-bottom: 0;
+}
+
+@media print {
+    // zoom, unlike transform, shrinks the layout box along with the content, so the pages still paginate onto
+    // sheets after being scaled down to fit one
+    .f-print {
+        zoom: var(--f-print-scale, 1);
+    }
+
+    .f-print--top-down .f-page {
+        break-after: page;
+    }
+
+    .f-print--top-down .f-page:last-child {
+        break-after: auto;
+    }
+
+    // hide everything that is neither the print container, inside it, nor an ancestor of it. this drops the
+    // options bar and whatever chrome the host renders around the form without this package having to know
+    // what any of it is.
+    body:has(.f-print) *:not(:has(.f-print)):not(.f-print):not(.f-print *) {
+        display: none !important;
+    }
+}

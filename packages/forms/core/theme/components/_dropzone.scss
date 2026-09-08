@@ -1,0 +1,11 @@
+@use "../variables";
+
+.dropzone-dragging {
+    pointer-events: auto;
+    background-color: variables.$dropzone-dragging;
+}
+
+.dropzone-invalid {
+    pointer-events: none;
+    background-color: variables.$dropzone-invalid;
+}

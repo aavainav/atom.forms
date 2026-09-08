@@ -1,0 +1,27 @@
+[
+    {
+        "source": "states.json",
+        "output": "states.ts",
+        "export": "states",
+        "doc": "The states, provinces and territories a license can be issued by."
+    },
+    {
+        "source": "vehicle-makes.json",
+        "output": "vehicle-makes.ts",
+        "export": "vehicleMakes",
+        "doc": [
+            "The vehicle makes. Reached only through the vehicle make list definition, which imports this module",
+            "dynamically, so it is fetched when a make select first needs it rather than when the form loads."
+        ]
+    },
+    {
+        "source": "vehicle-models.json",
+        "output": "vehicle-models.ts",
+        "export": "vehicleModels",
+        "doc": [
+            "The vehicle models, each carrying the value of the make it belongs to. Reached only through the vehicle",
+            "model list definition, which imports this module dynamically, so it is fetched once a make has been",
+            "chosen and its models are needed."
+        ]
+    }
+]

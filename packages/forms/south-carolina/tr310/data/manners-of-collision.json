@@ -1,0 +1,13 @@
+[
+    {"value":"00","description":"NOT A COLLISION WITH MV IN TRANSPORT"},
+    {"value":"10","description":"FRONT TO FRONT"},
+    {"value":"20","description":"FRONT TO REAR"},
+    {"value":"30","description":"SIDESWIPE SAME DIR"},
+    {"value":"40","description":"SIDESWIPE OPPOSITE DIR"},
+    {"value":"50","description":"REAR TO FRONT"},
+    {"value":"60","description":"REAR TO SIDE"},
+    {"value":"70","description":"REAR TO REAR"},
+    {"value":"80","description":"ANGLE"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

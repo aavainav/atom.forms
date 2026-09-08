@@ -1,0 +1,7 @@
+[
+    {"value":"00","description":"NO DAMAGE"},
+    {"value":"01","description":"MINOR DAMAGE"},
+    {"value":"02","description":"FUNCTIONAL DAMAGE"},
+    {"value":"03","description":"DISABLING DAMAGE"},
+    {"value":"99","description":"UNKNOWN VEHICLE NOT AT SCENE"}
+]

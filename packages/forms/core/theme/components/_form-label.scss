@@ -1,0 +1,25 @@
+@use "../variables";
+
+.f-label.fs-1 {
+    font-size: variables.$font-size-1 !important;
+}
+
+.f-label.fs-2 {
+    font-size: variables.$font-size-2 !important;
+}
+
+.f-label.fs-3 {
+    font-size: variables.$font-size-3 !important;
+}
+
+.f-label.fs-4 {
+    font-size: variables.$font-size-4 !important;
+}
+
+.f-label.fs-5 {
+    font-size: variables.$font-size-5 !important;
+}
+
+.f-label.fs-6 {
+    font-size: variables.$font-size-6 !important;
+}

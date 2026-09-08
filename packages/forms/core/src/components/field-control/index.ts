@@ -1,0 +1,2 @@
+export { default as FFieldControl } from "./field-control";
+export type { FControlBorderEdge, FControlBorderEdges, FControlBorderStyle, FControlBorderVisibility, FControlLabelFontWeight, FControlLabelTextCase } from "./field-control";

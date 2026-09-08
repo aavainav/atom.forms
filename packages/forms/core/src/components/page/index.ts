@@ -1,0 +1,1 @@
+export { FPage } from "./page";

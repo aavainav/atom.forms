@@ -1,0 +1,13 @@
+[
+    {"value":"01","description":"DRY"},
+    {"value":"02","description":"WET"},
+    {"value":"03","description":"SNOW"},
+    {"value":"04","description":"SLUSH"},
+    {"value":"05","description":"ICE/FROST"},
+    {"value":"06","description":"SAND"},
+    {"value":"07","description":"WATER (STANDING, ETC.)"},
+    {"value":"08","description":"MUD, DIRT, GRAVEL"},
+    {"value":"09","description":"OIL"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

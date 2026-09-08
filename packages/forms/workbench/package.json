@@ -1,0 +1,22 @@
+{
+    "name": "@forms/workbench",
+    "description": "The package that hosts and renders a standalone forms app around the report viewer.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo"
+    },
+    "dependencies": {
+        "@common/react": "1.0.0",
+        "@common/react-router": "1.0.0",
+        "@forms/report-viewer": "1.0.0",
+        "@shrub/core": "0.5.91",
+        "react-router": "8.1.0"
+    }
+}

@@ -1,0 +1,8 @@
+[
+    {"value":"1","description":"YES, RACING"},
+    {"value":"2","description":"YES, EXCEEDED SPEED LIMIT"},
+    {"value":"3","description":"YES, TOO FAST FOR CONDITION"},
+    {"value":"4","description":"YES, IMPEDING TRAFFIC"},
+    {"value":"5","description":"NO"},
+    {"value":"9","description":"UNKNOWN"}
+]

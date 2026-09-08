@@ -1,0 +1,17 @@
+[
+    {"value":"01","description":"MOVEMENT ESSENTIALLY STRAIGHT AHEAD"},
+    {"value":"02","description":"BACKING"},
+    {"value":"03","description":"CHANGING LANES"},
+    {"value":"04","description":"ENTERING TRAFFIC LANE"},
+    {"value":"05","description":"LEAVING TRAFFIC LANE"},
+    {"value":"06","description":"MAKING U-TURN"},
+    {"value":"07","description":"NEGOTIATING A CURVE"},
+    {"value":"08","description":"OVERTAKING/PASSING"},
+    {"value":"09","description":"PARKED"},
+    {"value":"10","description":"TURNING LEFT"},
+    {"value":"11","description":"TURNING RIGHT"},
+    {"value":"12","description":"SLOWING"},
+    {"value":"13","description":"STOPPED"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

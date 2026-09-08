@@ -1,0 +1,21 @@
+[
+    {"value":"00","description":"NON-COLLISION"},
+    {"value":"01","description":"CLOCK POSITION 1"},
+    {"value":"02","description":"CLOCK POSITION 2"},
+    {"value":"03","description":"CLOCK POSITION 3"},
+    {"value":"04","description":"CLOCK POSITION 4"},
+    {"value":"05","description":"CLOCK POSITION 5"},
+    {"value":"06","description":"CLOCK POSITION 6"},
+    {"value":"07","description":"CLOCK POSITION 7"},
+    {"value":"08","description":"CLOCK POSITION 8"},
+    {"value":"09","description":"CLOCK POSITION 9"},
+    {"value":"10","description":"CLOCK POSITION 10"},
+    {"value":"11","description":"CLOCK POSITION 11"},
+    {"value":"12","description":"CLOCK POSITION 12"},
+    {"value":"13","description":"TOP"},
+    {"value":"14","description":"UNDERCARRIAGE"},
+    {"value":"15","description":"CARGO LOSS OBJECT/PERSON SET IN MOTION"},
+    {"value":"16","description":"VEHICLE NOT AT SCENE"},
+    {"value":"17","description":"VEHICLE PENETRATED"},
+    {"value":"99","description":"UNKNOWN"}
+]

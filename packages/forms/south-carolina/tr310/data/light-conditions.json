@@ -1,0 +1,10 @@
+[
+    {"value":"01","description":"DAYLIGHT"},
+    {"value":"02","description":"DAWN"},
+    {"value":"03","description":"DUSK"},
+    {"value":"04","description":"DARK (NOT LIGHTED)"},
+    {"value":"05","description":"DARK (LIGHTED)"},
+    {"value":"06","description":"DARK (UNKNOWN LIGHTING)"},
+    {"value":"88","description":"OTHER"},
+    {"value":"99","description":"UNKNOWN"}
+]

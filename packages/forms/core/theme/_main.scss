@@ -1,0 +1,28 @@
+@use "./variables" as v;
+
+@use "bootstrap/scss/bootstrap" with (
+    $primary: v.$primary,
+    $secondary: v.$secondary,
+    $success: v.$success,
+    $danger: v.$danger,
+    $info: v.$info,
+    $warning: v.$warning,
+    $light: v.$light,
+    $dark: v.$dark,
+    $font-family-base: v.$font-family-base
+);
+
+@use "bootstrap-icons/font/bootstrap-icons.css";
+
+@use "./components/border";
+@use "./components/dropzone";
+@use "./components/field-checkbox";
+@use "./components/field-control";
+@use "./components/field-input";
+@use "./components/field-select";
+@use "./components/form-label";
+@use "./components/form-stackpanel";
+@use "./components/form";
+@use "./components/page";
+@use "./components/print";
+@use "./components/watermark";

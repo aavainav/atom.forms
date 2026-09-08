@@ -1,0 +1,14 @@
+[
+    {"value":"00","description":"NOT DISTRACTED"},
+    {"value":"01","description":"TEXTING OR MANUALLY OPERATING A MOBILE ELECTRONIC DEVICE"},
+    {"value":"02","description":"TALKING/LISTENING ON HANDS-FREE MOBILE ELECTRONIC DEVICE"},
+    {"value":"03","description":"TALKING/LISTENING ON HANDS HELD MOBILE ELECTRONIC DEVICE"},
+    {"value":"04","description":"UNKNOWN USE OF A MOBILE ELECTRONIC DEVICE"},
+    {"value":"05","description":"VEHICLE-INTEGRATED DEVICE OR CONTROLS"},
+    {"value":"06","description":"PASSENGER(S)"},
+    {"value":"07","description":"OTHER INSIDE VEHICLE"},
+    {"value":"08","description":"OTHER OUTSIDE VEHICLE"},
+    {"value":"09","description":"DISTRACTED, DETAILS UNKNOWN"},
+    {"value":"77","description":"NO DRIVER PRESENT UNKNOWN IF DRIVER PRESENT"},
+    {"value":"99","description":"UNKNOWN IF DISTRACTED"}
+]

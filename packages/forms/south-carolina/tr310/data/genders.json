@@ -1,0 +1,5 @@
+[
+    {"value":"M","description":"MALE"},
+    {"value":"F","description":"FEMALE"},
+    {"value":"U","description":"UNKNOWN"}
+]

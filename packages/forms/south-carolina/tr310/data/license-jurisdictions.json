@@ -1,0 +1,11 @@
+[
+    {"value":"0","description":"NOT LICENSED"},
+    {"value":"1","description":"US STATE"},
+    {"value":"2","description":"CANADA"},
+    {"value":"3","description":"MEXICO"},
+    {"value":"4","description":"OTHER INT'L LICENSE"},
+    {"value":"5","description":"US GOVERNMENT"},
+    {"value":"6","description":"INDIAN NATION"},
+    {"value":"7","description":"NOT APPLICABLE"},
+    {"value":"9","description":"UNKNOWN"}
+]

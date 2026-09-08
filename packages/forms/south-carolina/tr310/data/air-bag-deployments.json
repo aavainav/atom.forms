@@ -1,0 +1,10 @@
+[
+    {"value":"00","description":"NOT DEPLOYED"},
+    {"value":"01","description":"DEPLOYED FRONT"},
+    {"value":"02","description":"DEPLOYED SIDE"},
+    {"value":"03","description":"DEPLOYED CURTAIN"},
+    {"value":"04","description":"DEPLOYED OTHER"},
+    {"value":"05","description":"COMBINATION"},
+    {"value":"06","description":"DEPLOYED, UNKNOWN LOCATION"},
+    {"value":"7","description":"NOT APPLICABLE"}
+]

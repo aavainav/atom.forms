@@ -1,0 +1,7 @@
+[
+    {"value":"1","description":"TEST NOT GIVEN"},
+    {"value":"2","description":"TEST GIVEN"},
+    {"value":"3","description":"TEST REFUSED"},
+    {"value":"4","description":"PENDING"},
+    {"value":"9","description":"UNKNOWN"}
+]
