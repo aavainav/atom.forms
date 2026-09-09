@@ -12,14 +12,14 @@ import type { ViolationRow } from "@forms/violations";
  * replaces this outright.
  */
 export const violations: ReadonlyArray<ViolationRow> = [
-    ["56-1-20", "Driving without a licence", "56-1-20", undefined, 0],
-    ["56-1-460", "Driving under suspension", "56-1-460", undefined, 6, undefined, true],
-    ["56-3-110", "Operating an unregistered vehicle", "56-3-110", undefined, 0],
-    ["56-5-750", "Failure to stop for a law enforcement vehicle", "56-5-750", undefined, 6, undefined, true],
-    ["56-5-1520", "Exceeding the posted speed limit", "56-5-1520", undefined, 2],
-    ["56-5-1930", "Following too closely", "56-5-1930", undefined, 4],
-    ["56-5-2930", "Driving under the influence", "56-5-2930", undefined, 6, undefined, true],
-    ["56-5-3890", "Unlawful use of a wireless electronic communication device", "56-5-3890", undefined, 0],
-    ["56-5-6520", "Failure to wear a seat belt", "56-5-6520", undefined, 0],
-    ["56-10-520", "Operating an uninsured vehicle", "56-10-520", undefined, 0, undefined, true]
+    ["56-1-20", "Driving without a licence", "Licence & registration", "56-1-20", undefined, 0],
+    ["56-1-460", "Driving under suspension", "Licence & registration", "56-1-460", undefined, 6, undefined, true],
+    ["56-3-110", "Operating an unregistered vehicle", "Licence & registration", "56-3-110", undefined, 0],
+    ["56-5-750", "Failure to stop for a law enforcement vehicle", "Moving violation", "56-5-750", undefined, 6, undefined, true],
+    ["56-5-1520", "Exceeding the posted speed limit", "Speed", "56-5-1520", undefined, 2],
+    ["56-5-1930", "Following too closely", "Moving violation", "56-5-1930", undefined, 4],
+    ["56-5-2930", "Driving under the influence", "Impaired driving", "56-5-2930", undefined, 6, undefined, true],
+    ["56-5-3890", "Unlawful use of a wireless electronic communication device", "Moving violation", "56-5-3890", undefined, 0],
+    ["56-5-6520", "Failure to wear a seat belt", "Occupant safety", "56-5-6520", undefined, 0],
+    ["56-10-520", "Operating an uninsured vehicle", "Insurance", "56-10-520", undefined, 0, undefined, true]
 ];

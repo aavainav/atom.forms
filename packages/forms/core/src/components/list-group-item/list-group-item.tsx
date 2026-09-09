@@ -26,6 +26,12 @@ export default function FListGroupItem({
             event.preventDefault();
         }
 
+        // the disabled class greys the row but nothing about an anchor or a div refuses a click on its own, so a
+        // disabled item would otherwise still act on being clicked while looking as though it could not be
+        if (disabled) {
+            return;
+        }
+
         onClick?.(event);
     };
 
@@ -33,14 +39,14 @@ export default function FListGroupItem({
 
     if (href) {
         return (
-            <a id={id} href={href} className={classes} onClick={handleClick}>
+            <a id={id} href={href} className={classes} aria-disabled={disabled || undefined} onClick={handleClick}>
                 {children}
             </a>
         );
     }
 
     return (
-        <div id={id} className={classes} onClick={handleClick}>
+        <div id={id} className={classes} aria-disabled={disabled || undefined} onClick={handleClick}>
             {children}
         </div>
     );

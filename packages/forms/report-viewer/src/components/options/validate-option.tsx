@@ -1,17 +1,13 @@
 import React from "react";
 import { useService } from "@common/react";
-import { FButton, FIcon, FTooltip, IControllerManager, IRuleIssue } from "@forms/core";
+import { FButton, FIcon, FTooltip, IRuleIssue } from "@forms/core";
 
-import { INotificationService } from "../../services";
+import { INotificationService, IReportViewerOptionProps } from "../../services";
 import { IValidationService } from "../../services/validation";
 
-interface IValidateOptionProps {
-    /** The controllers belonging to the form being validated. */
-    readonly controllers: IControllerManager;
-}
 
 /** Defines the option for validating the current report. */
-export const ValidateOption = ({ controllers }: IValidateOptionProps): React.JSX.Element => {
+export const ValidateOption = ({ controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const notificationService = useService<INotificationService>(INotificationService);
     const validationService = useService<IValidationService>(IValidationService);
 
@@ -36,7 +32,7 @@ export const ValidateOption = ({ controllers }: IValidateOptionProps): React.JSX
     };
 
     return (
-        <FTooltip title="Validate" placement="top">
+        <FTooltip title={title} placement="top">
             <FButton id="validate-button" variant="light" type="button" onClick={handleValidate}>
                 <FIcon icon="shield-check" />
             </FButton>

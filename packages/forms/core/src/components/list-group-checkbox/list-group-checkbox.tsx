@@ -23,7 +23,9 @@ export default function FListGroupCheckbox({
 }: React.PropsWithChildren<IFListGroupCheckboxProps>): React.JSX.Element {
     return (
         <FListGroupItem id={id} disabled={disabled} href="#" preventDefault onClick={() => onChange?.(!checked)}>
-            <FFieldCheckbox label={label} checked={checked} indeterminate={indeterminate} onChange={onChange}>
+            {/* the box is disabled along with the row: the row's own click is what a click anywhere else on it
+                goes through, but the input sits on top of it and would otherwise still toggle */}
+            <FFieldCheckbox label={label} checked={checked} disabled={disabled} indeterminate={indeterminate} onChange={onChange}>
                 {children}
             </FFieldCheckbox>
         </FListGroupItem>

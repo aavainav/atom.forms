@@ -1,4 +1,4 @@
-import { Dropzone, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
@@ -26,6 +26,8 @@ export interface IOKTrafficService {
     applyViolationDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
     /** Writes the chosen violations onto the form, one complaint page each, and adds the pages the extra ones need. */
     applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    /** Narrows the given violations to those the complaint pages already carry. */
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the defendant's sex field. */
@@ -83,7 +85,22 @@ export class OKTrafficService implements IOKTrafficService {
             [ViolationDropzoneFields.statute]: violationSection.offenseCode
         });
 
-        return page.set(page.violationSection, updatedSection).setDropzone(dropzone);
+        // a dropped violation is on the citation exactly as a chosen one is, so its boxes lock the same way
+        const locked = updatedSection
+            .set(updatedSection.municipalCode, lock(updatedSection.getMunicipalCode()))
+            .set(updatedSection.offenseCode, lock(updatedSection.getOffenseCode()));
+
+        return page.set(page.violationSection, locked).setDropzone(dropzone);
+    }
+
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
+        const schema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+        const pages = controllers.getFormController().form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+
+        // the citation prints the agency's own code in its Muni Code box, so that is what identifies a charge
+        const carried = new Set(pages.map(page => page.getViolationSection().getMunicipalCode().getValue()).filter(Boolean));
+
+        return violations.filter(violation => carried.has(violation.code));
     }
 
     async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
@@ -125,8 +142,8 @@ export class OKTrafficService implements IOKTrafficService {
                 const section = page.getViolationSection();
 
                 const updated = section
-                    .set(section.municipalCode, section.getMunicipalCode().setValue(violation.code))
-                    .set(section.offenseCode, section.getOffenseCode().setValue(violation.statute ?? violation.code))
+                    .set(section.municipalCode, lock(section.getMunicipalCode().setValue(violation.code)))
+                    .set(section.offenseCode, lock(section.getOffenseCode().setValue(violation.statute ?? violation.code)))
                     .set(section.date, section.getDate().setValue(date))
                     .set(section.time, section.getTime().setValue(time))
                     .set(section.county, section.getCounty().setValue(county))
@@ -137,10 +154,10 @@ export class OKTrafficService implements IOKTrafficService {
                 // the citation has no box for the charge in words, so the description goes into the offense notes
                 // beneath it, which is the only place on the paper it can be read
                 const offense = result.getOffenseSection();
-                let offenseUpdated = offense.set(offense.notes, offense.getNotes().setValue(violation.description));
+                let offenseUpdated = offense.set(offense.notes, lock(offense.getNotes().setValue(violation.description)));
 
                 if (violation.fine !== undefined) {
-                    offenseUpdated = offenseUpdated.set(offense.amountDue, offenseUpdated.getAmountDue().setValue(violation.fine));
+                    offenseUpdated = offenseUpdated.set(offense.amountDue, lock(offenseUpdated.getAmountDue().setValue(violation.fine)));
                 }
 
                 collection = collection.replace(index, result.set(result.offenseSection, offenseUpdated));
@@ -206,4 +223,9 @@ export class OKTrafficService implements IOKTrafficService {
     private async getOptions(listId: string, parentValue?: string): Promise<Array<IOptionValue>> {
         return [...await this.valueListService.getOptions(listId, parentValue)];
     }
+}
+
+/** Returns the field disabled, which is how a box filled in from the violation list is marked as not hand-editable. */
+function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
+    return field.setIsEnabled(false);
 }

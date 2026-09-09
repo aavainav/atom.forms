@@ -1,20 +1,12 @@
 import React from "react";
 import { useParams, useSearchParams } from "react-router";
 import { useService } from "@common/react";
-import { IFormCatalogItem } from "@forms/catalog";
-import { FButton, FIcon, FTooltip, IControllerManager } from "@forms/core";
+import { FButton, FIcon, FTooltip } from "@forms/core";
 
-import { INotificationService, IReportViewerService } from "../../services";
-
-interface ISaveOptionProps {
-    /** The catalog item the form was loaded from; it resolves the mapper that extracts the data and carries the identity the saved data is stamped with. */
-    readonly catalogItem: IFormCatalogItem;
-    /** The controllers belonging to the form being saved. */
-    readonly controllers: IControllerManager;
-}
+import { INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
 
 /** Defines the option for saving the current report through the data writer the host registered. */
-export const SaveOption = ({ catalogItem, controllers }: ISaveOptionProps): React.JSX.Element => {
+export const SaveOption = ({ catalogItem, controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
@@ -36,7 +28,7 @@ export const SaveOption = ({ catalogItem, controllers }: ISaveOptionProps): Reac
     };
 
     return (
-        <FTooltip title="Save" placement="top">
+        <FTooltip title={title} placement="top">
             <FButton id="save-button" variant="light" type="button" onClick={handleSave}>
                 <FIcon icon="floppy" />
             </FButton>

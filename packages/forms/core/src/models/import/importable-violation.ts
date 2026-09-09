@@ -3,6 +3,7 @@ import { z } from "zod";
 export const schema = z.object({
     code: z.string().min(1).max(50),
     description: z.string().min(1).max(500),
+    category: z.string().max(100).optional(),
     statute: z.string().max(50).optional(),
     fine: z.number().min(0).optional(),
     points: z.number().min(0).optional(),
@@ -25,6 +26,8 @@ export interface IImportableViolation {
     /** The violation as it reads on the citation. */
     readonly description: string;
 
+    /** The group the code list files the violation under. Carried so a drop does not silently drop it; no citation prints it. */
+    readonly category?: string;
     /** The scheduled fine, where the jurisdiction publishes one. */
     readonly fine?: number;
     /** Whether the violation is a local ordinance rather than state law. */

@@ -80,9 +80,15 @@ id, which replaces this outright.
    form opened with;
 2. `await`s `controller.addPage` for each violation beyond that, which seeds the new page's shared sections;
 3. writes each violation's statute, description, points and court-appearance answer into that page's violation
-   section, **carrying the date and time of violation across from the first page**. Those two sit inside the
-   violation section rather than a shared one, so the shared-section copy does not move them, and one stop
-   produces one date and time however many charges come out of it.
+   section **and disables those boxes**, so a charge that came from the code list is not quietly typed over;
+4. **carries the date and time of violation across from the first page**, leaving both editable. Those two sit
+   inside the violation section rather than a shared one, so the shared-section copy does not move them, and one
+   stop produces one date and time however many charges come out of it.
+
+`getAppliedViolations` is the read side, and is what keeps a charge already on the citation ticked and locked in
+the selector. It matches on the **violation section number**, which is where this citation prints the statute; a
+violation carrying no statute of its own was written under its code. `applyViolationDropzone` locks the same boxes,
+so a dragged violation is on the citation exactly as a chosen one is.
 
 ## Recipes
 

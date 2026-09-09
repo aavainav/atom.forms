@@ -65,7 +65,7 @@ export class ViolationsModule implements IModule {
 
         const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
 
-        reportViewer.registerOption({ id: "violations", order: violationsOptionOrder, Component: ViolationsOption, canShow });
+        reportViewer.registerOption({ id: "violations", order: violationsOptionOrder, title: "Violations", Component: ViolationsOption, canShow });
         reportViewer.registerPanel({ id: "violations", Component: ViolationsPanel, canShow });
     }
 }

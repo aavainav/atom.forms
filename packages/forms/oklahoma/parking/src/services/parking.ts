@@ -1,4 +1,4 @@
-import { Dropzone, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
@@ -27,6 +27,8 @@ export interface IOKParkingService {
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
     applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    /** Narrows the given violations to those the citation pages already carry. */
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the registered owner's state field. */
@@ -76,7 +78,22 @@ export class OKParkingService implements IOKParkingService {
             [ViolationDropzoneFields.description]: violationSection.description
         });
 
-        return page.set(page.violationSection, updatedSection).setDropzone(dropzone);
+        // a dropped violation is on the citation exactly as a chosen one is, so its boxes lock the same way
+        const locked = updatedSection
+            .set(updatedSection.code, lock(updatedSection.getCode()))
+            .set(updatedSection.description, lock(updatedSection.getDescription()));
+
+        return page.set(page.violationSection, locked).setDropzone(dropzone);
+    }
+
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
+        const schema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+        const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+        // the citation prints the agency's own code in its violation block, so that is what identifies a charge
+        const carried = new Set(pages.map(page => page.getViolationSection().getCode().getValue()).filter(Boolean));
+
+        return violations.filter(violation => carried.has(violation.code));
     }
 
     async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
@@ -116,8 +133,8 @@ export class OKParkingService implements IOKParkingService {
                 const section = page.getViolationSection();
 
                 const updated = section
-                    .set(section.code, section.getCode().setValue(violation.code))
-                    .set(section.description, section.getDescription().setValue(violation.description))
+                    .set(section.code, lock(section.getCode().setValue(violation.code)))
+                    .set(section.description, lock(section.getDescription().setValue(violation.description)))
                     .set(section.date, section.getDate().setValue(date))
                     .set(section.time, section.getTime().setValue(time))
                     .set(section.location, section.getLocation().setValue(location));
@@ -128,7 +145,7 @@ export class OKParkingService implements IOKParkingService {
                 // carrying one writes both sections; one that does not leaves the amount for the clerk
                 if (violation.fine !== undefined) {
                     const payment = result.getPaymentSection();
-                    result = result.set(result.paymentSection, payment.set(payment.amountDue, payment.getAmountDue().setValue(violation.fine)));
+                    result = result.set(result.paymentSection, payment.set(payment.amountDue, lock(payment.getAmountDue().setValue(violation.fine))));
                 }
 
                 collection = collection.replace(index, result);
@@ -174,4 +191,9 @@ export class OKParkingService implements IOKParkingService {
     private async getOptions(listId: string, parentValue?: string): Promise<Array<IOptionValue>> {
         return [...await this.valueListService.getOptions(listId, parentValue)];
     }
+}
+
+/** Returns the field disabled, which is how a box filled in from the violation list is marked as not hand-editable. */
+function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
+    return field.setIsEnabled(false);
 }

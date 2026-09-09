@@ -3,6 +3,7 @@ import { FormCatalogModule } from "@forms/catalog";
 import { IFormIdentity, IFormMapper, FormModel } from "@forms/core";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
+import { DayNightModeOption, SaveOption, ValidateOption } from "./components/options";
 import { IReportViewerOptions } from "./options";
 import {
     IFormDataReader,
@@ -27,22 +28,27 @@ import {
     ValidationService,
 } from "./services";
 
+/** Where the report viewer's own options sit in the bar. A package registering one places it against these. */
+const validateOptionOrder = 100;
+const saveOptionOrder = 200;
+const dayNightModeOptionOrder = 900;
+
 export const IReportViewerConfiguration = createConfig<IReportViewerConfiguration>();
 export interface IReportViewerConfiguration {
-    /** Registers a catalog form with the report viewer, along with the route it is reachable at. */
-    registerForm: (registration: IFormRegistration) => void;
-    /** Registers a route with the report viewer. For a catalog form, use `registerForm` so the form and its route are registered together. */
-    registerRoute: (name: string, route: IReportViewerRoute) => void;
     /** Registers the reader responsible for supplying report data to load, from whatever source(s) the host app defines. */
     registerDataReader: (reader: IFormDataReader) => void;
     /** Registers the writer responsible for persisting saved report data, to whatever destination the host app defines. */
     registerDataWriter: (writer: IFormDataWriter) => void;
+    /** Registers a catalog form with the report viewer, along with the route it is reachable at. */
+    registerForm: (registration: IFormRegistration) => void;
     /** Registers the mapper that translates between the identified catalog form and the data contract it publishes. */
     registerMapper: <TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>) => void;
     /** Registers an option to render in the report viewer's options bar, alongside the built-in validate and save. */
     registerOption: (option: IReportViewerOption) => void;
     /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs rather than inside the options bar. */
     registerPanel: (panel: IReportViewerPanel) => void;
+    /** Registers a route with the report viewer. For a catalog form, use `registerForm` so the form and its route are registered together. */
+    registerRoute: (name: string, route: IReportViewerRoute) => void;
 }
 
 /** Defines the report viewer module. This module handles displaying and interacting with reports. */
@@ -56,13 +62,13 @@ export class ReportViewerModule implements IModule {
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IReportViewerOptions>(IReportViewerOptions);
         init.config(IReportViewerConfiguration).register(({ services }: IModuleConfigurator) => ({
-            registerForm: registration => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerForm(registration),
-            registerRoute: (name, route) => services.get<INavigationRegistrationService>(INavigationRegistrationService).registerChildRoute(name, route),
             registerDataReader: reader => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerDataReader(reader),
             registerDataWriter: writer => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerDataWriter(writer),
+            registerForm: registration => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerForm(registration),
             registerMapper: (identity, mapper) => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerMapper(identity, mapper),
             registerOption: option => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerOption(option),
             registerPanel: panel => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerPanel(panel),
+            registerRoute: (name, route) => services.get<INavigationRegistrationService>(INavigationRegistrationService).registerChildRoute(name, route)
         }));
     }
 
@@ -94,6 +100,23 @@ export class ReportViewerModule implements IModule {
         registration.registerChildRoute("report-viewer", { index: true, lazy: () => import("./components/").then(module => ({ Component: module.ReportViewerLoader })) });
 
         registration.registerRoute({ id: "not-found", path: "*", lazy: () => import("./components/").then(module => ({ Component: module.NotFound })) });
+
+        // the report viewer's own options go through the same seam a package adding one uses, so the bar has no
+        // built-ins of its own to special case and every option is gated, ordered and describable the same way
+        const reportViewer = services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService);
+        const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
+
+        reportViewer.registerOption({ id: "validate", order: validateOptionOrder, title: "Validate", Component: ValidateOption });
+        reportViewer.registerOption({
+            id: "save",
+            order: saveOptionOrder,
+            title: "Save",
+            Component: SaveOption,
+            // saving needs both halves: a mapper to extract the data and a writer to hand it to. with a mapper and
+            // no writer the data would be extracted, dropped, and the report reported as saved.
+            canShow: catalogItem => reportViewerService.canSaveForm(catalogItem)
+        });
+        reportViewer.registerOption({ id: "day-night-mode", order: dayNightModeOptionOrder, title: "Toggle day/night mode", Component: DayNightModeOption });
 
         // allow other modules the ability to configure the report viewer before the host renders.
         await next();

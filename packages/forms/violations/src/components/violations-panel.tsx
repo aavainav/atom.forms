@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useService } from "@common/react";
-import { FButton, FOffCanvas } from "@forms/core";
-import { INotificationService, IReportViewerOptionProps } from "@forms/report-viewer";
+import { FButton, FOffCanvas, useForm } from "@forms/core";
+import { INotificationService, IReportViewerPanelProps } from "@forms/report-viewer";
 
 import { ViolationSelectionList } from "./violation-selection-list";
 import { IViolation } from "../models";
@@ -11,7 +11,7 @@ import { IViolationSelectorService, IViolationService } from "../services";
 const maxSelectedViolations = 5;
 
 /** Defines a manager component for the violation selector off canvas. */
-export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptionProps): React.JSX.Element {
+export function ViolationsPanel({ catalogItem, controllers }: IReportViewerPanelProps): React.JSX.Element {
     const notificationService = useService<INotificationService>(INotificationService);
     const violationSelectorService = useService<IViolationSelectorService>(IViolationSelectorService);
     const violationService = useService<IViolationService>(IViolationService);
@@ -22,6 +22,15 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
     const [isApplying, setIsApplying] = useState(false);
 
     const binding = violationService.getBinding(catalogItem);
+
+    // the form is read through the hook rather than off the controller, so deleting a page while the panel is open
+    // frees the violation that was on it here as well; the panel is mounted for the life of the form and would
+    // otherwise be showing whatever the citation held when it was last opened
+    const form = useForm(controllers.getFormController());
+
+    const applied = useMemo(
+        () => new Set((binding && violations.length ? binding.getApplied(controllers, violations) : []).map(violation => violation.code)),
+        [binding, controllers, violations, form]);
 
     const close = useCallback(() => {
         setIsOpen(false);
@@ -54,8 +63,13 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
     }, [isOpen, binding, violationService, notificationService]);
 
     const toggle = useCallback((code: string) => {
+        // a violation already on the citation is ticked and locked, and is taken off only by deleting its page
+        if (applied.has(code)) {
+            return;
+        }
+
         setSelected(current => {
-            if (!current.has(code) && current.size >= maxSelectedViolations) {
+            if (!current.has(code) && applied.size + current.size >= maxSelectedViolations) {
                 // the list disables its unticked rows at the cap, so this only catches a pick that got past that
                 return current;
             }
@@ -65,16 +79,18 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
 
             return next;
         });
-    }, []);
+    }, [applied]);
 
     const add = async (): Promise<void> => {
         if (!binding) {
             return;
         }
 
-        // the chosen violations are handed over in the order the list offers them rather than the order they were
-        // ticked in, so the pages come out in the order an officer reading the panel would expect
-        const chosen = violations.filter(violation => selected.has(violation.code));
+        // only the newly ticked ones are handed over: the rest are already on the citation, and applying them a
+        // second time would write a second page for a charge it already carries. they are handed over in the order
+        // the list offers them rather than the order they were ticked in, so the pages come out in the order an
+        // officer reading the panel would expect
+        const chosen = violations.filter(violation => selected.has(violation.code) && !applied.has(violation.code));
         if (!chosen.length) {
             return;
         }
@@ -100,13 +116,14 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
                 <ViolationSelectionList
                     controller={controllers.getDragAndDropController()}
                     violations={violations}
+                    applied={applied}
                     selected={selected}
                     maxSelected={maxSelectedViolations}
                     onToggle={toggle}
                 />
             </FOffCanvas.Body>
             <div className="f-offcanvas__footer d-flex align-items-center justify-content-between border-top p-3">
-                <span className="small text-muted">{selected.size} of {maxSelectedViolations} selected</span>
+                <span className="small text-muted">{applied.size + selected.size} of {maxSelectedViolations} selected</span>
                 <FButton
                     id="violations-add-button"
                     variant="primary"

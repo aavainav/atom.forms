@@ -58,7 +58,8 @@ export class S438CitationModule implements IModule {
         violations.registerViolations({ name, version }, {
             listId: S438ViolationListId.violation,
             pageName: "front-page",
-            apply: (controllers, chosen) => services.get<IS438CitationService>(IS438CitationService).applyViolations(controllers, chosen)
+            apply: (controllers, chosen) => services.get<IS438CitationService>(IS438CitationService).applyViolations(controllers, chosen),
+            getApplied: (controllers, all) => services.get<IS438CitationService>(IS438CitationService).getAppliedViolations(controllers, all)
         });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);

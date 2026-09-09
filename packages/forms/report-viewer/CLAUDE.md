@@ -23,9 +23,9 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/components/report-viewer-loader.tsx](src/components/report-viewer-loader.tsx) | The generic data-driven index route: resolves data from the route context and loads whatever form the data names. |
 | [src/components/report-viewer-panel.tsx](src/components/report-viewer-panel.tsx) | Router-agnostic entry point for a host that already has its data. Its `options` carry the form identity plus `isReadOnly` and `showOptions`. Also imports `@forms/core/theme/_main.scss`. |
 | [src/components/report-viewer-layout.tsx](src/components/report-viewer-layout.tsx) | Bare `<Outlet />` for the `report-viewer` route. |
-| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: the three built-ins plus whatever `registerOption` added, in one ordered list. |
+| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with and nothing else. `options/` holds this package's own three, which `module.ts` registers like any other. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
-| [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts whatever `registerPanel` added, for this form, alongside the three built-in managers. |
+| [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts whatever `registerPanel` added, for this form, alongside the modal, notification and validation managers. A panel is handed `IReportViewerPanelProps` — an option's props without the `title`. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
 ## The host data boundary
@@ -79,20 +79,37 @@ the data either way.
 
 ## The options bar — the other seam
 
-The bar is built from one ordered list: the three built-ins (validate 100, save 200 — still gated on
-`canSaveForm` — day/night 900) plus everything `registerOption` has added, sorted on `order`. So a registered option
-can sit **between** the built-ins rather than only after them.
+**Every option is registered, this package's own included.** `ReportViewerModule.configure` registers validate
+(100), save (200) and day/night (900) through the very seam a package adding one uses, before `await next()` lets
+those packages register theirs — `@forms/printing` puts print at 300 and `@forms/violations` violations at 150.
+`ReportViewerOptions` then renders whatever `getOptions` answers with and knows nothing else: there is no built-in
+in the component to special case, no ordering rule that treats one option differently from another, and a
+registered option sits **between** this package's own rather than only after them.
 
 ```ts
-registerOption({ id, order, Component, canShow? })
+registerOption({ id, order, title, Component, canShow? })
 ```
 
-`Component` is handed `IReportViewerOptionProps` — `{ catalogItem, controllers }`, the same two things the built-ins
-get. Duplicate ids throw. `canShow(catalogItem)` filters per form; an option without one is always offered.
+- **`title`** is what the option is called. The bar hands it back to `Component` through
+  `IReportViewerOptionProps`, so the option renders it as its own tooltip rather than repeating the string — the
+  name an option is listed under and the name it shows on hover cannot drift apart.
+- **`Component`** is handed `IReportViewerOptionProps` — `{ catalogItem, controllers, title }`. Duplicate ids
+  throw.
+- **`canShow(catalogItem)`** filters per form; an option without one is always offered. Save's is
+  `canSaveForm`, which needs both a mapper and a data writer; violations' is a registered binding plus the form
+  being a `CitationForm`.
 
-This exists so a package adding a capability supplies its own button rather than the report viewer taking a
-dependency on that package: `@forms/printing` registers the print option at order 300 and `@forms/violations` the
-violations option at 150, and nothing here imports either.
+Because an option carries a title and a `canShow`, **what a form offers can be asked for without rendering any of
+it** — `getOptions(catalogItem)` is a complete, ordered, already-filtered answer. The sandbox's home page lists
+each form's options from exactly that call, which is why a citation lists Violations there and the TR-310 does not.
+
+### Where a per-form gate should live
+
+`canShow` gets the catalog item, so it can gate on anything the catalog knows: the identity, and the form family
+via `catalogItem.ctor.prototype instanceof CitationForm`. It cannot gate on jurisdiction — no state or agency is
+modelled anywhere; a form's state lives only in its package path and its name. An option that genuinely needs to
+vary by jurisdiction should be registered by the form package that knows its own, rather than by adding a state to
+the catalog for one caller to branch on.
 
 ## The panel seam — where an off canvas goes
 

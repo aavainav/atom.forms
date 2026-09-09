@@ -88,7 +88,8 @@ export class OKTrafficModule implements IModule {
         violations.registerViolations({ name, version }, {
             listId: OKTrafficViolationListId.violation,
             pageName: "complaint-page",
-            apply: (controllers, chosen) => services.get<IOKTrafficService>(IOKTrafficService).applyViolations(controllers, chosen)
+            apply: (controllers, chosen) => services.get<IOKTrafficService>(IOKTrafficService).applyViolations(controllers, chosen),
+            getApplied: (controllers, all) => services.get<IOKTrafficService>(IOKTrafficService).getAppliedViolations(controllers, all)
         });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);

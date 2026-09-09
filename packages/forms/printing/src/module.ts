@@ -43,6 +43,7 @@ export class PrintingModule implements IModule {
         // rather than the report viewer being made to know about printing
         config.get<IReportViewerConfiguration>(IReportViewerConfiguration).registerOption({
             id: "print",
+            title: "Print",
             order: printOptionOrder,
             Component: PrintOption
         });

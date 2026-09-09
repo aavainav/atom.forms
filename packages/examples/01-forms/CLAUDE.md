@@ -48,6 +48,13 @@ through `registerForm`. A catalog form the report viewer has no registration for
 marked "no route registered", so registering a form's bootstrapper without registering its route shows up as a
 visible gap rather than a silently missing row.
 
+Each form also lists **the options its report viewer offers**, from `IReportViewerService.getOptions(catalogItem)`
+— the same call the options bar renders from, so the badges here and the buttons there cannot disagree. That works
+because every option is registered with a `title` and a `canShow`, this package's own included, which is what lets
+a form's options be asked for without rendering any of them. It is also the quickest way to see a per-form gate
+working: the four citations list Violations and the TR-310 and Form 432 do not, because that option's `canShow`
+wants a registered violation binding and a `CitationForm`.
+
 Registered paths are relative (`sc/tr310`) because every form route is a child of the report viewer's layout route
 at `/`; `getLinkPath` in [home-page.tsx](src/home/home-page.tsx) makes them absolute for the anchor.
 

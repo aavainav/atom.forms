@@ -152,7 +152,9 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   `FInputGroup`.
 - Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FIcon`, `FModal`,
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`.
-- Import: `FDraggableItem`, `FDropzone`.
+- Import: `FDraggableItem`, `FDropzone`. `FDraggableItem` takes `disabled` for an item a panel is offering but
+  cannot currently be dragged — it clears `draggable` and refuses `dragStart`, which is what stops a panel's
+  locked row reaching the form by the one route a disabled checkbox does not cover.
 
 `FPage` pins `data-bs-theme="light"` on itself. A page is a printed document — white paper with a dark border in
 either color mode — so when the host flips the document to dark, the attribute stops at the page and every field

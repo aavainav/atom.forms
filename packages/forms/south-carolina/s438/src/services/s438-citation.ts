@@ -1,4 +1,4 @@
-import { Dropzone, FormModel, IControllerManager, PageCollection } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, PageCollection, TValueType } from "@forms/core";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
@@ -16,6 +16,8 @@ export interface IS438CitationService {
     applyViolationDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
     /** Writes the chosen violations onto the form, one front page each, and adds the pages the extra ones need. */
     applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    /** Narrows the given violations to those the citation's front pages already carry. */
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
     /** Returns a new page with the dropped person data applied to the citation's violator section. */
     applyViolatorDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
 }
@@ -56,7 +58,13 @@ export class S438CitationService implements IS438CitationService {
             points: violationSection.scPoints
         });
 
-        return page.set(page.violationSection, updatedSection).setDropzone(dropzone);
+        // a dropped violation is on the citation exactly as a chosen one is, so its boxes lock the same way
+        const locked = updatedSection
+            .set(updatedSection.sectionNumber, lock(updatedSection.getSectionNumber()))
+            .set(updatedSection.description, lock(updatedSection.getDescription()))
+            .set(updatedSection.scPoints, lock(updatedSection.getScPoints()));
+
+        return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
     async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
@@ -97,12 +105,15 @@ export class S438CitationService implements IS438CitationService {
                 const page = collection.pages[index] as FrontPageModel;
                 const section = page.getViolationSection();
 
+                // the boxes the violation fills are disabled with it: the charge came from the code list and is
+                // taken off by deleting its page, not by typing over it. the date and time are not part of the
+                // charge and stay as they were.
                 const updated = section
-                    .set(section.sectionNumber, section.getSectionNumber().setValue(violation.statute ?? violation.code))
-                    .set(section.description, section.getDescription().setValue(violation.description))
-                    .set(section.scPoints, section.getScPoints().setValue(violation.points ?? 0))
-                    .set(section.courtAppearanceRequiredYes, section.getCourtAppearanceRequiredYes().setValue(violation.requiresCourtAppearance === true))
-                    .set(section.courtAppearanceRequiredNo, section.getCourtAppearanceRequiredNo().setValue(violation.requiresCourtAppearance === false))
+                    .set(section.sectionNumber, lock(section.getSectionNumber().setValue(violation.statute ?? violation.code)))
+                    .set(section.description, lock(section.getDescription().setValue(violation.description)))
+                    .set(section.scPoints, lock(section.getScPoints().setValue(violation.points ?? 0)))
+                    .set(section.courtAppearanceRequiredYes, lock(section.getCourtAppearanceRequiredYes().setValue(violation.requiresCourtAppearance === true)))
+                    .set(section.courtAppearanceRequiredNo, lock(section.getCourtAppearanceRequiredNo().setValue(violation.requiresCourtAppearance === false)))
                     .set(section.dateOfViolation, section.getDateOfViolation().setValue(date))
                     .set(section.timeOfViolation, section.getTimeOfViolation().setValue(time));
 
@@ -111,6 +122,17 @@ export class S438CitationService implements IS438CitationService {
 
             return form.set(schema.frontPage, collection);
         });
+    }
+
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
+        const schema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
+        const pages = controllers.getFormController().form.get<PageCollection>(schema.frontPage).getPages<FrontPageModel>();
+
+        // the citation prints the statute as its violation section number, so that is what identifies a charge
+        // once it is on the form; a violation with no statute of its own was written under its code
+        const carried = new Set(pages.map(page => page.getViolationSection().getSectionNumber().getValue()).filter(Boolean));
+
+        return violations.filter(violation => carried.has(violation.statute ?? violation.code));
     }
 
     applyViolatorDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel {
@@ -127,6 +149,11 @@ export class S438CitationService implements IS438CitationService {
 
         return page.set(page.violatorSection, updatedSection).setDropzone(dropzone);
     }
+}
+
+/** Returns the field disabled, which is how a box filled in from the violation list is marked as not hand-editable. */
+function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
+    return field.setIsEnabled(false);
 }
 
 /**

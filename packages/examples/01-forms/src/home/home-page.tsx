@@ -26,6 +26,13 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
 
 interface IHomeLinkProps {
     readonly description: string;
+    /**
+     * The options the report viewer offers for this form, by name. Every option is registered — the report
+     * viewer's own included — so this is the same list the options bar renders, asked for without rendering any
+     * of it. A citation lists Violations; the TR-310 and the 432 do not, because that option's `canShow` gates on
+     * the form having declared how it takes one.
+     */
+    readonly options?: ReadonlyArray<string>;
     /** The route to navigate to. A form registered with the catalog but not with the report viewer has none, and lists as unreachable. */
     readonly path?: string;
     readonly title: string;
@@ -38,7 +45,7 @@ interface IHomeLinkProps {
  * dropped so that registering a form's bootstrapper without registering its route shows up here as a visible gap
  * instead of a silently missing row.
  */
-function getFormLinks({ catalogItems, registrations }: IHomeContent): Array<IHomeLinkProps> {
+function getFormLinks({ catalogItems, registrations }: IHomeContent, getOptions: (catalogItem: IFormCatalogItem) => Array<string>): Array<IHomeLinkProps> {
     const routedNames = new Set(registrations.map(registration => registration.name));
     const links: Array<IHomeLinkProps> = [];
 
@@ -48,6 +55,7 @@ function getFormLinks({ catalogItems, registrations }: IHomeContent): Array<IHom
         if (catalogItem) {
             links.push({
                 description: catalogItem.description,
+                options: getOptions(catalogItem),
                 path: getLinkPath(registration),
                 title: catalogItem.name,
                 version: catalogItem.version
@@ -57,7 +65,12 @@ function getFormLinks({ catalogItems, registrations }: IHomeContent): Array<IHom
 
     for (const catalogItem of catalogItems.values()) {
         if (!routedNames.has(catalogItem.name)) {
-            links.push({ description: catalogItem.description, title: catalogItem.name, version: catalogItem.version });
+            links.push({
+                description: catalogItem.description,
+                options: getOptions(catalogItem),
+                title: catalogItem.name,
+                version: catalogItem.version
+            });
         }
     }
 
@@ -77,7 +90,7 @@ function getLinkPath({ route }: IFormRegistration): string | undefined {
  * navigation service to route without reloading the app. A modified click is left to the browser, so ctrl/cmd/shift
  * still open the route in a new tab or window the way they would on any other link.
  */
-function HomeLink({ description, path, title, version }: IHomeLinkProps): React.JSX.Element {
+function HomeLink({ description, options, path, title, version }: IHomeLinkProps): React.JSX.Element {
     const navigationService = useService<INavigationService>(INavigationService);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
@@ -99,6 +112,12 @@ function HomeLink({ description, path, title, version }: IHomeLinkProps): React.
                 <span className="text-muted small font-monospace">{path ?? "no route registered"}</span>
             </div>
             <div className="text-muted small">{description}</div>
+            {options && options.length > 0 && (
+                <div className="d-flex flex-wrap align-items-center gap-1 mt-2">
+                    <span className="text-muted small me-1">Options</span>
+                    {options.map(option => <span key={option} className="badge rounded-pill text-bg-light border fw-normal">{option}</span>)}
+                </div>
+            )}
         </FListGroupItem>
     );
 }
@@ -111,7 +130,7 @@ export default function HomePage(): React.JSX.Element {
     return (
         <div className="container py-4" style={{ maxWidth: 900 }}>
             <h4 className="mb-1">Forms Sandbox</h4>
-            <p className="text-muted">Pick a form to load it with its mock data, or a demo to exercise a piece of the report viewer.</p>
+            <p className="text-muted">Pick a form to load it with its mock data, or a demo to exercise a piece of the report viewer. Each form lists the options its report viewer offers, which is what the bar in the bottom right will hold.</p>
 
             <h6 className="text-uppercase text-muted mt-4 mb-2">Forms</h6>
             <FAsyncLoader<IHomeContent> op={async () => {
@@ -124,7 +143,8 @@ export default function HomePage(): React.JSX.Element {
             }}>
                 {(content) => (
                     <FListGroup>
-                        {getFormLinks(content).map(link => <HomeLink key={link.title} {...link} />)}
+                        {getFormLinks(content, catalogItem => reportViewerService.getOptions(catalogItem).map(option => option.title))
+                            .map(link => <HomeLink key={link.title} {...link} />)}
                     </FListGroup>
                 )}
             </FAsyncLoader>

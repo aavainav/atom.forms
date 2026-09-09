@@ -8,6 +8,9 @@
 // thousand charges, almost all of it the same `{ code: "", description: "" },` scaffolding repeated per row. The
 // trailing fields are positional and optional, and a row carrying none of them is just a code and a description.
 //
+// `fields` below is the row order, and it is by how often a field is filled in rather than how important it is: a
+// row is trimmed to its last present field, so a commonly present field placed late costs a placeholder per row.
+//
 // The lists to emit are declared by a manifest at <data>/lists.json, so this script carries no knowledge of which
 // package is running it:
 //
@@ -32,6 +35,7 @@ const defaults = {
 const fields = [
     { name: "code", type: "string", required: true },
     { name: "description", type: "string", required: true },
+    { name: "category", type: "string" },
     { name: "statute", type: "string" },
     { name: "fine", type: "number" },
     { name: "points", type: "number" },

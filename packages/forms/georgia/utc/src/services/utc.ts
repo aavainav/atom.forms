@@ -1,4 +1,4 @@
-import { Dropzone, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
@@ -24,6 +24,8 @@ export interface IGAUTCService {
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
     applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    /** Narrows the given violations to those the citation pages already carry. */
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
     /** Returns a new citation page with the dropped person data applied to Section I. */
     applyViolatorDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Loads the options for the citation's county box - the three counties the form prints beside it. */
@@ -81,7 +83,23 @@ export class GAUTCService implements IGAUTCService {
             [ViolationDropzoneFields.statute]: offenseSection.codeSection
         });
 
-        return page.set(page.offenseSection, updatedSection).setDropzone(dropzone);
+        // a dropped violation is on the citation exactly as a chosen one is, so its boxes lock the same way
+        const locked = updatedSection
+            .set(updatedSection.codeSection, lock(updatedSection.getCodeSection()))
+            .set(updatedSection.description, lock(updatedSection.getDescription()));
+
+        return page.set(page.offenseSection, locked).setDropzone(dropzone);
+    }
+
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
+        const schema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+        const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+        // the citation prints the statute as its offense code section, so that is what identifies a charge once it
+        // is on the form; a violation with no statute of its own was written under its code
+        const carried = new Set(pages.map(page => page.getOffenseSection().getCodeSection().getValue()).filter(Boolean));
+
+        return violations.filter(violation => carried.has(violation.statute ?? violation.code));
     }
 
     async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
@@ -112,15 +130,20 @@ export class GAUTCService implements IGAUTCService {
                 const page = collection.pages[index] as CitationPageModel;
                 const section = page.getOffenseSection();
 
+                // the boxes the violation fills are disabled with it: the charge came from the code list and is
+                // taken off by deleting its page, not by typing over it
                 let updated = section
-                    .set(section.codeSection, section.getCodeSection().setValue(violation.statute ?? violation.code))
-                    .set(section.description, section.getDescription().setValue(violation.description));
+                    .set(section.codeSection, lock(section.getCodeSection().setValue(violation.statute ?? violation.code)))
+                    .set(section.description, lock(section.getDescription().setValue(violation.description)));
 
                 // state law and local ordinance are an exclusive pair, so the answer goes through the section's own
                 // select method rather than being written as two independent boxes; a violation saying neither
                 // leaves both clear, which is how the citation records an unanswered question
                 if (violation.isLocalOrdinance !== undefined) {
                     updated = updated.selectAuthority(violation.isLocalOrdinance ? updated.localOrdinance : updated.stateLaw);
+                    updated = updated
+                        .set(updated.stateLaw, lock(updated.getStateLaw()))
+                        .set(updated.localOrdinance, lock(updated.getLocalOrdinance()));
                 }
 
                 collection = collection.replace(index, page.set(page.offenseSection, updated));
@@ -182,4 +205,9 @@ export class GAUTCService implements IGAUTCService {
     private async getOptions(listId: string, parentValue?: string): Promise<Array<IOptionValue>> {
         return [...await this.valueListService.getOptions(listId, parentValue)];
     }
+}
+
+/** Returns the field disabled, which is how a box filled in from the violation list is marked as not hand-editable. */
+function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
+    return field.setIsEnabled(false);
 }

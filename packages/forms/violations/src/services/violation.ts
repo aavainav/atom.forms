@@ -15,10 +15,12 @@ export interface IViolationService {
     findByCode(listId: string, code: string): Promise<IViolation | undefined>;
     /** Gets the binding declaring how the identified form takes a violation, or undefined when the form declared none. */
     getBinding(identity: IFormIdentity): IViolationBinding | undefined;
+    /** Gets the distinct categories the identified list files its violations under, alphabetically; empty for a list that carries none. */
+    getCategories(listId: string): Promise<ReadonlyArray<string>>;
     /** Gets every violation in the identified list. */
     getViolations(listId: string): Promise<ReadonlyArray<IViolation>>;
-    /** Finds the violations in the identified list matching the given term; an empty term answers with the whole list. */
-    search(listId: string, term: string): Promise<ReadonlyArray<IViolation>>;
+    /** Finds the violations in the identified list matching the given term, within `category` when one is named; an empty term and no category answers with the whole list. */
+    search(listId: string, term: string, category?: string): Promise<ReadonlyArray<IViolation>>;
 }
 
 /** Defines the service for registering violation lists and the forms that draw on them. */
@@ -47,12 +49,16 @@ export class ViolationService implements IViolationService, IViolationRegistrati
         return this.bindings.get(getBindingKey(identity));
     }
 
+    public async getCategories(listId: string): Promise<ReadonlyArray<string>> {
+        return (await this.getList(this.getDefinition(listId))).getCategories();
+    }
+
     public async getViolations(listId: string): Promise<ReadonlyArray<IViolation>> {
         return (await this.getList(this.getDefinition(listId))).getViolations();
     }
 
-    public async search(listId: string, term: string): Promise<ReadonlyArray<IViolation>> {
-        return (await this.getList(this.getDefinition(listId))).search(term);
+    public async search(listId: string, term: string, category?: string): Promise<ReadonlyArray<IViolation>> {
+        return (await this.getList(this.getDefinition(listId))).search(term, category);
     }
 
     public registerList(definition: IViolationListDefinition): void {

@@ -7,7 +7,7 @@ import { PrintDialog } from "./print-dialog";
 import { IPrintRequest, IPrintService } from "../services";
 
 /** Defines the option for printing the current report as one of the copies the form publishes. */
-export const PrintOption = ({ catalogItem, controllers }: IReportViewerOptionProps): React.JSX.Element => {
+export const PrintOption = ({ catalogItem, controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const printService = useService<IPrintService>(IPrintService);
@@ -59,7 +59,7 @@ export const PrintOption = ({ catalogItem, controllers }: IReportViewerOptionPro
     };
 
     return (
-        <FTooltip title="Print" placement="top">
+        <FTooltip title={title} placement="top">
             <FButton id="print-button" variant="light" type="button" onClick={showDialog}>
                 <FIcon icon="printer" />
             </FButton>

@@ -78,15 +78,25 @@ export interface IReportViewerService {
 }
 
 /**
- * Defines an option rendered in the report viewer's options bar. The report viewer owns the bar but not what goes
- * in it beyond its own built-ins, so a package adding a capability registers the button for it here rather than the
- * report viewer taking a dependency on that package.
+ * Defines an option rendered in the report viewer's options bar.
+ *
+ * **Every option is registered, the report viewer's own included.** The bar renders whatever `getOptions` answers
+ * with and knows nothing else, so validate, save and day/night sit in the same list as print and violations and are
+ * gated the same way. That is also what lets something other than the bar — the sandbox's home page, say — ask what
+ * a form offers without rendering any of it.
  */
 export interface IReportViewerOption {
     /** Identifies the option; registering the same id twice throws. */
     readonly id: string;
-    /** Where the option sits in the bar, ascending. The built-in options are validate 100, save 200 and day/night 900. */
+    /** Where the option sits in the bar, ascending. The report viewer's own are validate 100, save 200 and day/night 900. */
     readonly order: number;
+    /**
+     * What the option is called, shown as its tooltip and by anything listing what a form offers.
+     *
+     * It is handed back to the option's own component rather than repeated inside it, so the name an option is
+     * listed under and the name it shows on hover cannot drift apart.
+     */
+    readonly title: string;
     /** The component rendered for the option. */
     readonly Component: ComponentType<IReportViewerOptionProps>;
     /** Whether the option is offered for the given form; it is always offered when omitted. */
@@ -105,17 +115,23 @@ export interface IReportViewerPanel {
     /** Identifies the panel; registering the same id twice throws. */
     readonly id: string;
     /** The component rendered for the panel. It is mounted for as long as the form is, and decides for itself whether it is showing. */
-    readonly Component: ComponentType<IReportViewerOptionProps>;
+    readonly Component: ComponentType<IReportViewerPanelProps>;
     /** Whether the panel is mounted for the given form; it is always mounted when omitted. */
     readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
 }
 
-/** Defines the props handed to every option rendered in the report viewer's options bar. */
-export interface IReportViewerOptionProps {
+/** Defines the props handed to every panel mounted at the report viewer's root. */
+export interface IReportViewerPanelProps {
     /** The catalog item the form was loaded from, which carries its identity. */
     readonly catalogItem: IFormCatalogItem;
-    /** The controllers belonging to the form the option acts on. */
+    /** The controllers belonging to the form the panel acts on. */
     readonly controllers: IControllerManager;
+}
+
+/** Defines the props handed to every option rendered in the report viewer's options bar. */
+export interface IReportViewerOptionProps extends IReportViewerPanelProps {
+    /** The name the option was registered under, which it shows as its tooltip. */
+    readonly title: string;
 }
 
 /**
@@ -152,12 +168,13 @@ export interface IReportViewerRegistrationService {
 
 @Singleton
 export class ReportViewerService implements IReportViewerService, IReportViewerRegistrationService {
+    private readonly _dataReader?: IFormDataReader;
+    private readonly _dataWriter?: IFormDataWriter;
+
     private readonly _forms: Map<string, IFormRegistration> = new Map<string, IFormRegistration>();
     private readonly _mappers: Map<string, IFormMapper<FormModel, IReportViewerData>> = new Map<string, IFormMapper<FormModel, IReportViewerData>>();
     private readonly _options: Map<string, IReportViewerOption> = new Map<string, IReportViewerOption>();
     private readonly _panels: Map<string, IReportViewerPanel> = new Map<string, IReportViewerPanel>();
-    private readonly _dataReader?: IFormDataReader;
-    private readonly _dataWriter?: IFormDataWriter;
 
     constructor(
         @IFormCatalogService private readonly formCatalogService: IFormCatalogService,

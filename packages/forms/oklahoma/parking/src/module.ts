@@ -67,7 +67,8 @@ export class OKParkingModule implements IModule {
         violations.registerViolations({ name, version }, {
             listId: OKParkingViolationListId.violation,
             pageName: "citation-page",
-            apply: (controllers, chosen) => services.get<IOKParkingService>(IOKParkingService).applyViolations(controllers, chosen)
+            apply: (controllers, chosen) => services.get<IOKParkingService>(IOKParkingService).applyViolations(controllers, chosen),
+            getApplied: (controllers, all) => services.get<IOKParkingService>(IOKParkingService).getAppliedViolations(controllers, all)
         });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);

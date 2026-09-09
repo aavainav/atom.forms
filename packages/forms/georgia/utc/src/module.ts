@@ -11,7 +11,7 @@ import { GAUTCFormSchema } from "./models/utc-form-schema";
 import { IGAUTCOptions } from "./options";
 import { IGAUTCService, GAUTCService } from "./services";
 import { gaUtcValueLists } from "./value-lists";
-import { GAUTCValueViolationListId, gaUtcViolationLists } from "./violations";
+import { gaUtcViolationLists, GAUTCValueViolationListId } from "./violations";
 
 export const IGAUTCConfiguration = createConfig<IGAUTCConfiguration>();
 export interface IGAUTCConfiguration {
@@ -67,7 +67,8 @@ export class GAUTCModule implements IModule {
         violations.registerViolations({ name, version }, {
             listId: GAUTCValueViolationListId.violation,
             pageName: "citation-page",
-            apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen)
+            apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen),
+            getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all)
         });
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
