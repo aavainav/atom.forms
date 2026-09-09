@@ -18,6 +18,8 @@ interface IViolationListProps {
     readonly violations: ReadonlyArray<IViolation>;
     /** The codes currently ticked. */
     readonly selected: ReadonlySet<string>;
+    /** How many codes may be ticked at once; once reached, the unticked rows stop accepting picks. */
+    readonly maxSelected: number;
     /** Invoked with the code whose ticked state changed. */
     readonly onToggle: (code: string) => void;
 }
@@ -36,11 +38,12 @@ function filter(violations: ReadonlyArray<IViolation>, term: string): ReadonlyAr
 }
 
 /** Renders the searchable list of violations, each row tickable and draggable. */
-export function ViolationSelectionList({ controller, violations, selected, onToggle }: IViolationListProps): React.JSX.Element {
+export function ViolationSelectionList({ controller, violations, selected, maxSelected, onToggle }: IViolationListProps): React.JSX.Element {
     const [searchTerm, setSearchTerm] = useState("");
 
     const matches = useMemo(() => filter(violations, searchTerm), [violations, searchTerm]);
     const visible = matches.slice(0, maxVisibleItems);
+    const isSelectionFull = selected.size >= maxSelected;
 
     return (
         <>
@@ -58,6 +61,12 @@ export function ViolationSelectionList({ controller, violations, selected, onTog
                 </FFieldControl>
             </div>
 
+            {isSelectionFull && (
+                <div className="small text-muted mb-2">
+                    {maxSelected} violations chosen — untick one to choose another.
+                </div>
+            )}
+
             {matches.length === 0
                 ? <div className="text-muted fst-italic">No violations match that search.</div>
                 : (
@@ -70,6 +79,7 @@ export function ViolationSelectionList({ controller, violations, selected, onTog
                                 <FListGroupCheckbox
                                     id={`violation-${violation.code}`}
                                     checked={selected.has(violation.code)}
+                                    disabled={isSelectionFull && !selected.has(violation.code)}
                                     onChange={() => onToggle(violation.code)}>
                                     <div className="ms-2">
                                         <div className="fw-bold">{violation.statute ?? violation.code}</div>

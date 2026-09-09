@@ -7,6 +7,9 @@ import { ViolationSelectionList } from "./violation-selection-list";
 import { IViolation } from "../models";
 import { IViolationSelectorService, IViolationService } from "../services";
 
+/** How many violations may be ticked before the rest of the list stops accepting picks. */
+const maxSelectedViolations = 5;
+
 /** Defines a manager component for the violation selector off canvas. */
 export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptionProps): React.JSX.Element {
     const notificationService = useService<INotificationService>(INotificationService);
@@ -52,6 +55,11 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
 
     const toggle = useCallback((code: string) => {
         setSelected(current => {
+            if (!current.has(code) && current.size >= maxSelectedViolations) {
+                // the list disables its unticked rows at the cap, so this only catches a pick that got past that
+                return current;
+            }
+
             const next = new Set(current);
             next.has(code) ? next.delete(code) : next.add(code);
 
@@ -93,11 +101,12 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
                     controller={controllers.getDragAndDropController()}
                     violations={violations}
                     selected={selected}
+                    maxSelected={maxSelectedViolations}
                     onToggle={toggle}
                 />
             </FOffCanvas.Body>
             <div className="f-offcanvas__footer d-flex align-items-center justify-content-between border-top p-3">
-                <span className="small text-muted">{selected.size} selected</span>
+                <span className="small text-muted">{selected.size} of {maxSelectedViolations} selected</span>
                 <FButton
                     id="violations-add-button"
                     variant="primary"
