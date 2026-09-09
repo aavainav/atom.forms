@@ -3,6 +3,7 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { FTooltip } from "../tooltip";
 import { buildClasses } from "../../utils/class-names";
 import { IFilterable, IFilterRef, Filter } from "../../utils/filterable";
+import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FIconColor = "primary" | "secondary" | "success" | "info" | "warning" | "danger" | "light" | "dark";
 export type FInputAutocomplete = "off" | "on";
@@ -135,12 +136,16 @@ interface IFFieldInputProps {
     readonly id?: string;
     /** Whether the input is marked as invalid. */
     readonly invalid?: boolean;
+    /** The margin applied to the input. A bare size applies to all four sides. */
+    readonly margin?: FMarginSize | IFMargin;
     /** The maximum value accepted by the input. */
     readonly max?: number | string;
     /** The maximum number of characters accepted by the input. */
     readonly maxlength?: number | string;
     /** Whether numeric digits are accepted as input. Defaults to true. */
     readonly number?: boolean;
+    /** The padding applied to the input. A bare size applies to all four sides. Defaults to `ps-2 pt-3 pe-2 pb-1`. */
+    readonly padding?: FPaddingSize | IFPadding;
     /** Placeholder text displayed when the input is empty. */
     readonly placeholder?: string;
     /** Whether the placeholder text is styled in italics. */
@@ -188,9 +193,11 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
     iconTooltip,
     id,
     invalid = false,
+    margin,
     max,
     maxlength,
     number = true,
+    padding,
     placeholder,
     placeholderItalic = false,
     symbols = [],
@@ -378,7 +385,9 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
             maxLength={typeof maxlength === "string" ? parseInt(maxlength, 10) : maxlength}
             value={displayValue}
             className={buildClasses(
-                "f-field-input", "form-control", "border-0", "bg-transparent", "ps-2", "pt-3", "pe-2", "pb-1", "rounded-0",
+                "f-field-input", "form-control", "border-0", "bg-transparent", "rounded-0",
+                getMarginClasses(undefined, margin),
+                getPaddingClasses({ start: "2", top: "3", end: "2", bottom: "1" }, padding),
                 fontWeight === "bold" ? "fw-bold" : "",
                 fontWeight === "normal" ? "fw-normal" : "",
                 invalid ? "is-invalid" : "",

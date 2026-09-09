@@ -1,4 +1,6 @@
 import React from "react";
+import { buildClasses } from "../../utils/class-names";
+import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FLabelSize = "1" | "2" | "3" | "4" | "5" | "6";
 export type FLabelTextAlignment = "start" | "center" | "end";
@@ -25,6 +27,10 @@ export type FLabelVariant =
 interface IFLabelProps {
     /** Sets the size of the label font; default to `6`. Label sizes go in asc order from largest `(1)` to smallest `(6)`. */
     readonly fontSize?: FLabelSize;
+    /** Sets the margin of the label. A bare size applies to all four sides. */
+    readonly margin?: FMarginSize | IFMargin;
+    /** Sets the padding of the label. A bare size applies to all four sides. */
+    readonly padding?: FPaddingSize | IFPadding;
     /** Sets the alignment of the text; default to start. */
     readonly textAlignment?: FLabelTextAlignment;
     /** Sets the color variant of the text; default to secondary. */
@@ -32,8 +38,16 @@ interface IFLabelProps {
 }
 
 /** Defines a form label, which is a stand alone label. */
-export default function FLabel({ fontSize = "6", textAlignment = "start", variant = "secondary", children }: React.PropsWithChildren<IFLabelProps>): React.JSX.Element {
+export default function FLabel({ fontSize = "6", margin, padding, textAlignment = "start", variant = "secondary", children }: React.PropsWithChildren<IFLabelProps>): React.JSX.Element {
     return (
-        <span className={`f-label d-block fs-${fontSize} text-${textAlignment} text-${variant}`}>{children}</span>
+        <span className={buildClasses(
+            "f-label",
+            "d-block",
+            `fs-${fontSize}`,
+            `text-${textAlignment}`,
+            `text-${variant}`,
+            getMarginClasses(undefined, margin),
+            getPaddingClasses(undefined, padding)
+        )}>{children}</span>
     );
 }

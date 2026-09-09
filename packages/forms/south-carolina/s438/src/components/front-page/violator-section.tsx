@@ -1,5 +1,5 @@
 import React from "react";
-import { ISectionBinding, FBorder, FFieldCheckbox, FFieldControl, FFieldInput, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FBorder, FFieldCheckbox, FFieldControl, FFieldInput, FLabel, FFormStackPanel, FSection } from "@forms/core";
 
 import { ViolatorSectionModel } from "../../models/front-page/violator-section";
 
@@ -149,7 +149,7 @@ export default function ViolatorSection({ binding }: IViolatorSectionProps): Rea
                     </FFieldControl>
                 </div>
                 <FBorder borderEdges={["left", "top", "right"]}>
-                    <span className="fs-6">CDL</span>
+                    <FLabel fontSize="6">CDL</FLabel>
                     <div className="d-flex justify-content-evenly">
                         <FFieldCheckbox
                             id={commercialDriverLicenseYes.id}

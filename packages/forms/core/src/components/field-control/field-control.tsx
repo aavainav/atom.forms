@@ -1,5 +1,6 @@
 import React from "react";
 import { buildClasses } from "../../utils/class-names";
+import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FControlBorderEdge = "all" | "top" | "right" | "bottom" | "left";
 export type FControlBorderEdges = FControlBorderEdge | FControlBorderEdge[];
@@ -25,8 +26,16 @@ interface IFFieldControlProps {
     readonly labelFor?: string;
     /** Font weight of the label text. */
     readonly labelFontWeight?: FControlLabelFontWeight;
+    /** The margin applied to the label. A bare size applies to all four sides. Defaults to `ms-1 mb-0`. The label is absolutely positioned, so its margins read as offsets from the control rather than as flow spacing. */
+    readonly labelMargin?: FMarginSize | IFMargin;
+    /** The padding applied to the label. A bare size applies to all four sides. */
+    readonly labelPadding?: FPaddingSize | IFPadding;
     /** Text case transform applied to the label. */
     readonly labelTextCase?: FControlLabelTextCase;
+    /** The margin applied to the control. A bare size applies to all four sides. */
+    readonly margin?: FMarginSize | IFMargin;
+    /** The padding applied to the control. A bare size applies to all four sides. */
+    readonly padding?: FPaddingSize | IFPadding;
     /** Whether a required indicator is shown next to the label. */
     readonly required?: boolean;
     /** Exact width in pixels. */
@@ -53,7 +62,11 @@ export default function FFieldControl({
     label,
     labelFor,
     labelFontWeight = "normal",
+    labelMargin,
+    labelPadding,
     labelTextCase = "uppercase",
+    margin,
+    padding,
     required = false,
     width,
     children
@@ -78,11 +91,15 @@ export default function FFieldControl({
             border === "visible" && edges.top ? "border-top" : "",
             border === "visible" && edges.right ? "border-end" : "",
             border === "visible" && edges.bottom ? "border-bottom" : "",
-            border === "visible" && edges.left ? "border-start" : ""
+            border === "visible" && edges.left ? "border-start" : "",
+            getMarginClasses(undefined, margin),
+            getPaddingClasses(undefined, padding)
         )}>
             {label && (
                 <label htmlFor={labelFor} className={buildClasses(
-                    "f-field-control-label", "form-label", "position-absolute", "ms-1", "mb-0", "fs-6",
+                    "f-field-control-label", "form-label", "position-absolute", "fs-6",
+                    getMarginClasses({ start: "1", bottom: "0" }, labelMargin),
+                    getPaddingClasses(undefined, labelPadding),
                     labelFontWeight === "bold" ? "fw-bold" : "",
                     labelTextCase === "uppercase" ? "text-uppercase" : "",
                     labelTextCase === "capitalize" ? "text-capitalize" : ""

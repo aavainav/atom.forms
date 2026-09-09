@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { buildClasses } from "../../utils/class-names";
+import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FCheckboxLabelTextCase = "uppercase" | "capitalize" | "none";
 export type FCheckboxType = "checkbox" | "radio";
@@ -17,8 +18,16 @@ interface IFFieldCheckboxProps {
     readonly invalid?: boolean;
     /** Text shown next to the input; ignored when `children` is given instead. */
     readonly label?: string;
+    /** The margin applied to the label. A bare size applies to all four sides. */
+    readonly labelMargin?: FMarginSize | IFMargin;
+    /** The padding applied to the label. A bare size applies to all four sides. */
+    readonly labelPadding?: FPaddingSize | IFPadding;
     /** Text casing applied to the label. Default "uppercase". */
     readonly labelTextCase?: FCheckboxLabelTextCase;
+    /** The margin applied to the wrapper. A bare size applies to all four sides. */
+    readonly margin?: FMarginSize | IFMargin;
+    /** The padding applied to the wrapper. A bare size applies to all four sides. Defaults to `ps-0` while there is no label. */
+    readonly padding?: FPaddingSize | IFPadding;
     /** Renders the input as a toggle switch instead of a checkbox/radio. Default false. */
     readonly switch?: boolean;
     /** The `type` attribute applied to the input. Default "checkbox". */
@@ -36,7 +45,11 @@ export default function FFieldCheckbox({
     indeterminate = false,
     invalid = false,
     label,
+    labelMargin,
+    labelPadding,
     labelTextCase = "uppercase",
+    margin,
+    padding,
     switch: isSwitch = false,
     type = "checkbox",
     children,
@@ -53,7 +66,12 @@ export default function FFieldCheckbox({
     const labelContent = children ?? label ?? "";
 
     return (
-        <div className={buildClasses("f-field-checkbox form-check", isSwitch ? "form-switch" : "", !labelContent ? "ps-0" : "")}>
+        <div className={buildClasses(
+            "f-field-checkbox form-check",
+            isSwitch ? "form-switch" : "",
+            getMarginClasses(undefined, margin),
+            getPaddingClasses(!labelContent ? { start: "0" } : undefined, padding)
+        )}>
             <input
                 ref={inputRef}
                 id={id}
@@ -70,7 +88,13 @@ export default function FFieldCheckbox({
                 disabled={disabled}
                 onChange={(event) => onChange?.(event.target.checked)}
             />
-            {labelContent ? <label htmlFor={id} className={buildClasses("f-field-checkbox-label", "form-check-label", labelTextCase === "uppercase" ? "text-uppercase" : "")}>{labelContent}</label> : null}
+            {labelContent ? <label htmlFor={id} className={buildClasses(
+                "f-field-checkbox-label",
+                "form-check-label",
+                labelTextCase === "uppercase" ? "text-uppercase" : "",
+                getMarginClasses(undefined, labelMargin),
+                getPaddingClasses(undefined, labelPadding)
+            )}>{labelContent}</label> : null}
         </div>
     );
 }

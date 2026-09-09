@@ -13,10 +13,7 @@ import { SectionModel } from "../models/section";
  * render, which another edit may already have replaced, and re-picking the option already chosen leaves the
  * dependents alone rather than clearing a selection the user did not touch.
  */
-export function setOptionWithDependents<TSection extends SectionModel>(
-    binding: ISectionBinding<TSection>,
-    field: FieldDefinition<OptionFieldModel>,
-    dependents: ReadonlyArray<FieldDefinition<FieldModel<TValueType>>>): (value: IOptionValue) => void {
+export function setOptionWithDependents<TSection extends SectionModel>(binding: ISectionBinding<TSection>, field: FieldDefinition<OptionFieldModel>, dependents: ReadonlyArray<FieldDefinition<FieldModel<TValueType>>>): (value: IOptionValue) => void {
     return value => binding.update(current => {
         const previous = current.get<OptionFieldModel>(field).getValue();
         const updated = current.set(field, current.get<OptionFieldModel>(field).setValue(value));
