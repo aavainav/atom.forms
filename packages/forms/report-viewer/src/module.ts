@@ -89,15 +89,18 @@ export class ReportViewerModule implements IModule {
 
     async configure({ services, next }: IModuleConfigurator): Promise<void> {
         // We need to initialize the top level report viewer route so that the modules can register their child routes.
-        // The route itself is just a layout that renders the matched child via <Outlet />: the generic, data-driven
-        // ReportViewerLoader registered below as its index route, or a form-specific route registered by a form package.
+        // The route itself is just a layout that renders the matched child via <Outlet />, which is a form-specific
+        // route registered by a form package, or whatever the host registers as the index.
+        //
+        // Nothing is registered as that index here. `ReportViewerLoader` is exported for a host that wants the
+        // generic, data-driven route -- it loads whichever form the data reader answers with -- but a host is
+        // rarely asking for a form at its root, and registering one there would take the root away from the host
+        // before it had a say. A host that wants it registers it, at the path it wants it on.
         const registration = services.get<INavigationRegistrationService>(INavigationRegistrationService);
         registration.registerRoute({
             id: "report-viewer",
             path: "/",
             lazy: () => import("./components/").then(module => ({ Component: module.ReportViewerLayout })) });
-
-        registration.registerChildRoute("report-viewer", { index: true, lazy: () => import("./components/").then(module => ({ Component: module.ReportViewerLoader })) });
 
         registration.registerRoute({ id: "not-found", path: "*", lazy: () => import("./components/").then(module => ({ Component: module.NotFound })) });
 

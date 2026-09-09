@@ -148,10 +148,15 @@ the app's runtime, but a reload starts light again.
 
 `configure` registers:
 - `report-viewer` (path `/`) → `ReportViewerLayout`, a bare `<Outlet />`;
-- its **index** child → `ReportViewerLoader`, the generic data-driven route;
 - `not-found` (path `*`).
 
 then `await next()` so form modules can register their own child routes before the host renders.
+
+**Nothing is registered as the index route**, so the root belongs to the host. `ReportViewerLoader` — the generic,
+data-driven route that loads whichever form the data reader answers with — is exported rather than registered: a
+host is rarely asking for a form at its root, and putting one there would take the root away before the host had a
+say. A host that wants it registers it, at whatever path it wants it on; the sandbox puts its own menu at the index
+instead.
 
 Two seams register a child route, and which one to use depends on what is being routed:
 
@@ -167,7 +172,7 @@ Two seams register a child route, and which one to use depends on what is being 
 
 | | Route | Component | Use when |
 | --- | --- | --- | --- |
-| Generic | index route of `report-viewer` | `ReportViewerLoader` → `ReportViewer` | The data names the form; the host has registered a data reader. |
+| Generic | wherever the **host** registers it | `ReportViewerLoader` → `ReportViewer` | The data names the form; the host has registered a data reader. Not registered for you — pick the path yourself. |
 | Form-specific | a form package's own path (`sc/tr310`) | that package's `*FormLoader` → `ReportViewer` | The route is bound to one form; the loader passes a `CATALOG_IDENTITY`. |
 | No router at all | — | `ReportViewerPanel` | The host has already resolved and mapped the data and just wants the form mounted. |
 

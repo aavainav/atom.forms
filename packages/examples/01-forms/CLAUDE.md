@@ -15,7 +15,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- |
 | [index.html](index.html) | The vite entry document. Its `<script src>` must match the entry file's name. |
 | [src/main.ts](src/main.ts) | The app's startup: one `WorkbenchBootstrapper.start` call listing every bootstrapper and the module settings. **The file every new form is registered in.** |
-| [src/home/](src/home/) | The `/home` route: `HomeModule` registers it, `home-page.tsx` renders it. |
+| [src/home/](src/home/) | The index route at `/`: `HomeModule` registers it, `home-page.tsx` renders it. |
 | [src/example-data-module.ts](src/example-data-module.ts) | The host data boundary — the `IFormDataReader`/`IFormDataWriter` pair, the fixture-per-route table, and the sessionStorage round trip. |
 | [src/mock-citation-data.ts](src/mock-citation-data.ts) · [mock-public-contact-or-warning-data.ts](src/mock-public-contact-or-warning-data.ts) · [mock-tr310-data.ts](src/mock-tr310-data.ts) | The fixtures, each written in its own form's published data contract (`IS438Data`, `IPublicContactOrWarningData`, `ITR310Data`). Each exports a `Record<string, T>` keyed by scenario: `full` and `minimal`. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
@@ -26,8 +26,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 
 | Path | Rendered by | Registered in |
 | --- | --- | --- |
-| `/` | `ReportViewerLoader` — resolves the form from whatever the data reader returns | `@forms/report-viewer` |
-| `/home` | `HomePage` | [src/home/home-module.ts](src/home/home-module.ts) |
+| `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | each form package's `*FormLoader`, pinned to one `CATALOG_IDENTITY` | the form packages |
 | `/demo/dropzone` · `/demo/watermark` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/report-viewer` |
@@ -41,7 +40,7 @@ eighteen lines with a different path and lazy import — copy one to add another
 
 ## The home page
 
-`/home` lists every form and demo as a link into its route, and **hardcodes nothing about the forms**. It joins two
+`/` lists every form and demo as a link into its route, and **hardcodes nothing about the forms**. It joins two
 registries on the form's name at render time: `IFormCatalogService.getLatestVersions()` (whose only caller this is)
 for the title, description and version, and `IReportViewerService.getForms()` for the route each form registered
 through `registerForm`. A catalog form the report viewer has no registration for is still listed, greyed out and
@@ -79,13 +78,13 @@ source already knows which record it is asking for.
 
 ## Gotchas
 
-- **`/` is not the home page.** `@forms/report-viewer` registers `/`'s index route in its own `configure`, before
-  `await next()`, and `addChildRoute` only appends — so a host module cannot displace it. That is why the home page
-  lives at `/home`. Changing this means changing `@common/react-router` and `@forms/report-viewer`, not this package.
-- **`getForm()` falls back to the last fixture entry** for any unmatched route, which is what keeps `/` rendering a
-  form at all. The cost is that `/ok/parking` and `/ok/traffic`, which have no fixtures, are handed S438 data their
-  pinned `CATALOG_IDENTITY` has no mapper for, so they render blank. Add an entry to the `forms` table when those
-  forms get fixtures.
+- **`/` is this package's, not the report viewer's.** `@forms/report-viewer` registers the `report-viewer` layout
+  at `/` but nothing as its index, so the index is the host's to claim — `HomeModule` claims it. `addChildRoute`
+  only appends, so there is no displacing a route that is already there: if the report viewer ever registers an
+  index of its own again, the home page has nowhere to go without changing that package.
+- **`getForm()` falls back to the last fixture entry** for any unmatched route. `/ok/parking` and `/ok/traffic`
+  have no fixtures, so they are handed S438 data their pinned `CATALOG_IDENTITY` has no mapper for and render
+  blank. Add an entry to the `forms` table when those forms get fixtures.
 - **The entry file is `src/main.ts`, not `.tsx`** — it contains no JSX. [index.html](index.html) names it explicitly,
   so renaming it means editing both.
 - Bootstrap 5 utility classes are used directly here, not `@common/ui`. The theme is not imported by any file in this
