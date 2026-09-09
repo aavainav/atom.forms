@@ -90,7 +90,7 @@ export class ViolationService implements IViolationService, IViolationRegistrati
         let pending = this.lists.get(definition.id);
 
         if (!pending) {
-            // the promise is cached rather than the resolved list, so a picker opened twice before the first load
+            // the promise is cached rather than the resolved list, so a selector opened twice before the first load
             // settles shares that one load; a rejected load is not left cached, so the next request can retry
             pending = definition.load()
                 .then(violations => new ViolationList(definition, violations))

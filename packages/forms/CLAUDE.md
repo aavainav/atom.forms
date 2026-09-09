@@ -10,7 +10,7 @@ task recipes; open that one rather than reading the package's source to orient.
 | [core/](core/) | `@forms/core` | Form model/definition/entity tree, field models, validation rules, controllers, `F*` React components. No shrub module. |
 | [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version. Definition data only, never mapping. |
 | [value-lists/](value-lists/) | `@forms/value-lists` | Value-list registry + service, the code generator, and the national (jurisdiction-free) lists. |
-| [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the picker that puts them on a form. Citations only; bundles no lists of its own. |
+| [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the selector that puts them on a form. Citations only; bundles no lists of its own. |
 | [report-viewer/](report-viewer/) | `@forms/report-viewer` | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications, mappers. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, bootstrapper. |

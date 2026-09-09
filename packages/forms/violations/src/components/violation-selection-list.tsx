@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { FDraggableItem, FFieldInput, FListGroup, FListGroupCheckbox, IDragAndDropController } from "@forms/core";
+import { FFieldControl, FDraggableItem, FFieldInput, FListGroup, FListGroupCheckbox, IDragAndDropController } from "@forms/core";
 
 import { IViolation } from "../models";
 
@@ -11,7 +11,7 @@ import { IViolation } from "../models";
  */
 const maxVisibleItems = 50;
 
-interface IViolationPickerListProps {
+interface IViolationListProps {
     /** The drag-and-drop controller belonging to the form, so a row can be dragged onto it. */
     readonly controller: IDragAndDropController;
     /** The violations to offer, already ordered by the search that produced them. */
@@ -22,8 +22,21 @@ interface IViolationPickerListProps {
     readonly onToggle: (code: string) => void;
 }
 
+/** Narrows the violations to those matching the term, across code, statute and description. */
+function filter(violations: ReadonlyArray<IViolation>, term: string): ReadonlyArray<IViolation> {
+    const match = term.trim().toLowerCase();
+    if (!match) {
+        return violations;
+    }
+
+    return violations.filter(violation =>
+        violation.code.toLowerCase().includes(match)
+        || violation.description.toLowerCase().includes(match)
+        || (violation.statute?.toLowerCase().includes(match) ?? false));
+}
+
 /** Renders the searchable list of violations, each row tickable and draggable. */
-export function ViolationPickerList({ controller, violations, selected, onToggle }: IViolationPickerListProps): React.JSX.Element {
+export function ViolationSelectionList({ controller, violations, selected, onToggle }: IViolationListProps): React.JSX.Element {
     const [searchTerm, setSearchTerm] = useState("");
 
     const matches = useMemo(() => filter(violations, searchTerm), [violations, searchTerm]);
@@ -32,15 +45,17 @@ export function ViolationPickerList({ controller, violations, selected, onToggle
     return (
         <>
             <div className="mb-2">
-                <FFieldInput
-                    id="violation-search"
-                    autocomplete="off"
-                    enableClear
-                    placeholder="Search violations..."
-                    symbols={[".", "-", "(", ")", "/", " "]}
-                    value={searchTerm}
-                    onChange={(value) => setSearchTerm(value ?? "")}
-                />
+                <FFieldControl border="visible" borderEdges={["bottom"]}>
+                    <FFieldInput
+                        id="violation-search"
+                        autocomplete="off"
+                        enableClear
+                        placeholder="Search violations..."
+                        symbols={[".", "-", "(", ")", "/", " "]}
+                        value={searchTerm}
+                        onChange={(value) => setSearchTerm(value ?? "")}
+                    />
+                </FFieldControl>
             </div>
 
             {matches.length === 0
@@ -73,23 +88,4 @@ export function ViolationPickerList({ controller, violations, selected, onToggle
             )}
         </>
     );
-}
-
-/**
- * Narrows the violations to those matching the term, across code, statute and description.
- *
- * The list arrives already loaded, so this filters in place rather than going back to the service: a search runs on
- * every keystroke, and a round trip per keystroke would re-sort thousands of rows to answer a question the rows
- * already in hand can answer.
- */
-function filter(violations: ReadonlyArray<IViolation>, term: string): ReadonlyArray<IViolation> {
-    const match = term.trim().toLowerCase();
-    if (!match) {
-        return violations;
-    }
-
-    return violations.filter(violation =>
-        violation.code.toLowerCase().includes(match)
-        || violation.description.toLowerCase().includes(match)
-        || (violation.statute?.toLowerCase().includes(match) ?? false));
 }

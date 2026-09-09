@@ -42,7 +42,7 @@ A yarn-workspaces monorepo of 18 packages, with lerna as the task runner. Nothin
 | [`@forms/catalog`](packages/forms/catalog/) | The registry of forms, keyed by name and version. Definition data only. |
 | [`@forms/report-viewer`](packages/forms/report-viewer/) | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications and the mapper registry. |
 | [`@forms/value-lists`](packages/forms/value-lists/) | The registry and code generator for the lists behind option fields, plus the national ones. |
-| [`@forms/violations`](packages/forms/violations/) | The registry of violations a citation is written for, plus the picker that puts them on a form. |
+| [`@forms/violations`](packages/forms/violations/) | The registry of violations a citation is written for, plus the selector that puts them on a form. |
 | [`@forms/printing`](packages/forms/printing/) | The copies a form publishes, the print dialog and the `@page` rules. No PDF library — a print stylesheet and `window.print()`. |
 | [`@forms/workbench`](packages/forms/workbench/) | Standalone app host: React root, router, bootstrapper. |
 | `packages/forms/<state>/<form>/` | One package per form. Six of them. |
@@ -61,7 +61,7 @@ core  ←  catalog  ←  report-viewer  ←  workbench
 
 `printing` and `violations` sit above the report viewer and below the forms. Neither is imported by the report
 viewer: each registers its own button through `registerOption`, which is why a form package can gain printing or a
-violation picker without the report viewer knowing either exists.
+violation selector without the report viewer knowing either exists.
 
 ## How a form is put together
 

@@ -1,6 +1,6 @@
 {
     "name": "@forms/violations",
-    "description": "The registry and generated data for the violations a citation can be written for, plus the picker that puts them on a form.",
+    "description": "The registry and generated data for the violations a citation can be written for, plus the selector that puts them on a form.",
     "version": "1.0.0",
     "private": true,
     "main": "dist/index.js",

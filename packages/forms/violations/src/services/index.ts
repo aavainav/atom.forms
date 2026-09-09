@@ -1,2 +1,2 @@
 export * from "./violation";
-export * from "./violation-picker";
+export * from "./violation-selector";

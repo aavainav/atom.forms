@@ -1,11 +1,4 @@
-/**
- * Represents one violation a citation can be written for.
- *
- * The shape is the union of what the citation forms print, and everything but the code and the description is
- * optional, because no jurisdiction publishes all of it: South Carolina prints points beside the charge and no
- * fine, Oklahoma City prints a scheduled fine and no points, and Georgia prints neither. A form takes what it has
- * a box for and leaves the rest.
- */
+/** Represents one violation a citation can be written for. */
 export interface IViolation {
     /** The agency's own code for the violation, as the citation prints it. */
     readonly code: string;
@@ -24,13 +17,7 @@ export interface IViolation {
     readonly statute?: string;
 }
 
-/**
- * The compact row a generated violation list is emitted as.
- *
- * Spelling an violation out in full costs several times what the data in it is worth once a list runs to a few
- * thousand rows, so a generated list is emitted as tuples and expanded by `toViolations` when it loads. The
- * trailing fields are positional, and a row carrying none of them is just a code and a description.
- */
+/** The compact row a generated violation list is emitted as. */
 export type ViolationRow = readonly [
     code: string,
     description: string,

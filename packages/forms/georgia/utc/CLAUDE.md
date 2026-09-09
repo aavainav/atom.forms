@@ -97,7 +97,7 @@ The vehicle make/model dependency is the usual one: `parentValue={make.getValue(
 `service.resolveVehicleDropzone(dropzone)` awaited in `citation-page.tsx` before the drop is applied, because a drop
 carries make and model as *names* with no codes.
 
-## The violation picker
+## The violation selector
 
 The list is `ga-utc:violation`, written **inline** in [src/violations.ts](src/violations.ts) as this form's value
 lists are — Atlanta publishes no machine-readable offence code list, so it is the Title 40 sections the ticket is

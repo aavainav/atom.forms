@@ -17,7 +17,7 @@ export type ImportableViolation = z.infer<typeof schema>;
  *
  * Everything but the code and the description is optional because no jurisdiction publishes all of it, and a form
  * takes only what it has a box for; the shape mirrors `IViolation` in `@forms/violations`, which is where the
- * violations a picker offers come from.
+ * violations a selector offers come from.
  */
 export interface IImportableViolation {
     /** The agency's own code for the violation. */

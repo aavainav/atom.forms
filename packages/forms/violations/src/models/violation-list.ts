@@ -40,7 +40,7 @@ export class ViolationList {
      *
      * Matches whose code or statute starts with the term are ordered ahead of the rest, because an officer typing
      * a section number knows exactly which charge they are after and should not have to scroll past every
-     * description that happens to mention it. An empty term matches the whole list, which is what the picker shows
+     * description that happens to mention it. An empty term matches the whole list, which is what the selector shows
      * before anything has been typed.
      */
     public search(term: string): ReadonlyArray<IViolation> {

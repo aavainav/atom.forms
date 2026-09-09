@@ -3,20 +3,14 @@ import { useService } from "@common/react";
 import { FButton, FOffCanvas } from "@forms/core";
 import { INotificationService, IReportViewerOptionProps } from "@forms/report-viewer";
 
-import { ViolationPickerList } from "./violation-picker-list";
+import { ViolationSelectionList } from "./violation-selection-list";
 import { IViolation } from "../models";
-import { IViolationPickerService, IViolationService } from "../services";
+import { IViolationSelectorService, IViolationService } from "../services";
 
-/**
- * Defines a manager component for the violation picker off canvas.
- *
- * It slides in from the end rather than the start, because the validation panel holds the start edge and both can
- * be open at once. It is an off canvas rather than a modal for a reason that outlives the styling: a modal's
- * backdrop covers the form, and a violation has to be draggable out of this and onto the citation behind it.
- */
+/** Defines a manager component for the violation selector off canvas. */
 export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptionProps): React.JSX.Element {
     const notificationService = useService<INotificationService>(INotificationService);
-    const violationPickerService = useService<IViolationPickerService>(IViolationPickerService);
+    const violationSelectorService = useService<IViolationSelectorService>(IViolationSelectorService);
     const violationService = useService<IViolationService>(IViolationService);
 
     const [violations, setViolations] = useState<ReadonlyArray<IViolation>>([]);
@@ -32,9 +26,9 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
     }, []);
 
     useEffect(() => {
-        const listener = violationPickerService.onOpenPicker(() => setIsOpen(true));
+        const listener = violationSelectorService.onOpenSelector(() => setIsOpen(true));
         return () => listener.remove();
-    }, [violationPickerService]);
+    }, [violationSelectorService]);
 
     useEffect(() => {
         if (!isOpen || !binding) {
@@ -44,7 +38,7 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
         let isCurrent = true;
 
         // the list is loaded when the panel is first opened rather than when the form is, so the chunk carrying a
-        // jurisdiction's code list is not fetched by an officer who never opens the picker
+        // jurisdiction's code list is not fetched by an officer who never opens the selector
         violationService.getViolations(binding.listId)
             .then(result => { if (isCurrent) { setViolations(result); } })
             .catch(() => {
@@ -95,7 +89,7 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerOptio
         <FOffCanvas id="violations" isOpen={isOpen} placement="end">
             <FOffCanvas.Header borderVisibility="visible" onClose={close}><h5>Violations</h5></FOffCanvas.Header>
             <FOffCanvas.Body>
-                <ViolationPickerList
+                <ViolationSelectionList
                     controller={controllers.getDragAndDropController()}
                     violations={violations}
                     selected={selected}

@@ -46,9 +46,9 @@ export class S438CitationModule implements IModule {
 
         new S438FormSchema();
 
-        // the list this form draws its charges from, and how a chosen violation lands on it. the picker never
+        // the list this form draws its charges from, and how a chosen violation lands on it. the selector never
         // writes a field itself: the citation names its charge in its own section under its own field names, and a
-        // second violation means a second front page, which is the form's business rather than the picker's.
+        // second violation means a second front page, which is the form's business rather than the selector's.
         const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
 
         for (const definition of s438ViolationLists) {

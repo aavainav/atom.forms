@@ -4,7 +4,7 @@ Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Route `sc/s4
 Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2025"`.
 
 The simplest of the citation packages: two page types, no value lists. Reach for this one as the template for
-putting the violation picker on a form — it is where that pattern was worked out first.
+putting the violation selector on a form — it is where that pattern was worked out first.
 
 ## Structure
 
@@ -66,14 +66,14 @@ differs. The violation *location* is shared: one stop happens in one place.
   page, because a page it creates goes through `createPage` rather than the form controller and so is not seeded
   for it. Pages beyond the end of `additionalViolations` are left alone, not removed.
 
-## The violation picker
+## The violation selector
 
 The list is `sc-s438:violation`, generated from [data/violations.json](data/violations.json) — a **starter set**,
 not an authoritative one: the SCDPS publishes no machine-readable code list with the S438, so the point values and
 court-appearance flags need checking against the current Code. An agency serving its own list registers over the
 id, which replaces this outright.
 
-`S438CitationService.applyViolations` is what the picker calls. It:
+`S438CitationService.applyViolations` is what the selector calls. It:
 
 1. finds the first front page with **no charge on it** — no section number and no description — and starts there,
    so picking again adds to the citation rather than rewriting it, while the first pick still fills the page the

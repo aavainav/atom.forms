@@ -1,6 +1,6 @@
 # `@forms/violations`
 
-The registry and service for the violations a citation can be written for, plus the picker that puts them on a
+The registry and service for the violations a citation can be written for, plus the selector that puts them on a
 form. Two halves in one package, the way `@forms/printing` is: a registry shaped like
 [`@forms/value-lists`](../value-lists/), and a capability that registers its own button and panel with the report
 viewer so nothing there has to import this.
@@ -14,20 +14,20 @@ Depends on `@shrub/core`, `@common/react`, `@common/event-emitter`, `@forms/core
 | --- | --- |
 | [src/module.ts](src/module.ts) | `ViolationsModule` + `IViolationsConfiguration` (`registerList`, `registerViolations`). Registers the option at order 150 and the panel, both gated by `canShow`. |
 | [src/services/violation.ts](src/services/violation.ts) | `IViolationService` (read) / `IViolationRegistrationService` (write) / `ViolationService`. Holds both the lists and the per-form bindings. |
-| [src/services/violation-picker.ts](src/services/violation-picker.ts) | `IViolationPickerService` — `openPicker()` / `onOpenPicker`. Event only; the panel owns whether it is showing. |
+| [src/services/violation-selector.ts](src/services/violation-selector.ts) | `IViolationSelectorService` — `openSelector()` / `onOpenSelector`. Event only; the panel owns whether it is showing. |
 | [src/models/violation.ts](src/models/violation.ts) | `IViolation`, `ViolationRow`, `toViolations(rows)`. |
 | [src/models/violation-list.ts](src/models/violation-list.ts) | `ViolationList` — a loaded list, its lazy code index, and `search`. |
 | [src/models/violation-list-definition.ts](src/models/violation-list-definition.ts) | `IViolationListDefinition`: `{ id, load() }`. |
 | [src/models/violation-binding.ts](src/models/violation-binding.ts) | `IViolationBinding` — the per-form seam. |
 | [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` in the options bar. Raises the event, nothing more. |
 | [src/components/violations-panel.tsx](src/components/violations-panel.tsx) | The manager — owns `isOpen` and the ticked set, loads the list, calls the form's `apply`. |
-| [src/components/violation-picker-list.tsx](src/components/violation-picker-list.tsx) | The searchable, tickable, draggable list. |
+| [src/components/violation-list.tsx](src/components/violation-list.tsx) | The searchable, tickable, draggable list. |
 | [src/violations.ts](src/violations.ts) | `ViolationListId` and `standardViolationLists`. **Both empty, deliberately** — see below. |
 | [scripts/generate-violation-lists.mjs](scripts/generate-violation-lists.mjs) | The generator, also exposed to form packages as the `generate-violation-lists` bin. |
 
 ## Core ideas
 
-**The picker never writes a field.** The word "violation" does not name the same box on any two of these forms: the
+**The selector never writes a field.** The word "violation" does not name the same box on any two of these forms: the
 S438 writes its `violation-section`, the Georgia UTC writes its **`offense-section`** — its own `violation-section`
 holds the speed detection gear — and the two Oklahoma forms split the charge across a violation block and a block
 carrying the money. So a form registers an `IViolationBinding` saying which list it draws on and handing over an
@@ -56,7 +56,7 @@ forms happened to register. A catalog item carries no `type`, so the form family
 
 ## Why an off canvas and not a modal
 
-A modal's backdrop covers the form, and a violation has to be draggable out of the picker and onto the citation
+A modal's backdrop covers the form, and a violation has to be draggable out of the selector and onto the citation
 behind it. The panel is therefore an `FOffCanvas` with `placement="end"` — the validation panel holds the start
 edge, and both can be open at once.
 
@@ -67,14 +67,14 @@ bar's own contents however high its z-index. `registerPanel` mounts it at the re
 
 ## Loading and caching
 
-- `ViolationService` caches the **promise** per id, so a picker opened twice before the first load settles shares
+- `ViolationService` caches the **promise** per id, so a selector opened twice before the first load settles shares
   one load; a rejected load is evicted so the next request retries.
 - The panel loads the list when it is **first opened**, not when the form loads, so the chunk carrying a
-  jurisdiction's code list is never fetched by an officer who does not open the picker.
+  jurisdiction's code list is never fetched by an officer who does not open the selector.
 - `ViolationList` builds its code index lazily. `search` matches over code, statute and description, and orders
   matches whose code or statute **starts with** the term ahead of the rest — an officer typing a section number
   knows which charge they want.
-- The picker filters the loaded list in the component rather than going back through the service, because a search
+- The selector filters the loaded list in the component rather than going back through the service, because a search
   runs per keystroke and the rows are already in hand.
 
 ## The generator
@@ -101,7 +101,7 @@ back into the entry chunk and the code split silently stops working.
 generate from) → `data/lists.json` → `yarn generate` → an id in its `src/violations.ts` → register it from the
 form module's `configure` through `IViolationsConfiguration.registerList`.
 
-**Put the picker on a form**: mark the form's shared sections `{ isShared: true }` in its schema → add an
+**Put the selector on a form**: mark the form's shared sections `{ isShared: true }` in its schema → add an
 `applyViolations(controllers, violations)` to its service → subclass `ViolationDropzone` and register it in the
 page model's `initialize()` → wrap the charge section in `<FDropzone>` → `registerViolations` from `configure` →
 make the mapper handle repeating pages. See [`@forms/s438`](../south-carolina/s438/) for the worked example.

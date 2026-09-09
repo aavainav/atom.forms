@@ -83,7 +83,7 @@ The one dependent pair on the form, and both fields sit on the **same** section,
   first — a model name only identifies a model underneath a make. An unrecognized name is **cleared** rather than
   carried onto the form.
 
-## The violation picker
+## The violation selector
 
 The list is `ok-traffic:violation`, written **inline** in [src/violations.ts](src/violations.ts) — Oklahoma City
 publishes no machine-readable offence code list, so the codes and scheduled fines need checking against the

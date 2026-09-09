@@ -22,7 +22,7 @@ per violation, so it travels with the charge rather than with the vehicle it was
 3 dropzones: `CitationPageVehicleDropzone` (make only), `CitationPageViolationDropzone`,
 `DetailPageOwnerDropzone` (registered owner).
 
-## The violation picker
+## The violation selector
 
 The list is `ok-parking:violation`, written **inline** in [src/violations.ts](src/violations.ts) — Oklahoma City
 publishes no machine-readable parking code list, so the codes and scheduled fines need checking against the current

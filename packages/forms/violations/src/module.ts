@@ -5,7 +5,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { ViolationsOption, ViolationsPanel } from "./components";
 import { IViolationBinding, IViolationListDefinition } from "./models";
-import { IViolationPickerService, IViolationRegistrationService, IViolationService, ViolationPickerService, ViolationService } from "./services";
+import { IViolationRegistrationService, IViolationSelectorService, IViolationService, ViolationSelectorService, ViolationService } from "./services";
 import { standardViolationLists } from "./violations";
 
 /** Where the violations option sits in the report viewer's options bar, between validate and save. */
@@ -18,13 +18,13 @@ export interface IViolationsConfiguration {
      * serves its own current code list without this package knowing where it went.
      */
     registerList: (definition: IViolationListDefinition) => void;
-    /** Registers how the identified form takes the violations chosen in the picker. */
+    /** Registers how the identified form takes the violations chosen in the selector. */
     registerViolations: (identity: IFormIdentity, binding: IViolationBinding) => void;
 }
 
 /**
  * Defines the violations module. It owns the registry of violations a citation can be written for, and adds the
- * picker -- an option in the report viewer's bar and the panel it opens -- to the forms that declare a binding.
+ * selector -- an option in the report viewer's bar and the panel it opens -- to the forms that declare a binding.
  */
 export class ViolationsModule implements IModule {
     readonly name = "forms-violations";
@@ -38,7 +38,7 @@ export class ViolationsModule implements IModule {
     }
 
     configureServices(registration: IServiceRegistration): void {
-        registration.register<IViolationPickerService, ViolationPickerService>(IViolationPickerService, ViolationPickerService);
+        registration.register<IViolationSelectorService, ViolationSelectorService>(IViolationSelectorService, ViolationSelectorService);
 
         const violationServiceFactory = new SingletonServiceFactory(ViolationService);
         registration.registerSingleton<IViolationService, ViolationService>(IViolationService, violationServiceFactory);
@@ -56,7 +56,7 @@ export class ViolationsModule implements IModule {
 
         const violationService = services.get<IViolationService>(IViolationService);
 
-        // the picker is offered only where it can actually do something: the form has declared how it takes a
+        // the selector is offered only where it can actually do something: the form has declared how it takes a
         // violation, and it is a citation. the registration is the working gate -- a form that declared nothing has
         // nowhere to put a charge -- while the citation check states the rule the feature is bound by rather than
         // leaving it to be inferred from which forms happened to register.
