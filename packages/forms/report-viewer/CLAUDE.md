@@ -16,6 +16,7 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/services/navigation.ts](src/services/navigation.ts) | `INavigationService` (`navigateTo`, `currentLocation`, `router`) / `INavigationRegistrationService` (`registerRoute`, `registerChildRoute`). |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. |
+| [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` — renders `ReportViewerForm` when handed an `initialForm`, otherwise `<Outlet />`. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation. **Both `ReportViewer` and `ReportViewerPanel` render this**, so every host wires a form identically. |
@@ -109,6 +110,22 @@ stacking context, which ranks anything fixed inside it only against the bar's ow
 z-index — the same trap that put the print dialog behind `IModalService` rather than inside `PrintOption`. A panel
 is mounted for as long as the form is and decides for itself whether it is showing, which is what lets the option
 be a plain button raising an event on a service.
+
+## Day/night mode
+
+Bootstrap 5.3 resolves its color mode from a `data-bs-theme` attribute and the compiled theme already carries the
+whole dark palette, so `ThemeService.setTheme` stamps the attribute on `document.documentElement` and nothing else
+is needed. It goes on the document rather than on an element the viewer renders because the viewer never owns the
+document — `ReportViewerPanel` mounts without even the `#report-viewer` wrapper — and the host's own chrome should
+follow the toggle too.
+
+**`FPage` pins itself back to `data-bs-theme="light"`.** A page is a printed document: it is white paper with a
+dark border in either mode, and letting the attribute cascade into it would leave every input, select and checkbox
+on the page rendered dark against white. Bootstrap supports nesting color modes, so pinning the page converges on
+dark chrome around light paper, and leaves the print branch unaffected whichever mode the app is in.
+
+The theme is **not persisted** — it survives in-app navigation, since the service is a singleton living as long as
+the app's runtime, but a reload starts light again.
 
 ## Routing
 

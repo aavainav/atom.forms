@@ -154,6 +154,11 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`.
 - Import: `FDraggableItem`, `FDropzone`.
 
+`FPage` pins `data-bs-theme="light"` on itself. A page is a printed document — white paper with a dark border in
+either color mode — so when the host flips the document to dark, the attribute stops at the page and every field
+rendered on it stays legible. Anything painting page chrome should keep that in mind rather than reaching for a
+theme-aware color.
+
 `FOffCanvas` takes a `placement` of `"start"` (the default, where the validation panel sits) or `"end"`. Two panels
 that can be open at once need different edges, or they cover each other. It is plain markup with no backdrop and
 no portal, so it has to be rendered somewhere that is not itself a stacking context — which is why
