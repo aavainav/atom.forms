@@ -26,14 +26,7 @@ const pageGap = 24;
 /** The number of CSS pixels an inch maps to when printing. */
 const pixelsPerInch = 96;
 
-/**
- * The share of the sheet a copy is fitted into, leaving a little of it spare.
- *
- * The pages have to be measured on screen, but they are laid out again under print media before they are printed,
- * and that second layout is not identical: bootstrap ships print rules of its own, and a form page measures a few
- * percent taller under them. Fitting a copy to the last pixel of the sheet would therefore hand the printer
- * something slightly too big for it, and a copy that was meant to be one sheet would come out as two.
- */
+/** The share of the sheet a copy is fitted into, leaving a little of it spare. */
 const fitSafetyFactor = 0.95;
 
 /** The printable sheet sizes, as [width, height] in CSS pixels at the 96dpi a browser maps print units by. */
@@ -182,11 +175,7 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
         return profile;
     }
 
-    /**
-     * Measures the pages laid out for print and gets the factor that fits them onto one sheet. Pages are measured
-     * rather than computed from the stylesheet's widths, since a page's height depends on what the form holds, and
-     * a wrapped side-by-side row would report the width it wrapped to rather than the width it wants.
-     */
+    /** Measures the pages laid out for print and gets the factor that fits them onto one sheet. */
     private getScale(layout: PrintLayout, orientation: PrintOrientation, paper: PrintPaper, margin: number): number | undefined {
         const element = document.querySelector(printElementSelector);
         const pages = element ? Array.from(element.children).filter((child): child is HTMLElement => child instanceof HTMLElement) : [];

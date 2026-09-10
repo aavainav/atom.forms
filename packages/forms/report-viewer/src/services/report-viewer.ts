@@ -77,25 +77,13 @@ export interface IReportViewerService {
     saveForm: (form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext) => Promise<IReportViewerData>;
 }
 
-/**
- * Defines an option rendered in the report viewer's options bar.
- *
- * **Every option is registered, the report viewer's own included.** The bar renders whatever `getOptions` answers
- * with and knows nothing else, so validate, save and day/night sit in the same list as print and violations and are
- * gated the same way. That is also what lets something other than the bar — the sandbox's home page, say — ask what
- * a form offers without rendering any of it.
- */
+/** Defines an option rendered in the report viewer's options bar. */
 export interface IReportViewerOption {
     /** Identifies the option; registering the same id twice throws. */
     readonly id: string;
     /** Where the option sits in the bar, ascending. The report viewer's own are validate 100, save 200 and day/night 900. */
     readonly order: number;
-    /**
-     * What the option is called, shown as its tooltip and by anything listing what a form offers.
-     *
-     * It is handed back to the option's own component rather than repeated inside it, so the name an option is
-     * listed under and the name it shows on hover cannot drift apart.
-     */
+    /** What the option is called, shown as its tooltip and by anything listing what a form offers. */
     readonly title: string;
     /** The component rendered for the option. */
     readonly Component: ComponentType<IReportViewerOptionProps>;
@@ -103,14 +91,7 @@ export interface IReportViewerOption {
     readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
 }
 
-/**
- * Defines a panel rendered at the report viewer's root, alongside the modal, notification and validation managers.
- *
- * A panel is what an option opens when what it opens is not a modal: an off canvas is `position: fixed`, and the
- * options bar is itself `position-fixed` and so a stacking context, which means a panel rendered from inside the
- * bar is ranked only within it however high its z-index. Registering the panel here puts it outside the bar, and
- * lets a package own a panel without the report viewer taking a dependency on that package.
- */
+/** Defines a panel rendered at the report viewer's root, alongside the modal, notification and validation managers. */
 export interface IReportViewerPanel {
     /** Identifies the panel; registering the same id twice throws. */
     readonly id: string;

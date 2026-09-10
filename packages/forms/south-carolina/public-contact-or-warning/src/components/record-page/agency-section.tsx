@@ -26,7 +26,7 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
 
     return (
         <FSection>
-            <div className="text-center">
+            <div className="text-center mb-2">
                 <h4 className="fw-bold mb-0">STATE OF SOUTH CAROLINA</h4>
                 <h4 className="fw-bold mb-0">PUBLIC CONTACT / WARNING</h4>
             </div>
@@ -41,11 +41,13 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                     />
                 </FFieldControl>
                 <FFormStackPanel direction="vertical">
-                    <FFieldControl width={240} height={20} label={city.label} labelFor={city.id} border="hidden">
+                    <FFieldControl width={200} height={20} label={city.label} labelFor={city.id} border="hidden">
                         <FFieldInput
                             id={city.id}
                             disabled={!city.getIsEnabled()}
                             invalid={city.getHasError()}
+                            margin={{ start: 40 }}
+                            padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
                             value={city.getValue()}
                             onChange={(value) => binding.setValue(section.city, value)}
                         />

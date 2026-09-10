@@ -18,13 +18,7 @@ export interface ITR310FormModel extends ITR310Form {
 /** The code the report uses for a yes answer on its yes/no/unknown boxes. */
 const yes = "1";
 
-/**
- * Formats a date as the `YYYY-MM-DD` the report's date boxes carry.
- *
- * This is the one order `DateRangeFieldRule` parses, and a value it cannot parse silently skips date validation.
- * Stamping any other order would leave the date the form writes for itself unchecked by the form's own rules, so
- * a host mapping a source that uses another order has to convert before its data reaches the contract.
- */
+/** Formats a date as the `YYYY-MM-DD` the report's date boxes carry. */
 function formatDate(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
@@ -32,13 +26,7 @@ function formatDate(date: Date): string {
     return `${date.getFullYear()}-${month}-${day}`;
 }
 
-/**
- * Reads a string field as the single value it holds.
- *
- * A string field's type allows a list, since the framework's fields are shared with forms that hold one; no box on
- * the TR-310 is one, so a list would mean the field had been written to by something that does not belong to this
- * report, and joining it is a better answer than dropping it.
- */
+/** Reads a string field as the single value it holds. */
 function text(field: StringFieldModel): string {
     const value = field.getValue();
 
@@ -52,12 +40,7 @@ function count(field: NumberFieldModel): number {
     return Array.isArray(value) ? value[0] ?? 0 : value;
 }
 
-/**
- * Represents the model for the South Carolina TR-310 traffic collision report.
- *
- * The collision and narrative pages appear once; the person and unit pages appear once per person and once per
- * unit involved, and a form opens with one of each until a page is added.
- */
+/** Represents the model for the South Carolina TR-310 traffic collision report. */
 export class TR310FormModel extends CrashForm implements ITR310FormModel {
     private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
 
@@ -76,13 +59,7 @@ export class TR310FormModel extends CrashForm implements ITR310FormModel {
             .addRuleCollection(this.schema.ruleCollection);
     }
 
-    /**
-     * Builds the common crash contract from the report.
-     *
-     * This is the summary every crash form publishes, not the report's own data: the fields the TR-310 has no box
-     * for are left blank rather than invented, and the complete round-trippable contract is `ITR310Data`, which
-     * the mapper deals in.
-     */
+    /** Builds the common crash contract from the report. */
     public getCrashData(): ICrash {
         const page = this.getCollisionPage();
         const collision = page.getCollisionSection();
