@@ -1,8 +1,8 @@
-import { buildClasses } from "./class-names";
+import type { CSSProperties } from "react";
 
-/** A step on the Bootstrap spacer scale; `0` removes the padding entirely. */
-export type FPaddingSize = "0" | "1" | "2" | "3" | "4" | "5";
-/** A step on the Bootstrap spacer scale for a margin, which may additionally be `auto` to center or push. */
+/** An exact padding value in pixels; `0` removes the padding entirely. */
+export type FPaddingSize = number;
+/** An exact margin value in pixels, which may additionally be `auto` to center or push. */
 export type FMarginSize = FPaddingSize | "auto";
 
 /** Per-side margin. A side left unset keeps the component's own default for that side. */
@@ -42,21 +42,20 @@ export interface IFPadding {
 }
 
 type SpacingSide = keyof IFMargin;
-type SpacingValues = Partial<Record<SpacingSide, string>>;
+type SpacingValues = Partial<Record<SpacingSide, FMarginSize>>;
 
-/**
- * The Bootstrap class suffix for each side, listed in the order Bootstrap itself emits the utilities
- * (all sides, then each axis, then each edge) so that a narrower side always wins over a broader one.
- */
-const classSuffixes: Record<SpacingSide, string> = {
-    all: "",
-    x: "x",
-    y: "y",
-    top: "t",
-    end: "e",
-    bottom: "b",
-    start: "s"
+/** The CSS property suffixes each side maps to, ensuring narrower sides can override broader ones. */
+const cssKeysBySide: Record<SpacingSide, Array<"Top" | "Bottom" | "InlineStart" | "InlineEnd">> = {
+    all: ["Top", "Bottom", "InlineStart", "InlineEnd"],
+    x: ["InlineStart", "InlineEnd"],
+    y: ["Top", "Bottom"],
+    top: ["Top"],
+    end: ["InlineEnd"],
+    bottom: ["Bottom"],
+    start: ["InlineStart"]
 };
+
+const sideOrder: SpacingSide[] = ["all", "x", "y", "top", "end", "bottom", "start"];
 
 /** The sides a broader side covers, and therefore displaces when a caller sets it. */
 const displacedSides: Partial<Record<SpacingSide, Array<SpacingSide>>> = {
@@ -66,18 +65,17 @@ const displacedSides: Partial<Record<SpacingSide, Array<SpacingSide>>> = {
 };
 
 /**
- * Resolves a component's own spacing defaults against the spacing a caller asked for and builds the Bootstrap
- * classes for the result. Every Bootstrap spacing utility is a single class selector, so a class appended to a
- * default cannot override it -- the winner is decided by stylesheet order, not by the class attribute. A side
- * the caller supplies therefore removes any default it covers rather than being emitted alongside it.
+ * Resolves a component's own spacing defaults against the spacing a caller asked for and builds inline styles
+ * for the result. A side the caller supplies removes any default it covers, so an explicit value clears a default
+ * it would normally overlay.
  */
-function buildSpacing(prefix: string, defaults: SpacingValues | undefined, spacing: string | SpacingValues | undefined): string {
+function buildSpacingStyle(prefix: "margin" | "padding", defaults: SpacingValues | undefined, spacing: FMarginSize | SpacingValues | undefined): CSSProperties {
     if (!defaults && !spacing) {
-        return "";
+        return {};
     }
 
     // a bare size is shorthand for all four sides
-    const sides = typeof spacing === "string" ? { all: spacing } : spacing;
+    const sides = typeof spacing === "number" || spacing === "auto" ? { all: spacing } : spacing;
     const resolved: SpacingValues = { ...defaults };
 
     if (sides) {
@@ -93,24 +91,26 @@ function buildSpacing(prefix: string, defaults: SpacingValues | undefined, spaci
         });
     }
 
-    return buildClasses(...Object.keys(classSuffixes).map(key => {
-        const side = key as SpacingSide;
-        const size = resolved[side];
+    const style: CSSProperties = {};
 
-        return size !== undefined ? `${prefix}${classSuffixes[side]}-${size}` : "";
-    }));
+    sideOrder.forEach(side => {
+        const value = resolved[side];
+        if (value === undefined) return;
+
+        cssKeysBySide[side].forEach(suffix => {
+            (style as Record<string, unknown>)[`${prefix}${suffix}`] = value;
+        });
+    });
+
+    return style;
 }
 
-/**
- * Builds the Bootstrap margin classes for an element, resolving a component's own defaults against the margin
- * a caller asked for. A side the caller supplies removes any default it covers, so `"0"` clears a default
- * `top` margin rather than losing to it on stylesheet order.
- */
-export function getMarginClasses(defaults: IFMargin | undefined, margin: FMarginSize | IFMargin | undefined): string {
-    return buildSpacing("m", defaults, margin);
+/** Builds margin styles for an element, resolving defaults against caller-supplied values. */
+export function getMarginStyle(defaults: IFMargin | undefined, margin: FMarginSize | IFMargin | undefined): CSSProperties {
+    return buildSpacingStyle("margin", defaults, margin);
 }
 
-/** Builds the Bootstrap padding classes for an element. */
-export function getPaddingClasses(defaults: IFPadding | undefined, padding: FPaddingSize | IFPadding | undefined): string {
-    return buildSpacing("p", defaults, padding);
+/** Builds padding styles for an element. */
+export function getPaddingStyle(defaults: IFPadding | undefined, padding: FPaddingSize | IFPadding | undefined): CSSProperties {
+    return buildSpacingStyle("padding", defaults, padding);
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import { buildClasses } from "../../utils/class-names";
-import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
+import { getMarginStyle, getPaddingStyle, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FLabelSize = "1" | "2" | "3" | "4" | "5" | "6";
 export type FLabelTextAlignment = "start" | "center" | "end";
@@ -39,15 +39,18 @@ interface IFLabelProps {
 
 /** Defines a form label, which is a stand alone label. */
 export default function FLabel({ fontSize = "6", margin, padding, textAlignment = "start", variant = "secondary", children }: React.PropsWithChildren<IFLabelProps>): React.JSX.Element {
+    const style: React.CSSProperties = {
+        ...getMarginStyle(undefined, margin),
+        ...getPaddingStyle(undefined, padding)
+    };
+
     return (
-        <span className={buildClasses(
+        <span style={style} className={buildClasses(
             "f-label",
             "d-block",
             `fs-${fontSize}`,
             `text-${textAlignment}`,
-            `text-${variant}`,
-            getMarginClasses(undefined, margin),
-            getPaddingClasses(undefined, padding)
+            `text-${variant}`
         )}>{children}</span>
     );
 }

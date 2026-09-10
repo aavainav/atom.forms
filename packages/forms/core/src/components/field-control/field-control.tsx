@@ -1,6 +1,6 @@
 import React from "react";
 import { buildClasses } from "../../utils/class-names";
-import { getMarginClasses, getPaddingClasses, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
+import { getMarginStyle, getPaddingStyle, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type FControlBorderEdge = "all" | "top" | "right" | "bottom" | "left";
 export type FControlBorderEdges = FControlBorderEdge | FControlBorderEdge[];
@@ -26,7 +26,7 @@ interface IFFieldControlProps {
     readonly labelFor?: string;
     /** Font weight of the label text. */
     readonly labelFontWeight?: FControlLabelFontWeight;
-    /** The margin applied to the label. A bare size applies to all four sides. Defaults to `ms-1 mb-0`. The label is absolutely positioned, so its margins read as offsets from the control rather than as flow spacing. */
+    /** The margin applied to the label. A bare size applies to all four sides. Defaults to a 4px start offset and no bottom margin. The label is absolutely positioned, so its margins read as offsets from the control rather than as flow spacing. */
     readonly labelMargin?: FMarginSize | IFMargin;
     /** The padding applied to the label. A bare size applies to all four sides. */
     readonly labelPadding?: FPaddingSize | IFPadding;
@@ -72,7 +72,10 @@ export default function FFieldControl({
     children
 }: React.PropsWithChildren<IFFieldControlProps>): React.JSX.Element {
     const edges = getBorderEdges(borderEdges);
-    const style: React.CSSProperties = {};
+    const style: React.CSSProperties = {
+        ...getMarginStyle(undefined, margin),
+        ...getPaddingStyle(undefined, padding)
+    };
 
     if (width !== undefined) {
         style.width = width;
@@ -84,6 +87,11 @@ export default function FFieldControl({
         style.flexShrink = 0;
     }
 
+    const labelStyle: React.CSSProperties = {
+        ...getMarginStyle({ start: 4, bottom: 0 }, labelMargin),
+        ...getPaddingStyle(undefined, labelPadding)
+    };
+
     return (
         <div style={style} className={buildClasses(
             "f-field-control position-relative border-dark",
@@ -91,15 +99,11 @@ export default function FFieldControl({
             border === "visible" && edges.top ? "border-top" : "",
             border === "visible" && edges.right ? "border-end" : "",
             border === "visible" && edges.bottom ? "border-bottom" : "",
-            border === "visible" && edges.left ? "border-start" : "",
-            getMarginClasses(undefined, margin),
-            getPaddingClasses(undefined, padding)
+            border === "visible" && edges.left ? "border-start" : ""
         )}>
             {label && (
-                <label htmlFor={labelFor} className={buildClasses(
+                <label htmlFor={labelFor} style={labelStyle} className={buildClasses(
                     "f-field-control-label", "form-label", "position-absolute", "fs-6",
-                    getMarginClasses({ start: "1", bottom: "0" }, labelMargin),
-                    getPaddingClasses(undefined, labelPadding),
                     labelFontWeight === "bold" ? "fw-bold" : "",
                     labelTextCase === "uppercase" ? "text-uppercase" : "",
                     labelTextCase === "capitalize" ? "text-capitalize" : ""
