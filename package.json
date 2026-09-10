@@ -16,7 +16,8 @@
         "build-forms": "lerna run build-forms --stream",
         "clean": "lerna run clean --stream --parallel",
         "dev-forms": "cd ./packages/examples/01-forms && yarn run dev",
-        "preview": "cd ./packages/examples/01-forms && yarn run preview"
+        "preview": "cd ./packages/examples/01-forms && yarn run preview",
+        "test": "lerna run test --stream"
     },
     "dependencies": {
         "react": "^19.2.7",
@@ -25,8 +26,11 @@
         "typescript": "^6.0.3"
     },
     "devDependencies": {
+        "@types/node": "^24.0.0",
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
-        "lerna": "^10.0.0"
+        "lerna": "^10.0.0",
+        "vite": "^8.2.2",
+        "vitest": "^5.0.0"
     }
 }

@@ -48,6 +48,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
 | [theme/](theme/) | SCSS. `theme/_main.scss` is the entry a host imports. |
+| [test/](test/) | Vitest suites, mirroring `src/`. [test/fixtures/](test/fixtures/) holds the in-memory form and the rule-context stub. Outside `tsconfig.json`'s `include`, so `tsc -b` never sees it. |
 
 ## Field models
 
@@ -122,7 +123,7 @@ returns a copy gated by a `Condition`.
 
 | Rule | Notes |
 | --- | --- |
-| `RequiredFieldRule` | The only rule that fires on an empty value. |
+| `RequiredFieldRule` | Fires on an empty value. So does `MaxLengthFieldRule` with a non-zero minimum — see Gotchas. |
 | `MaxLengthFieldRule` | Takes min **and** max; message interpolates `{maxLength}`. |
 | `NumberRangeFieldRule`, `DateRangeFieldRule` | Skip empty and unparseable values. `DateRangeFieldRule` statics: `notInFuture`, `notBefore`. Only parses `YYYY-MM-DD`. |
 | `PatternFieldRule` | Strips a global flag (`lastIndex` would leak between pages). Registers under `new.target.name`, so subclasses get their own name. |
@@ -141,6 +142,27 @@ a citation carrying three violations, all of them the same issue. That is what k
 repeatable page. `RuleContext.getField` resolves within the bound page, falling back to the first instance on the
 form when the field belongs to another page definition. `FormModel.getPagesFor` returns `[]` (rather than throwing)
 for a page the form has no instances of, so such a rule is skipped.
+
+## Tests
+
+`yarn test` (watch: `yarn test-watch`, typecheck: `yarn test-types`). Vitest, `environment: "node"` — the model,
+controller, mapping and validation surface has no react or DOM dependency, and keeping the environment out of the
+way is what makes an accidental import of a component fail loudly rather than quietly succeed against a shim.
+
+Tests live in [test/](test/), mirroring `src/`, **not** beside the source: `tsconfig.json` sets `include: ["src"]`
+and `rootDir: "src"`, so a colocated `*.test.ts` would be compiled into `dist/`. [test/tsconfig.json](test/tsconfig.json)
+is what typechecks them and what oxc reads compiler options from — Vitest itself strips types without checking them.
+Components and hooks have no tests yet; they need `jsdom` and are a separate wave.
+
+| Rule | Why |
+| --- | --- |
+| Import deep source paths, never `src/index.ts` or `src/utils/index.ts` | The barrel re-exports `src/utils`, which pulls in `disposable.ts` and with it a value import of react |
+| Build a fixture's definition tree once, at module scope | `Entity.set` validates by reference identity, so a tree rebuilt per test throws for any entity still holding the old definitions |
+| Give each fixture its own model subclasses | `Entity.definitionRegistry` is keyed by model constructor, so a constructor backs exactly one definition |
+| Seed field values with `setValue`, never a field model's constructor | A concrete field's `value` class-field initializer runs after the base constructor and overwrites it — see Gotchas |
+| Never call `FormModel.dispose()` in a hook | It clears both registries process-wide. Vitest's per-file isolation already gives each file a fresh tree, which is why `isolate` is left on |
+| `await` a form's `initialize()` | It is what creates the pages; a form that has only been constructed holds empty page collections |
+| A rule needs no form | `IRuleContext` is `{form, page, getField}` and nothing reads `form` or `page`, so `stubRuleContext(field)` is a complete stand-in. Only `RulesController.validate` needs a real `RuleContext` |
 
 ## Components
 
@@ -197,6 +219,12 @@ if the type's default should read as empty.
 **Clear a dependent select when its parent changes**: use `setOptionWithDependents(binding, parentField,
 [dependentFields])` — it moves both in a single update.
 
+**Add a test**: `test/<mirror of the source path>.test.ts`, importing the source by deep relative path. Reach for
+[test/fixtures/citation-form.ts](test/fixtures/citation-form.ts) only when the assertion genuinely needs a built
+form — a rule or a collection does not. `test/tsconfig.json` inherits `isolatedModules` (a type-only import must
+be written `import type`) and `noUnusedLocals` (an unused import is a hard error), so run `yarn test-types` as well
+as `yarn test`.
+
 ## Gotchas
 
 - `Entity.get` **throws** for a missing/falsy value; `PageModel.getDropzone` throws for an unregistered dropzone.
@@ -206,3 +234,18 @@ if the type's default should read as empty.
   section for exactly that reason.
 - `FormMapper.read` **omits** a key when the field is empty, so an untouched number field is absent rather than `0`.
   `FormMapper.write` skips `undefined`, so an unmentioned field keeps its current value.
+- A concrete field model declares `public readonly value = <default>` as a class-field initializer, which under
+  `useDefineForClassFields` runs *after* `FieldModel`'s constructor has assigned `field.value` — so
+  `new StringFieldModel({name, label, value: "abc"}).value` is `""`, not `"abc"`. Nothing in production notices,
+  because `FieldDefinition.createNew` always passes `""` and real values arrive through `setValue`, which goes
+  through `withChanges` and bypasses the constructor. Pinned by a characterization test in
+  [test/models/field.test.ts](test/models/field.test.ts).
+- `MaxLengthFieldRule` takes a **minimum** as well as a maximum, and unlike every other rule it does not skip an
+  empty value — a rule with a non-zero minimum reports against a blank field. It also reads
+  `(field.value as string)?.length`, which is `undefined` for a number field and falls back to `0`, so a length
+  rule with a non-zero minimum *always* reports against a `NumberFieldModel`, with a message about exceeding the
+  maximum. Both are pinned in [test/models/validation/rules/max-length-field-rule.test.ts](test/models/validation/rules/max-length-field-rule.test.ts).
+- `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
+  `setReadOnly()` a newly added page arrives with its non-shared sections enabled.
+- `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page
+  definitions is only ever evaluated against the pages of the first.

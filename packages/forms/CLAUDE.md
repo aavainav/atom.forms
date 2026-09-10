@@ -75,6 +75,9 @@ in one is a change in all three in the same places.
   explicit props over Context for things like enabled/read-only.
 - **Doc comments are JSDoc `/** */`**, not `//`. Trivial single-field getters are one-liners with no doc comment.
 - **Keep new dependencies to a minimum.**
+- **Tests live in a package's `test/` directory, not beside the source.** Every package's `tsconfig.json` sets
+  `include: ["src"]` and `rootDir: "src"`, so a colocated test would be compiled into `dist/` — the build output
+  every other package consumes.
 - **A section property cannot be called `name`, `id`, `revision` or `definition`** — `SectionModel` and `Entity`
   already declare those, and a field definition shadowing one is a compile error that cascades through every file
   touching the section. Prefix instead: `officerName`, `witnessName`, `licenseIdentifier`.
@@ -99,3 +102,10 @@ in one is a change in all three in the same places.
 
 `yarn build-forms` from the repo root (lerna, `tsc -b` per package). Per package: `yarn build`, `yarn clean`.
 Value-list packages also have `yarn generate`.
+
+## Test
+
+`yarn test` from the repo root (lerna, `vitest run` per package). Per package: `yarn test`, `yarn test-watch`, and
+`yarn test-types` — Vitest strips types without checking them, so the typecheck is a separate script. Only
+[core/](core/) has tests today; a package adopts them by copying core's `vitest.config.ts` and `test/tsconfig.json`.
+See [core/CLAUDE.md](core/CLAUDE.md) for the rules a test has to follow to stay clear of the global registries.
