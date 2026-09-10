@@ -17,8 +17,8 @@ export const OfficerSection = ({ binding }: IOfficerSectionProps): React.JSX.Ele
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={373} label={issuedBy.label} labelFor={issuedBy.id} borderEdges={["top", "bottom"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top", "bottom"]} label={issuedBy.label} labelFor={issuedBy.id} width={373}>
                     <FFieldInput
                         id={issuedBy.id}
                         disabled={!issuedBy.getIsEnabled()}
@@ -27,7 +27,7 @@ export const OfficerSection = ({ binding }: IOfficerSectionProps): React.JSX.Ele
                         onChange={(value) => binding.setValue(section.issuedBy, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={100} label={rank.label} labelFor={rank.id} borderEdges={["left", "top", "bottom"]}>
+                <FFieldControl borderEdges={["left", "top", "bottom"]} label={rank.label} labelFor={rank.id} width={100}>
                     <FFieldInput
                         id={rank.id}
                         disabled={!rank.getIsEnabled()}
@@ -36,7 +36,7 @@ export const OfficerSection = ({ binding }: IOfficerSectionProps): React.JSX.Ele
                         onChange={(value) => binding.setValue(section.rank, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={115} label={scCjaNumber.label} labelFor={scCjaNumber.id} borderEdges={["left", "top", "bottom"]}>
+                <FFieldControl borderEdges={["left", "top", "bottom"]} label={scCjaNumber.label} labelFor={scCjaNumber.id} width={115}>
                     <FFieldInput
                         id={scCjaNumber.id}
                         disabled={!scCjaNumber.getIsEnabled()}

@@ -34,22 +34,22 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                 <h6 className="fw-bold mb-0">SEARCHES (CHECK ALL THAT APPLY)</h6>
             </div>
             <FFormStackPanel direction="horizontal">
-                <FFieldCheckbox id={ofDriver.id} label={ofDriver.label} checked={ofDriver.getValue() as boolean} disabled={!ofDriver.getIsEnabled()} invalid={ofDriver.getHasError()}
+                <FFieldCheckbox id={ofDriver.id} checked={ofDriver.getValue() as boolean} disabled={!ofDriver.getIsEnabled()} invalid={ofDriver.getHasError()} label={ofDriver.label}
                     onChange={(checked) => binding.setValue(section.ofDriver, checked)} />
-                <FFieldCheckbox id={ofPedestrian.id} label={ofPedestrian.label} checked={ofPedestrian.getValue() as boolean} disabled={!ofPedestrian.getIsEnabled()} invalid={ofPedestrian.getHasError()}
+                <FFieldCheckbox checked={ofPedestrian.getValue() as boolean} disabled={!ofPedestrian.getIsEnabled()} id={ofPedestrian.id} invalid={ofPedestrian.getHasError()} label={ofPedestrian.label}
                     onChange={(checked) => binding.setValue(section.ofPedestrian, checked)} />
-                <FFieldCheckbox id={ofVehicle.id} label={ofVehicle.label} checked={ofVehicle.getValue() as boolean} disabled={!ofVehicle.getIsEnabled()} invalid={ofVehicle.getHasError()}
+                <FFieldCheckbox checked={ofVehicle.getValue() as boolean} disabled={!ofVehicle.getIsEnabled()} id={ofVehicle.id} invalid={ofVehicle.getHasError()} label={ofVehicle.label}
                     onChange={(checked) => binding.setValue(section.ofVehicle, checked)} />
-                <FFieldCheckbox id={ofPassenger.id} label={ofPassenger.label} checked={ofPassenger.getValue() as boolean} disabled={!ofPassenger.getIsEnabled()} invalid={ofPassenger.getHasError()}
+                <FFieldCheckbox checked={ofPassenger.getValue() as boolean} disabled={!ofPassenger.getIsEnabled()} id={ofPassenger.id} invalid={ofPassenger.getHasError()} label={ofPassenger.label}
                     onChange={(checked) => binding.setValue(section.ofPassenger, checked)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <div className="w-100">
                     <div className="p-2">
                         <div className="d-flex justify-content-evenly">
-                            <FFieldCheckbox id={consentRequestedYes.id} label={consentRequestedYes.label} type="radio" checked={consentRequestedYes.getValue() as boolean} disabled={!consentRequestedYes.getIsEnabled()} invalid={consentRequestedYes.getHasError()}
+                            <FFieldCheckbox id={consentRequestedYes.id} checked={consentRequestedYes.getValue() as boolean} disabled={!consentRequestedYes.getIsEnabled()} invalid={consentRequestedYes.getHasError()} label={consentRequestedYes.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectConsentRequested(current.consentRequestedYes))} />
-                            <FFieldCheckbox id={consentRequestedNo.id} label={consentRequestedNo.label} type="radio" checked={consentRequestedNo.getValue() as boolean} disabled={!consentRequestedNo.getIsEnabled()} invalid={consentRequestedNo.getHasError()}
+                            <FFieldCheckbox checked={consentRequestedNo.getValue() as boolean} disabled={!consentRequestedNo.getIsEnabled()} id={consentRequestedNo.id} invalid={consentRequestedNo.getHasError()} label={consentRequestedNo.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectConsentRequested(current.consentRequestedNo))} />
                         </div>
                     </div>
@@ -57,33 +57,34 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                 <div className="w-100">
                     <div className="p-2">
                         <div className="d-flex justify-content-evenly">
-                            <FFieldCheckbox id={consentGivenYes.id} label={consentGivenYes.label} type="radio" checked={consentGivenYes.getValue() as boolean} disabled={!consentGivenYes.getIsEnabled()} invalid={consentGivenYes.getHasError()}
+                            <FFieldCheckbox checked={consentGivenYes.getValue() as boolean} disabled={!consentGivenYes.getIsEnabled()} id={consentGivenYes.id} invalid={consentGivenYes.getHasError()} label={consentGivenYes.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectConsentGiven(current.consentGivenYes))} />
-                            <FFieldCheckbox id={consentGivenNo.id} label={consentGivenNo.label} type="radio" checked={consentGivenNo.getValue() as boolean} disabled={!consentGivenNo.getIsEnabled()} invalid={consentGivenNo.getHasError()}
+                            <FFieldCheckbox checked={consentGivenNo.getValue() as boolean} disabled={!consentGivenNo.getIsEnabled()} id={consentGivenNo.id} invalid={consentGivenNo.getHasError()} label={consentGivenNo.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectConsentGiven(current.consentGivenNo))} />
                         </div>
                     </div>
                 </div>
             </FFormStackPanel>
             <div className="d-flex justify-content-evenly p-2">
-                <FFieldCheckbox id={madeByConsent.id} label={madeByConsent.label} checked={madeByConsent.getValue() as boolean} disabled={!madeByConsent.getIsEnabled()} invalid={madeByConsent.getHasError()}
+                <FFieldCheckbox checked={madeByConsent.getValue() as boolean} disabled={!madeByConsent.getIsEnabled()} id={madeByConsent.id} invalid={madeByConsent.getHasError()} label={madeByConsent.label}
                     onChange={(checked) => binding.setValue(section.madeByConsent, checked)} />
-                <FFieldCheckbox id={incidentToArrest.id} label={incidentToArrest.label} checked={incidentToArrest.getValue() as boolean} disabled={!incidentToArrest.getIsEnabled()} invalid={incidentToArrest.getHasError()}
+                <FFieldCheckbox checked={incidentToArrest.getValue() as boolean} disabled={!incidentToArrest.getIsEnabled()} id={incidentToArrest.id} invalid={incidentToArrest.getHasError()} label={incidentToArrest.label}
                     onChange={(checked) => binding.setValue(section.incidentToArrest, checked)} />
-                <FFieldCheckbox id={inventoryVehicleTowed.id} label={inventoryVehicleTowed.label} checked={inventoryVehicleTowed.getValue() as boolean} disabled={!inventoryVehicleTowed.getIsEnabled()} invalid={inventoryVehicleTowed.getHasError()}
+                <FFieldCheckbox checked={inventoryVehicleTowed.getValue() as boolean} disabled={!inventoryVehicleTowed.getIsEnabled()} id={inventoryVehicleTowed.id} invalid={inventoryVehicleTowed.getHasError()} label={inventoryVehicleTowed.label}
                     onChange={(checked) => binding.setValue(section.inventoryVehicleTowed, checked)} />
-                <FFieldCheckbox id={probableCause.id} label={probableCause.label} checked={probableCause.getValue() as boolean} disabled={!probableCause.getIsEnabled()} invalid={probableCause.getHasError()}
+                <FFieldCheckbox checked={probableCause.getValue() as boolean} disabled={!probableCause.getIsEnabled()} id={probableCause.id} invalid={probableCause.getHasError()} label={probableCause.label}
                     onChange={(checked) => binding.setValue(section.probableCause, checked)} />
             </div>
-            <FFormStackPanel height={22} direction="horizontal">
-                <FFieldCheckbox id={basisOther.id} label={basisOther.label} checked={basisOther.getValue() as boolean} disabled={!basisOther.getIsEnabled()} invalid={basisOther.getHasError()}
+            <FFormStackPanel direction="horizontal" height={22}>
+                <FFieldCheckbox checked={basisOther.getValue() as boolean} disabled={!basisOther.getIsEnabled()} id={basisOther.id} invalid={basisOther.getHasError()} label={basisOther.label}
                     onChange={(checked) => binding.setValue(section.basisOther, checked)} />
-                    
-                <FFieldControl label={basisOtherSpecify.label} labelFor={basisOtherSpecify.id} borderEdges={["bottom"]}>
+
+                <FFieldControl borderEdges={["bottom"]} label={basisOtherSpecify.label} labelFor={basisOtherSpecify.id}>
                     <FFieldInput
-                        id={basisOtherSpecify.id}
                         disabled={!basisOtherSpecify.getIsEnabled() || basisOther.getIsEmpty()}
+                        id={basisOtherSpecify.id}
                         invalid={basisOtherSpecify.getHasError()}
+                        padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
                         value={basisOtherSpecify.getValue()}
                         onChange={(value) => binding.setValue(section.basisOtherSpecify, value)}
                     />

@@ -29,34 +29,35 @@ export const PrimaryReasonSection = ({ binding }: IPrimaryReasonSectionProps): R
             <FFormStackPanel direction="horizontal">
                 <div className="w-100">
                     <div className="p-2">
-                        <FFieldCheckbox id={movingViolation.id} label={movingViolation.label} type="radio" checked={movingViolation.getValue() as boolean} disabled={!movingViolation.getIsEnabled()} invalid={movingViolation.getHasError()}
+                        <FFieldCheckbox id={movingViolation.id} checked={movingViolation.getValue() as boolean} disabled={!movingViolation.getIsEnabled()} invalid={movingViolation.getHasError()} label={movingViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.movingViolation))} />
-                        <FFieldCheckbox id={nonMovingViolation.id} label={nonMovingViolation.label} type="radio" checked={nonMovingViolation.getValue() as boolean} disabled={!nonMovingViolation.getIsEnabled()} invalid={nonMovingViolation.getHasError()}
+                        <FFieldCheckbox checked={nonMovingViolation.getValue() as boolean} disabled={!nonMovingViolation.getIsEnabled()} id={nonMovingViolation.id} invalid={nonMovingViolation.getHasError()} label={nonMovingViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.nonMovingViolation))} />
-                        <FFieldCheckbox id={motoristAssistance.id} label={motoristAssistance.label} type="radio" checked={motoristAssistance.getValue() as boolean} disabled={!motoristAssistance.getIsEnabled()} invalid={motoristAssistance.getHasError()}
+                        <FFieldCheckbox checked={motoristAssistance.getValue() as boolean} disabled={!motoristAssistance.getIsEnabled()} id={motoristAssistance.id} invalid={motoristAssistance.getHasError()} label={motoristAssistance.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.motoristAssistance))} />
                     </div>
                 </div>
                 <div className="w-100">
                     <div className="p-2">
-                        <FFieldCheckbox id={bolo.id} label={bolo.label} type="radio" checked={bolo.getValue() as boolean} disabled={!bolo.getIsEnabled()} invalid={bolo.getHasError()}
+                        <FFieldCheckbox checked={bolo.getValue() as boolean} disabled={!bolo.getIsEnabled()} id={bolo.id} invalid={bolo.getHasError()} label={bolo.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.bolo))} />
-                        <FFieldCheckbox id={trafficCollision.id} label={trafficCollision.label} type="radio" checked={trafficCollision.getValue() as boolean} disabled={!trafficCollision.getIsEnabled()} invalid={trafficCollision.getHasError()}
+                        <FFieldCheckbox checked={trafficCollision.getValue() as boolean} disabled={!trafficCollision.getIsEnabled()} id={trafficCollision.id} invalid={trafficCollision.getHasError()} label={trafficCollision.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.trafficCollision))} />
-                        <FFieldCheckbox id={suspiciousActivity.id} label={suspiciousActivity.label} type="radio" checked={suspiciousActivity.getValue() as boolean} disabled={!suspiciousActivity.getIsEnabled()} invalid={suspiciousActivity.getHasError()}
+                        <FFieldCheckbox checked={suspiciousActivity.getValue() as boolean} disabled={!suspiciousActivity.getIsEnabled()} id={suspiciousActivity.id} invalid={suspiciousActivity.getHasError()} label={suspiciousActivity.label} type="radio"
                             onChange={() => binding.update((current) => current.selectReason(current.suspiciousActivity))} />
                     </div>
                 </div>
             </FFormStackPanel>
-            <FFormStackPanel height={22} direction="horizontal">
-                <FFieldCheckbox id={other.id} label={other.label} type="radio" checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} invalid={other.getHasError()}
+            <FFormStackPanel direction="horizontal" height={22}>
+                <FFieldCheckbox checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} id={other.id} invalid={other.getHasError()} label={other.label} type="radio"
                     onChange={() => binding.update((current) => current.selectReason(current.other))} />
-                    
-                 <FFieldControl label={otherSpecify.label} labelFor={otherSpecify.id} borderEdges={["bottom"]}>
+
+                 <FFieldControl borderEdges={["bottom"]} label={otherSpecify.label} labelFor={otherSpecify.id}>
                     <FFieldInput
-                        id={otherSpecify.id}
                         disabled={!otherSpecify.getIsEnabled() || other.getIsEmpty()}
+                        id={otherSpecify.id}
                         invalid={otherSpecify.getHasError()}
+                        padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
                         value={otherSpecify.getValue()}
                         onChange={(value) => binding.setValue(section.otherSpecify, value)}
                     />

@@ -31,7 +31,7 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                 <h4 className="fw-bold mb-0">PUBLIC CONTACT / WARNING</h4>
             </div>
             <FFormStackPanel direction="horizontal">
-                <FFieldControl width={350} label={agencyName.label} labelFor={agencyName.id} border="hidden">
+                <FFieldControl border="hidden" label={agencyName.label} labelFor={agencyName.id} width={350}>
                     <FFieldInput
                         id={agencyName.id}
                         disabled={!agencyName.getIsEnabled()}
@@ -41,7 +41,7 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                     />
                 </FFieldControl>
                 <FFormStackPanel direction="vertical">
-                    <FFieldControl width={200} height={20} label={city.label} labelFor={city.id} border="hidden">
+                    <FFieldControl border="hidden" height={20} label={city.label} labelFor={city.id} width={200}>
                         <FFieldInput
                             id={city.id}
                             disabled={!city.getIsEnabled()}
@@ -52,7 +52,7 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                             onChange={(value) => binding.setValue(section.city, value)}
                         />
                     </FFieldControl>
-                    <FFieldControl width={240} height={20} label={county.label} labelFor={county.id} border="hidden">
+                    <FFieldControl border="hidden" height={20} label={county.label} labelFor={county.id} width={240}>
                         <FFieldSelect
                             id={county.id}
                             cacheKey={PublicContactOrWarningValueListId.county}

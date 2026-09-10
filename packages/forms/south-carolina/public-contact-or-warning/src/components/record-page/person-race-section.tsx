@@ -27,8 +27,8 @@ export const PersonRaceSection = ({ binding, valueListController }: IPersonRaceS
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={118} label={race.label} labelFor={race.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={race.label} labelFor={race.id} width={118}>
                     <FFieldSelect
                         id={race.id}
                         cacheKey={PublicContactOrWarningValueListId.raceEthnicity}
@@ -41,7 +41,7 @@ export const PersonRaceSection = ({ binding, valueListController }: IPersonRaceS
                         onChange={(value) => binding.setValue(section.race, value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={85} label={gender.label} labelFor={gender.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={gender.label} labelFor={gender.id} width={85}>
                     <FFieldSelect
                         id={gender.id}
                         cacheKey={PublicContactOrWarningValueListId.gender}
@@ -54,12 +54,12 @@ export const PersonRaceSection = ({ binding, valueListController }: IPersonRaceS
                         onChange={(value) => binding.setValue(section.gender, value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={178} label={dateOfBirth.label} labelFor={dateOfBirth.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={dateOfBirth.label} labelFor={dateOfBirth.id} width={178}>
                     <FFieldInput
-                        type="date"
                         id={dateOfBirth.id}
                         disabled={!dateOfBirth.getIsEnabled()}
                         invalid={dateOfBirth.getHasError()}
+                        type="date"
                         value={dateOfBirth.getValue()}
                         onChange={(value) => binding.setValue(section.dateOfBirth, value)}
                     />

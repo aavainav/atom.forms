@@ -43,8 +43,8 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={173} label={licenseNumber.label} labelFor={licenseNumber.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={licenseNumber.label} labelFor={licenseNumber.id} width={173}>
                     <FFieldInput
                         id={licenseNumber.id}
                         disabled={!licenseNumber.getIsEnabled()}
@@ -53,7 +53,7 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                         onChange={(value) => binding.setValue(section.licenseNumber, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={85} label={state.label} labelFor={state.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={state.label} labelFor={state.id} width={85}>
                     <FFieldSelect
                         id={state.id}
                         cacheKey={ValueListId.state}
@@ -67,7 +67,7 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                         onChange={(value) => binding.setValue(section.state, value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={150} label={make.label} labelFor={make.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={make.label} labelFor={make.id} width={150}>
                     <FFieldSelect
                         id={make.id}
                         cacheKey={ValueListId.vehicleMake}
@@ -81,7 +81,7 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                         onChange={(value) => setMake(value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={65} label={year.label} labelFor={year.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={year.label} labelFor={year.id} width={65}>
                     <FFieldInput
                         id={year.id}
                         disabled={!year.getIsEnabled()}
@@ -90,23 +90,22 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                         onChange={(value) => binding.setValue(section.year, Number(value))}
                     />
                 </FFieldControl>
-                <FBorder width={115} height={44} borderEdges={["left", "top"]}>
+                <FBorder borderEdges={["left", "top"]} contentJustify="center" height={44} width={115}>
                     <FFieldCheckbox
                         id={cmv.id}
-                        label={cmv.label}
                         checked={cmv.getValue() as boolean}
                         disabled={!cmv.getIsEnabled()}
                         invalid={cmv.getHasError()}
+                        label={cmv.label}
                         onChange={(checked) => binding.setValue(section.cmv, checked)}
                     />
                 </FBorder>
             </FFormStackPanel>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={588} label={model.label} labelFor={model.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={model.label} labelFor={model.id} width={588}>
                     <FFieldSelect
                         id={model.id}
                         cacheKey={ValueListId.vehicleModel}
-                        parentValue={makeCode}
                         controller={valueListController}
                         // a model only means anything underneath a make, so the field stays shut until one is
                         // chosen - which also keeps the model list from being fetched at all until then
@@ -114,6 +113,7 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                         format="descriptionOnly"
                         invalid={model.getHasError()}
                         options={loadModelOptions}
+                        parentValue={makeCode}
                         placeholder={makeCode ? "Select..." : "Select a make first"}
                         searchable
                         value={model.getValue()}

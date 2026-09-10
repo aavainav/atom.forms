@@ -15,8 +15,8 @@ export const RouteSection = ({ binding }: IRouteSectionProps): React.JSX.Element
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={75} label={type.label} labelFor={type.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={type.label} labelFor={type.id} width={75}>
                     <FFieldInput
                         id={type.id}
                         disabled={!type.getIsEnabled()}
@@ -25,7 +25,7 @@ export const RouteSection = ({ binding }: IRouteSectionProps): React.JSX.Element
                         onChange={(value) => binding.setValue(section.type, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={513} label={numberOrName.label} labelFor={numberOrName.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={numberOrName.label} labelFor={numberOrName.id} width={513}>
                     <FFieldInput
                         id={numberOrName.id}
                         disabled={!numberOrName.getIsEnabled()}

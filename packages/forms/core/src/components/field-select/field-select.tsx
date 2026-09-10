@@ -7,6 +7,7 @@ import FFieldInput, { IFieldInputComponent } from "../field-input/field-input";
 import { IOptionValue } from "../../models/field";
 
 import { buildClasses } from "../../utils/class-names";
+import { getMarginStyle, getPaddingStyle, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
 
 export type { Placement };
 
@@ -58,6 +59,8 @@ interface IFFieldSelectProps {
     readonly id?: string;
     /** Applies invalid styling to the toggle button. Default false. */
     readonly invalid?: boolean;
+    /** The margin applied to the toggle button. A bare size applies to all four sides. */
+    readonly margin?: FMarginSize | IFMargin;
     /** The number of matching options shown at once, the rest being reached by searching; default 50. */
     readonly maxVisibleItems?: number;
     /** Popper.js placement of the dropdown menu relative to the toggle button; default `"bottom-start"`. */
@@ -66,6 +69,8 @@ interface IFFieldSelectProps {
     readonly multiple?: boolean;
     /** The selectable options, or a function that asynchronously loads them for `parentValue` when the menu is opened. */
     readonly options: IOptionValue[] | ((parentValue?: string) => Promise<IOptionValue[]>);
+    /** The padding applied to the toggle button. A bare size applies to all four sides. */
+    readonly padding?: FPaddingSize | IFPadding;
     /**
      * The value of the parent option this select's list hangs off, for a list that depends on another field.
      *
@@ -93,10 +98,12 @@ export default function FFieldSelect({
     format = "valueAndDescription",
     id,
     invalid = false,
+    margin,
     maxVisibleItems = defaultMaxVisibleItems,
     menuPlacement = "bottom-start",
     multiple = false,
     options,
+    padding,
     parentValue,
     placeholder = "Select...",
     searchable = false,
@@ -261,9 +268,14 @@ export default function FFieldSelect({
         }
     };
 
+    const toggleStyle: React.CSSProperties = {
+        ...getMarginStyle(undefined, margin),
+        ...getPaddingStyle(undefined, padding)
+    };
+
     return (
         <div className="f-field-select">
-            <div ref={toggleRef} className={isOpen ? "show" : ""}>
+            <div ref={toggleRef} className={isOpen ? "show" : ""} style={toggleStyle}>
                 <FButton
                     id={id}
                     type="button"

@@ -18,28 +18,30 @@ export const LatitudeLongitudeSection = ({ binding }: ILatitudeLongitudeSectionP
         <FSection>
             <FFormStackPanel direction="vertical">
                 <FFormStackPanel direction="horizontal">
-                    <FBorder width={100} height={22} borderEdges={["left", "top"]}>
+                    <FBorder borderEdges={["left", "top"]} height={22} width={100}>
                         <FLabel fontSize="6" textAlignment="center">LATITUDE</FLabel>
                     </FBorder>
-                    <FFieldControl width={107} height={22} label={latitude.label} labelFor={latitude.id} borderEdges={["left", "top"]}>
+                    <FFieldControl borderEdges={["left", "top"]} height={22} label={latitude.label} labelFor={latitude.id} width={107}>
                         <FFieldInput
                             id={latitude.id}
                             disabled={!latitude.getIsEnabled()}
                             invalid={latitude.getHasError()}
+                            padding={{ start: 5, top: 0, end: 0, bottom: 0 }}
                             value={latitude.getValue()}
                             onChange={(value) => binding.setValue(section.latitude, value)}
                         />
                     </FFieldControl>
                 </FFormStackPanel>
                 <FFormStackPanel direction="horizontal">
-                    <FBorder width={100} height={22} borderEdges={["left", "top"]}>
+                    <FBorder borderEdges={["left", "top"]} height={22} width={100}>
                         <FLabel fontSize="6" textAlignment="center">LONGITUDE</FLabel>
                     </FBorder>
-                    <FFieldControl width={107} height={22} label={longitude.label} labelFor={longitude.id} borderEdges={["left", "top"]}>
+                    <FFieldControl borderEdges={["left", "top"]} height={22} label={longitude.label} labelFor={longitude.id} width={107}>
                         <FFieldInput
                             id={longitude.id}
                             disabled={!longitude.getIsEnabled()}
                             invalid={longitude.getHasError()}
+                            padding={{ start: 5, top: 0, end: 0, bottom: 0 }}
                             value={longitude.getValue()}
                             onChange={(value) => binding.setValue(section.longitude, value)}
                         />

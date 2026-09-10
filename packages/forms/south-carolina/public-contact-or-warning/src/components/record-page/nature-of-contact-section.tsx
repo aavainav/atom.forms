@@ -42,60 +42,61 @@ export const NatureOfContactSection = ({ binding }: INatureOfContactSectionProps
             <FFormStackPanel direction="horizontal">
                 <div className="w-100">
                     <div className="p-2">
-                        <FFieldCheckbox id={speeding.id} label={speeding.label} type="radio" checked={speeding.getValue() as boolean} disabled={!speeding.getIsEnabled()} invalid={speeding.getHasError()}
+                        <FFieldCheckbox id={speeding.id} checked={speeding.getValue() as boolean} disabled={!speeding.getIsEnabled()} invalid={speeding.getHasError()} label={speeding.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.speeding))} />
-                        <FFieldCheckbox id={contactOnly.id} label={contactOnly.label} type="radio" checked={contactOnly.getValue() as boolean} disabled={!contactOnly.getIsEnabled()} invalid={contactOnly.getHasError()}
+                        <FFieldCheckbox checked={contactOnly.getValue() as boolean} disabled={!contactOnly.getIsEnabled()} id={contactOnly.id} invalid={contactOnly.getHasError()} label={contactOnly.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.contactOnly))} />
-                        <FFieldCheckbox id={improperLaneUse.id} label={improperLaneUse.label} type="radio" checked={improperLaneUse.getValue() as boolean} disabled={!improperLaneUse.getIsEnabled()} invalid={improperLaneUse.getHasError()}
+                        <FFieldCheckbox checked={improperLaneUse.getValue() as boolean} disabled={!improperLaneUse.getIsEnabled()} id={improperLaneUse.id} invalid={improperLaneUse.getHasError()} label={improperLaneUse.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.improperLaneUse))} />
-                        <FFieldCheckbox id={failureToDimLights.id} label={failureToDimLights.label} type="radio" checked={failureToDimLights.getValue() as boolean} disabled={!failureToDimLights.getIsEnabled()} invalid={failureToDimLights.getHasError()}
+                        <FFieldCheckbox checked={failureToDimLights.getValue() as boolean} disabled={!failureToDimLights.getIsEnabled()} id={failureToDimLights.id} invalid={failureToDimLights.getHasError()} label={failureToDimLights.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.failureToDimLights))} />
-                        <FFieldCheckbox id={improperBacking.id} label={improperBacking.label} type="radio" checked={improperBacking.getValue() as boolean} disabled={!improperBacking.getIsEnabled()} invalid={improperBacking.getHasError()}
+                        <FFieldCheckbox checked={improperBacking.getValue() as boolean} disabled={!improperBacking.getIsEnabled()} id={improperBacking.id} invalid={improperBacking.getHasError()} label={improperBacking.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.improperBacking))} />
-                        <FFieldCheckbox id={improperLights.id} label={improperLights.label} type="radio" checked={improperLights.getValue() as boolean} disabled={!improperLights.getIsEnabled()} invalid={improperLights.getHasError()}
+                        <FFieldCheckbox checked={improperLights.getValue() as boolean} disabled={!improperLights.getIsEnabled()} id={improperLights.id} invalid={improperLights.getHasError()} label={improperLights.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.improperLights))} />
-                        <FFieldCheckbox id={improperTurn.id} label={improperTurn.label} type="radio" checked={improperTurn.getValue() as boolean} disabled={!improperTurn.getIsEnabled()} invalid={improperTurn.getHasError()}
+                        <FFieldCheckbox checked={improperTurn.getValue() as boolean} disabled={!improperTurn.getIsEnabled()} id={improperTurn.id} invalid={improperTurn.getHasError()} label={improperTurn.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.improperTurn))} />
-                        <FFieldCheckbox id={disregardingStopSign.id} label={disregardingStopSign.label} type="radio" checked={disregardingStopSign.getValue() as boolean} disabled={!disregardingStopSign.getIsEnabled()} invalid={disregardingStopSign.getHasError()}
+                        <FFieldCheckbox checked={disregardingStopSign.getValue() as boolean} disabled={!disregardingStopSign.getIsEnabled()} id={disregardingStopSign.id} invalid={disregardingStopSign.getHasError()} label={disregardingStopSign.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.disregardingStopSign))} />
-                        <FFieldCheckbox id={seatBeltViolation.id} label={seatBeltViolation.label} type="radio" checked={seatBeltViolation.getValue() as boolean} disabled={!seatBeltViolation.getIsEnabled()} invalid={seatBeltViolation.getHasError()}
+                        <FFieldCheckbox checked={seatBeltViolation.getValue() as boolean} disabled={!seatBeltViolation.getIsEnabled()} id={seatBeltViolation.id} invalid={seatBeltViolation.getHasError()} label={seatBeltViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.seatBeltViolation))} />
-                        <FFieldCheckbox id={handsFreeViolation.id} label={handsFreeViolation.label} type="radio" checked={handsFreeViolation.getValue() as boolean} disabled={!handsFreeViolation.getIsEnabled()} invalid={handsFreeViolation.getHasError()}
+                        <FFieldCheckbox checked={handsFreeViolation.getValue() as boolean} disabled={!handsFreeViolation.getIsEnabled()} id={handsFreeViolation.id} invalid={handsFreeViolation.getHasError()} label={handsFreeViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.handsFreeViolation))} />
                     </div>
                 </div>
                 <div className="w-100">
                     <div className="p-2">
-                        <FFieldCheckbox id={disregardingTrafficSignal.id} label={disregardingTrafficSignal.label} type="radio" checked={disregardingTrafficSignal.getValue() as boolean} disabled={!disregardingTrafficSignal.getIsEnabled()} invalid={disregardingTrafficSignal.getHasError()}
+                        <FFieldCheckbox checked={disregardingTrafficSignal.getValue() as boolean} disabled={!disregardingTrafficSignal.getIsEnabled()} id={disregardingTrafficSignal.id} invalid={disregardingTrafficSignal.getHasError()} label={disregardingTrafficSignal.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.disregardingTrafficSignal))} />
-                        <FFieldCheckbox id={followingTooClose.id} label={followingTooClose.label} type="radio" checked={followingTooClose.getValue() as boolean} disabled={!followingTooClose.getIsEnabled()} invalid={followingTooClose.getHasError()}
+                        <FFieldCheckbox checked={followingTooClose.getValue() as boolean} disabled={!followingTooClose.getIsEnabled()} id={followingTooClose.id} invalid={followingTooClose.getHasError()} label={followingTooClose.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.followingTooClose))} />
-                        <FFieldCheckbox id={changingLanesUnlawfully.id} label={changingLanesUnlawfully.label} type="radio" checked={changingLanesUnlawfully.getValue() as boolean} disabled={!changingLanesUnlawfully.getIsEnabled()} invalid={changingLanesUnlawfully.getHasError()}
+                        <FFieldCheckbox checked={changingLanesUnlawfully.getValue() as boolean} disabled={!changingLanesUnlawfully.getIsEnabled()} id={changingLanesUnlawfully.id} invalid={changingLanesUnlawfully.getHasError()} label={changingLanesUnlawfully.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.changingLanesUnlawfully))} />
-                        <FFieldCheckbox id={noRightOfWay.id} label={noRightOfWay.label} type="radio" checked={noRightOfWay.getValue() as boolean} disabled={!noRightOfWay.getIsEnabled()} invalid={noRightOfWay.getHasError()}
+                        <FFieldCheckbox checked={noRightOfWay.getValue() as boolean} disabled={!noRightOfWay.getIsEnabled()} id={noRightOfWay.id} invalid={noRightOfWay.getHasError()} label={noRightOfWay.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.noRightOfWay))} />
-                        <FFieldCheckbox id={defectiveEquipment.id} label={defectiveEquipment.label} type="radio" checked={defectiveEquipment.getValue() as boolean} disabled={!defectiveEquipment.getIsEnabled()} invalid={defectiveEquipment.getHasError()}
+                        <FFieldCheckbox checked={defectiveEquipment.getValue() as boolean} disabled={!defectiveEquipment.getIsEnabled()} id={defectiveEquipment.id} invalid={defectiveEquipment.getHasError()} label={defectiveEquipment.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.defectiveEquipment))} />
-                        <FFieldCheckbox id={improperPassing.id} label={improperPassing.label} type="radio" checked={improperPassing.getValue() as boolean} disabled={!improperPassing.getIsEnabled()} invalid={improperPassing.getHasError()}
+                        <FFieldCheckbox checked={improperPassing.getValue() as boolean} disabled={!improperPassing.getIsEnabled()} id={improperPassing.id} invalid={improperPassing.getHasError()} label={improperPassing.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.improperPassing))} />
-                        <FFieldCheckbox id={driversLicenseViolation.id} label={driversLicenseViolation.label} type="radio" checked={driversLicenseViolation.getValue() as boolean} disabled={!driversLicenseViolation.getIsEnabled()} invalid={driversLicenseViolation.getHasError()}
+                        <FFieldCheckbox checked={driversLicenseViolation.getValue() as boolean} disabled={!driversLicenseViolation.getIsEnabled()} id={driversLicenseViolation.id} invalid={driversLicenseViolation.getHasError()} label={driversLicenseViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.driversLicenseViolation))} />
-                        <FFieldCheckbox id={vehicleLicenseViolation.id} label={vehicleLicenseViolation.label} type="radio" checked={vehicleLicenseViolation.getValue() as boolean} disabled={!vehicleLicenseViolation.getIsEnabled()} invalid={vehicleLicenseViolation.getHasError()}
+                        <FFieldCheckbox checked={vehicleLicenseViolation.getValue() as boolean} disabled={!vehicleLicenseViolation.getIsEnabled()} id={vehicleLicenseViolation.id} invalid={vehicleLicenseViolation.getHasError()} label={vehicleLicenseViolation.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.vehicleLicenseViolation))} />
-                        <FFieldCheckbox id={pedestrian.id} label={pedestrian.label} type="radio" checked={pedestrian.getValue() as boolean} disabled={!pedestrian.getIsEnabled()} invalid={pedestrian.getHasError()}
+                        <FFieldCheckbox checked={pedestrian.getValue() as boolean} disabled={!pedestrian.getIsEnabled()} id={pedestrian.id} invalid={pedestrian.getHasError()} label={pedestrian.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.pedestrian))} />
-                        <FFieldCheckbox id={immigrationStop.id} label={immigrationStop.label} type="radio" checked={immigrationStop.getValue() as boolean} disabled={!immigrationStop.getIsEnabled()} invalid={immigrationStop.getHasError()}
+                        <FFieldCheckbox checked={immigrationStop.getValue() as boolean} disabled={!immigrationStop.getIsEnabled()} id={immigrationStop.id} invalid={immigrationStop.getHasError()} label={immigrationStop.label} type="radio"
                             onChange={() => binding.update((current) => current.selectNature(current.immigrationStop))} />
 
-                        <FFormStackPanel height={22} direction="horizontal">
-                            <FFieldCheckbox id={other.id} label={other.label} type="radio" checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} invalid={other.getHasError()}
+                        <FFormStackPanel direction="horizontal" height={22}>
+                            <FFieldCheckbox checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} id={other.id} invalid={other.getHasError()} label={other.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectNature(current.other))} />
-                                
-                            <FFieldControl label={otherSpecify.label} labelFor={otherSpecify.id} borderEdges={["bottom"]}>
+
+                            <FFieldControl borderEdges={["bottom"]} label={otherSpecify.label} labelFor={otherSpecify.id}>
                                 <FFieldInput
-                                    id={otherSpecify.id}
                                     disabled={!otherSpecify.getIsEnabled() || other.getIsEmpty()}
+                                    id={otherSpecify.id}
                                     invalid={otherSpecify.getHasError()}
+                                    padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
                                     value={otherSpecify.getValue()}
                                     onChange={(value) => binding.setValue(section.otherSpecify, value)}
                                 />

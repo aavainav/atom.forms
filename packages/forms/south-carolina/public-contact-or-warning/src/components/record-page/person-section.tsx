@@ -28,8 +28,8 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={323} label={firstName.label} labelFor={firstName.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={firstName.label} labelFor={firstName.id} width={323}>
                     <FFieldInput
                         id={firstName.id}
                         disabled={!firstName.getIsEnabled()}
@@ -38,7 +38,7 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
                         onChange={(value) => binding.setValue(section.firstName, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={65} label={middleInitial.label} labelFor={middleInitial.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={middleInitial.label} labelFor={middleInitial.id} width={65}>
                     <FFieldInput
                         id={middleInitial.id}
                         disabled={!middleInitial.getIsEnabled()}
@@ -47,7 +47,7 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
                         onChange={(value) => binding.setValue(section.middleInitial, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={200} label={lastName.label} labelFor={lastName.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={lastName.label} labelFor={lastName.id} width={200}>
                     <FFieldInput
                         id={lastName.id}
                         disabled={!lastName.getIsEnabled()}
@@ -57,8 +57,8 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
                     />
                 </FFieldControl>
             </FFormStackPanel>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={118} label={licensedState.label} labelFor={licensedState.id} borderEdges={["top"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top"]} label={licensedState.label} labelFor={licensedState.id} width={118}>
                     <FFieldSelect
                         id={licensedState.id}
                         cacheKey={ValueListId.state}
@@ -72,7 +72,7 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
                         onChange={(value) => binding.setValue(section.licensedState, value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={470} label={driverLicenseNumber.label} labelFor={driverLicenseNumber.id} borderEdges={["left", "top"]}>
+                <FFieldControl borderEdges={["left", "top"]} label={driverLicenseNumber.label} labelFor={driverLicenseNumber.id} width={470}>
                     <FFieldInput
                         id={driverLicenseNumber.id}
                         disabled={!driverLicenseNumber.getIsEnabled()}

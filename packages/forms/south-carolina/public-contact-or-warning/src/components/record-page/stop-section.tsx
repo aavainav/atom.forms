@@ -27,31 +27,31 @@ export const StopSection = ({ binding, valueListController }: IStopSectionProps)
 
     return (
         <FSection>
-            <FFormStackPanel height={44} direction="horizontal">
-                <FFieldControl width={75} label={county.label} labelFor={county.id} borderEdges={["top", "bottom"]}>
+            <FFormStackPanel direction="horizontal" height={44}>
+                <FFieldControl borderEdges={["top", "bottom"]} label={county.label} labelFor={county.id} width={75}>
                     <FFieldSelect
                         id={county.id}
                         cacheKey={PublicContactOrWarningValueListId.county}
                         controller={valueListController}
                         disabled={!county.getIsEnabled()}
-                        format="descriptionOnly"
+                        format="valueOnly"
                         invalid={county.getHasError()}
                         options={loadCountyOptions}
                         value={county.getValue()}
                         onChange={(value) => binding.setValue(section.county, value as IOptionValue)}
                     />
                 </FFieldControl>
-                <FFieldControl width={178} label={date.label} labelFor={date.id} borderEdges={["left", "top", "bottom"]}>
+                <FFieldControl borderEdges={["left", "top", "bottom"]} label={date.label} labelFor={date.id} width={178}>
                     <FFieldInput
-                        type="date"
                         id={date.id}
                         disabled={!date.getIsEnabled()}
                         invalid={date.getHasError()}
+                        type="date"
                         value={date.getValue()}
                         onChange={(value) => binding.setValue(section.date, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={130} label={time.label} labelFor={time.id} borderEdges={["left", "top", "bottom"]}>
+                <FFieldControl borderEdges={["left", "top", "bottom"]} label={time.label} labelFor={time.id} width={130}>
                     <FFieldInput
                         id={time.id}
                         disabled={!time.getIsEnabled()}
@@ -60,7 +60,7 @@ export const StopSection = ({ binding, valueListController }: IStopSectionProps)
                         onChange={(value) => binding.setValue(section.time, value)}
                     />
                 </FFieldControl>
-                <FFieldControl width={205} label={cadCallNumber.label} labelFor={cadCallNumber.id} borderEdges={["left", "top", "bottom"]}>
+                <FFieldControl borderEdges={["left", "top", "bottom"]} label={cadCallNumber.label} labelFor={cadCallNumber.id} width={205}>
                     <FFieldInput
                         id={cadCallNumber.id}
                         disabled={!cadCallNumber.getIsEnabled()}
