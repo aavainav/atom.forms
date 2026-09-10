@@ -5,7 +5,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { PublicContactOrWarningFormFactory } from "./form-factory";
 import { PublicContactOrWarningMapper } from "./mapping";
-import { PublicContactOrWarningFormModel } from "./models/public-contact-or-warning-form";
+import { CATALOG_IDENTITY, PublicContactOrWarningFormModel } from "./models/public-contact-or-warning-form";
 import { PublicContactOrWarningFormSchema } from "./models/public-contact-or-warning-form-schema";
 import { IPublicContactOrWarningOptions } from "./options";
 import { IPublicContactOrWarningService, PublicContactOrWarningService } from "./services";
@@ -29,9 +29,9 @@ export class PublicContactOrWarningModule implements IModule {
     }
 
     async configure({ config }: IModuleConfigurator): Promise<void> {
-        const name = "SC Form 432 - Public Contact / Warning";
-        const description = "South Carolina Form 432 (Rev. 06/2014) - Public Contact / Warning record, completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A).";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this record owns go into the shared registry through the same seam a host would use to
         // replace any of them; the national lists it also draws on are already there from ValueListsModule

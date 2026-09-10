@@ -11,6 +11,17 @@ export interface IS438FormModel extends IS438Form {
     readonly noticePage: PageDefinition<NoticePageModel>;
 }
 
+/**
+ * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
+ * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
+ * drift from the one the catalog resolves it by.
+ */
+export const CATALOG_IDENTITY = {
+    name: "S438 Citation Form",
+    description: "The south carolina S438 UTT citation form.",
+    version: "1.0"
+} as const;
+
 /** Formats a date as the `MM/DD/YYYY` the citation's date boxes carry. */
 function formatDate(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -21,6 +32,10 @@ function formatDate(date: Date): string {
 
 /** Represents the S438 form model, providing access to its schema and its front and notice pages. */
 export class S438FormModel extends CitationForm implements IS438Form {
+    public readonly name: string = CATALOG_IDENTITY.name;
+    public readonly description: string = CATALOG_IDENTITY.description;
+    public readonly version: string = CATALOG_IDENTITY.version;
+
     private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
     public readonly frontPage: PageDefinition<FrontPageModel> = this.schema.frontPage;
     public readonly noticePage: PageDefinition<NoticePageModel> = this.schema.noticePage;

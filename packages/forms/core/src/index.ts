@@ -2,6 +2,7 @@ export { FAccordion } from "./components/accordion";
 export { FAsyncLoader } from "./components/async-loader";
 export { FBorder } from "./components/border";
 export { FButton } from "./components/button";
+export { FCode } from "./components/code";
 export { FDraggableItem } from "./components/draggable-item";
 export { FFieldCheckbox } from "./components/field-checkbox";
 export { FFieldControl } from "./components/field-control";

@@ -4,7 +4,7 @@ import { useService } from "@common/react";
 import { IControllerManager, FAsyncLoader } from "@forms/core";
 import { IInitialForm, IReportViewerService, ReportViewer } from "@forms/report-viewer";
 
-const CATALOG_IDENTITY = { name: "SC Form 432 - Public Contact / Warning", version: "1.0" };
+import { CATALOG_IDENTITY } from "../models/public-contact-or-warning-form";
 
 interface IPublicContactOrWarningFormLoaderProps {
     /** The controllers to use for the loaded form; when omitted the report viewer creates and owns its own. Supply this when something rendered outside the form, such as a panel of draggable items, needs the same controllers. */

@@ -11,6 +11,17 @@ export interface IGAUTCFormModel extends IGAUTCForm {
     readonly courtPage: PageDefinition<CourtPageModel>;
 }
 
+/**
+ * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
+ * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
+ * drift from the one the catalog resolves it by.
+ */
+export const CATALOG_IDENTITY = {
+    name: "GA Uniform Traffic Citation",
+    description: "Georgia uniform traffic citation, summons, and accusation as issued by the City of Atlanta Department of Police - the face of the citation the officer serves, and the reverse of the court's copy the clerk and judge complete.",
+    version: "1.0"
+} as const;
+
 /** The three letter month the citation's "On Month" box prints, indexed by month number. */
 const abbreviatedMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -30,6 +41,10 @@ function twoDigits(value: number): string {
  * `setDateOfViolation` and `setTimeOfViolation` each write several fields in one update.
  */
 export class GAUTCFormModel extends CitationForm implements IGAUTCFormModel {
+    public readonly name: string = CATALOG_IDENTITY.name;
+    public readonly description: string = CATALOG_IDENTITY.description;
+    public readonly version: string = CATALOG_IDENTITY.version;
+
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
 
     public readonly citationPage: PageDefinition<CitationPageModel> = this.schema.citationPage;

@@ -53,8 +53,16 @@ export interface IFormDataWriter {
 export interface IReportViewerService {
     /** Gets whether forms should render read-only by default, from the module options/settings. */
     readonly isReadOnly: boolean;
+    /** Gets whether report data can be extracted from the form with the given identity, which it can once a mapper is registered to extract it. */
+    canExtractData: (identity: IFormIdentity) => boolean;
     /** Gets whether the form with the given identity can be saved, which it can once a mapper is registered to extract its data and a writer is registered to persist it. */
     canSaveForm: (identity: IFormIdentity) => boolean;
+    /**
+     * Extracts the report data the given form publishes, stamped with the identity the form model carries. The
+     * catalog item is what the mapper is resolved by. This is the data `saveForm` hands to the data writer,
+     * without persisting any of it.
+     */
+    extractData: (form: FormModel, catalogItem: IFormCatalogItem) => IReportViewerData;
     /** Gets the forms registered with this report viewer, each paired with the route it is reachable at. */
     getForms: () => Promise<Array<IFormRegistration>>;
     /** Gets the report data to load for the given context, from the registered data reader if one exists, otherwise falling back to the static data supplied via module options/settings. */
@@ -171,10 +179,30 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         return this.options.isReadOnly ?? false;
     }
 
+    canExtractData(identity: IFormIdentity): boolean {
+        return !!this.getMapper(identity);
+    }
+
     canSaveForm(identity: IFormIdentity): boolean {
         // save is only offered when the data can both be extracted and be put somewhere; without a writer the
         // extracted data would be discarded and the user still told the report had been saved
-        return !!this._dataWriter && !!this.getMapper(identity);
+        return !!this._dataWriter && this.canExtractData(identity);
+    }
+
+    extractData(form: FormModel, catalogItem: IFormCatalogItem): IReportViewerData {
+        const mapper = this.getMapper(catalogItem);
+        const values = mapper ? mapper.extract(form) : {};
+
+        // a form model declares the identity it is registered under and stamps it on itself, so the whole of
+        // IForm comes off the form; without it, saved data could not be resolved back to a form by loadForm.
+        return {
+            ...values,
+            name: form.name,
+            description: form.description,
+            status: form.status,
+            type: form.type,
+            version: form.version
+        };
     }
 
     async getForms(): Promise<Array<IFormRegistration>> {
@@ -227,19 +255,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
     }
 
     async saveForm(form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IReportViewerData> {
-        const mapper = this.getMapper(catalogItem);
-        const values = mapper ? mapper.extract(form) : {};
-
-        // a form model never assigns its own name/version, so the identity is stamped from the catalog item the
-        // form was resolved under; without it, saved data could not be resolved back to a form by loadForm.
-        const data: IReportViewerData = {
-            ...values,
-            name: catalogItem.name,
-            description: catalogItem.description,
-            status: form.status,
-            type: form.type,
-            version: catalogItem.version
-        };
+        const data = this.extractData(form, catalogItem);
 
         await this._dataWriter?.saveData(data, context);
 

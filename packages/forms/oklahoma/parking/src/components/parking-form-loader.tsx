@@ -4,7 +4,7 @@ import { useService } from "@common/react";
 import { FAsyncLoader } from "@forms/core";
 import { IInitialForm, IReportViewerService, ReportViewer } from "@forms/report-viewer";
 
-const CATALOG_IDENTITY = { name: "OKC Parking Violation", version: "1.0" };
+import { CATALOG_IDENTITY } from "../models/parking-form";
 
 /** Defines the Oklahoma City parking violation form loader. */
 export default function OKParkingFormLoader(): React.JSX.Element {

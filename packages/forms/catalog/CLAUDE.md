@@ -44,6 +44,8 @@ shape or a persistence hook on `IFormCatalogItem`, it belongs in the report view
 From the form package's `module.ts` `configure`, after constructing its schema:
 
 ```ts
+const { name, description, version } = CATALOG_IDENTITY;   // exported by the form model's own file
+
 new MyFormSchema();
 config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration).registerCatalogItem({
     name, description, version,
@@ -52,5 +54,12 @@ config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration).registerCatalog
 });
 ```
 
-The `name`/`version` pair used here must match the one passed to `registerMapper` — the report viewer keys mappers
-on the resolved catalog item's identity, and a mismatch shows up as a form that silently neither populates nor saves.
+**The identity is declared once, as a `CATALOG_IDENTITY` constant beside the form model, and never as a literal
+here.** The model assigns it to its own `name`/`description`/`version`, which is what `extractData` stamps a saved
+report with; the module registers the catalog item, the mapper and the route from the same constant, and the route
+loader passes it as its pinned identity. Four call sites, one declaration.
+
+That matters because the `name`/`version` pair used here must match the one passed to `registerMapper` — the report
+viewer keys mappers on the resolved catalog item's identity, and a mismatch shows up as a form that silently
+neither populates nor saves. A form whose model named a different version than its catalog item would be worse
+still: it would stamp saved records with an identity the catalog cannot resolve.

@@ -6,7 +6,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { OKParkingFormFactory } from "./form-factory";
 import { OKParkingMapper } from "./mapping";
-import { OKParkingFormModel } from "./models/parking-form";
+import { CATALOG_IDENTITY, OKParkingFormModel } from "./models/parking-form";
 import { OKParkingFormSchema } from "./models/parking-form-schema";
 import { IOKParkingOptions } from "./options";
 import { IOKParkingService, OKParkingService } from "./services";
@@ -31,9 +31,9 @@ export class OKParkingModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        const name = "OKC Parking Violation";
-        const description = "Oklahoma City Municipal Court parking violation - the citation left on the vehicle, the complaint and warrant page the counselor and clerk endorse, and the registered owner and vehicle detail.";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
         // any of them; the national lists it also draws on are already there from ValueListsModule

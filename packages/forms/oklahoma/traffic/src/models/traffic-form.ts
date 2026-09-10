@@ -14,6 +14,17 @@ export interface IOKTrafficFormModel extends IOKTrafficForm {
 }
 
 /**
+ * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
+ * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
+ * drift from the one the catalog resolves it by.
+ */
+export const CATALOG_IDENTITY = {
+    name: "OKC Traffic Citation",
+    description: "Oklahoma City Municipal Court traffic citation - the complaint and information sworn by the issuing officer, the warrant page the counselor and clerk endorse, and the witness, registered owner and status supplement.",
+    version: "1.0"
+} as const;
+
+/**
  * Formats a date as the `YYYY-MM-DD` the form's date boxes carry.
  *
  * This is the one order `DateRangeFieldRule` parses, and a value it cannot parse silently skips date validation.
@@ -34,6 +45,10 @@ function formatDate(date: Date): string {
  * below always reach the first page of a collection.
  */
 export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormModel {
+    public readonly name: string = CATALOG_IDENTITY.name;
+    public readonly description: string = CATALOG_IDENTITY.description;
+    public readonly version: string = CATALOG_IDENTITY.version;
+
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
 
     public readonly complaintPage: PageDefinition<ComplaintPageModel> = this.schema.complaintPage;

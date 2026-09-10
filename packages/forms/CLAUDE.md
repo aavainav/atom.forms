@@ -60,6 +60,10 @@ in one is a change in all three in the same places.
   `private`/`protected` helpers last). Insert new members at their alphabetical position.
 - **Each form owns its data contract and hand-writes its mapper.** No shared cross-form data model, no generic
   mapping. A mapper's `extract`/`populate` pair for a section sit adjacent so a missed field shows in one diff.
+- **A form's identity is declared once, as a `CATALOG_IDENTITY` constant beside its form model**, and the model
+  assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item, the mapper and the
+  route from that constant, and the route loader pins it — so the identity `extractData` stamps a saved report with
+  is the same one the catalog resolves it by. Never write a form's name or version as a literal anywhere else.
 - **State is per form instance**, held by `ControllerManager`/`FormController` in the React layer — never attached
   to the immutable `FormModel`.
 - **A section declared `{ isShared: true }` holds the same values on every instance of its page.** Every citation
@@ -85,7 +89,8 @@ in one is a change in all three in the same places.
    [ga-utc](georgia/utc/) for one whose answers are printed rows of checkboxes rather than coded boxes).
 2. `package.json` deps: `@forms/catalog`, `@forms/core`, `@forms/report-viewer`, `@forms/workbench`, plus
    `@forms/value-lists` if it has option fields. `tsconfig.json` extends `../../tsconfig.base.json`.
-3. Schema → page/section models → section components → data contract → mapper → rules.
+3. Schema → form model and its `CATALOG_IDENTITY` → page/section models → section components → data contract →
+   mapper → rules.
 4. `form-factory.ts`, `services/`, `options.ts`, `module.ts`, `bootstrapper.ts`, `index.ts`.
 5. Register the bootstrapper in `packages/examples/02-forms/src/main.ts`. The sandbox home page lists the form
    automatically, by joining the catalog to the routes registered through `registerForm`.

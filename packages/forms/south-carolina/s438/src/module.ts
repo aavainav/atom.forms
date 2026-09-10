@@ -5,7 +5,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { S438FormFactory } from "./form-factory";
 import { S438Mapper } from "./mapping";
-import { S438FormModel } from "./models/s438-form";
+import { CATALOG_IDENTITY, S438FormModel } from "./models/s438-form";
 import { S438FormSchema } from "./models/s438-form-schema";
 import { IS438CitationOptions } from "./options";
 import { IS438CitationService, S438CitationService } from "./services";
@@ -29,9 +29,9 @@ export class S438CitationModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        const name = "S438 Citation Form";
-        const description = "The south carolina S438 UTT citation form.";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
         reportViewer.registerForm({

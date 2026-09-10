@@ -150,8 +150,9 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   `FWatermark` (+ `getStatusWatermark`).
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`, `FLabel`,
   `FInputGroup`.
-- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FIcon`, `FModal`,
-  `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`.
+- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FCode`, `FIcon`, `FModal`,
+  `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`. `FCode` is a `<pre><code>` panel whose
+  colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle.
 - Import: `FDraggableItem`, `FDropzone`. `FDraggableItem` takes `disabled` for an item a panel is offering but
   cannot currently be dragged — it clears `draggable` and refuses `dragStart`, which is what stops a panel's
   locked row reaching the form by the one route a disabled checkbox does not cover.

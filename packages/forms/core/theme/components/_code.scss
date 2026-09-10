@@ -1,0 +1,13 @@
+@use "../variables";
+
+// the colors are bootstrap's theme-aware custom properties rather than the compile-time variables, so the panel
+// follows the day/night toggle the report viewer stamps onto the document
+.f-code {
+    background-color: var(--bs-tertiary-bg);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    color: var(--bs-body-color);
+    margin-bottom: 0;
+    overflow-x: auto;
+    padding: variables.$padding-xs;
+}

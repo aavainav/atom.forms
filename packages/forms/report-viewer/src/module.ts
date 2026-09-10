@@ -3,7 +3,7 @@ import { FormCatalogModule } from "@forms/catalog";
 import { IFormIdentity, IFormMapper, FormModel } from "@forms/core";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
-import { DayNightModeOption, SaveOption, ValidateOption } from "./components/options";
+import { DayNightModeOption, ReportDataOption, SaveOption, ValidateOption } from "./components/options";
 import { IReportViewerOptions } from "./options";
 import {
     IFormDataReader,
@@ -31,6 +31,7 @@ import {
 /** Where the report viewer's own options sit in the bar. A package registering one places it against these. */
 const validateOptionOrder = 100;
 const saveOptionOrder = 200;
+const reportDataOptionOrder = 250;
 const dayNightModeOptionOrder = 900;
 
 export const IReportViewerConfiguration = createConfig<IReportViewerConfiguration>();
@@ -118,6 +119,15 @@ export class ReportViewerModule implements IModule {
             // saving needs both halves: a mapper to extract the data and a writer to hand it to. with a mapper and
             // no writer the data would be extracted, dropped, and the report reported as saved.
             canShow: catalogItem => reportViewerService.canSaveForm(catalogItem)
+        });
+        reportViewer.registerOption({
+            id: "report-data",
+            order: reportDataOptionOrder,
+            title: "View report data",
+            Component: ReportDataOption,
+            // the data is only worth showing once a mapper can produce it; without one the payload is the stamped
+            // identity and nothing the user filled in
+            canShow: catalogItem => reportViewerService.canExtractData(catalogItem)
         });
         reportViewer.registerOption({ id: "day-night-mode", order: dayNightModeOptionOrder, title: "Toggle day/night mode", Component: DayNightModeOption });
 

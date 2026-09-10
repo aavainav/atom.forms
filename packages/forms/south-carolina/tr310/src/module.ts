@@ -5,7 +5,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { TR310FormFactory } from "./form-factory";
 import { TR310Mapper } from "./mapping";
-import { TR310FormModel } from "./models/tr310-form";
+import { CATALOG_IDENTITY, TR310FormModel } from "./models/tr310-form";
 import { TR310FormSchema } from "./models/tr310-form-schema";
 import { ITR310Options } from "./options";
 import { ITR310Service, TR310Service } from "./services";
@@ -29,9 +29,9 @@ export class TR310Module implements IModule {
     }
 
     async configure({ config }: IModuleConfigurator): Promise<void> {
-        const name = "SC TR-310 - Traffic Collision Report";
-        const description = "South Carolina TR-310 (Rev. 7/2024) - the traffic collision report, carrying the collision, a page per person and per unit involved, and the officer's narrative and diagram.";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this report owns go into the shared registry through the same seam a host would use to
         // replace any of them; the national lists it also draws on are already there from ValueListsModule

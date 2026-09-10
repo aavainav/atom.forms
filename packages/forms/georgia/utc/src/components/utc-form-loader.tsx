@@ -4,7 +4,7 @@ import { useService } from "@common/react";
 import { IControllerManager, FAsyncLoader } from "@forms/core";
 import { IInitialForm, IReportViewerService, ReportViewer } from "@forms/report-viewer";
 
-const CATALOG_IDENTITY = { name: "GA Uniform Traffic Citation", version: "1.0" };
+import { CATALOG_IDENTITY } from "../models/utc-form";
 
 interface IGAUTCFormLoaderProps {
     /** The controllers to use for the loaded form; when omitted the report viewer creates and owns its own. Supply this when something rendered outside the form, such as a panel of draggable items, needs the same controllers. */

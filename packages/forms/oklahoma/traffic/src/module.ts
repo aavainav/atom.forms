@@ -7,7 +7,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { OKTrafficFormFactory } from "./form-factory";
 import { OKTrafficMapper } from "./mapping";
-import { OKTrafficFormModel } from "./models/traffic-form";
+import { CATALOG_IDENTITY, OKTrafficFormModel } from "./models/traffic-form";
 import { OKTrafficFormSchema } from "./models/traffic-form-schema";
 import { IOKTrafficOptions } from "./options";
 import { IOKTrafficService, OKTrafficService } from "./services";
@@ -32,9 +32,9 @@ export class OKTrafficModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        const name = "OKC Traffic Citation";
-        const description = "Oklahoma City Municipal Court traffic citation - the complaint and information sworn by the issuing officer, the warrant page the counselor and clerk endorse, and the witness, registered owner and status supplement.";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
         // any of them; the national lists it also draws on are already there from ValueListsModule

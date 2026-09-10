@@ -6,7 +6,7 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { GAUTCFormFactory } from "./form-factory";
 import { GAUTCMapper } from "./mapping";
-import { GAUTCFormModel } from "./models/utc-form";
+import { CATALOG_IDENTITY, GAUTCFormModel } from "./models/utc-form";
 import { GAUTCFormSchema } from "./models/utc-form-schema";
 import { IGAUTCOptions } from "./options";
 import { IGAUTCService, GAUTCService } from "./services";
@@ -31,9 +31,9 @@ export class GAUTCModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        const name = "GA Uniform Traffic Citation";
-        const description = "Georgia uniform traffic citation, summons, and accusation as issued by the City of Atlanta Department of Police - the face of the citation the officer serves, and the reverse of the court's copy the clerk and judge complete.";
-        const version = "1.0";
+        // the form model declares the identity and stamps it on itself, so everything registered here names the
+        // same form the extracted data is stamped with
+        const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
         // any of them; the national lists it also draws on are already there from ValueListsModule

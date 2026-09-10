@@ -23,7 +23,8 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/components/report-viewer-loader.tsx](src/components/report-viewer-loader.tsx) | The generic data-driven index route: resolves data from the route context and loads whatever form the data names. |
 | [src/components/report-viewer-panel.tsx](src/components/report-viewer-panel.tsx) | Router-agnostic entry point for a host that already has its data. Its `options` carry the form identity plus `isReadOnly` and `showOptions`. Also imports `@forms/core/theme/_main.scss`. |
 | [src/components/report-viewer-layout.tsx](src/components/report-viewer-layout.tsx) | Bare `<Outlet />` for the `report-viewer` route. |
-| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with and nothing else. `options/` holds this package's own three, which `module.ts` registers like any other. |
+| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with and nothing else. `options/` holds this package's own four, which `module.ts` registers like any other. |
+| [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button` (order 250), and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts whatever `registerPanel` added, for this form, alongside the modal, notification and validation managers. A panel is handed `IReportViewerPanelProps` — an option's props without the `title`. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
@@ -72,16 +73,25 @@ registerMapper(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>)
 
 `loadFormReport(context, identity?)` is `getData` then `loadForm`.
 
-`saveForm(form, catalogItem, context)`: `mapper.extract(form)` (or `{}`), then **stamps `name`, `description`,
-`status`, `type`, `version` from the catalog item** — a form model never assigns its own identity, and without the
-stamp the saved data could not be resolved back to a form. Hands it to the writer if one is registered, and returns
-the data either way.
+`extractData(form, catalogItem)`: `mapper.extract(form)` (or `{}`), then **stamps the whole of `IForm` — `name`,
+`description`, `status`, `type`, `version` — from the form model**, which declares the identity it is registered
+under and assigns it to itself. Without the stamp the saved data could not be resolved back to a form. The catalog
+item is passed for the mapper lookup alone. Persists nothing.
+
+`saveForm(form, catalogItem, context)` is `extractData` then the writer, returning the data whether or not a writer
+consumed it. The extract-and-stamp lives in `extractData` alone so that **what a preview shows and what a save
+sends cannot drift** — the report-data option renders exactly this payload without touching the writer.
+
+`canExtractData(identity)` is the mapper half of `canSaveForm` (which is that *plus* a registered writer). They are
+different gates on purpose: a form with a mapper but no host writer still produces perfectly good outgoing data, so
+the report-data option is offered where save is not.
 
 ## The options bar — the other seam
 
 **Every option is registered, this package's own included.** `ReportViewerModule.configure` registers validate
-(100), save (200) and day/night (900) through the very seam a package adding one uses, before `await next()` lets
-those packages register theirs — `@forms/printing` puts print at 300 and `@forms/violations` violations at 150.
+(100), save (200), report data (250) and day/night (900) through the very seam a package adding one uses, before
+`await next()` lets those packages register theirs — `@forms/printing` puts print at 300 and `@forms/violations`
+violations at 150.
 `ReportViewerOptions` then renders whatever `getOptions` answers with and knows nothing else: there is no built-in
 in the component to special case, no ordering rule that treats one option differently from another, and a
 registered option sits **between** this package's own rather than only after them.
@@ -96,8 +106,8 @@ registerOption({ id, order, title, Component, canShow? })
 - **`Component`** is handed `IReportViewerOptionProps` — `{ catalogItem, controllers, title }`. Duplicate ids
   throw.
 - **`canShow(catalogItem)`** filters per form; an option without one is always offered. Save's is
-  `canSaveForm`, which needs both a mapper and a data writer; violations' is a registered binding plus the form
-  being a `CitationForm`.
+  `canSaveForm`, which needs both a mapper and a data writer; report data's is `canExtractData`, the mapper half
+  alone; violations' is a registered binding plus the form being a `CitationForm`.
 
 Because an option carries a title and a `canShow`, **what a form offers can be asked for without rendering any of
 it** — `getOptions(catalogItem)` is a complete, ordered, already-filtered answer. The sandbox's home page lists
