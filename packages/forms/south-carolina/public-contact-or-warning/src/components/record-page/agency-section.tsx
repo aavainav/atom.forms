@@ -61,6 +61,7 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                             format="descriptionOnly"
                             invalid={county.getHasError()}
                             options={loadCountyOptions}
+                            padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
                             value={county.getValue()}
                             onChange={(value) => binding.setValue(section.county, value as IOptionValue)}
                         />

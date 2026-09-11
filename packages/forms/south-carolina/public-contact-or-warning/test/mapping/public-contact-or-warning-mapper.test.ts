@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { IPublicContactOrWarningData } from "../../src/mapping/public-contact-or-warning-data";
 import { PublicContactOrWarningFormModel } from "../../src/models/public-contact-or-warning-form";
 import { PublicContactOrWarningMapper } from "../../src/mapping/public-contact-or-warning-mapper";
+import { RecordPageModel } from "../../src/models/record-page/record-page";
 import { createForm } from "../fixtures/form";
 
 /**
@@ -158,6 +159,37 @@ describe("PublicContactOrWarningMapper", () => {
 
             expect(populated).not.toBe(form);
             expect(mapper.extract(form)).toEqual({});
+        });
+
+        /**
+         * Only the agency section's fields are wired up to honor `readOnlyFields` today - see
+         * `PublicContactOrWarningMapper.populateAgency`.
+         */
+        describe("readOnlyFields", () => {
+            function agencySection(populated: PublicContactOrWarningFormModel) {
+                return populated.getRecordPageCollection().getFirstPage<RecordPageModel>().getAgencySection();
+            }
+
+            it("disables a field named in readOnlyFields", async () => {
+                const populated = await mapper.populate(form, { agencyName: "Columbia Police Department" }, new Set(["agencyName"]));
+
+                expect(agencySection(populated).getAgencyName().getIsEnabled()).toBe(false);
+            });
+
+            it("leaves a defaulted field editable when it is not named in readOnlyFields", async () => {
+                const populated = await mapper.populate(
+                    form,
+                    { agencyCity: "Columbia", agencyName: "Columbia Police Department" },
+                    new Set(["agencyName"]));
+
+                expect(agencySection(populated).getCity().getIsEnabled()).toBe(true);
+            });
+
+            it("leaves every field editable when readOnlyFields is omitted", async () => {
+                const populated = await mapper.populate(form, { agencyName: "Columbia Police Department" });
+
+                expect(agencySection(populated).getAgencyName().getIsEnabled()).toBe(true);
+            });
         });
     });
 });

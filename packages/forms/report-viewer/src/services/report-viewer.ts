@@ -3,7 +3,7 @@ import { IFormCatalogItem, IFormCatalogService, IFormComponentProps } from "@for
 import { IControllerManager, IFormIdentity, IFormMapper, FormFactory, FormModel } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
-import { IReportViewerData, IReportViewerOptions } from "../options";
+import { IFormDefaults, IReportViewerData, IReportViewerOptions } from "../options";
 import { INavigationRegistrationService, IReportViewerRoute } from "./navigation";
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
@@ -39,6 +39,16 @@ export interface IInitialForm {
  */
 export interface IFormDataReader {
     getData(context: IFormDataContext): Promise<IReportViewerData | undefined>;
+    /**
+     * Gets the values a new record for this form should start with, and optionally which of them should come back
+     * locked rather than editable. Called by `loadFormReport` only once `getData` has resolved nothing to load,
+     * i.e. the user is creating a record rather than opening one. Optional: a reader that only ever opens existing
+     * records can leave this unimplemented.
+     *
+     * Unrelated to `FieldModel.setDefaultValue()`, which resets a single field back to its own type's zero-value -
+     * this supplies the values a whole new record should start with, and is never called for an existing one.
+     */
+    getDefaultData?(context: IFormDataContext): Promise<IFormDefaults | undefined>;
 }
 
 /**
@@ -67,15 +77,29 @@ export interface IReportViewerService {
     getForms: () => Promise<Array<IFormRegistration>>;
     /** Gets the report data to load for the given context, from the registered data reader if one exists, otherwise falling back to the static data supplied via module options/settings. */
     getData: (context: IFormDataContext) => Promise<IReportViewerData | undefined>;
+    /**
+     * Gets the values a new record should start with for the given context: from the registered data reader's
+     * `getDefaultData` when it implements one, otherwise the static defaults supplied via module options/settings.
+     * `loadFormReport` reaches this only once `getData` has found nothing to load.
+     */
+    getDefaultData: (context: IFormDataContext) => Promise<IFormDefaults | undefined>;
     /** Gets the options registered for the given form, in the order they are rendered in the options bar. */
     getOptions: (catalogItem: IFormCatalogItem) => Array<IReportViewerOption>;
     /** Gets the panels registered for the given form, which are mounted at the report viewer's root. */
     getPanels: (catalogItem: IFormCatalogItem) => Array<IReportViewerPanel>;
-    /** Loads the catalog form matching `identity` (or, when omitted, the given data's `name`/`version`) and populates it with that data. */
-    loadForm: (data: IReportViewerData | undefined, identity?: IFormReportIdentity) => Promise<IInitialForm | undefined>;
+    /**
+     * Loads the catalog form matching `identity` (or, when omitted, the given data's `name`/`version`) and
+     * populates it with that data. `readOnlyFields` names which of the data's own fields should come back locked
+     * rather than editable, and is meaningful only when the target form's mapper has wired those fields up for
+     * locking (see `FormMapper.write`).
+     */
+    loadForm: (data: IReportViewerData | undefined, identity?: IFormReportIdentity, readOnlyFields?: ReadonlySet<string>) => Promise<IInitialForm | undefined>;
     /**
      * Resolves the report data for the given context, loads the matching catalog form, and populates it with that data.
-     * When `identity` is omitted, the catalog form is resolved from the loaded data's `name`/`version` instead.
+     * When there is none to load, falls back to `getDefaultData` so a newly created record starts with whatever
+     * defaults the host has configured, locking whichever of them the host named. When `identity` is omitted, the
+     * catalog form is resolved from the loaded (or default) data's `name`/`version` instead - so identity, when
+     * given, always wins over a default payload's own.
      */
     loadFormReport: (context: IFormDataContext, identity?: IFormReportIdentity) => Promise<IInitialForm | undefined>;
     /**
@@ -213,6 +237,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         return this._dataReader ? await this._dataReader.getData(context) : this.options.data;
     }
 
+    async getDefaultData(context: IFormDataContext): Promise<IFormDefaults | undefined> {
+        // checked on the method rather than on the reader existing (unlike getData) -- getDefaultData is optional
+        // per reader, so a reader implementing only getData still lets a host configure static defaults via options.
+        return this._dataReader?.getDefaultData ? await this._dataReader.getDefaultData(context) : this.options.defaultData;
+    }
+
     getOptions(catalogItem: IFormCatalogItem): Array<IReportViewerOption> {
         return Array.from(this._options.values())
             .filter(option => !option.canShow || option.canShow(catalogItem))
@@ -225,12 +255,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         return Array.from(this._panels.values()).filter(panel => !panel.canShow || panel.canShow(catalogItem));
     }
 
-    async loadForm(data: IReportViewerData | undefined, identity?: IFormReportIdentity): Promise<IInitialForm | undefined> {
+    async loadForm(data: IReportViewerData | undefined, identity?: IFormReportIdentity, readOnlyFields?: ReadonlySet<string>): Promise<IInitialForm | undefined> {
         const name = identity?.name ?? data?.name;
         if (!name) {
             return undefined;
         }
-    
+
         const catalogItem = await this.formCatalogService.get({ name, version: identity?.version ?? data?.version });
         const Component = await catalogItem.component();
         const formFactory = new catalogItem.formFactory();
@@ -243,7 +273,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         if (data && mapper) {
             // a mapper for a form whose pages repeat has to create a page per record the data carries, which it
             // can only do asynchronously; one for a form of fixed pages returns the form itself and this awaits nothing
-            form = await mapper.populate(form, data);
+            form = await mapper.populate(form, data, readOnlyFields);
         }
 
         return { catalogItem, form, formFactory, Component };
@@ -251,7 +281,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
 
     async loadFormReport(context: IFormDataContext, identity?: IFormReportIdentity): Promise<IInitialForm | undefined> {
         const data = await this.getData(context);
-        return this.loadForm(data, identity);
+        if (data) {
+            return this.loadForm(data, identity);
+        }
+
+        const defaults = await this.getDefaultData(context);
+        return this.loadForm(defaults?.data, identity, defaults?.readOnlyFields);
     }
 
     async saveForm(form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IReportViewerData> {

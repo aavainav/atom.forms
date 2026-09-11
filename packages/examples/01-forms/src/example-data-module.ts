@@ -1,6 +1,6 @@
 import { IModule, IModuleConfigurator } from "@shrub/core";
 import { IReportViewerData } from "@forms/core";
-import { IFormDataContext, IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
+import { IFormDataContext, IFormDefaults, IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IModuleBootstrapper } from "@forms/workbench";
 
 import { mockCitations } from "./mock-citation-data";
@@ -24,25 +24,34 @@ const forms = [
         path: "ga/utc",
         identity: { name: "GA Uniform Traffic Citation", version: "1.0" },
         type: "citation",
-        records: mockGAUTCRecords
+        records: mockGAUTCRecords,
+        defaults: undefined
     },
     {
         path: "sc/432",
         identity: { name: "SC Form 432 - Public Contact / Warning", version: "1.0" },
         type: "none",
-        records: mockPublicContactOrWarningRecords
+        records: mockPublicContactOrWarningRecords,
+        // this agency only ever issues warnings out of Columbia, so a new record's agency name is a settled fact
+        // and locked; the city stays editable in case an officer is typing up a record for a different one.
+        defaults: {
+            data: { agencyCity: "Columbia", agencyName: "Columbia Police Department" },
+            readOnlyFields: new Set(["agencyName"])
+        }
     },
     {
         path: "sc/tr310",
         identity: { name: "SC TR-310 - Traffic Collision Report", version: "1.0" },
         type: "crash",
-        records: mockTR310Records
+        records: mockTR310Records,
+        defaults: undefined
     },
     {
         path: "sc/s438",
         identity: { name: "S438 Citation Form", version: "1.0" },
         type: "citation",
-        records: mockCitations
+        records: mockCitations,
+        defaults: undefined
     }
 ] as const;
 
@@ -55,6 +64,8 @@ const forms = [
  * so the whole round trip can be seen without a server: load, edit, save, reload.
  *
  * Switch scenarios with `?record=full` or `?record=minimal`. Clear a saved record with `?record=full&reset=1`.
+ * `?record=new` demonstrates a host's configured defaults for a record that does not exist yet - and which of
+ * their fields it has locked - e.g. `/sc/432?record=new&reset=1`.
  */
 export class ExampleDataModule implements IModule {
     readonly name = "example-data";
@@ -70,7 +81,8 @@ export class ExampleDataModule implements IModule {
                 }
 
                 return getSavedData() ?? getFixtureData(context);
-            }
+            },
+            getDefaultData: async () => getDefaultFixtureData()
         });
 
         reportViewer.registerDataWriter({
@@ -79,9 +91,14 @@ export class ExampleDataModule implements IModule {
     }
 }
 
-/** Returns the fixture for the form being rendered, chosen by the route the browser is on. */
-function getFixtureData(context: IFormDataContext): IReportViewerData {
+/** Returns the fixture for the form being rendered, chosen by the route the browser is on, or undefined for the `new` scenario so getData falls through to getDefaultData. */
+function getFixtureData(context: IFormDataContext): IReportViewerData | undefined {
     const scenario = context.searchParams.get("record") ?? context.searchParams.get("citation") ?? "full";
+
+    if (scenario === "new") {
+        return undefined;
+    }
+
     const form = getForm();
 
     // each fixture is the target form's own contract, which carries no identity of its own, so the host stamps
@@ -91,6 +108,20 @@ function getFixtureData(context: IFormDataContext): IReportViewerData {
         ...form.identity,
         status: "draft",
         type: form.type
+    };
+}
+
+/** Returns the values a brand new record for the form being rendered should start with, or undefined for a form with no defaults configured. */
+function getDefaultFixtureData(): IFormDefaults | undefined {
+    const form = getForm();
+
+    if (!form.defaults) {
+        return undefined;
+    }
+
+    return {
+        data: { ...form.defaults.data, ...form.identity, status: "draft", type: form.type },
+        readOnlyFields: form.defaults.readOnlyFields
     };
 }
 

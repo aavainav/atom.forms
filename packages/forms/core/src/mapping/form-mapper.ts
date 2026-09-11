@@ -16,8 +16,13 @@ export interface IFormMapper<TForm extends FormModel, TData extends object> {
      * A form whose pages repeat has to create a page per record the data carries, and creating a page means
      * awaiting its `initialize`, so a mapper may answer with a promise. A mapper over a form of fixed pages has
      * nothing to await and returns the form directly.
+     *
+     * `readOnlyFields`, when given, names which of the data's own fields should come back disabled rather than
+     * editable -- for a host stamping a default value it considers a settled fact rather than an editable
+     * suggestion. A field the mapper hasn't wired up for locking (see `FormMapper.write`) stays editable
+     * regardless of being named here.
      */
-    populate(form: TForm, data: TData): TForm | Promise<TForm>;
+    populate(form: TForm, data: TData, readOnlyFields?: ReadonlySet<keyof TData>): TForm | Promise<TForm>;
 }
 
 /**
@@ -29,7 +34,7 @@ export interface IFormMapper<TForm extends FormModel, TData extends object> {
  */
 export abstract class FormMapper<TForm extends FormModel, TData extends object> implements IFormMapper<TForm, TData> {
     abstract extract(form: TForm): TData;
-    abstract populate(form: TForm, data: TData): TForm | Promise<TForm>;
+    abstract populate(form: TForm, data: TData, readOnlyFields?: ReadonlySet<keyof TData>): TForm | Promise<TForm>;
 
     /**
      * Assigns the field's value to the given key, leaving the key absent when the field is empty so that an
@@ -46,10 +51,29 @@ export abstract class FormMapper<TForm extends FormModel, TData extends object> 
         }
     }
 
-    /** Returns a new section with the field set from the given value, or the section unchanged when the value is undefined. */
-    protected write<TSection extends SectionModel>(section: TSection, definition: FieldDefinition<FieldModel<TValueType>>, value: TValueType | undefined): TSection {
-        return value === undefined
-            ? section
-            : section.set(definition, section.get<FieldModel<TValueType>>(definition).setValue(value));
+    /**
+     * Returns a new section with the field set from the given value, or the section unchanged when the value is
+     * undefined. When `key` names a field the caller wants lockable and `readOnlyFields` contains it, the field
+     * also comes back disabled - for a host stamping a default value it considers settled rather than editable.
+     * Both are optional so an existing call with no need to be lockable is unaffected; a mapper only pays for this
+     * on the fields it explicitly opts in.
+     */
+    protected write<TSection extends SectionModel, TKey extends keyof TData = never>(
+        section: TSection,
+        definition: FieldDefinition<FieldModel<TValueType>>,
+        value: TValueType | undefined,
+        key?: TKey,
+        readOnlyFields?: ReadonlySet<keyof TData>
+    ): TSection {
+        if (value === undefined) {
+            return section;
+        }
+
+        let field = section.get<FieldModel<TValueType>>(definition).setValue(value);
+        if (key !== undefined && readOnlyFields?.has(key)) {
+            field = field.setIsEnabled(false);
+        }
+
+        return section.set(definition, field);
     }
 }

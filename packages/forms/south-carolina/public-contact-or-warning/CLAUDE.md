@@ -31,7 +31,7 @@ the **person** section, splitting it visually to match the printed form.
 | [src/models/record-page/](src/models/record-page/) | `record-page.ts` + one file per section + `dropzones/`. |
 | [src/components/](src/components/) | Root form, route loader, and `record-page/` mirroring the models tree. |
 | [src/mapping/public-contact-or-warning-data.ts](src/mapping/public-contact-or-warning-data.ts) | `IPublicContactOrWarningData` — **flat**, ~70 optional fields. Option fields are typed `IOptionValue`. |
-| [src/mapping/public-contact-or-warning-mapper.ts](src/mapping/public-contact-or-warning-mapper.ts) | `populate` is **synchronous**; one `extract`/`populate` pair per section, adjacent. |
+| [src/mapping/public-contact-or-warning-mapper.ts](src/mapping/public-contact-or-warning-mapper.ts) | `populate` is **synchronous**; one `extract`/`populate` pair per section, adjacent. The agency section's three fields (`populateAgency`) are the worked example of a lockable field: each `write()` call passes its own contract key plus `readOnlyFields`, so a host's `getDefaultData` can lock, say, the agency name while leaving city and county editable. No other section is wired up for locking. |
 | [src/services/public-contact-or-warning.ts](src/services/public-contact-or-warning.ts) | `IPublicContactOrWarningService` — 2 `apply*Dropzone`, 6 `get*Options`, and `resolveVehicleDropzone`. |
 | [src/value-lists.ts](src/value-lists.ts) | `PublicContactOrWarningValueListId` + `publicContactOrWarningValueLists`. |
 | [src/generated/](src/generated/) · [data/](data/) | 2 generated lists (counties, race-ethnicities) + their source JSON and `lists.json`. |

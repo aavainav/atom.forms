@@ -11,7 +11,7 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | Path | Contents |
 | --- | --- |
 | [src/module.ts](src/module.ts) | `ReportViewerModule` + `IReportViewerConfiguration` (`registerForm`, `registerRoute`, `registerDataReader`, `registerDataWriter`, `registerMapper`, `registerOption`, `registerPanel`). Registers the `report-viewer` layout route, its index route, and the `*` not-found route. |
-| [src/options.ts](src/options.ts) | `IReportViewerOptions`: `data?` (static report data) and `isReadOnly?`. Bound to module settings. |
+| [src/options.ts](src/options.ts) | `IReportViewerOptions`: `data?` (static report data), `defaultData?` (static defaults for a newly created record, `IFormDefaults`) and `isReadOnly?`. Bound to module settings. |
 | [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerService`, `IReportViewerRegistrationService`, `IFormDataReader`, `IFormDataWriter`, `IInitialForm`, `IFormDataContext`. |
 | [src/services/navigation.ts](src/services/navigation.ts) | `INavigationService` (`navigateTo`, `currentLocation`, `router`) / `INavigationRegistrationService` (`registerRoute`, `registerChildRoute`). |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. |
@@ -34,13 +34,23 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 Two halves, each registered at most once, both host-supplied:
 
 ```ts
-IFormDataReader { getData(context: IFormDataContext): Promise<IReportViewerData | undefined> }
+IFormDataReader { getData(context): Promise<IReportViewerData | undefined>; getDefaultData?(context): Promise<IFormDefaults | undefined> }
 IFormDataWriter { saveData(data: IReportViewerData, context): Promise<void> }
 ```
 
 `IFormDataContext` is `{ params, searchParams }` — the route context the form was loaded under, so a reader can
 resolve a specific record and a writer can identify the one it writes back to. With no reader registered,
 `getData` falls back to `IReportViewerOptions.data`.
+
+**`getDefaultData` is the values a *new* record should start with**, reached by `loadFormReport` only once
+`getData` resolved nothing to load. `IFormDefaults` is `{ data: IReportViewerData, readOnlyFields?:
+ReadonlySet<string> }` — `readOnlyFields` names which of `data`'s own fields should come back locked rather than
+editable, understood by the target form's mapper (see `FormMapper.write` in `@forms/core`). It is optional per
+reader, and checked on the *method* rather than on whether a reader exists at all — unlike `getData`, whose
+`this.options.data` fallback only ever triggers when there is **no reader registered**, `getDefaultData` falls back
+to `IReportViewerOptions.defaultData` whenever the registered reader simply doesn't implement it. A host adopting
+this needs its own `getData` to distinguish "no id given, this is new" from "id given but not found" — both
+resolve to `undefined` today, and only the former should fall through to defaults.
 
 The host maps its own record shape into the target form's contract; the report viewer only hands data across.
 
@@ -63,15 +73,19 @@ registerMapper(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>)
 
 ## Load and save
 
-`loadForm(data, identity?)`:
+`loadForm(data, identity?, readOnlyFields?)`:
 1. name = `identity?.name ?? data?.name`; returns `undefined` if neither.
 2. resolve the catalog item, `await catalogItem.component()`, `new catalogItem.formFactory()`,
    `await formFactory.createForm().initialize()`.
-3. if data **and** a mapper: `form = await mapper.populate(form, data)` (awaited because a repeating-page mapper
-   must create pages, which is async).
+3. if data **and** a mapper: `form = await mapper.populate(form, data, readOnlyFields)` (awaited because a
+   repeating-page mapper must create pages, which is async).
 4. → `IInitialForm { catalogItem, form, formFactory, Component }`.
 
-`loadFormReport(context, identity?)` is `getData` then `loadForm`.
+`loadFormReport(context, identity?)` is `getData` then `loadForm` — except when `getData` resolves nothing, in
+which case it falls back to `getDefaultData` first, passing its `data` and `readOnlyFields` into `loadForm` so a
+newly created record starts with whatever defaults (and locks) the host has configured. `identity`, when given,
+always wins over a default payload's own `name`/`version` — every form-specific route loader passes one, so a
+default payload's identity fields are load-bearing only for the generic, identity-less loader.
 
 `extractData(form, catalogItem)`: `mapper.extract(form)` (or `{}`), then **stamps the whole of `IForm` — `name`,
 `description`, `status`, `type`, `version` — from the form model**, which declares the identity it is registered

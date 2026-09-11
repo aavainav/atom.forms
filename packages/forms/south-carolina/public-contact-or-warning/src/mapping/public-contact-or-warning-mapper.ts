@@ -41,12 +41,15 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
     /**
      * Returns a new form with the given data applied to its record page. Every field of the form is reachable
      * from the data contract, and a field the data does not mention keeps the value it already holds.
+     *
+     * `readOnlyFields` names which of `data`'s own fields should come back disabled rather than editable - today
+     * only the agency section's fields are wired up to honor it (see `populateAgency`).
      */
-    public populate(form: PublicContactOrWarningFormModel, data: IPublicContactOrWarningData): PublicContactOrWarningFormModel {
+    public populate(form: PublicContactOrWarningFormModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PublicContactOrWarningFormModel {
         const collection = form.getRecordPageCollection();
         const page = collection.getFirstPage<RecordPageModel>();
 
-        let updated = page.set(page.agencySection, this.populateAgency(page.getAgencySection(), data));
+        let updated = page.set(page.agencySection, this.populateAgency(page.getAgencySection(), data, readOnlyFields));
         updated = updated.set(updated.personSection, this.populatePerson(updated.getPersonSection(), data));
         updated = updated.set(updated.routeSection, this.populateRoute(updated.getRouteSection(), data));
         updated = updated.set(updated.stopSection, this.populateStop(updated.getStopSection(), data));
@@ -65,11 +68,11 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "agencyName", section.getAgencyName());
     }
 
-    private populateAgency(section: AgencySectionModel, data: IPublicContactOrWarningData): AgencySectionModel {
-        let updated = this.write(section, section.city, data.agencyCity);
-        updated = this.write(updated, section.county, data.agencyCounty);
+    private populateAgency(section: AgencySectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): AgencySectionModel {
+        let updated = this.write(section, section.city, data.agencyCity, "agencyCity", readOnlyFields);
+        updated = this.write(updated, section.county, data.agencyCounty, "agencyCounty", readOnlyFields);
 
-        return this.write(updated, section.agencyName, data.agencyName);
+        return this.write(updated, section.agencyName, data.agencyName, "agencyName", readOnlyFields);
     }
 
     private extractPerson(section: PersonSectionModel, data: FormValues<IPublicContactOrWarningData>): void {

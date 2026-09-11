@@ -70,7 +70,14 @@ round trip works with no server:
 - the **reader** prefers a saved record over the fixture, so load → edit → save → reload shows the edit.
 
 Query string controls: `?record=full` / `?record=minimal` picks the scenario (`?citation=` is accepted as an alias),
-and `?reset=1` clears the saved record for that route first.
+`?record=new` demonstrates a host's configured defaults for a record that does not exist yet (see below), and
+`?reset=1` clears the saved record for that route first.
+
+**`?record=new`** makes `getFixtureData` return `undefined`, so `getData` has nothing to load and `getDefaultData`
+engages instead. Only `sc/432` has a `defaults` entry in the `forms` table — its agency name and city are
+pre-filled, and the agency name comes back locked while the city stays editable, proving a host can mix locked and
+editable fields in one default payload (see `PublicContactOrWarningMapper.populateAgency`, the one mapper wired up
+to honor `readOnlyFields`). Try `/sc/432?record=new&reset=1`.
 
 Fixtures are chosen **by route**, not from anything in the data context, because a context carries only the matched
 route's params and query string and every form route here is a static path with neither. A host reading from a real
