@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig, type UserConfig } from "vitest/config";
+import { defineConfig } from "vitest/config";
 
 /**
  * Every workspace package a form package can reach, mapped to its source.
@@ -57,7 +57,7 @@ export interface IFormsTestOptions {
 }
 
 /** Builds the vitest config for a package under `packages/forms`. */
-export function defineFormsConfig(options: IFormsTestOptions = {}): UserConfig {
+export function defineFormsConfig(options: IFormsTestOptions = {}) {
     return defineConfig({
         /**
          * The rule classes carrying `@RegisterRule`, and the services carrying `@Singleton`, pass the class being
