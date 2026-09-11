@@ -91,10 +91,10 @@ describe("CompositeRule", () => {
         it("replaces the rules' messages with its own, deduped per field", () => {
             const rule = CompositeRule.or(
                 violatorFields.firstName,
-                definition => [new RequiredFieldRule(definition), new MaxLengthFieldRule(definition, 5, 10)],
+                definition => [new MaxLengthFieldRule(definition, 5, 10), new MaxLengthFieldRule(definition, 0, 1)],
                 "Give a name of five characters or more.");
 
-            const issues = rule.validate(context("", "12345"));
+            const issues = rule.validate(context("Al", "12345"));
 
             expect(issues).toHaveLength(1);
             expect(issues[0].message).toBe("Give a name of five characters or more.");

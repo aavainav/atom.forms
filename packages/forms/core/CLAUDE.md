@@ -123,8 +123,8 @@ returns a copy gated by a `Condition`.
 
 | Rule | Notes |
 | --- | --- |
-| `RequiredFieldRule` | Fires on an empty value. So does `MaxLengthFieldRule` with a non-zero minimum — see Gotchas. |
-| `MaxLengthFieldRule` | Takes min **and** max; message interpolates `{maxLength}`. |
+| `RequiredFieldRule` | Fires on an empty value. |
+| `MaxLengthFieldRule` | Takes min **and** max; message interpolates `{maxLength}`. Skips empty values. Measures a non-string value (e.g. a number) by its printed length. |
 | `NumberRangeFieldRule`, `DateRangeFieldRule` | Skip empty and unparseable values. `DateRangeFieldRule` statics: `notInFuture`, `notBefore`. Only parses `YYYY-MM-DD`. |
 | `PatternFieldRule` | Strips a global flag (`lastIndex` would leak between pages). Registers under `new.target.name`, so subclasses get their own name. |
 | `AlphanumericFieldRule` | A `PatternFieldRule` subclass. |
@@ -242,11 +242,6 @@ as `yarn test`.
   because `FieldDefinition.createNew` always passes `""` and real values arrive through `setValue`, which goes
   through `withChanges` and bypasses the constructor. Pinned by a characterization test in
   [test/models/field.test.ts](test/models/field.test.ts).
-- `MaxLengthFieldRule` takes a **minimum** as well as a maximum, and unlike every other rule it does not skip an
-  empty value — a rule with a non-zero minimum reports against a blank field. It also reads
-  `(field.value as string)?.length`, which is `undefined` for a number field and falls back to `0`, so a length
-  rule with a non-zero minimum *always* reports against a `NumberFieldModel`, with a message about exceeding the
-  maximum. Both are pinned in [test/models/validation/rules/max-length-field-rule.test.ts](test/models/validation/rules/max-length-field-rule.test.ts).
 - `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
   `setReadOnly()` a newly added page arrives with its non-shared sections enabled.
 - `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page

@@ -27,7 +27,12 @@ export class MaxLengthFieldRule extends FieldRule implements IMaxLengthFieldRule
     }
 
     protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
-        const valueLength = (field.value as string)?.length ?? 0;
+        // an empty value is the required rule's concern
+        if (field.getIsEmpty()) {
+            return [];
+        }
+
+        const valueLength = String(field.getValue()).length;
 
         if (valueLength < this.minimumLength || valueLength > this.maximumLength) {
             return [{ field: field, message: this.message.replace("{maxLength}", this.maximumLength.toString()), severity: this.severity }];

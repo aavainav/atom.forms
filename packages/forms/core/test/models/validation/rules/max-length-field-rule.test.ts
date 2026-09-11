@@ -45,29 +45,35 @@ describe("MaxLengthFieldRule", () => {
         expect(rule.validate(stubRuleContext(field("abcd")))[0].message).toBe("No more than 3.");
     });
 
-    /**
-     * Characterization, not specification. Unlike every other rule this one does not skip an empty value: a blank
-     * field has length 0, so a non-zero minimum reports against it. `RequiredFieldRule` is therefore not the only
-     * rule that fires on an empty value, which is what `core/CLAUDE.md` claims.
-     */
-    it("reports an empty value when the minimum is above zero", () => {
+    /** An empty value is the required rule's concern, matching every other rule -- a non-zero minimum does not fire on a blank field. */
+    it("skips an empty value even when the minimum is above zero", () => {
         const empty = new StringFieldModel(spec);
 
-        expect(new MaxLengthFieldRule(violatorFields.driverLicenseNumber, 2, 4).validate(stubRuleContext(empty))).toHaveLength(1);
-        expect(new MaxLengthFieldRule(violatorFields.driverLicenseNumber, 0, 4).validate(stubRuleContext(empty))).toHaveLength(0);
+        expect(new MaxLengthFieldRule(violatorFields.driverLicenseNumber, 2, 4).validate(stubRuleContext(empty))).toHaveLength(0);
     });
 
-    /**
-     * Characterization, not specification. The rule reads `(field.value as string)?.length`, which is undefined
-     * for a number and falls back to 0 -- so a length rule with a non-zero minimum always reports against a number
-     * field, whatever it holds, and does so with a message about exceeding the maximum.
-     */
-    it("always reports against a number field when the minimum is above zero", () => {
-        const number = new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: "" }).setValue(12345);
+    describe("a number field", () => {
+        function numberField(value: number): NumberFieldModel {
+            return new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: "" }).setValue(value);
+        }
 
-        const issues = new MaxLengthFieldRule(chargeFields.fineAmount, 1, 3).validate(stubRuleContext(number));
+        it("measures the length of its printed digits", () => {
+            const rule = new MaxLengthFieldRule(chargeFields.fineAmount, 1, 3);
 
-        expect(issues).toHaveLength(1);
-        expect(issues[0].message).toBe("This field exceeds the maximum length of 3 char(s).");
+            expect(rule.validate(stubRuleContext(numberField(123)))).toHaveLength(0);
+        });
+
+        it("reports a value whose digit count exceeds the maximum", () => {
+            const issues = new MaxLengthFieldRule(chargeFields.fineAmount, 1, 3).validate(stubRuleContext(numberField(12345)));
+
+            expect(issues).toHaveLength(1);
+            expect(issues[0].message).toBe("This field exceeds the maximum length of 3 char(s).");
+        });
+
+        it("skips zero, which reads as empty rather than a single digit", () => {
+            const rule = new MaxLengthFieldRule(chargeFields.fineAmount, 1, 3);
+
+            expect(rule.validate(stubRuleContext(numberField(0)))).toHaveLength(0);
+        });
     });
 });
