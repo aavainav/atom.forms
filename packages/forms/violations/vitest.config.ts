@@ -1,4 +1,4 @@
-import { defineFormsConfig } from "../vitest.config.base.mjs";
+import { defineFormsConfig } from "../vitest.config.base.mts";
 
 /**
  * Violations run under `node` rather than the shared default of `jsdom`: the models and the service reach

@@ -1,4 +1,4 @@
-import { defineFormsConfig } from "../vitest.config.base.mjs";
+import { defineFormsConfig } from "../vitest.config.base.mts";
 
 /**
  * Core runs under `node` rather than the shared default of `jsdom`: its models, controllers, mapping and
