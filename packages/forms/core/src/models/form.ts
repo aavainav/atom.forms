@@ -15,7 +15,7 @@ import { withChanges } from "../utils/clone";
 
 export type FormModelConstructor<TForm extends FormModel> = new () => TForm;
 export type FormStatus = "canceled" | "draft" | "rejected" | "inProgress" | "issued" | "voided";
-export type FormType = "crash" | "citation" | "tow" | "none";
+export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
 
 /** Identifies a form registered with the form catalog. A missing version resolves to the latest. */
 export interface IFormIdentity {

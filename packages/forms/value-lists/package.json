@@ -14,7 +14,10 @@
         "build": "yarn run build-ts",
         "build-ts": "tsc -b .",
         "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
-        "generate": "node ./scripts/generate-value-lists.mjs --data ./data --out ./src/generated --row-import ../models/value-list-option"
+        "generate": "node ./scripts/generate-value-lists.mjs --data ./data --out ./src/generated --row-import ../models/value-list-option",
+        "test": "vitest run",
+        "test-types": "tsc -p test/tsconfig.json",
+        "test-watch": "vitest"
     },
     "dependencies": {
         "@shrub/core": "0.5.91"

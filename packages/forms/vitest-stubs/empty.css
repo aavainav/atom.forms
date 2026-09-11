@@ -1,0 +1,2 @@
+/* Stands in for the theme stylesheet when a package's tests import a component that pulls it in.
+   Tests assert behaviour rather than appearance, and compiling bootstrap's sass for them is pure cost. */

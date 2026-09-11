@@ -145,9 +145,11 @@ for a page the form has no instances of, so such a rule is skipped.
 
 ## Tests
 
-`yarn test` (watch: `yarn test-watch`, typecheck: `yarn test-types`). Vitest, `environment: "node"` — the model,
-controller, mapping and validation surface has no react or DOM dependency, and keeping the environment out of the
-way is what makes an accidental import of a component fail loudly rather than quietly succeed against a shim.
+`yarn test` (watch: `yarn test-watch`, typecheck: `yarn test-types`). The config is one line on top of the shared
+[vitest.config.base.mts](../vitest.config.base.mts), overriding its `jsdom` default to `environment: "node"` — the
+model, controller, mapping and validation surface has no react or DOM dependency, and keeping the environment out
+of the way is what makes an accidental import of a component fail loudly rather than quietly succeed against a
+shim. That is also why this package's tests import deep source paths rather than `@forms/core`.
 
 Tests live in [test/](test/), mirroring `src/`, **not** beside the source: `tsconfig.json` sets `include: ["src"]`
 and `rootDir: "src"`, so a colocated `*.test.ts` would be compiled into `dist/`. [test/tsconfig.json](test/tsconfig.json)

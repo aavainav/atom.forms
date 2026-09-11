@@ -105,7 +105,28 @@ Value-list packages also have `yarn generate`.
 
 ## Test
 
-`yarn test` from the repo root (lerna, `vitest run` per package). Per package: `yarn test`, `yarn test-watch`, and
-`yarn test-types` — Vitest strips types without checking them, so the typecheck is a separate script. Only
-[core/](core/) has tests today; a package adopts them by copying core's `vitest.config.ts` and `test/tsconfig.json`.
+`yarn test` and `yarn test-types` from the repo root (lerna, one run per package). Per package: `yarn test`,
+`yarn test-watch`, `yarn test-types` — Vitest strips types without checking them, so the typecheck is a separate
+script, and it is the one that enforces the mapper fixtures described below.
+
+Every package shares [vitest.config.base.mts](vitest.config.base.mts), so a package's own `vitest.config.ts` is one
+line. The base resolves every workspace package to its **source** rather than its built `dist/`, so a suite runs on
+a fresh clone without `yarn build` first, and it pins `experimentalDecorators` for the `@RegisterRule` and
+`@Singleton` classes, whose decorators reference the class being decorated.
+
+Its default environment is `jsdom`, because importing the `@forms/core` barrel loads `@popperjs/core`, which reads
+`document` as it is imported — and a form package reaches core through the barrel in every file. [core/](core/),
+[value-lists/](value-lists/) and [violations/](violations/) override it to `node`: they import deep source paths and
+reach core only for types, so nothing pulls the barrel in. Prefer `node` where a package can manage it; the suite
+is roughly five times quicker without a DOM.
+
+A new package adopts tests by copying a one-line `vitest.config.ts`, a `test/tsconfig.json`, and the three scripts.
 See [core/CLAUDE.md](core/CLAUDE.md) for the rules a test has to follow to stay clear of the global registries.
+
+**A form package's mapper is tested by a round trip.** `extract(populate(form, data))` must equal `data`, over a
+fixture holding a value for **every** field the contract publishes. The fixture is typed `Required<IFormData>`, so
+a field added to the contract and forgotten in the fixture fails `yarn test-types` — which is what keeps the round
+trip covering the whole contract rather than slowly falling behind it. Every value is distinct and derived from its
+own field name, so a mapper writing one field into a neighbouring box fails rather than passes; and every value is
+non-empty, because `FormMapper.read` omits an empty field and `""`, `0` and `false` all read as empty. TR-310's
+fixture carries 347 fields and was generated from its contract rather than typed by hand.

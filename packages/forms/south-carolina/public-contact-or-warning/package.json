@@ -11,7 +11,10 @@
         "build": "yarn run build-ts",
         "build-ts": "tsc -b .",
         "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
-        "generate": "generate-value-lists --data ./data --out ./src/generated"
+        "generate": "generate-value-lists --data ./data --out ./src/generated",
+        "test": "vitest run",
+        "test-types": "tsc -p test/tsconfig.json",
+        "test-watch": "vitest"
     },
     "dependencies": {
         "@forms/catalog": "1.0.0",

@@ -14,7 +14,10 @@
         "build": "yarn run build-ts",
         "build-ts": "tsc -b .",
         "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
-        "generate": "node ./scripts/generate-violation-lists.mjs --data ./data --out ./src/generated --row-import ../models/violation"
+        "generate": "node ./scripts/generate-violation-lists.mjs --data ./data --out ./src/generated --row-import ../models/violation",
+        "test": "vitest run",
+        "test-types": "tsc -p test/tsconfig.json",
+        "test-watch": "vitest"
     },
     "dependencies": {
         "@common/event-emitter": "1.0.0",
