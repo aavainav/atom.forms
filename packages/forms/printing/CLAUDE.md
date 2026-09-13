@@ -69,7 +69,7 @@ the component that renders it. This package owns every decision *about* a print;
 
 ## Registering copies — the seam
 
-From a form package's `module.ts` `configure`, alongside `registerMapper`:
+From a form package's `module.ts` `configure`, alongside `catalog.registerCatalogItem`:
 
 ```ts
 config.get<IPrintingConfiguration>(IPrintingConfiguration).registerProfiles({ name, version }, [
@@ -81,8 +81,8 @@ config.get<IPrintingConfiguration>(IPrintingConfiguration).registerProfiles({ na
 - `pages` are page definition **names** — the keys of the form factory's `getPageTypes()`. Selecting by name rather
   than by definition is what lets a copy be declared as plain strings, and it means a name belonging to a page type
   that **repeats** contributes every instance of it (TR-310's "All pages" prints all seven).
-- Keyed `` `${name}@${version}` ``. **Registration throws without a version**, for the same reason `registerMapper`
-  does: lookup goes through a resolved catalog item, which always names a concrete version.
+- Keyed `` `${name}@${version}` ``. **Registration throws without a version**, for the same reason a catalog item's
+  own registration does: lookup goes through a resolved catalog item, which always names a concrete version.
 - One set per identity, and duplicate ids within a set throw.
 - **A form that registers nothing still prints.** `getProfiles` falls back to a single "All pages" copy of every
   page type, top-down. Printing works for every form in the catalog on the day it is registered.

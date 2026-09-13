@@ -41,28 +41,26 @@ export class TR310Module implements IModule {
             valueLists.registerList(definition);
         }
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "sc/tr310", lazy: () => import("./components").then(module => ({ Component: module.TR310FormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new TR310Mapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         new TR310FormSchema();
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "crash",
             version,
             ctor: TR310FormModel,
             schema: TR310FormSchema,
             formFactory: TR310FormFactory,
-            component: () => import("./components").then(module => module.TR310Form)
+            component: () => import("./components").then(module => module.TR310Form),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new TR310Mapper(),
+            valueListIds: tr310ValueLists.map(definition => definition.id)
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "sc/tr310", lazy: () => import("./components").then(module => ({ Component: module.TR310FormLoader })) });
     }
 }

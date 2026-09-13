@@ -33,16 +33,7 @@ export class S438CitationModule implements IModule {
         // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "sc/s438", lazy: () => import("./components/").then(module => ({ Component: module.S438CitationFormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new S438Mapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         new S438FormSchema();
 
@@ -62,15 +53,22 @@ export class S438CitationModule implements IModule {
             getApplied: (controllers, all) => services.get<IS438CitationService>(IS438CitationService).getAppliedViolations(controllers, all)
         });
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "citation",
             version,
             ctor: S438FormModel,
             schema: S438FormSchema,
             formFactory: S438FormFactory,
-            component: () => import("./components/").then(module => module.S438CitationForm)
+            component: () => import("./components/").then(module => module.S438CitationForm),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new S438Mapper(),
+            violationListId: S438ViolationListId.violation
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "sc/s438", lazy: () => import("./components/").then(module => ({ Component: module.S438CitationFormLoader })) });
     }
 }

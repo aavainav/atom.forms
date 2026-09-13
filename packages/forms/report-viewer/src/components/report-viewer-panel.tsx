@@ -1,5 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
+import { IFormCatalogService } from "@forms/catalog";
 import { FAsyncLoader, IReportViewerData } from "@forms/core";
 
 import { ReportViewerForm } from "./report-viewer-form";
@@ -22,12 +23,21 @@ interface IReportViewerPanelProps {
 
 /** A data-driven, router-agnostic report viewer for hosts that have already resolved and mapped their own report data and just want to mount the matching catalog form. */
 export default function ReportViewerPanel({ data, options }: IReportViewerPanelProps): React.JSX.Element {
+    const formCatalogService = useService<IFormCatalogService>(IFormCatalogService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     const isReadOnly = options?.isReadOnly ?? reportViewerService.isReadOnly;
 
     return (
-        <FAsyncLoader<IInitialForm | undefined> op={() => reportViewerService.loadForm(data, options)}>
+        <FAsyncLoader<IInitialForm | undefined> op={async () => {
+            const name = options?.name ?? data?.name;
+            if (!name) {
+                return undefined;
+            }
+
+            const catalogItem = await formCatalogService.get({ name, version: options?.version ?? data?.version });
+            return reportViewerService.loadForm(catalogItem, data);
+        }}>
             {(initialForm) => initialForm && <ReportViewerForm initialForm={initialForm} isReadOnly={!!isReadOnly} showOptions={options?.showOptions} />}
         </FAsyncLoader>
     );

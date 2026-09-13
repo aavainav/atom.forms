@@ -1,21 +1,12 @@
 import { ComponentType } from "react";
-import { IFormCatalogItem, IFormCatalogService, IFormComponentProps } from "@forms/catalog";
-import { IControllerManager, IFormIdentity, IFormMapper, FormFactory, FormModel } from "@forms/core";
+import { IFormCatalogItem, IFormComponentProps, IFormDataContext } from "@forms/catalog";
+import { FormFactory, FormModel, IControllerManager, IFormIdentity, IReportViewerData } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
-import { IFormDefaults, IReportViewerData, IReportViewerOptions } from "../options";
-import { INavigationRegistrationService, IReportViewerRoute } from "./navigation";
-
-type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+import { IReportViewerOptions } from "../options";
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
 export const IReportViewerRegistrationService = createService<IReportViewerRegistrationService>("forms-report-viewer-registration-service");
-
-/** Defines the route/request context a form was loaded under (e.g. matched route params and the current query string), so a data reader can resolve a specific record. */
-export interface IFormDataContext {
-    readonly params: Readonly<Record<string, string | undefined>>;
-    readonly searchParams: URLSearchParams;
-}
 
 /** Identifies a specific catalog form to load, for hosts that are already bound to one form rather than resolving it from the loaded data. Every part is optional, since an omitted one falls back to the loaded data. */
 export type IFormReportIdentity = Partial<IFormIdentity>;
@@ -32,79 +23,39 @@ export interface IInitialForm {
     readonly Component: ComponentType<IFormComponentProps>;
 }
 
-/**
- * Defines the read half of the host data boundary: a host-supplied source of report data. Implementations are responsible
- * for fetching from whatever source(s) they need and mapping the result into the shape the target form expects.
- * The write half is IFormDataWriter.
- */
-export interface IFormDataReader {
-    getData(context: IFormDataContext): Promise<IReportViewerData | undefined>;
-    /**
-     * Gets the values a new record for this form should start with, and optionally which of them should come back
-     * locked rather than editable. Called by `loadFormReport` only once `getData` has resolved nothing to load,
-     * i.e. the user is creating a record rather than opening one. Optional: a reader that only ever opens existing
-     * records can leave this unimplemented.
-     *
-     * Unrelated to `FieldModel.setDefaultValue()`, which resets a single field back to its own type's zero-value -
-     * this supplies the values a whole new record should start with, and is never called for an existing one.
-     */
-    getDefaultData?(context: IFormDataContext): Promise<IFormDefaults | undefined>;
-}
-
-/**
- * Defines the write half of the host data boundary: a host-supplied destination for report data. Implementations own
- * persistence and any mapping back into the host's own record shape; the report viewer only hands the data over.
- * The read half is IFormDataReader.
- */
-export interface IFormDataWriter {
-    saveData(data: IReportViewerData, context: IFormDataContext): Promise<void>;
-}
-
 export interface IReportViewerService {
     /** Gets whether forms should render read-only by default, from the module options/settings. */
     readonly isReadOnly: boolean;
-    /** Gets whether report data can be extracted from the form with the given identity, which it can once a mapper is registered to extract it. */
-    canExtractData: (identity: IFormIdentity) => boolean;
-    /** Gets whether the form with the given identity can be saved, which it can once a mapper is registered to extract its data and a writer is registered to persist it. */
-    canSaveForm: (identity: IFormIdentity) => boolean;
+    /** Gets whether the given catalog item's report data can be extracted, which it can once it carries a mapper. */
+    canExtractData: (catalogItem: IFormCatalogItem) => boolean;
+    /** Gets whether the given catalog item's form can be saved, which it can once it carries both a mapper and a data writer. */
+    canSaveForm: (catalogItem: IFormCatalogItem) => boolean;
     /**
      * Extracts the report data the given form publishes, stamped with the identity the form model carries. The
-     * catalog item is what the mapper is resolved by. This is the data `saveForm` hands to the data writer,
-     * without persisting any of it.
+     * catalog item's mapper is what does the extracting. This is the data `saveForm` hands to the catalog item's
+     * data writer, without persisting any of it.
      */
     extractData: (form: FormModel, catalogItem: IFormCatalogItem) => IReportViewerData;
-    /** Gets the forms registered with this report viewer, each paired with the route it is reachable at. */
-    getForms: () => Promise<Array<IFormRegistration>>;
-    /** Gets the report data to load for the given context, from the registered data reader if one exists, otherwise falling back to the static data supplied via module options/settings. */
-    getData: (context: IFormDataContext) => Promise<IReportViewerData | undefined>;
-    /**
-     * Gets the values a new record should start with for the given context: from the registered data reader's
-     * `getDefaultData` when it implements one, otherwise the static defaults supplied via module options/settings.
-     * `loadFormReport` reaches this only once `getData` has found nothing to load.
-     */
-    getDefaultData: (context: IFormDataContext) => Promise<IFormDefaults | undefined>;
     /** Gets the options registered for the given form, in the order they are rendered in the options bar. */
     getOptions: (catalogItem: IFormCatalogItem) => Array<IReportViewerOption>;
     /** Gets the panels registered for the given form, which are mounted at the report viewer's root. */
     getPanels: (catalogItem: IFormCatalogItem) => Array<IReportViewerPanel>;
     /**
-     * Loads the catalog form matching `identity` (or, when omitted, the given data's `name`/`version`) and
-     * populates it with that data. `readOnlyFields` names which of the data's own fields should come back locked
-     * rather than editable, and is meaningful only when the target form's mapper has wired those fields up for
-     * locking (see `FormMapper.write`).
+     * Builds the given catalog item's form and populates it with `data`, via the catalog item's own mapper.
+     * `readOnlyFields` names which of the data's own fields should come back locked rather than editable, and is
+     * meaningful only when the catalog item's mapper has wired those fields up for locking (see `FormMapper.write`).
      */
-    loadForm: (data: IReportViewerData | undefined, identity?: IFormReportIdentity, readOnlyFields?: ReadonlySet<string>) => Promise<IInitialForm | undefined>;
+    loadForm: (catalogItem: IFormCatalogItem, data: IReportViewerData | undefined, readOnlyFields?: ReadonlySet<string>) => Promise<IInitialForm>;
     /**
-     * Resolves the report data for the given context, loads the matching catalog form, and populates it with that data.
-     * When there is none to load, falls back to `getDefaultData` so a newly created record starts with whatever
-     * defaults the host has configured, locking whichever of them the host named. When `identity` is omitted, the
-     * catalog form is resolved from the loaded (or default) data's `name`/`version` instead - so identity, when
-     * given, always wins over a default payload's own.
+     * Resolves the report data for the given context through the catalog item's own data reader, and loads the
+     * item's form populated with it. When the reader has nothing to load, falls back to its `getDefaultData` so a
+     * newly created record starts with whatever defaults the catalog item's reader has configured, locking
+     * whichever of them it named.
      */
-    loadFormReport: (context: IFormDataContext, identity?: IFormReportIdentity) => Promise<IInitialForm | undefined>;
+    loadFormReport: (catalogItem: IFormCatalogItem, context: IFormDataContext) => Promise<IInitialForm>;
     /**
-     * Extracts report data from the given form and hands it to the registered data writer, if one exists. The data
-     * is returned whether or not a writer consumed it, so a host that persists the data itself can use this too.
+     * Extracts report data from the given form and hands it to the catalog item's data writer, if it has one. The
+     * data is returned whether or not a writer consumed it, so a host that persists the data itself can use this too.
      */
     saveForm: (form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext) => Promise<IReportViewerData>;
 }
@@ -147,32 +98,8 @@ export interface IReportViewerOptionProps extends IReportViewerPanelProps {
     readonly title: string;
 }
 
-/**
- * Defines the model for registering a catalog form with the report viewer. The identity is the one the form
- * registered with the catalog, so a host can resolve a registered form's route back to what the catalog knows
- * about it; the form's status and type are per-instance state and so are no part of a registration.
- */
-export interface IFormRegistration extends IFormIdentity {
-    /** The route for the form. The route will handle loading/initializing a form. */
-    readonly route: IReportViewerRoute;
-}
-
 /** Defines a service for registering forms with the report viewer. */
 export interface IReportViewerRegistrationService {
-    /**
-     * Registers a catalog form and the route it is reachable at, which is where the form is loaded and initialized.
-     * Only one route may be registered per form name, since a route belongs to a form rather than to one of its versions.
-     */
-    registerForm: (registration: IFormRegistration) => void;
-    /** Registers the reader responsible for supplying report data to load. Only one reader may be registered. */
-    registerDataReader: (reader: IFormDataReader) => void;
-    /** Registers the writer responsible for persisting saved report data. Only one writer may be registered. */
-    registerDataWriter: (writer: IFormDataWriter) => void;
-    /**
-     * Registers the mapper that translates between the identified catalog form and the data contract it publishes.
-     * Only one mapper may be registered per identity, and a form without one simply neither populates nor saves.
-     */
-    registerMapper: <TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>) => void;
     /** Registers an option to render in the report viewer's options bar. Only one option may be registered per id. */
     registerOption: (option: IReportViewerOption) => void;
     /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs. Only one panel may be registered per id. */
@@ -181,41 +108,28 @@ export interface IReportViewerRegistrationService {
 
 @Singleton
 export class ReportViewerService implements IReportViewerService, IReportViewerRegistrationService {
-    private readonly _dataReader?: IFormDataReader;
-    private readonly _dataWriter?: IFormDataWriter;
-
-    private readonly _forms: Map<string, IFormRegistration> = new Map<string, IFormRegistration>();
-    private readonly _mappers: Map<string, IFormMapper<FormModel, IReportViewerData>> = new Map<string, IFormMapper<FormModel, IReportViewerData>>();
     private readonly _options: Map<string, IReportViewerOption> = new Map<string, IReportViewerOption>();
     private readonly _panels: Map<string, IReportViewerPanel> = new Map<string, IReportViewerPanel>();
 
-    constructor(
-        @IFormCatalogService private readonly formCatalogService: IFormCatalogService,
-        @INavigationRegistrationService private readonly navigationRegistrationService: INavigationRegistrationService,
-        @IReportViewerOptions private readonly options: IReportViewerOptions) {
-    }
-
-    get forms(): Array<IFormRegistration> {
-        return Array.from(this._forms.values());
+    constructor(@IReportViewerOptions private readonly options: IReportViewerOptions) {
     }
 
     get isReadOnly(): boolean {
         return this.options.isReadOnly ?? false;
     }
 
-    canExtractData(identity: IFormIdentity): boolean {
-        return !!this.getMapper(identity);
+    canExtractData(catalogItem: IFormCatalogItem): boolean {
+        return !!catalogItem.mapper;
     }
 
-    canSaveForm(identity: IFormIdentity): boolean {
+    canSaveForm(catalogItem: IFormCatalogItem): boolean {
         // save is only offered when the data can both be extracted and be put somewhere; without a writer the
         // extracted data would be discarded and the user still told the report had been saved
-        return !!this._dataWriter && this.canExtractData(identity);
+        return !!catalogItem.mapper && !!catalogItem.dataWriter;
     }
 
     extractData(form: FormModel, catalogItem: IFormCatalogItem): IReportViewerData {
-        const mapper = this.getMapper(catalogItem);
-        const values = mapper ? mapper.extract(form) : {};
+        const values = catalogItem.mapper ? catalogItem.mapper.extract(form) : {};
 
         // a form model declares the identity it is registered under and stamps it on itself, so the whole of
         // IForm comes off the form; without it, saved data could not be resolved back to a form by loadForm.
@@ -227,20 +141,6 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
             type: form.type,
             version: form.version
         };
-    }
-
-    async getForms(): Promise<Array<IFormRegistration>> {
-        return this.forms;
-    }
-
-    async getData(context: IFormDataContext): Promise<IReportViewerData | undefined> {
-        return this._dataReader ? await this._dataReader.getData(context) : this.options.data;
-    }
-
-    async getDefaultData(context: IFormDataContext): Promise<IFormDefaults | undefined> {
-        // checked on the method rather than on the reader existing (unlike getData) -- getDefaultData is optional
-        // per reader, so a reader implementing only getData still lets a host configure static defaults via options.
-        return this._dataReader?.getDefaultData ? await this._dataReader.getDefaultData(context) : this.options.defaultData;
     }
 
     getOptions(catalogItem: IFormCatalogItem): Array<IReportViewerOption> {
@@ -255,90 +155,36 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         return Array.from(this._panels.values()).filter(panel => !panel.canShow || panel.canShow(catalogItem));
     }
 
-    async loadForm(data: IReportViewerData | undefined, identity?: IFormReportIdentity, readOnlyFields?: ReadonlySet<string>): Promise<IInitialForm | undefined> {
-        const name = identity?.name ?? data?.name;
-        if (!name) {
-            return undefined;
-        }
-
-        const catalogItem = await this.formCatalogService.get({ name, version: identity?.version ?? data?.version });
+    async loadForm(catalogItem: IFormCatalogItem, data: IReportViewerData | undefined, readOnlyFields?: ReadonlySet<string>): Promise<IInitialForm> {
         const Component = await catalogItem.component();
         const formFactory = new catalogItem.formFactory();
         let form = await formFactory.createForm().initialize();
 
-        // the mapper is resolved from the catalog item rather than the requested identity, which may have named no
-        // version and so been answered with the latest
-        const mapper = this.getMapper(catalogItem);
-
-        if (data && mapper) {
+        if (data && catalogItem.mapper) {
             // a mapper for a form whose pages repeat has to create a page per record the data carries, which it
             // can only do asynchronously; one for a form of fixed pages returns the form itself and this awaits nothing
-            form = await mapper.populate(form, data, readOnlyFields);
+            form = await catalogItem.mapper.populate(form, data, readOnlyFields);
         }
 
         return { catalogItem, form, formFactory, Component };
     }
 
-    async loadFormReport(context: IFormDataContext, identity?: IFormReportIdentity): Promise<IInitialForm | undefined> {
-        const data = await this.getData(context);
+    async loadFormReport(catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IInitialForm> {
+        const data = await catalogItem.dataReader?.getData(context);
         if (data) {
-            return this.loadForm(data, identity);
+            return this.loadForm(catalogItem, data);
         }
 
-        const defaults = await this.getDefaultData(context);
-        return this.loadForm(defaults?.data, identity, defaults?.readOnlyFields);
+        const defaults = await catalogItem.dataReader?.getDefaultData?.(context);
+        return this.loadForm(catalogItem, defaults?.data, defaults?.readOnlyFields);
     }
 
     async saveForm(form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IReportViewerData> {
         const data = this.extractData(form, catalogItem);
 
-        await this._dataWriter?.saveData(data, context);
+        await catalogItem.dataWriter?.saveData(data, context);
 
         return data;
-    }
-
-    registerForm(registration: IFormRegistration): void {
-        if (this._forms.has(registration.name)) {
-            throw new Error(`A form with the name of ${registration.name} has already been registered with the report viewer.`);
-        }
-
-        this.navigationRegistrationService.registerChildRoute("report-viewer", registration.route);
-        this._forms.set(registration.name, registration);
-    }
-
-    registerDataReader(reader: IFormDataReader): void {
-        if (this._dataReader) {
-            throw new Error("A data reader has already been registered with the report viewer.");
-        }
-
-        (<Mutable<IFormDataReader | undefined>>this._dataReader) = reader;
-    }
-
-    registerDataWriter(writer: IFormDataWriter): void {
-        if (this._dataWriter) {
-            throw new Error("A data writer has already been registered with the report viewer.");
-        }
-
-        (<Mutable<IFormDataWriter | undefined>>this._dataWriter) = writer;
-    }
-
-    registerMapper<TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>): void {
-        // a mapper is always looked up against a resolved catalog item, which names a concrete version, so a mapper
-        // registered without one could never be matched; that would surface as a form that silently refuses to
-        // populate or save rather than as an error here.
-        if (!identity.version) {
-            throw new Error(`A mapper must be registered with the version of the form it maps, but the mapper for ${identity.name} named none.`);
-        }
-
-        const key = getMapperKey(identity);
-
-        if (this._mappers.has(key)) {
-            throw new Error(`A mapper for the form with the name of ${identity.name} and version ${identity.version} has already been registered with the report viewer.`);
-        }
-
-        // each form publishes its own contract, so the registry can only hold them erased; this is the one place the
-        // concrete pair is widened, which keeps the cast off every form module's registration.
-        this._mappers.set(key, <IFormMapper<FormModel, IReportViewerData>><unknown>mapper);
     }
 
     registerOption(option: IReportViewerOption): void {
@@ -356,14 +202,4 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
 
         this._panels.set(panel.id, panel);
     }
-
-    /** Gets the mapper registered for the given form, if one was registered. */
-    private getMapper(identity: IFormIdentity): IFormMapper<FormModel, IReportViewerData> | undefined {
-        return this._mappers.get(getMapperKey(identity));
-    }
-}
-
-/** Keys a mapper by the form it belongs to. Registration rejects an identity without a version, so both sides of the lookup name a concrete one. */
-function getMapperKey({ name, version }: IFormIdentity): string {
-    return `${name}@${version}`;
 }

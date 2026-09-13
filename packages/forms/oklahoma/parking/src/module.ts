@@ -43,16 +43,7 @@ export class OKParkingModule implements IModule {
             valueLists.registerList(definition);
         }
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "ok/parking", lazy: () => import("./components").then(module => ({ Component: module.OKParkingFormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new OKParkingMapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         new OKParkingFormSchema();
 
@@ -71,15 +62,23 @@ export class OKParkingModule implements IModule {
             getApplied: (controllers, all) => services.get<IOKParkingService>(IOKParkingService).getAppliedViolations(controllers, all)
         });
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "citation",
             version,
             ctor: OKParkingFormModel,
             schema: OKParkingFormSchema,
             formFactory: OKParkingFormFactory,
-            component: () => import("./components").then(module => module.OKParkingForm)
+            component: () => import("./components").then(module => module.OKParkingForm),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new OKParkingMapper(),
+            valueListIds: okParkingValueLists.map(definition => definition.id),
+            violationListId: OKParkingViolationListId.violation
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "ok/parking", lazy: () => import("./components").then(module => ({ Component: module.OKParkingFormLoader })) });
     }
 }

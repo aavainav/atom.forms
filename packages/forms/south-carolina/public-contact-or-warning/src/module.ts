@@ -41,28 +41,26 @@ export class PublicContactOrWarningModule implements IModule {
             valueLists.registerList(definition);
         }
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "sc/432", lazy: () => import("./components").then(module => ({ Component: module.PublicContactOrWarningFormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new PublicContactOrWarningMapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         new PublicContactOrWarningFormSchema();
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "none",
             version,
             ctor: PublicContactOrWarningFormModel,
             schema: PublicContactOrWarningFormSchema,
             formFactory: PublicContactOrWarningFormFactory,
-            component: () => import("./components").then(module => module.PublicContactOrWarningForm)
+            component: () => import("./components").then(module => module.PublicContactOrWarningForm),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new PublicContactOrWarningMapper(),
+            valueListIds: publicContactOrWarningValueLists.map(definition => definition.id)
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "sc/432", lazy: () => import("./components").then(module => ({ Component: module.PublicContactOrWarningFormLoader })) });
     }
 }

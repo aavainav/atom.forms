@@ -15,6 +15,7 @@ function catalogItem(name: string, ...pageNames: Array<string>): IFormCatalogIte
     return {
         name,
         description: name,
+        type: "none",
         version: "1.0.0",
         ctor: class { } as never,
         schema: class { } as never,

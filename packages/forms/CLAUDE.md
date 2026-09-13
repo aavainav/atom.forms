@@ -8,10 +8,10 @@ task recipes; open that one rather than reading the package's source to orient.
 | Package | Name | What it owns |
 | --- | --- | --- |
 | [core/](core/) | `@forms/core` | Form model/definition/entity tree, field models, validation rules, controllers, `F*` React components. No shrub module. |
-| [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version. Definition data only, never mapping. |
+| [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version — the source of truth for a form's identity, definition, mapper, and data reader/writer. |
 | [value-lists/](value-lists/) | `@forms/value-lists` | Value-list registry + service, the code generator, and the national (jurisdiction-free) lists. |
 | [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the selector that puts them on a form. Citations only; bundles no lists of its own. |
-| [report-viewer/](report-viewer/) | `@forms/report-viewer` | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications, mappers. |
+| [report-viewer/](report-viewer/) | `@forms/report-viewer` | Renders an already-resolved catalog item, populates it from its own data reader, saves it back. Owns routing, modals, notifications — tracks no form by identity itself. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, bootstrapper. |
 | [south-carolina/s438/](south-carolina/s438/) | `@forms/s438` | SC S438 UTT citation form. |
@@ -61,9 +61,10 @@ in one is a change in all three in the same places.
 - **Each form owns its data contract and hand-writes its mapper.** No shared cross-form data model, no generic
   mapping. A mapper's `extract`/`populate` pair for a section sit adjacent so a missed field shows in one diff.
 - **A form's identity is declared once, as a `CATALOG_IDENTITY` constant beside its form model**, and the model
-  assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item, the mapper and the
-  route from that constant, and the route loader pins it — so the identity `extractData` stamps a saved report with
-  is the same one the catalog resolves it by. Never write a form's name or version as a literal anywhere else.
+  assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item and its mapper (both
+  with `@forms/catalog`) and the route (with `@forms/report-viewer`) from that constant, and the route loader pins
+  it — so the identity `extractData` stamps a saved report with is the same one the catalog resolves it by. Never
+  write a form's name or version as a literal anywhere else.
 - **State is per form instance**, held by `ControllerManager`/`FormController` in the React layer — never attached
   to the immutable `FormModel`.
 - **A section declared `{ isShared: true }` holds the same values on every instance of its page.** Every citation
@@ -95,8 +96,9 @@ in one is a change in all three in the same places.
 3. Schema → form model and its `CATALOG_IDENTITY` → page/section models → section components → data contract →
    mapper → rules.
 4. `form-factory.ts`, `services/`, `options.ts`, `module.ts`, `bootstrapper.ts`, `index.ts`.
-5. Register the bootstrapper in `packages/examples/02-forms/src/main.ts`. The sandbox home page lists the form
-   automatically, by joining the catalog to the routes registered through `registerForm`.
+5. Register the bootstrapper in `packages/examples/01-forms/src/main.ts`. The sandbox home page lists every catalog
+   form automatically; add the form's route to the `formRoutes` table in `src/home/home-page.tsx` so it lists as
+   reachable rather than routeless.
 
 ## Build
 

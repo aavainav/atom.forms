@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { IFormCatalogItem } from "../../src/services/form-catalog";
-import { FormCatalogService } from "../../src/services/form-catalog";
+import type { IFormCatalogItem, IFormDataReader, IFormDataWriter } from "../../src/services/form-catalog";
+import { FormCatalogService, withDataHooks } from "../../src/services/form-catalog";
 
 /**
  * A catalog item is only ever stored and handed back, never constructed from, so a stub carrying the identity is
@@ -11,6 +11,7 @@ function item(name: string, version: string, description: string = name): IFormC
     return {
         name,
         description,
+        type: "none",
         version,
         ctor: class { } as never,
         schema: class { } as never,
@@ -53,6 +54,15 @@ describe("FormCatalogService", () => {
 
             expect(() => catalog.registerCatalogItem(item("s438", "1.0.0")))
                 .toThrowError("A form with the name of s438 and version 1.0.0 has already been registered with the form catalog.");
+        });
+
+        /** The mapper is always hand-written by the same package that registers the item, so it's just a plain field rather than a separate call. */
+        it("keeps a mapper passed inline", async () => {
+            const mapper = { extract: () => ({}), populate: async (form: never) => form };
+
+            catalog.registerCatalogItem({ ...item("s438", "1.0.0"), mapper });
+
+            await expect(catalog.get({ name: "s438" })).resolves.toMatchObject({ mapper });
         });
     });
 
@@ -119,5 +129,45 @@ describe("FormCatalogService", () => {
         it("answers an empty map when nothing is registered", async () => {
             await expect(catalog.getLatestVersions()).resolves.toEqual(new Map());
         });
+    });
+});
+
+describe("withDataHooks", () => {
+    it("attaches the reader and writer the hooks answer with for the item's identity", () => {
+        const reader: IFormDataReader = { getData: async () => undefined };
+        const writer: IFormDataWriter = { saveData: async () => { } };
+
+        const result = withDataHooks(item("s438", "1.0.0"), {
+            getDataReader: () => reader,
+            getDataWriter: () => writer
+        });
+
+        expect(result.dataReader).toBe(reader);
+        expect(result.dataWriter).toBe(writer);
+    });
+
+    it("leaves the item unchanged when no hooks are given", () => {
+        const catalogItem = item("s438", "1.0.0");
+
+        expect(withDataHooks(catalogItem, undefined)).toBe(catalogItem);
+    });
+
+    it("leaves the item unchanged when the hooks answer nothing for this identity", () => {
+        const catalogItem = item("s438", "1.0.0");
+
+        const result = withDataHooks(catalogItem, { getDataReader: () => undefined, getDataWriter: () => undefined });
+
+        expect(result).toBe(catalogItem);
+    });
+
+    it("leaves a reader already on the item alone when the hooks answer nothing for it", () => {
+        const reader: IFormDataReader = { getData: async () => undefined };
+        const writer: IFormDataWriter = { saveData: async () => { } };
+        const catalogItem = { ...item("s438", "1.0.0"), dataReader: reader };
+
+        const result = withDataHooks(catalogItem, { getDataWriter: () => writer });
+
+        expect(result.dataReader).toBe(reader);
+        expect(result.dataWriter).toBe(writer);
     });
 });

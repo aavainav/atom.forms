@@ -14,6 +14,7 @@ import { bootstrapper as WatermarkDemoBootstrapper } from "./demos/watermark";
 
 // Entry point and startup for the report viewer react app. Better place to do this?
 await WorkbenchBootstrapper.start({
+    // kept alphabetical
     bootstrappers: [
         DropzoneDemoBootstrapper,
         ExampleDataBootstrapper,

@@ -1,8 +1,9 @@
 # `@forms/report-viewer`
 
-Loads a catalog form, populates it from host data, renders it, and saves it back. Owns routing, modals,
-notifications, and the **form ↔ data mapper registry**. Depends on `@forms/catalog`, `@forms/core`,
-`@common/react-router`, react-router 8.
+Loads an already-resolved catalog item, populates it from its own data reader, renders it, and saves it back. Owns
+routing, modals, notifications and validation — but tracks no form by identity itself. `@forms/catalog` is the one
+registry; this package is a pure consumer of whatever catalog item its caller hands it. Depends on `@forms/catalog`,
+`@forms/core`, `@common/react-router`, react-router 8.
 
 Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 
@@ -10,9 +11,9 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `ReportViewerModule` + `IReportViewerConfiguration` (`registerForm`, `registerRoute`, `registerDataReader`, `registerDataWriter`, `registerMapper`, `registerOption`, `registerPanel`). Registers the `report-viewer` layout route, its index route, and the `*` not-found route. |
-| [src/options.ts](src/options.ts) | `IReportViewerOptions`: `data?` (static report data), `defaultData?` (static defaults for a newly created record, `IFormDefaults`) and `isReadOnly?`. Bound to module settings. |
-| [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerService`, `IReportViewerRegistrationService`, `IFormDataReader`, `IFormDataWriter`, `IInitialForm`, `IFormDataContext`. |
+| [src/module.ts](src/module.ts) | `ReportViewerModule` + `IReportViewerConfiguration` (`registerRoute`, `registerOption`, `registerPanel`). Registers the `report-viewer` layout route, its index route, and the `*` not-found route. |
+| [src/options.ts](src/options.ts) | `IReportViewerOptions`: `isReadOnly?` only. Bound to module settings. |
+| [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerService`, `IReportViewerRegistrationService`, `IInitialForm`, `IFormReportIdentity`. |
 | [src/services/navigation.ts](src/services/navigation.ts) | `INavigationService` (`navigateTo`, `currentLocation`, `router`) / `INavigationRegistrationService` (`registerRoute`, `registerChildRoute`). |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. |
@@ -20,8 +21,7 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` — renders `ReportViewerForm` when handed an `initialForm`, otherwise `<Outlet />`. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation. **Both `ReportViewer` and `ReportViewerPanel` render this**, so every host wires a form identically. |
-| [src/components/report-viewer-loader.tsx](src/components/report-viewer-loader.tsx) | The generic data-driven index route: resolves data from the route context and loads whatever form the data names. |
-| [src/components/report-viewer-panel.tsx](src/components/report-viewer-panel.tsx) | Router-agnostic entry point for a host that already has its data. Its `options` carry the form identity plus `isReadOnly` and `showOptions`. Also imports `@forms/core/theme/_main.scss`. |
+| [src/components/report-viewer-panel.tsx](src/components/report-viewer-panel.tsx) | Router-agnostic entry point for a host that already has its data. Resolves the catalog item itself (via `IFormCatalogService`) from `options`/`data`'s name and version, then calls `loadForm`. Also imports `@forms/core/theme/_main.scss`. |
 | [src/components/report-viewer-layout.tsx](src/components/report-viewer-layout.tsx) | Bare `<Outlet />` for the `report-viewer` route. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with and nothing else. `options/` holds this package's own four, which `module.ts` registers like any other. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button` (order 250), and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
@@ -29,76 +29,48 @@ Module dependencies: `ReactRouterModule`, `FormCatalogModule`.
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts whatever `registerPanel` added, for this form, alongside the modal, notification and validation managers. A panel is handed `IReportViewerPanelProps` — an option's props without the `title`. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
-## The host data boundary
+## The host data boundary and the mapper — now on the catalog item
 
-Two halves, each registered at most once, both host-supplied:
+`IFormDataContext`, `IFormDataReader`, `IFormDataWriter`, `IFormDefaults`, `IFormDataHooks` and `withDataHooks` all
+live in `@forms/catalog` — see that package's `CLAUDE.md`. This package only *consumes* what ends up on a resolved
+`IFormCatalogItem`: `catalogItem.mapper`, `catalogItem.dataReader`, `catalogItem.dataWriter`. It never looks either
+up by identity itself and it plays no part in attaching a host's `IFormDataHooks` — that happens in the caller
+(almost always a form's own route loader), before the item ever reaches this package's services.
 
-```ts
-IFormDataReader { getData(context): Promise<IReportViewerData | undefined>; getDefaultData?(context): Promise<IFormDefaults | undefined> }
-IFormDataWriter { saveData(data: IReportViewerData, context): Promise<void> }
-```
-
-`IFormDataContext` is `{ params, searchParams }` — the route context the form was loaded under, so a reader can
-resolve a specific record and a writer can identify the one it writes back to. With no reader registered,
-`getData` falls back to `IReportViewerOptions.data`.
-
-**`getDefaultData` is the values a *new* record should start with**, reached by `loadFormReport` only once
-`getData` resolved nothing to load. `IFormDefaults` is `{ data: IReportViewerData, readOnlyFields?:
-ReadonlySet<string> }` — `readOnlyFields` names which of `data`'s own fields should come back locked rather than
-editable, understood by the target form's mapper (see `FormMapper.write` in `@forms/core`). It is optional per
-reader, and checked on the *method* rather than on whether a reader exists at all — unlike `getData`, whose
-`this.options.data` fallback only ever triggers when there is **no reader registered**, `getDefaultData` falls back
-to `IReportViewerOptions.defaultData` whenever the registered reader simply doesn't implement it. A host adopting
-this needs its own `getData` to distinguish "no id given, this is new" from "id given but not found" — both
-resolve to `undefined` today, and only the former should fall through to defaults.
-
-The host maps its own record shape into the target form's contract; the report viewer only hands data across.
-
-## The mapper registry — the key seam
-
-```ts
-registerMapper(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>)
-```
-
-- Keyed `` `${name}@${version}` ``. **Registration throws without a version**, because lookup always goes through a
-  resolved catalog item (which always names a concrete version); a versionless mapper could never match and would
-  surface as a form that silently neither populates nor saves.
-- Looked up against the **catalog item**, not the requested identity — a request naming no version is answered with
-  the latest, and the mapper must match what was actually resolved.
-- One mapper per identity; duplicates throw.
-- This is the one place the concrete `IFormMapper<TForm, TData>` pair is widened, so no form module needs a cast.
-- `canSaveForm(identity)` is "is a mapper registered **and** a data writer registered", and gates the save button.
-  Both halves matter: with a mapper but no writer, `saveForm` would extract the data, find nothing to hand it to, and
-  the save option would still report the report as saved.
+The consequence worth knowing: because a reader/writer is resolved per identity rather than a single global pair,
+**there is no generic, identity-less loading path any more.** Every route has to already know which catalog item
+it's loading — resolving *which* form/record a URL means is the host's job, done before `loadForm`/`loadFormReport`
+is ever called, not something a reader can be asked to guess from context alone.
 
 ## Load and save
 
-`loadForm(data, identity?, readOnlyFields?)`:
-1. name = `identity?.name ?? data?.name`; returns `undefined` if neither.
-2. resolve the catalog item, `await catalogItem.component()`, `new catalogItem.formFactory()`,
-   `await formFactory.createForm().initialize()`.
-3. if data **and** a mapper: `form = await mapper.populate(form, data, readOnlyFields)` (awaited because a
-   repeating-page mapper must create pages, which is async).
-4. → `IInitialForm { catalogItem, form, formFactory, Component }`.
+Every one of these takes an already-resolved `IFormCatalogItem` — this package never looks one up by identity.
 
-`loadFormReport(context, identity?)` is `getData` then `loadForm` — except when `getData` resolves nothing, in
-which case it falls back to `getDefaultData` first, passing its `data` and `readOnlyFields` into `loadForm` so a
-newly created record starts with whatever defaults (and locks) the host has configured. `identity`, when given,
-always wins over a default payload's own `name`/`version` — every form-specific route loader passes one, so a
-default payload's identity fields are load-bearing only for the generic, identity-less loader.
+`loadForm(catalogItem, data, readOnlyFields?)`:
+1. `await catalogItem.component()`, `new catalogItem.formFactory()`, `await formFactory.createForm().initialize()`.
+2. if `data` **and** `catalogItem.mapper`: `form = await catalogItem.mapper.populate(form, data, readOnlyFields)`
+   (awaited because a repeating-page mapper must create pages, which is async).
+3. → `IInitialForm { catalogItem, form, formFactory, Component }`.
 
-`extractData(form, catalogItem)`: `mapper.extract(form)` (or `{}`), then **stamps the whole of `IForm` — `name`,
-`description`, `status`, `type`, `version` — from the form model**, which declares the identity it is registered
-under and assigns it to itself. Without the stamp the saved data could not be resolved back to a form. The catalog
-item is passed for the mapper lookup alone. Persists nothing.
+`loadFormReport(catalogItem, context)` is `catalogItem.dataReader?.getData(context)` then `loadForm` — except when
+that resolves nothing, in which case it falls back to `catalogItem.dataReader?.getDefaultData?.(context)` first,
+passing its `data` and `readOnlyFields` into `loadForm` so a newly created record starts with whatever defaults
+(and locks) the reader has configured. A catalog item with no reader simply has nothing to load, and `loadForm`
+still runs — the form is built and returned unpopulated.
 
-`saveForm(form, catalogItem, context)` is `extractData` then the writer, returning the data whether or not a writer
-consumed it. The extract-and-stamp lives in `extractData` alone so that **what a preview shows and what a save
-sends cannot drift** — the report-data option renders exactly this payload without touching the writer.
+`extractData(form, catalogItem)`: `catalogItem.mapper?.extract(form)` (or `{}`), then **stamps the whole of
+`IForm` — `name`, `description`, `status`, `type`, `version` — from the form model**, which declares the identity
+it is registered under and assigns it to itself. Without the stamp the saved data could not be resolved back to a
+form. Persists nothing.
 
-`canExtractData(identity)` is the mapper half of `canSaveForm` (which is that *plus* a registered writer). They are
-different gates on purpose: a form with a mapper but no host writer still produces perfectly good outgoing data, so
-the report-data option is offered where save is not.
+`saveForm(form, catalogItem, context)` is `extractData` then `catalogItem.dataWriter?.saveData(data, context)`,
+returning the data whether or not a writer consumed it. The extract-and-stamp lives in `extractData` alone so that
+**what a preview shows and what a save sends cannot drift** — the report-data option renders exactly this payload
+without touching the writer.
+
+`canExtractData(catalogItem)` is `!!catalogItem.mapper`. `canSaveForm(catalogItem)` is that *plus* `!!catalogItem.
+dataWriter`. They are different gates on purpose: a form with a mapper but no writer still produces perfectly good
+outgoing data, so the report-data option is offered where save is not.
 
 ## The options bar — the other seam
 
@@ -129,11 +101,11 @@ each form's options from exactly that call, which is why a citation lists Violat
 
 ### Where a per-form gate should live
 
-`canShow` gets the catalog item, so it can gate on anything the catalog knows: the identity, and the form family
-via `catalogItem.ctor.prototype instanceof CitationForm`. It cannot gate on jurisdiction — no state or agency is
-modelled anywhere; a form's state lives only in its package path and its name. An option that genuinely needs to
-vary by jurisdiction should be registered by the form package that knows its own, rather than by adding a state to
-the catalog for one caller to branch on.
+`canShow` gets the catalog item, so it can gate on anything the catalog knows: the identity, the form's `type`, and
+the form family via `catalogItem.ctor.prototype instanceof CitationForm`. It cannot gate on jurisdiction — no state
+or agency is modelled anywhere; a form's state lives only in its package path and its name. An option that
+genuinely needs to vary by jurisdiction should be registered by the form package that knows its own, rather than by
+adding a state to the catalog for one caller to branch on.
 
 ## The panel seam — where an off canvas goes
 
@@ -176,29 +148,21 @@ the app's runtime, but a reload starts light again.
 
 then `await next()` so form modules can register their own child routes before the host renders.
 
-**Nothing is registered as the index route**, so the root belongs to the host. `ReportViewerLoader` — the generic,
-data-driven route that loads whichever form the data reader answers with — is exported rather than registered: a
-host is rarely asking for a form at its root, and putting one there would take the root away before the host had a
-say. A host that wants it registers it, at whatever path it wants it on; the sandbox puts its own menu at the index
-instead.
+**Nothing is registered as the index route**, so the root belongs to the host.
 
-Two seams register a child route, and which one to use depends on what is being routed:
+This package tracks no identity-to-route pairing of its own — `registerRoute(name, route)` is `registerChildRoute`
+on the navigation service, plain and generic, used identically whether the route belongs to a catalog form or not
+(the sandbox's home page and demo routes use the same seam). A catalog form's own route is registered the same
+way, by whichever package owns that route — usually the form package itself, right alongside its own
+`registerCatalogItem` call. Nothing here records which route belongs to which form; a host that wants to list
+"every form and where it lives" keeps that mapping itself (see the sandbox's `home-page.tsx`).
 
-- **`registerForm({ name, version, route })`** — for a **catalog form**. It registers the child route under
-  `report-viewer` *and* records the identity ↔ route pairing, so the route is declared once and a host can ask
-  `getForms()` which forms are reachable and where. One route per form name (a route belongs to a form, not to one
-  of its versions); a duplicate name throws. `IFormRegistration` extends `IFormIdentity` — a registration carries no
-  `status` or `type`, since those are per-instance form state.
-- **`registerRoute(name, route)`** — for anything that is **not** a catalog form (the sandbox's home page and demo
-  routes). It is `registerChildRoute` on the navigation service and records nothing.
-
-## Two ways to mount a form
+## Mounting a form
 
 | | Route | Component | Use when |
 | --- | --- | --- | --- |
-| Generic | wherever the **host** registers it | `ReportViewerLoader` → `ReportViewer` | The data names the form; the host has registered a data reader. Not registered for you — pick the path yourself. |
-| Form-specific | a form package's own path (`sc/tr310`) | that package's `*FormLoader` → `ReportViewer` | The route is bound to one form; the loader passes a `CATALOG_IDENTITY`. |
-| No router at all | — | `ReportViewerPanel` | The host has already resolved and mapped the data and just wants the form mounted. |
+| Form-specific | a form package's own path (`sc/tr310`) | that package's `*FormLoader` → `ReportViewer` | The loader resolves the catalog item (`formCatalogService.get(CATALOG_IDENTITY)`), attaches a host's data boundary via `withDataHooks(catalogItem, services.tryGet(IFormDataHooks))`, and calls `loadFormReport(catalogItem, context)`. |
+| No router at all | — | `ReportViewerPanel` | The host has already resolved and mapped the data and just wants the form mounted; `ReportViewerPanel` resolves the catalog item itself and calls `loadForm`. |
 
 ## Gotchas
 

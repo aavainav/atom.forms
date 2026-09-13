@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
-import { useService } from "@common/react";
+import { useService, useServices } from "@common/react";
+import { IFormCatalogService, IFormDataHooks, withDataHooks } from "@forms/catalog";
 import { ControllerManager, FAsyncLoader, FormStatus, IControllerManager, getStatusWatermark } from "@forms/core";
 import { IInitialForm, IReportViewerService, ReportViewerForm } from "@forms/report-viewer";
 
@@ -49,7 +50,9 @@ function WatermarkDemoForm({ controllers, initialForm, isReadOnly, status }: IWa
 
 /** Demonstrates the watermark each form status stamps across a page, and that a form carries one only while it renders read-only. */
 export default function WatermarkDemoPage(): React.JSX.Element {
+    const formCatalogService = useService<IFormCatalogService>(IFormCatalogService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
+    const services = useServices();
 
     const params = useParams();
     const [searchParams] = useSearchParams();
@@ -93,11 +96,14 @@ export default function WatermarkDemoPage(): React.JSX.Element {
                 the form is loaded, and the controller manager only resets when the form's id changes, which neither
                 setStatus nor setReadOnly does. keying the loader re-runs the load, which builds a form with a new id.
             */}
-            <FAsyncLoader<IInitialForm | undefined>
+            <FAsyncLoader<IInitialForm>
                 key={`${status}:${isReadOnly}`}
-                op={() => reportViewerService.loadFormReport({ params, searchParams }, catalogIdentity)}
+                op={async () => {
+                    const catalogItem = withDataHooks(await formCatalogService.get(catalogIdentity), services.tryGet(IFormDataHooks));
+                    return reportViewerService.loadFormReport(catalogItem, { params, searchParams });
+                }}
             >
-                {(initialForm) => initialForm && (
+                {(initialForm) => (
                     <WatermarkDemoForm controllers={controllers} initialForm={initialForm} isReadOnly={isReadOnly} status={status} />
                 )}
             </FAsyncLoader>

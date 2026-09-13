@@ -43,16 +43,7 @@ export class GAUTCModule implements IModule {
             valueLists.registerList(definition);
         }
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "ga/utc", lazy: () => import("./components").then(module => ({ Component: module.GAUTCFormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new GAUTCMapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         new GAUTCFormSchema();
 
@@ -71,15 +62,23 @@ export class GAUTCModule implements IModule {
             getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all)
         });
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "citation",
             version,
             ctor: GAUTCFormModel,
             schema: GAUTCFormSchema,
             formFactory: GAUTCFormFactory,
-            component: () => import("./components").then(module => module.GAUTCForm)
+            component: () => import("./components").then(module => module.GAUTCForm),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new GAUTCMapper(),
+            valueListIds: gaUtcValueLists.map(definition => definition.id),
+            violationListId: GAUTCValueViolationListId.violation
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "ga/utc", lazy: () => import("./components").then(module => ({ Component: module.GAUTCFormLoader })) });
     }
 }

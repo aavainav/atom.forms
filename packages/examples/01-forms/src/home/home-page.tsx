@@ -2,13 +2,7 @@ import React from "react";
 import { useService } from "@common/react";
 import { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { FAsyncLoader, FListGroup, FListGroupItem } from "@forms/core";
-import { IFormRegistration, INavigationService, IReportViewerService } from "@forms/report-viewer";
-
-/** The catalog and the routes registered for it, which the home page lists by joining the two on the form's name. */
-interface IHomeContent {
-    readonly catalogItems: Map<string, IFormCatalogItem>;
-    readonly registrations: Array<IFormRegistration>;
-}
+import { INavigationService, IReportViewerService } from "@forms/report-viewer";
 
 /** The sandbox demos. These are not catalog forms, so unlike the forms they carry their own title and description. */
 const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: string; readonly title: string }> = [
@@ -24,6 +18,20 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
     }
 ];
 
+/**
+ * The route each catalog form is reachable at. The report viewer tracks no identity-to-route pairing of its own
+ * any more -- a form package registers its own route directly -- so this package, as the host, keeps its own record
+ * of where each one landed, purely for building this menu.
+ */
+const formRoutes: ReadonlyMap<string, string> = new Map([
+    ["GA Uniform Traffic Citation", "ga/utc"],
+    ["OKC Parking Violation", "ok/parking"],
+    ["OKC Traffic Citation", "ok/traffic"],
+    ["SC Form 432 - Public Contact / Warning", "sc/432"],
+    ["S438 Citation Form", "sc/s438"],
+    ["SC TR-310 - Traffic Collision Report", "sc/tr310"]
+]);
+
 interface IHomeLinkProps {
     readonly description: string;
     /**
@@ -33,56 +41,33 @@ interface IHomeLinkProps {
      * the form having declared how it takes one.
      */
     readonly options?: ReadonlyArray<string>;
-    /** The route to navigate to. A form registered with the catalog but not with the report viewer has none, and lists as unreachable. */
+    /** The route to navigate to. A catalog form with no entry in `formRoutes` has none, and lists as unreachable. */
     readonly path?: string;
     readonly title: string;
     readonly version?: string;
 }
 
 /**
- * Joins the catalog to the report viewer's registered routes on the form's name, listing the routed forms in
- * registration order and then any catalog form no route was registered for. An unrouted form is listed rather than
- * dropped so that registering a form's bootstrapper without registering its route shows up here as a visible gap
- * instead of a silently missing row.
+ * Lists every catalog form, alphabetically, alongside the route this package knows for it. A form with no entry in
+ * `formRoutes` is listed rather than dropped, so registering a form's bootstrapper without adding its route here
+ * shows up as a visible gap instead of a silently missing row.
  */
-function getFormLinks({ catalogItems, registrations }: IHomeContent, getOptions: (catalogItem: IFormCatalogItem) => Array<string>): Array<IHomeLinkProps> {
-    const routedNames = new Set(registrations.map(registration => registration.name));
-    const links: Array<IHomeLinkProps> = [];
-
-    for (const registration of registrations) {
-        const catalogItem = catalogItems.get(registration.name);
-
-        if (catalogItem) {
-            links.push({
-                description: catalogItem.description,
-                options: getOptions(catalogItem),
-                path: getLinkPath(registration),
-                title: catalogItem.name,
-                version: catalogItem.version
-            });
-        }
-    }
-
-    for (const catalogItem of catalogItems.values()) {
-        if (!routedNames.has(catalogItem.name)) {
-            links.push({
-                description: catalogItem.description,
-                options: getOptions(catalogItem),
-                title: catalogItem.name,
-                version: catalogItem.version
-            });
-        }
-    }
-
-    return links;
+function getFormLinks(catalogItems: Map<string, IFormCatalogItem>, getOptions: (catalogItem: IFormCatalogItem) => Array<string>): Array<IHomeLinkProps> {
+    return Array.from(catalogItems.values())
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(catalogItem => ({
+            description: catalogItem.description,
+            options: getOptions(catalogItem),
+            path: getLinkPath(catalogItem.name),
+            title: catalogItem.name,
+            version: catalogItem.version
+        }));
 }
 
-/**
- * Returns the url for a registered form. A form registers its route as a child of the report viewer's layout route,
- * so the path it registers is relative (`sc/tr310`) and the link the browser needs is absolute.
- */
-function getLinkPath({ route }: IFormRegistration): string | undefined {
-    return route.path ? `/${route.path.replace(/^\//, "")}` : undefined;
+/** Returns the url for a catalog form's route, if this package knows one for it. A form registers its route as a child of the report viewer's layout route, so the path is relative (`sc/tr310`) and the link the browser needs is absolute. */
+function getLinkPath(name: string): string | undefined {
+    const path = formRoutes.get(name);
+    return path ? `/${path.replace(/^\//, "")}` : undefined;
 }
 
 /**
@@ -133,17 +118,10 @@ export default function HomePage(): React.JSX.Element {
             <p className="text-muted">Pick a form to load it with its mock data, or a demo to exercise a piece of the report viewer. Each form lists the options its report viewer offers, which is what the bar in the bottom right will hold.</p>
 
             <h6 className="text-uppercase text-muted mt-4 mb-2">Forms</h6>
-            <FAsyncLoader<IHomeContent> op={async () => {
-                const [catalogItems, registrations] = await Promise.all([
-                    formCatalogService.getLatestVersions(),
-                    reportViewerService.getForms()
-                ]);
-
-                return { catalogItems, registrations };
-            }}>
-                {(content) => (
+            <FAsyncLoader<Map<string, IFormCatalogItem>> op={() => formCatalogService.getLatestVersions()}>
+                {(catalogItems) => (
                     <FListGroup>
-                        {getFormLinks(content, catalogItem => reportViewerService.getOptions(catalogItem).map(option => option.title))
+                        {getFormLinks(catalogItems, catalogItem => reportViewerService.getOptions(catalogItem).map(option => option.title))
                             .map(link => <HomeLink key={link.title} {...link} />)}
                     </FListGroup>
                 )}

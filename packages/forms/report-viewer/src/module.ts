@@ -1,14 +1,10 @@
 import { ReactRouterModule } from "@common/react-router";
 import { FormCatalogModule } from "@forms/catalog";
-import { IFormIdentity, IFormMapper, FormModel } from "@forms/core";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
 import { DayNightModeOption, ReportDataOption, SaveOption, ValidateOption } from "./components/options";
 import { IReportViewerOptions } from "./options";
 import {
-    IFormDataReader,
-    IFormDataWriter,
-    IFormRegistration,
     IModalService,
     INavigationRegistrationService,
     INavigationService,
@@ -36,37 +32,22 @@ const dayNightModeOptionOrder = 900;
 
 export const IReportViewerConfiguration = createConfig<IReportViewerConfiguration>();
 export interface IReportViewerConfiguration {
-    /** Registers the reader responsible for supplying report data to load, from whatever source(s) the host app defines. */
-    registerDataReader: (reader: IFormDataReader) => void;
-    /** Registers the writer responsible for persisting saved report data, to whatever destination the host app defines. */
-    registerDataWriter: (writer: IFormDataWriter) => void;
-    /** Registers a catalog form with the report viewer, along with the route it is reachable at. */
-    registerForm: (registration: IFormRegistration) => void;
-    /** Registers the mapper that translates between the identified catalog form and the data contract it publishes. */
-    registerMapper: <TForm extends FormModel, TData extends object>(identity: IFormIdentity, mapper: IFormMapper<TForm, TData>) => void;
     /** Registers an option to render in the report viewer's options bar, alongside the built-in validate and save. */
     registerOption: (option: IReportViewerOption) => void;
     /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs rather than inside the options bar. */
     registerPanel: (panel: IReportViewerPanel) => void;
-    /** Registers a route with the report viewer. For a catalog form, use `registerForm` so the form and its route are registered together. */
+    /** Registers a route with the report viewer. For a catalog form, this is where its own route is registered too, since the report viewer tracks no identity-to-route pairing of its own. */
     registerRoute: (name: string, route: IReportViewerRoute) => void;
 }
 
 /** Defines the report viewer module. This module handles displaying and interacting with reports. */
 export class ReportViewerModule implements IModule {
     readonly name = "report-viewer";
-    readonly dependencies = [
-        ReactRouterModule,
-        FormCatalogModule
-    ];
+    readonly dependencies = [FormCatalogModule, ReactRouterModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IReportViewerOptions>(IReportViewerOptions);
         init.config(IReportViewerConfiguration).register(({ services }: IModuleConfigurator) => ({
-            registerDataReader: reader => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerDataReader(reader),
-            registerDataWriter: writer => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerDataWriter(writer),
-            registerForm: registration => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerForm(registration),
-            registerMapper: (identity, mapper) => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerMapper(identity, mapper),
             registerOption: option => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerOption(option),
             registerPanel: panel => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerPanel(panel),
             registerRoute: (name, route) => services.get<INavigationRegistrationService>(INavigationRegistrationService).registerChildRoute(name, route)
@@ -93,10 +74,9 @@ export class ReportViewerModule implements IModule {
         // The route itself is just a layout that renders the matched child via <Outlet />, which is a form-specific
         // route registered by a form package, or whatever the host registers as the index.
         //
-        // Nothing is registered as that index here. `ReportViewerLoader` is exported for a host that wants the
-        // generic, data-driven route -- it loads whichever form the data reader answers with -- but a host is
-        // rarely asking for a form at its root, and registering one there would take the root away from the host
-        // before it had a say. A host that wants it registers it, at the path it wants it on.
+        // Nothing is registered as that index here -- a host is rarely asking for a form at its root, and
+        // registering one there would take the root away from the host before it had a say. A host that wants a
+        // form at its root registers that form's own route there instead.
         const registration = services.get<INavigationRegistrationService>(INavigationRegistrationService);
         registration.registerRoute({
             id: "report-viewer",

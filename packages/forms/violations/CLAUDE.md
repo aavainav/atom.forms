@@ -53,7 +53,8 @@ there is no national one, so every list is declared in the form package that dra
 
 The registration is the working half — a form that declared no binding has nowhere to put a charge — while the
 `CitationForm` check states the rule the feature is bound by rather than leaving it to be inferred from which
-forms happened to register. A catalog item carries no `type`, so the form family is read off its `ctor`.
+forms happened to register. The form family is read off `catalogItem.ctor` rather than `catalogItem.type`, since
+the check predates that field and nothing has forced a reason to migrate it yet.
 
 ## Why an off canvas and not a modal
 

@@ -44,16 +44,7 @@ export class OKTrafficModule implements IModule {
             valueLists.registerList(definition);
         }
 
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerForm({
-            name,
-            version,
-            route: { path: "ok/traffic", lazy: () => import("./components").then(module => ({ Component: module.OKTrafficFormLoader })) }
-        });
-
-        // the report viewer owns the mapping between a form and the contract it publishes; a host is responsible for
-        // mapping its own data into that contract before handing it to the report viewer.
-        reportViewer.registerMapper({ name, version }, new OKTrafficMapper());
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         // the citation is a multi-part set on paper, and which pages a part carries depends on who receives it:
         // the violator is handed the complaint and the warrant, the court is filed the complaint and the supplement
@@ -92,15 +83,23 @@ export class OKTrafficModule implements IModule {
             getApplied: (controllers, all) => services.get<IOKTrafficService>(IOKTrafficService).getAppliedViolations(controllers, all)
         });
 
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
         catalog.registerCatalogItem({
             name,
             description,
+            type: "citation",
             version,
             ctor: OKTrafficFormModel,
             schema: OKTrafficFormSchema,
             formFactory: OKTrafficFormFactory,
-            component: () => import("./components").then(module => module.OKTrafficForm)
+            component: () => import("./components").then(module => module.OKTrafficForm),
+            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
+            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            mapper: new OKTrafficMapper(),
+            valueListIds: okTrafficValueLists.map(definition => definition.id),
+            violationListId: OKTrafficViolationListId.violation
         });
+
+        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
+        reportViewer.registerRoute("report-viewer", { path: "ok/traffic", lazy: () => import("./components").then(module => ({ Component: module.OKTrafficFormLoader })) });
     }
 }
