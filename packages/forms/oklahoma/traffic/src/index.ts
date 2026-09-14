@@ -1,7 +1,6 @@
 export * from "./module";
 
 export { bootstrapper as OKTrafficFormBootstrapper } from "./bootstrapper";
-export { OKTrafficFormLoader } from "./components";
 
 /** The data contract a host app maps its own record data to and from. */
 export type { IOKTrafficData, IOKTrafficViolationData } from "./mapping";

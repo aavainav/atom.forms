@@ -1,15 +1,10 @@
-import { FormCatalogModule, IFormCatalogItem } from "@forms/catalog";
-import { CitationForm, IFormIdentity } from "@forms/core";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
+import { FormCatalogModule } from "@forms/catalog";
+import { IFormIdentity } from "@forms/core";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
-import { ViolationsOption, ViolationsPanel } from "./components";
 import { IViolationBinding, IViolationListDefinition } from "./models";
 import { IViolationRegistrationService, IViolationSelectorService, IViolationService, ViolationSelectorService, ViolationService } from "./services";
 import { standardViolationLists } from "./violations";
-
-/** Where the violations option sits in the report viewer's options bar, between validate and save. */
-const violationsOptionOrder = 150;
 
 export const IViolationsConfiguration = createConfig<IViolationsConfiguration>();
 export interface IViolationsConfiguration {
@@ -23,12 +18,15 @@ export interface IViolationsConfiguration {
 }
 
 /**
- * Defines the violations module. It owns the registry of violations a citation can be written for, and adds the
- * selector -- an option in the report viewer's bar and the panel it opens -- to the forms that declare a binding.
+ * Defines the violations module. It owns the registry of violations a citation can be written for, and the
+ * selector -- an option and the panel it opens -- that puts a chosen one onto a form. Which forms are offered the
+ * selector is not decided here: a catalog item declares its `violationListId`, and whoever renders the form reads
+ * that and mounts `ViolationsOption`/`ViolationsPanel` accordingly. That keeps this package below the one doing
+ * the rendering rather than reaching up into it.
  */
 export class ViolationsModule implements IModule {
     readonly name = "forms-violations";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule];
+    readonly dependencies = [FormCatalogModule];
 
     initialize(init: IModuleInitializer): void {
         init.config(IViolationsConfiguration).register(({ services }: IModuleConfigurator) => ({
@@ -45,7 +43,7 @@ export class ViolationsModule implements IModule {
         registration.registerSingleton<IViolationRegistrationService, ViolationService>(IViolationRegistrationService, violationServiceFactory);
     }
 
-    configure({ config, services }: IModuleConfigurator): void {
+    configure({ services }: IModuleConfigurator): void {
         // the bundled lists go in first so a module depending on this one, which configures later, can replace any
         // of them by registering over its id
         const registration = services.get<IViolationRegistrationService>(IViolationRegistrationService);
@@ -53,19 +51,5 @@ export class ViolationsModule implements IModule {
         for (const definition of standardViolationLists) {
             registration.registerList(definition);
         }
-
-        const violationService = services.get<IViolationService>(IViolationService);
-
-        // the selector is offered only where it can actually do something: the form has declared how it takes a
-        // violation, and it is a citation. the registration is the working gate -- a form that declared nothing has
-        // nowhere to put a charge -- while the citation check states the rule the feature is bound by rather than
-        // leaving it to be inferred from which forms happened to register.
-        const canShow = (catalogItem: IFormCatalogItem): boolean =>
-            !!violationService.getBinding(catalogItem) && catalogItem.ctor.prototype instanceof CitationForm;
-
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-
-        reportViewer.registerOption({ id: "violations", order: violationsOptionOrder, title: "Violations", Component: ViolationsOption, canShow });
-        reportViewer.registerPanel({ id: "violations", Component: ViolationsPanel, canShow });
     }
 }

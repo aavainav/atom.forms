@@ -1,6 +1,6 @@
 # `@forms/tr310` — SC TR-310 Traffic Collision Report
 
-Catalog identity: **name `"SC TR-310 - Traffic Collision Report"`, version `"1.0"`**. Route `sc/tr310`. Module name
+Catalog identity: **name `"SC TR-310 - Traffic Collision Report"`, version `"1.0"`**. Sandbox route `sc/tr310`, which the host owns. Module name
 `tr310-crash-form`. Form type `"crash"` (extends `CrashForm`). Form factory version string `"v2024"`.
 SC TR-310 (Rev. 7/2024).
 

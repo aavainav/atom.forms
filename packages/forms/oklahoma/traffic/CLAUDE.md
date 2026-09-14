@@ -1,6 +1,6 @@
 # `@forms/ok-traffic` — OKC Traffic Citation
 
-Catalog identity: **name `"OKC Traffic Citation"`, version `"1.0"`**. Route `ok/traffic`. Module name
+Catalog identity: **name `"OKC Traffic Citation"`, version `"1.0"`**. Sandbox route `ok/traffic`, which the host owns. Module name
 `ok-traffic-form`. Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2026"`.
 
 Oklahoma City Municipal Court traffic citation and complaint. Three pages, all fixed, a synchronous mapper, ~101

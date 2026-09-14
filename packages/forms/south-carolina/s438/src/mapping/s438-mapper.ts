@@ -58,7 +58,7 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
      * value it already holds - which is how the date of violation and ticket number the form stamps on itself
      * survive a partial record.
      */
-    public async populate(form: S438FormModel, data: IS438Data): Promise<S438FormModel> {
+    public async populate(form: S438FormModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): Promise<S438FormModel> {
         const additional = data.additionalViolations ?? [];
 
         let updated = form;
@@ -73,13 +73,13 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         collection.getPages<FrontPageModel>().forEach((page, index) => {
             // the shared sections are written onto every page rather than only the first: a page created here does
             // not go through the form controller, which is what would otherwise have copied them across
-            let result = page.set(page.violatorSection, this.populateViolator(page.getViolatorSection(), data));
-            result = result.set(result.vehicleSection, this.populateVehicle(result.getVehicleSection(), data));
-            result = result.set(result.ownerSection, this.populateOwner(result.getOwnerSection(), data));
-            result = result.set(result.courtSection, this.populateCourt(result.getCourtSection(), data));
-            result = result.set(result.violationLocationSection, this.populateViolationLocation(result.getViolationLocationSection(), data));
-            result = result.set(result.arrestingOfficerSection, this.populateArrestingOfficer(result.getArrestingOfficerSection(), data));
-            result = result.set(result.footerSection, this.populateFooter(result.getFooterSection(), data));
+            let result = page.set(page.violatorSection, this.populateViolator(page.getViolatorSection(), data, readOnlyFields));
+            result = result.set(result.vehicleSection, this.populateVehicle(result.getVehicleSection(), data, readOnlyFields));
+            result = result.set(result.ownerSection, this.populateOwner(result.getOwnerSection(), data, readOnlyFields));
+            result = result.set(result.courtSection, this.populateCourt(result.getCourtSection(), data, readOnlyFields));
+            result = result.set(result.violationLocationSection, this.populateViolationLocation(result.getViolationLocationSection(), data, readOnlyFields));
+            result = result.set(result.arrestingOfficerSection, this.populateArrestingOfficer(result.getArrestingOfficerSection(), data, readOnlyFields));
+            result = result.set(result.footerSection, this.populateFooter(result.getFooterSection(), data, readOnlyFields));
 
             // the violation is the one section that differs page to page; the first comes from the flat fields and
             // the rest from the array, and a page the data does not reach keeps what it holds
@@ -116,27 +116,27 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "violatorZipCode", section.getZipCode());
     }
 
-    private populateViolator(section: ViolatorSectionModel, data: IS438Data): ViolatorSectionModel {
-        let updated = this.write(section, section.city, data.violatorCity);
-        updated = this.write(updated, section.commercialDriverLicenseNo, data.violatorCommercialDriverLicenseNo);
-        updated = this.write(updated, section.commercialDriverLicenseYes, data.violatorCommercialDriverLicenseYes);
-        updated = this.write(updated, section.dateOfBirth, data.violatorDateOfBirth);
-        updated = this.write(updated, section.driverLicenseClass, data.violatorDriverLicenseClass);
-        updated = this.write(updated, section.driverLicenseNumber, data.violatorDriverLicenseNumber);
-        updated = this.write(updated, section.driverLicenseState, data.violatorDriverLicenseState);
-        updated = this.write(updated, section.eyeColor, data.violatorEyeColor);
-        updated = this.write(updated, section.firstName, data.violatorFirstName);
-        updated = this.write(updated, section.hairColor, data.violatorHairColor);
-        updated = this.write(updated, section.height, data.violatorHeight);
-        updated = this.write(updated, section.lastName, data.violatorLastName);
-        updated = this.write(updated, section.middleName, data.violatorMiddleName);
-        updated = this.write(updated, section.race, data.violatorRace);
-        updated = this.write(updated, section.sex, data.violatorSex);
-        updated = this.write(updated, section.state, data.violatorState);
-        updated = this.write(updated, section.streetAddress, data.violatorStreetAddress);
-        updated = this.write(updated, section.weight, data.violatorWeight);
+    private populateViolator(section: ViolatorSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): ViolatorSectionModel {
+        let updated = this.write(section, section.city, data, "violatorCity", readOnlyFields);
+        updated = this.write(updated, section.commercialDriverLicenseNo, data, "violatorCommercialDriverLicenseNo", readOnlyFields);
+        updated = this.write(updated, section.commercialDriverLicenseYes, data, "violatorCommercialDriverLicenseYes", readOnlyFields);
+        updated = this.write(updated, section.dateOfBirth, data, "violatorDateOfBirth", readOnlyFields);
+        updated = this.write(updated, section.driverLicenseClass, data, "violatorDriverLicenseClass", readOnlyFields);
+        updated = this.write(updated, section.driverLicenseNumber, data, "violatorDriverLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.driverLicenseState, data, "violatorDriverLicenseState", readOnlyFields);
+        updated = this.write(updated, section.eyeColor, data, "violatorEyeColor", readOnlyFields);
+        updated = this.write(updated, section.firstName, data, "violatorFirstName", readOnlyFields);
+        updated = this.write(updated, section.hairColor, data, "violatorHairColor", readOnlyFields);
+        updated = this.write(updated, section.height, data, "violatorHeight", readOnlyFields);
+        updated = this.write(updated, section.lastName, data, "violatorLastName", readOnlyFields);
+        updated = this.write(updated, section.middleName, data, "violatorMiddleName", readOnlyFields);
+        updated = this.write(updated, section.race, data, "violatorRace", readOnlyFields);
+        updated = this.write(updated, section.sex, data, "violatorSex", readOnlyFields);
+        updated = this.write(updated, section.state, data, "violatorState", readOnlyFields);
+        updated = this.write(updated, section.streetAddress, data, "violatorStreetAddress", readOnlyFields);
+        updated = this.write(updated, section.weight, data, "violatorWeight", readOnlyFields);
 
-        return this.write(updated, section.zipCode, data.violatorZipCode);
+        return this.write(updated, section.zipCode, data, "violatorZipCode", readOnlyFields);
     }
 
     private extractVehicle(section: VehicleSectionModel, data: FormValues<IS438Data>): void {
@@ -155,21 +155,21 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IS438Data): VehicleSectionModel {
-        let updated = this.write(section, section.auto, data.vehicleAuto);
-        updated = this.write(updated, section.bicycle, data.vehicleBicycle);
-        updated = this.write(updated, section.combination, data.vehicleCombination);
-        updated = this.write(updated, section.commercial, data.vehicleCommercialVehicle);
-        updated = this.write(updated, section.hazardousMaterials, data.vehicleHazardousMaterials);
-        updated = this.write(updated, section.licenseNumber, data.vehicleLicenseNumber);
-        updated = this.write(updated, section.licenseState, data.vehicleLicenseState);
-        updated = this.write(updated, section.make, data.vehicleMake);
-        updated = this.write(updated, section.moped, data.vehicleMoped);
-        updated = this.write(updated, section.motorcycle, data.vehicleMotorcycle);
-        updated = this.write(updated, section.other, data.vehicleOther);
-        updated = this.write(updated, section.pedestrian, data.vehiclePedestrian);
+    private populateVehicle(section: VehicleSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): VehicleSectionModel {
+        let updated = this.write(section, section.auto, data, "vehicleAuto", readOnlyFields);
+        updated = this.write(updated, section.bicycle, data, "vehicleBicycle", readOnlyFields);
+        updated = this.write(updated, section.combination, data, "vehicleCombination", readOnlyFields);
+        updated = this.write(updated, section.commercial, data, "vehicleCommercialVehicle", readOnlyFields);
+        updated = this.write(updated, section.hazardousMaterials, data, "vehicleHazardousMaterials", readOnlyFields);
+        updated = this.write(updated, section.licenseNumber, data, "vehicleLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.licenseState, data, "vehicleLicenseState", readOnlyFields);
+        updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
+        updated = this.write(updated, section.moped, data, "vehicleMoped", readOnlyFields);
+        updated = this.write(updated, section.motorcycle, data, "vehicleMotorcycle", readOnlyFields);
+        updated = this.write(updated, section.other, data, "vehicleOther", readOnlyFields);
+        updated = this.write(updated, section.pedestrian, data, "vehiclePedestrian", readOnlyFields);
 
-        return this.write(updated, section.year, data.vehicleYear);
+        return this.write(updated, section.year, data, "vehicleYear", readOnlyFields);
     }
 
     private extractOwner(section: OwnerSectionModel, data: FormValues<IS438Data>): void {
@@ -182,15 +182,15 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "ownerZipCode", section.getZipCode());
     }
 
-    private populateOwner(section: OwnerSectionModel, data: IS438Data): OwnerSectionModel {
-        let updated = this.write(section, section.city, data.ownerCity);
-        updated = this.write(updated, section.firstName, data.ownerFirstName);
-        updated = this.write(updated, section.lastName, data.ownerLastName);
-        updated = this.write(updated, section.middleName, data.ownerMiddleName);
-        updated = this.write(updated, section.state, data.ownerState);
-        updated = this.write(updated, section.streetAddress, data.ownerStreetAddress);
+    private populateOwner(section: OwnerSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): OwnerSectionModel {
+        let updated = this.write(section, section.city, data, "ownerCity", readOnlyFields);
+        updated = this.write(updated, section.firstName, data, "ownerFirstName", readOnlyFields);
+        updated = this.write(updated, section.lastName, data, "ownerLastName", readOnlyFields);
+        updated = this.write(updated, section.middleName, data, "ownerMiddleName", readOnlyFields);
+        updated = this.write(updated, section.state, data, "ownerState", readOnlyFields);
+        updated = this.write(updated, section.streetAddress, data, "ownerStreetAddress", readOnlyFields);
 
-        return this.write(updated, section.zipCode, data.ownerZipCode);
+        return this.write(updated, section.zipCode, data, "ownerZipCode", readOnlyFields);
     }
 
     private extractCourt(section: CourtSectionModel, data: FormValues<IS438Data>): void {
@@ -203,15 +203,15 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "courtZipCode", section.getZipCode());
     }
 
-    private populateCourt(section: CourtSectionModel, data: IS438Data): CourtSectionModel {
-        let updated = this.write(section, section.city, data.courtCity);
-        updated = this.write(updated, section.dateOfTrial, data.courtDateOfTrial);
-        updated = this.write(updated, section.courtName, data.courtName);
-        updated = this.write(updated, section.state, data.courtState);
-        updated = this.write(updated, section.streetAddress, data.courtStreetAddress);
-        updated = this.write(updated, section.timeOfTrial, data.courtTimeOfTrial);
+    private populateCourt(section: CourtSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): CourtSectionModel {
+        let updated = this.write(section, section.city, data, "courtCity", readOnlyFields);
+        updated = this.write(updated, section.dateOfTrial, data, "courtDateOfTrial", readOnlyFields);
+        updated = this.write(updated, section.courtName, data, "courtName", readOnlyFields);
+        updated = this.write(updated, section.state, data, "courtState", readOnlyFields);
+        updated = this.write(updated, section.streetAddress, data, "courtStreetAddress", readOnlyFields);
+        updated = this.write(updated, section.timeOfTrial, data, "courtTimeOfTrial", readOnlyFields);
 
-        return this.write(updated, section.zipCode, data.courtZipCode);
+        return this.write(updated, section.zipCode, data, "courtZipCode", readOnlyFields);
     }
 
     private extractViolation(section: ViolationSectionModel, data: FormValues<IS438ViolationData>): void {
@@ -242,15 +242,15 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
      * the first violation, which sits flat on the record, and the rest, which sit in `additionalViolations`.
      */
     private populateViolation(section: ViolationSectionModel, data: IS438ViolationData): ViolationSectionModel {
-        let updated = this.write(section, section.bloodAlcoholLevel, data.violationBloodAlcoholLevel);
-        updated = this.write(updated, section.courtAppearanceRequiredNo, data.violationCourtAppearanceRequiredNo);
-        updated = this.write(updated, section.courtAppearanceRequiredYes, data.violationCourtAppearanceRequiredYes);
-        updated = this.write(updated, section.dateOfViolation, data.violationDateOfViolation);
-        updated = this.write(updated, section.description, data.violationDescription);
-        updated = this.write(updated, section.scPoints, data.violationScPoints);
-        updated = this.write(updated, section.sectionNumber, data.violationSectionNumber);
+        let updated = this.write(section, section.bloodAlcoholLevel, data, "violationBloodAlcoholLevel");
+        updated = this.write(updated, section.courtAppearanceRequiredNo, data, "violationCourtAppearanceRequiredNo");
+        updated = this.write(updated, section.courtAppearanceRequiredYes, data, "violationCourtAppearanceRequiredYes");
+        updated = this.write(updated, section.dateOfViolation, data, "violationDateOfViolation");
+        updated = this.write(updated, section.description, data, "violationDescription");
+        updated = this.write(updated, section.scPoints, data, "violationScPoints");
+        updated = this.write(updated, section.sectionNumber, data, "violationSectionNumber");
 
-        return this.write(updated, section.timeOfViolation, data.violationTimeOfViolation);
+        return this.write(updated, section.timeOfViolation, data, "violationTimeOfViolation");
     }
 
     private extractViolationLocation(section: ViolationLocationSectionModel, data: FormValues<IS438Data>): void {
@@ -261,13 +261,13 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "violationLocationLongitude", section.getLongitude());
     }
 
-    private populateViolationLocation(section: ViolationLocationSectionModel, data: IS438Data): ViolationLocationSectionModel {
-        let updated = this.write(section, section.violationLocation, data.violationLocation);
-        updated = this.write(updated, section.violationLocationCity, data.violationLocationCity);
-        updated = this.write(updated, section.violationLocationCounty, data.violationLocationCounty);
-        updated = this.write(updated, section.violationLocationLatitude, data.violationLocationLatitude);
+    private populateViolationLocation(section: ViolationLocationSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): ViolationLocationSectionModel {
+        let updated = this.write(section, section.violationLocation, data, "violationLocation", readOnlyFields);
+        updated = this.write(updated, section.violationLocationCity, data, "violationLocationCity", readOnlyFields);
+        updated = this.write(updated, section.violationLocationCounty, data, "violationLocationCounty", readOnlyFields);
+        updated = this.write(updated, section.violationLocationLatitude, data, "violationLocationLatitude", readOnlyFields);
 
-        return this.write(updated, section.violationLocationLongitude, data.violationLocationLongitude);
+        return this.write(updated, section.violationLocationLongitude, data, "violationLocationLongitude", readOnlyFields);
     }
 
     private extractArrestingOfficer(section: ArrestingOfficerSectionModel, data: FormValues<IS438Data>): void {
@@ -279,21 +279,21 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "arrestingOfficerSccjaOfficerNumber", section.getSccjaOfficerNumber());
     }
 
-    private populateArrestingOfficer(section: ArrestingOfficerSectionModel, data: IS438Data): ArrestingOfficerSectionModel {
-        let updated = this.write(section, section.bailDeposited, data.arrestingOfficerBailDeposited);
-        updated = this.write(updated, section.bondAmountRequested, data.arrestingOfficerBondAmountRequested);
-        updated = this.write(updated, section.dateOfArrest, data.arrestingOfficerDateOfArrest);
-        updated = this.write(updated, section.officerName, data.arrestingOfficerName);
-        updated = this.write(updated, section.officerRank, data.arrestingOfficerRank);
+    private populateArrestingOfficer(section: ArrestingOfficerSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): ArrestingOfficerSectionModel {
+        let updated = this.write(section, section.bailDeposited, data, "arrestingOfficerBailDeposited", readOnlyFields);
+        updated = this.write(updated, section.bondAmountRequested, data, "arrestingOfficerBondAmountRequested", readOnlyFields);
+        updated = this.write(updated, section.dateOfArrest, data, "arrestingOfficerDateOfArrest", readOnlyFields);
+        updated = this.write(updated, section.officerName, data, "arrestingOfficerName", readOnlyFields);
+        updated = this.write(updated, section.officerRank, data, "arrestingOfficerRank", readOnlyFields);
 
-        return this.write(updated, section.sccjaOfficerNumber, data.arrestingOfficerSccjaOfficerNumber);
+        return this.write(updated, section.sccjaOfficerNumber, data, "arrestingOfficerSccjaOfficerNumber", readOnlyFields);
     }
 
     private extractFooter(section: FooterSectionModel, data: FormValues<IS438Data>): void {
         this.read(data, "footerTicketNumber", section.getTicketNumber());
     }
 
-    private populateFooter(section: FooterSectionModel, data: IS438Data): FooterSectionModel {
-        return this.write(section, section.ticketNumber, data.footerTicketNumber);
+    private populateFooter(section: FooterSectionModel, data: IS438Data, readOnlyFields?: ReadonlySet<keyof IS438Data>): FooterSectionModel {
+        return this.write(section, section.ticketNumber, data, "footerTicketNumber", readOnlyFields);
     }
 }

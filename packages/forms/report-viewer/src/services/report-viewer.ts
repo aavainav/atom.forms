@@ -1,15 +1,50 @@
 import { ComponentType } from "react";
-import { IFormCatalogItem, IFormComponentProps, IFormDataContext } from "@forms/catalog";
-import { FormFactory, FormModel, IControllerManager, IFormIdentity, IReportViewerData } from "@forms/core";
+import { IFormCatalogItem, IFormCatalogService, IFormComponentProps } from "@forms/catalog";
+import { FormFactory, FormModel, IControllerManager, IFormIdentity, IModalOptions, IReportViewerData } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
-import { IReportViewerOptions } from "../options";
-
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
-export const IReportViewerRegistrationService = createService<IReportViewerRegistrationService>("forms-report-viewer-registration-service");
+export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
 
-/** Identifies a specific catalog form to load, for hosts that are already bound to one form rather than resolving it from the loaded data. Every part is optional, since an omitted one falls back to the loaded data. */
-export type IFormReportIdentity = Partial<IFormIdentity>;
+/**
+ * Defines the host's side of a form's data: where the record the form is populated from comes from, and where the
+ * data the form publishes goes back to. It is handed to the report viewer as a prop rather than registered
+ * anywhere, so a host holds one per record it is showing rather than one per form.
+ */
+export interface IDataManager<TData extends object = IReportViewerData> {
+    /**
+     * Reads the host's record and transforms it into the contract the form publishes. Resolving `undefined` loads
+     * a blank form; there is no separate notion of defaults, so a host with no record yet simply answers with the
+     * values a new one should start with.
+     *
+     * It takes no arguments: the host owns its own routing, so a manager closes over whichever record it was built
+     * for rather than being handed a context to guess from.
+     */
+    read(): Promise<IDataManagerResult<TData> | undefined>;
+    /**
+     * Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable.
+     *
+     * This always takes the full `IReportViewerData` rather than `TData`: `extractData` stamps `name`/`status`/
+     * `type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never just the
+     * contract that went in. Because this signature doesn't depend on `TData`, everything downstream of the load
+     * (the options bar, `saveForm`) types its `dataManager` as `IDataManager<any>` rather than threading the
+     * specific `TData` through props that never call `read()` and so never need to know it.
+     */
+    write?(data: IReportViewerData): Promise<void>;
+}
+
+/** Defines what a data manager read. */
+export interface IDataManagerResult<TData extends object = IReportViewerData> {
+    /** The record, in the shape the target form's own contract publishes. */
+    readonly data: TData;
+    /**
+     * Which of `data`'s own fields come back locked rather than editable -- a value the host considers settled
+     * rather than an editable suggestion. It is typed against the contract, so a misspelled key is a compile error
+     * rather than a silent no-op, and it is an array because a host writes a literal here. A field the form's
+     * mapper has not wired up for locking (see `FormMapper.write`) stays editable regardless of being named.
+     */
+    readonly readOnlyFields?: ReadonlyArray<keyof TData & string>;
+}
 
 /** Describes a form resolved from the form catalog and ready to render. */
 export interface IInitialForm {
@@ -24,64 +59,53 @@ export interface IInitialForm {
 }
 
 export interface IReportViewerService {
-    /** Gets whether forms should render read-only by default, from the module options/settings. */
-    readonly isReadOnly: boolean;
     /** Gets whether the given catalog item's report data can be extracted, which it can once it carries a mapper. */
     canExtractData: (catalogItem: IFormCatalogItem) => boolean;
-    /** Gets whether the given catalog item's form can be saved, which it can once it carries both a mapper and a data writer. */
-    canSaveForm: (catalogItem: IFormCatalogItem) => boolean;
+    /** Gets whether the given catalog item's form can be saved, which it can once it carries a mapper and the data manager can write. */
+    canSaveForm: (catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>) => boolean;
     /**
      * Extracts the report data the given form publishes, stamped with the identity the form model carries. The
-     * catalog item's mapper is what does the extracting. This is the data `saveForm` hands to the catalog item's
-     * data writer, without persisting any of it.
+     * catalog item's mapper is what does the extracting. This is the data `saveForm` hands to the data manager,
+     * without persisting any of it.
      */
     extractData: (form: FormModel, catalogItem: IFormCatalogItem) => IReportViewerData;
-    /** Gets the options registered for the given form, in the order they are rendered in the options bar. */
-    getOptions: (catalogItem: IFormCatalogItem) => Array<IReportViewerOption>;
-    /** Gets the panels registered for the given form, which are mounted at the report viewer's root. */
-    getPanels: (catalogItem: IFormCatalogItem) => Array<IReportViewerPanel>;
+    /** Gets the options the given form offers, in the order they are rendered in the options bar. */
+    getOptions: (catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>) => Array<IReportViewerOption>;
     /**
-     * Builds the given catalog item's form and populates it with `data`, via the catalog item's own mapper.
-     * `readOnlyFields` names which of the data's own fields should come back locked rather than editable, and is
-     * meaningful only when the catalog item's mapper has wired those fields up for locking (see `FormMapper.write`).
+     * Resolves the identified form from the catalog, builds it, and populates it with whatever the data manager
+     * reads, through the catalog item's own mapper. A manager that reads nothing, or a form with no mapper, simply
+     * leaves the form as the factory built it.
      */
-    loadForm: (catalogItem: IFormCatalogItem, data: IReportViewerData | undefined, readOnlyFields?: ReadonlySet<string>) => Promise<IInitialForm>;
+    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IDataManager<TData>) => Promise<IInitialForm>;
     /**
-     * Resolves the report data for the given context through the catalog item's own data reader, and loads the
-     * item's form populated with it. When the reader has nothing to load, falls back to its `getDefaultData` so a
-     * newly created record starts with whatever defaults the catalog item's reader has configured, locking
-     * whichever of them it named.
+     * Extracts report data from the given form and hands it to the data manager, if it can write. The data is
+     * returned whether or not it was consumed, so a host that persists the data itself can use this too.
      */
-    loadFormReport: (catalogItem: IFormCatalogItem, context: IFormDataContext) => Promise<IInitialForm>;
-    /**
-     * Extracts report data from the given form and hands it to the catalog item's data writer, if it has one. The
-     * data is returned whether or not a writer consumed it, so a host that persists the data itself can use this too.
-     */
-    saveForm: (form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext) => Promise<IReportViewerData>;
+    saveForm: (form: FormModel, catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>) => Promise<IReportViewerData>;
 }
 
-/** Defines an option rendered in the report viewer's options bar. */
+/** Describes an option offered in the report viewer's options bar, in the order the bar renders them. */
 export interface IReportViewerOption {
     /** Identifies the option; registering the same id twice throws. */
     readonly id: string;
-    /** Where the option sits in the bar, ascending. The report viewer's own are validate 100, save 200 and day/night 900. */
-    readonly order: number;
     /** What the option is called, shown as its tooltip and by anything listing what a form offers. */
     readonly title: string;
-    /** The component rendered for the option. */
+    /** The component rendered for the option. Every one of them is loaded lazily, so the bar renders them under a suspense boundary. */
     readonly Component: ComponentType<IReportViewerOptionProps>;
     /** Whether the option is offered for the given form; it is always offered when omitted. */
-    readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
+    readonly canShow?: (catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>) => boolean;
 }
 
-/** Defines a panel rendered at the report viewer's root, alongside the modal, notification and validation managers. */
-export interface IReportViewerPanel {
-    /** Identifies the panel; registering the same id twice throws. */
-    readonly id: string;
-    /** The component rendered for the panel. It is mounted for as long as the form is, and decides for itself whether it is showing. */
-    readonly Component: ComponentType<IReportViewerPanelProps>;
-    /** Whether the panel is mounted for the given form; it is always mounted when omitted. */
-    readonly canShow?: (catalogItem: IFormCatalogItem) => boolean;
+/**
+ * Defines a service for registering an option to render in the report viewer's options bar. `ReportViewerModule`
+ * is the only thing that calls this today, registering its own six built-ins from its own `configure()` -- the
+ * report viewer stays the sole importer of `@forms/violations`/`@forms/printing` rather than having them register
+ * up into it, which is what keeps the dependency direction one-way. The seam is public rather than private to that
+ * module because it is the natural extension point for a host that wants to add its own option.
+ */
+export interface IReportViewerOptionRegistrationService {
+    /** Registers an option to render in the report viewer's options bar. Registering the same id twice throws. */
+    registerOption: (option: IReportViewerOption) => void;
 }
 
 /** Defines the props handed to every panel mounted at the report viewer's root. */
@@ -90,42 +114,41 @@ export interface IReportViewerPanelProps {
     readonly catalogItem: IFormCatalogItem;
     /** The controllers belonging to the form the panel acts on. */
     readonly controllers: IControllerManager;
+    /** Reports a failure to the user through the report viewer's own notifications. */
+    readonly onError: (message: string) => void;
 }
 
 /** Defines the props handed to every option rendered in the report viewer's options bar. */
 export interface IReportViewerOptionProps extends IReportViewerPanelProps {
-    /** The name the option was registered under, which it shows as its tooltip. */
+    /** The name the option is offered under, which it shows as its tooltip. */
     readonly title: string;
+    /** The data manager the form was rendered with, if any. Save writes through it. */
+    readonly dataManager?: IDataManager<any>;
+    /** Opens a modal at the report viewer's root -- never inside the options bar, which is a stacking context. */
+    readonly showModal: (options: IModalOptions) => void;
 }
 
-/** Defines a service for registering forms with the report viewer. */
-export interface IReportViewerRegistrationService {
-    /** Registers an option to render in the report viewer's options bar. Only one option may be registered per id. */
-    registerOption: (option: IReportViewerOption) => void;
-    /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs. Only one panel may be registered per id. */
-    registerPanel: (panel: IReportViewerPanel) => void;
-}
+/** Gets whether the given catalog item's report data can be extracted, which it can once it carries a mapper. */
+export const canExtractData = (catalogItem: IFormCatalogItem): boolean => !!catalogItem.mapper;
+
+// saving needs both halves: a mapper to extract the data and somewhere to hand it to. with a mapper and no writer
+// the data would be extracted, dropped, and the report still reported as saved.
+/** Gets whether the given catalog item's form can be saved, which it can once it carries a mapper and the data manager can write. */
+export const canSaveForm = (catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>): boolean => !!catalogItem.mapper && !!dataManager?.write;
 
 @Singleton
-export class ReportViewerService implements IReportViewerService, IReportViewerRegistrationService {
-    private readonly _options: Map<string, IReportViewerOption> = new Map<string, IReportViewerOption>();
-    private readonly _panels: Map<string, IReportViewerPanel> = new Map<string, IReportViewerPanel>();
+export class ReportViewerService implements IReportViewerService, IReportViewerOptionRegistrationService {
+    private readonly options = new Map<string, IReportViewerOption>();
 
-    constructor(@IReportViewerOptions private readonly options: IReportViewerOptions) {
-    }
-
-    get isReadOnly(): boolean {
-        return this.options.isReadOnly ?? false;
+    constructor(@IFormCatalogService private readonly formCatalogService: IFormCatalogService) {
     }
 
     canExtractData(catalogItem: IFormCatalogItem): boolean {
-        return !!catalogItem.mapper;
+        return canExtractData(catalogItem);
     }
 
-    canSaveForm(catalogItem: IFormCatalogItem): boolean {
-        // save is only offered when the data can both be extracted and be put somewhere; without a writer the
-        // extracted data would be discarded and the user still told the report had been saved
-        return !!catalogItem.mapper && !!catalogItem.dataWriter;
+    canSaveForm(catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>): boolean {
+        return canSaveForm(catalogItem, dataManager);
     }
 
     extractData(form: FormModel, catalogItem: IFormCatalogItem): IReportViewerData {
@@ -143,63 +166,45 @@ export class ReportViewerService implements IReportViewerService, IReportViewerR
         };
     }
 
-    getOptions(catalogItem: IFormCatalogItem): Array<IReportViewerOption> {
-        return Array.from(this._options.values())
-            .filter(option => !option.canShow || option.canShow(catalogItem))
-            .sort((a, b) => a.order - b.order);
+    /** Gets the registered options offered for the given form, in the order they were registered. */
+    getOptions(catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>): Array<IReportViewerOption> {
+        return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(catalogItem, dataManager));
     }
 
-    getPanels(catalogItem: IFormCatalogItem): Array<IReportViewerPanel> {
-        // panels are not ordered: each one positions itself against an edge of the viewport rather than sharing a
-        // strip with the others, so there is nothing for an order to mean
-        return Array.from(this._panels.values()).filter(panel => !panel.canShow || panel.canShow(catalogItem));
-    }
-
-    async loadForm(catalogItem: IFormCatalogItem, data: IReportViewerData | undefined, readOnlyFields?: ReadonlySet<string>): Promise<IInitialForm> {
+    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IDataManager<TData>): Promise<IInitialForm> {
+        const catalogItem = await this.formCatalogService.get(identity);
         const Component = await catalogItem.component();
         const formFactory = new catalogItem.formFactory();
         let form = await formFactory.createForm().initialize();
 
-        if (data && catalogItem.mapper) {
+        const result = await dataManager?.read();
+
+        if (result && catalogItem.mapper) {
+            // the mapper takes the locked fields as a set because that is what it looks them up in, while the host
+            // hands them over as an array because that is what a caller writes
+            const readOnlyFields = result.readOnlyFields && new Set<string>(result.readOnlyFields);
+
             // a mapper for a form whose pages repeat has to create a page per record the data carries, which it
             // can only do asynchronously; one for a form of fixed pages returns the form itself and this awaits nothing
-            form = await catalogItem.mapper.populate(form, data, readOnlyFields);
+            form = await catalogItem.mapper.populate(form, <IReportViewerData><unknown>result.data, readOnlyFields);
         }
 
         return { catalogItem, form, formFactory, Component };
     }
 
-    async loadFormReport(catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IInitialForm> {
-        const data = await catalogItem.dataReader?.getData(context);
-        if (data) {
-            return this.loadForm(catalogItem, data);
-        }
-
-        const defaults = await catalogItem.dataReader?.getDefaultData?.(context);
-        return this.loadForm(catalogItem, defaults?.data, defaults?.readOnlyFields);
-    }
-
-    async saveForm(form: FormModel, catalogItem: IFormCatalogItem, context: IFormDataContext): Promise<IReportViewerData> {
-        const data = this.extractData(form, catalogItem);
-
-        await catalogItem.dataWriter?.saveData(data, context);
-
-        return data;
-    }
-
     registerOption(option: IReportViewerOption): void {
-        if (this._options.has(option.id)) {
+        if (this.options.has(option.id)) {
             throw new Error(`An option with the id of ${option.id} has already been registered with the report viewer.`);
         }
 
-        this._options.set(option.id, option);
+        this.options.set(option.id, option);
     }
 
-    registerPanel(panel: IReportViewerPanel): void {
-        if (this._panels.has(panel.id)) {
-            throw new Error(`A panel with the id of ${panel.id} has already been registered with the report viewer.`);
-        }
+    async saveForm(form: FormModel, catalogItem: IFormCatalogItem, dataManager?: IDataManager<any>): Promise<IReportViewerData> {
+        const data = this.extractData(form, catalogItem);
 
-        this._panels.set(panel.id, panel);
+        await dataManager?.write?.(data);
+
+        return data;
     }
 }

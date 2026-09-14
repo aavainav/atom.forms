@@ -50,14 +50,14 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         const page = collection.getFirstPage<RecordPageModel>();
 
         let updated = page.set(page.agencySection, this.populateAgency(page.getAgencySection(), data, readOnlyFields));
-        updated = updated.set(updated.personSection, this.populatePerson(updated.getPersonSection(), data));
-        updated = updated.set(updated.routeSection, this.populateRoute(updated.getRouteSection(), data));
-        updated = updated.set(updated.stopSection, this.populateStop(updated.getStopSection(), data));
-        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-        updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
-        updated = updated.set(updated.natureOfContactSection, this.populateNatureOfContact(updated.getNatureOfContactSection(), data));
-        updated = updated.set(updated.primaryReasonSection, this.populatePrimaryReason(updated.getPrimaryReasonSection(), data));
-        updated = updated.set(updated.searchesSection, this.populateSearches(updated.getSearchesSection(), data));
+        updated = updated.set(updated.personSection, this.populatePerson(updated.getPersonSection(), data, readOnlyFields));
+        updated = updated.set(updated.routeSection, this.populateRoute(updated.getRouteSection(), data, readOnlyFields));
+        updated = updated.set(updated.stopSection, this.populateStop(updated.getStopSection(), data, readOnlyFields));
+        updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data, readOnlyFields));
+        updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data, readOnlyFields));
+        updated = updated.set(updated.natureOfContactSection, this.populateNatureOfContact(updated.getNatureOfContactSection(), data, readOnlyFields));
+        updated = updated.set(updated.primaryReasonSection, this.populatePrimaryReason(updated.getPrimaryReasonSection(), data, readOnlyFields));
+        updated = updated.set(updated.searchesSection, this.populateSearches(updated.getSearchesSection(), data, readOnlyFields));
 
         return form.set(form.recordPage, collection.replace(0, updated));
     }
@@ -69,10 +69,10 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
     }
 
     private populateAgency(section: AgencySectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): AgencySectionModel {
-        let updated = this.write(section, section.city, data.agencyCity, "agencyCity", readOnlyFields);
-        updated = this.write(updated, section.county, data.agencyCounty, "agencyCounty", readOnlyFields);
+        let updated = this.write(section, section.city, data, "agencyCity", readOnlyFields);
+        updated = this.write(updated, section.county, data, "agencyCounty", readOnlyFields);
 
-        return this.write(updated, section.agencyName, data.agencyName, "agencyName", readOnlyFields);
+        return this.write(updated, section.agencyName, data, "agencyName", readOnlyFields);
     }
 
     private extractPerson(section: PersonSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -88,18 +88,18 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "personRace", section.getRace());
     }
 
-    private populatePerson(section: PersonSectionModel, data: IPublicContactOrWarningData): PersonSectionModel {
-        let updated = this.write(section, section.dateOfBirth, data.personDateOfBirth);
-        updated = this.write(updated, section.driverLicenseNumber, data.personDriverLicenseNumber);
-        updated = this.write(updated, section.firstName, data.personFirstName);
-        updated = this.write(updated, section.gender, data.personGender);
-        updated = this.write(updated, section.lastName, data.personLastName);
-        updated = this.write(updated, section.latitude, data.personLatitude);
-        updated = this.write(updated, section.licensedState, data.personLicensedState);
-        updated = this.write(updated, section.longitude, data.personLongitude);
-        updated = this.write(updated, section.middleInitial, data.personMiddleInitial);
+    private populatePerson(section: PersonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PersonSectionModel {
+        let updated = this.write(section, section.dateOfBirth, data, "personDateOfBirth", readOnlyFields);
+        updated = this.write(updated, section.driverLicenseNumber, data, "personDriverLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.firstName, data, "personFirstName", readOnlyFields);
+        updated = this.write(updated, section.gender, data, "personGender", readOnlyFields);
+        updated = this.write(updated, section.lastName, data, "personLastName", readOnlyFields);
+        updated = this.write(updated, section.latitude, data, "personLatitude", readOnlyFields);
+        updated = this.write(updated, section.licensedState, data, "personLicensedState", readOnlyFields);
+        updated = this.write(updated, section.longitude, data, "personLongitude", readOnlyFields);
+        updated = this.write(updated, section.middleInitial, data, "personMiddleInitial", readOnlyFields);
 
-        return this.write(updated, section.race, data.personRace);
+        return this.write(updated, section.race, data, "personRace", readOnlyFields);
     }
 
     private extractRoute(section: RouteSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -107,10 +107,10 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "routeType", section.getType());
     }
 
-    private populateRoute(section: RouteSectionModel, data: IPublicContactOrWarningData): RouteSectionModel {
-        const updated = this.write(section, section.numberOrName, data.routeNumberOrName);
+    private populateRoute(section: RouteSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): RouteSectionModel {
+        const updated = this.write(section, section.numberOrName, data, "routeNumberOrName", readOnlyFields);
 
-        return this.write(updated, section.type, data.routeType);
+        return this.write(updated, section.type, data, "routeType", readOnlyFields);
     }
 
     private extractStop(section: StopSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -120,12 +120,12 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "stopTime", section.getTime());
     }
 
-    private populateStop(section: StopSectionModel, data: IPublicContactOrWarningData): StopSectionModel {
-        let updated = this.write(section, section.cadCallNumber, data.stopCadCallNumber);
-        updated = this.write(updated, section.county, data.stopCounty);
-        updated = this.write(updated, section.date, data.stopDate);
+    private populateStop(section: StopSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): StopSectionModel {
+        let updated = this.write(section, section.cadCallNumber, data, "stopCadCallNumber", readOnlyFields);
+        updated = this.write(updated, section.county, data, "stopCounty", readOnlyFields);
+        updated = this.write(updated, section.date, data, "stopDate", readOnlyFields);
 
-        return this.write(updated, section.time, data.stopTime);
+        return this.write(updated, section.time, data, "stopTime", readOnlyFields);
     }
 
     private extractVehicle(section: VehicleSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -137,14 +137,14 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IPublicContactOrWarningData): VehicleSectionModel {
-        let updated = this.write(section, section.cmv, data.vehicleCmv);
-        updated = this.write(updated, section.licenseNumber, data.vehicleLicenseNumber);
-        updated = this.write(updated, section.make, data.vehicleMake);
-        updated = this.write(updated, section.model, data.vehicleModel);
-        updated = this.write(updated, section.state, data.vehicleState);
+    private populateVehicle(section: VehicleSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): VehicleSectionModel {
+        let updated = this.write(section, section.cmv, data, "vehicleCmv", readOnlyFields);
+        updated = this.write(updated, section.licenseNumber, data, "vehicleLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
+        updated = this.write(updated, section.model, data, "vehicleModel", readOnlyFields);
+        updated = this.write(updated, section.state, data, "vehicleState", readOnlyFields);
 
-        return this.write(updated, section.year, data.vehicleYear);
+        return this.write(updated, section.year, data, "vehicleYear", readOnlyFields);
     }
 
     private extractOfficer(section: OfficerSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -153,11 +153,11 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "officerScCjaNumber", section.getScCjaNumber());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IPublicContactOrWarningData): OfficerSectionModel {
-        let updated = this.write(section, section.issuedBy, data.officerIssuedBy);
-        updated = this.write(updated, section.rank, data.officerRank);
+    private populateOfficer(section: OfficerSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): OfficerSectionModel {
+        let updated = this.write(section, section.issuedBy, data, "officerIssuedBy", readOnlyFields);
+        updated = this.write(updated, section.rank, data, "officerRank", readOnlyFields);
 
-        return this.write(updated, section.scCjaNumber, data.officerScCjaNumber);
+        return this.write(updated, section.scCjaNumber, data, "officerScCjaNumber", readOnlyFields);
     }
 
     private extractNatureOfContact(section: NatureOfContactSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -185,30 +185,30 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "natureVehicleLicenseViolation", section.getVehicleLicenseViolation());
     }
 
-    private populateNatureOfContact(section: NatureOfContactSectionModel, data: IPublicContactOrWarningData): NatureOfContactSectionModel {
-        let updated = this.write(section, section.changingLanesUnlawfully, data.natureChangingLanesUnlawfully);
-        updated = this.write(updated, section.contactOnly, data.natureContactOnly);
-        updated = this.write(updated, section.defectiveEquipment, data.natureDefectiveEquipment);
-        updated = this.write(updated, section.disregardingStopSign, data.natureDisregardingStopSign);
-        updated = this.write(updated, section.disregardingTrafficSignal, data.natureDisregardingTrafficSignal);
-        updated = this.write(updated, section.driversLicenseViolation, data.natureDriversLicenseViolation);
-        updated = this.write(updated, section.failureToDimLights, data.natureFailureToDimLights);
-        updated = this.write(updated, section.followingTooClose, data.natureFollowingTooClose);
-        updated = this.write(updated, section.handsFreeViolation, data.natureHandsFreeViolation);
-        updated = this.write(updated, section.immigrationStop, data.natureImmigrationStop);
-        updated = this.write(updated, section.improperBacking, data.natureImproperBacking);
-        updated = this.write(updated, section.improperLaneUse, data.natureImproperLaneUse);
-        updated = this.write(updated, section.improperLights, data.natureImproperLights);
-        updated = this.write(updated, section.improperPassing, data.natureImproperPassing);
-        updated = this.write(updated, section.improperTurn, data.natureImproperTurn);
-        updated = this.write(updated, section.noRightOfWay, data.natureNoRightOfWay);
-        updated = this.write(updated, section.other, data.natureOther);
-        updated = this.write(updated, section.otherSpecify, data.natureOtherSpecify);
-        updated = this.write(updated, section.pedestrian, data.naturePedestrian);
-        updated = this.write(updated, section.seatBeltViolation, data.natureSeatBeltViolation);
-        updated = this.write(updated, section.speeding, data.natureSpeeding);
+    private populateNatureOfContact(section: NatureOfContactSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): NatureOfContactSectionModel {
+        let updated = this.write(section, section.changingLanesUnlawfully, data, "natureChangingLanesUnlawfully", readOnlyFields);
+        updated = this.write(updated, section.contactOnly, data, "natureContactOnly", readOnlyFields);
+        updated = this.write(updated, section.defectiveEquipment, data, "natureDefectiveEquipment", readOnlyFields);
+        updated = this.write(updated, section.disregardingStopSign, data, "natureDisregardingStopSign", readOnlyFields);
+        updated = this.write(updated, section.disregardingTrafficSignal, data, "natureDisregardingTrafficSignal", readOnlyFields);
+        updated = this.write(updated, section.driversLicenseViolation, data, "natureDriversLicenseViolation", readOnlyFields);
+        updated = this.write(updated, section.failureToDimLights, data, "natureFailureToDimLights", readOnlyFields);
+        updated = this.write(updated, section.followingTooClose, data, "natureFollowingTooClose", readOnlyFields);
+        updated = this.write(updated, section.handsFreeViolation, data, "natureHandsFreeViolation", readOnlyFields);
+        updated = this.write(updated, section.immigrationStop, data, "natureImmigrationStop", readOnlyFields);
+        updated = this.write(updated, section.improperBacking, data, "natureImproperBacking", readOnlyFields);
+        updated = this.write(updated, section.improperLaneUse, data, "natureImproperLaneUse", readOnlyFields);
+        updated = this.write(updated, section.improperLights, data, "natureImproperLights", readOnlyFields);
+        updated = this.write(updated, section.improperPassing, data, "natureImproperPassing", readOnlyFields);
+        updated = this.write(updated, section.improperTurn, data, "natureImproperTurn", readOnlyFields);
+        updated = this.write(updated, section.noRightOfWay, data, "natureNoRightOfWay", readOnlyFields);
+        updated = this.write(updated, section.other, data, "natureOther", readOnlyFields);
+        updated = this.write(updated, section.otherSpecify, data, "natureOtherSpecify", readOnlyFields);
+        updated = this.write(updated, section.pedestrian, data, "naturePedestrian", readOnlyFields);
+        updated = this.write(updated, section.seatBeltViolation, data, "natureSeatBeltViolation", readOnlyFields);
+        updated = this.write(updated, section.speeding, data, "natureSpeeding", readOnlyFields);
 
-        return this.write(updated, section.vehicleLicenseViolation, data.natureVehicleLicenseViolation);
+        return this.write(updated, section.vehicleLicenseViolation, data, "natureVehicleLicenseViolation", readOnlyFields);
     }
 
     private extractPrimaryReason(section: PrimaryReasonSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -226,15 +226,15 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
      * `selectReason` so that data checking none of them stays as it arrived instead of being forced into a
      * selection. Data that checks more than one is the source's error to correct, and validation reports it.
      */
-    private populatePrimaryReason(section: PrimaryReasonSectionModel, data: IPublicContactOrWarningData): PrimaryReasonSectionModel {
-        let updated = this.write(section, section.bolo, data.primaryReasonBolo);
-        updated = this.write(updated, section.motoristAssistance, data.primaryReasonMotoristAssistance);
-        updated = this.write(updated, section.movingViolation, data.primaryReasonMovingViolation);
-        updated = this.write(updated, section.nonMovingViolation, data.primaryReasonNonMovingViolation);
-        updated = this.write(updated, section.otherSpecify, data.primaryReasonOtherSpecify);
-        updated = this.write(updated, section.suspiciousActivity, data.primaryReasonSuspiciousActivity);
+    private populatePrimaryReason(section: PrimaryReasonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PrimaryReasonSectionModel {
+        let updated = this.write(section, section.bolo, data, "primaryReasonBolo", readOnlyFields);
+        updated = this.write(updated, section.motoristAssistance, data, "primaryReasonMotoristAssistance", readOnlyFields);
+        updated = this.write(updated, section.movingViolation, data, "primaryReasonMovingViolation", readOnlyFields);
+        updated = this.write(updated, section.nonMovingViolation, data, "primaryReasonNonMovingViolation", readOnlyFields);
+        updated = this.write(updated, section.otherSpecify, data, "primaryReasonOtherSpecify", readOnlyFields);
+        updated = this.write(updated, section.suspiciousActivity, data, "primaryReasonSuspiciousActivity", readOnlyFields);
 
-        return this.write(updated, section.trafficCollision, data.primaryReasonTrafficCollision);
+        return this.write(updated, section.trafficCollision, data, "primaryReasonTrafficCollision", readOnlyFields);
     }
 
     private extractSearches(section: SearchesSectionModel, data: FormValues<IPublicContactOrWarningData>): void {
@@ -258,20 +258,20 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
      * `selectConsentGiven`, for the same reason the primary reasons are: data that answers neither must stay
      * unanswered rather than be pushed into a "no".
      */
-    private populateSearches(section: SearchesSectionModel, data: IPublicContactOrWarningData): SearchesSectionModel {
-        let updated = this.write(section, section.basisOtherSpecify, data.searchesBasisOtherSpecify);
-        updated = this.write(updated, section.consentGivenNo, data.searchesConsentGivenNo);
-        updated = this.write(updated, section.consentGivenYes, data.searchesConsentGivenYes);
-        updated = this.write(updated, section.consentRequestedNo, data.searchesConsentRequestedNo);
-        updated = this.write(updated, section.consentRequestedYes, data.searchesConsentRequestedYes);
-        updated = this.write(updated, section.incidentToArrest, data.searchesIncidentToArrest);
-        updated = this.write(updated, section.inventoryVehicleTowed, data.searchesInventoryVehicleTowed);
-        updated = this.write(updated, section.madeByConsent, data.searchesMadeByConsent);
-        updated = this.write(updated, section.ofDriver, data.searchesOfDriver);
-        updated = this.write(updated, section.ofPassenger, data.searchesOfPassenger);
-        updated = this.write(updated, section.ofPedestrian, data.searchesOfPedestrian);
-        updated = this.write(updated, section.ofVehicle, data.searchesOfVehicle);
+    private populateSearches(section: SearchesSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): SearchesSectionModel {
+        let updated = this.write(section, section.basisOtherSpecify, data, "searchesBasisOtherSpecify", readOnlyFields);
+        updated = this.write(updated, section.consentGivenNo, data, "searchesConsentGivenNo", readOnlyFields);
+        updated = this.write(updated, section.consentGivenYes, data, "searchesConsentGivenYes", readOnlyFields);
+        updated = this.write(updated, section.consentRequestedNo, data, "searchesConsentRequestedNo", readOnlyFields);
+        updated = this.write(updated, section.consentRequestedYes, data, "searchesConsentRequestedYes", readOnlyFields);
+        updated = this.write(updated, section.incidentToArrest, data, "searchesIncidentToArrest", readOnlyFields);
+        updated = this.write(updated, section.inventoryVehicleTowed, data, "searchesInventoryVehicleTowed", readOnlyFields);
+        updated = this.write(updated, section.madeByConsent, data, "searchesMadeByConsent", readOnlyFields);
+        updated = this.write(updated, section.ofDriver, data, "searchesOfDriver", readOnlyFields);
+        updated = this.write(updated, section.ofPassenger, data, "searchesOfPassenger", readOnlyFields);
+        updated = this.write(updated, section.ofPedestrian, data, "searchesOfPedestrian", readOnlyFields);
+        updated = this.write(updated, section.ofVehicle, data, "searchesOfVehicle", readOnlyFields);
 
-        return this.write(updated, section.probableCause, data.searchesProbableCause);
+        return this.write(updated, section.probableCause, data, "searchesProbableCause", readOnlyFields);
     }
 }

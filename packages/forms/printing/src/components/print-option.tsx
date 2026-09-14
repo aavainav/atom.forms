@@ -1,15 +1,31 @@
 import React from "react";
 import { useService } from "@common/react";
-import { IModalService, INotificationService, IReportViewerOptionProps } from "@forms/report-viewer";
-import { FButton, FIcon, FTooltip } from "@forms/core";
+import { IFormCatalogItem } from "@forms/catalog";
+import { FButton, FIcon, FTooltip, IControllerManager, IModalOptions } from "@forms/core";
 
 import { PrintDialog } from "./print-dialog";
 import { IPrintRequest, IPrintService } from "../services";
 
+/**
+ * Defines the props the print option is rendered with. Declared here rather than imported so that nothing in this
+ * package depends on whoever renders it: the dialog is opened through a `showModal` handed in, and a failure goes
+ * out through `onError`, both of which belong to the host of the option rather than to the option.
+ */
+export interface IPrintOptionProps {
+    /** The catalog item the form was loaded from, which its printable copies are resolved by. */
+    readonly catalogItem: IFormCatalogItem;
+    /** The controllers belonging to the form being printed. */
+    readonly controllers: IControllerManager;
+    /** The name the option is offered under, shown as its tooltip. */
+    readonly title: string;
+    /** Opens a modal at the root of whatever is hosting this option - never inside the options bar, which is a stacking context. */
+    readonly showModal: (options: IModalOptions) => void;
+    /** Invoked when the report cannot be printed. */
+    readonly onError?: (message: string) => void;
+}
+
 /** Defines the option for printing the current report as one of the copies the form publishes. */
-export const PrintOption = ({ catalogItem, controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
-    const modalService = useService<IModalService>(IModalService);
-    const notificationService = useService<INotificationService>(INotificationService);
+export const PrintOption = ({ catalogItem, controllers, title, showModal, onError }: IPrintOptionProps): React.JSX.Element => {
     const printService = useService<IPrintService>(IPrintService);
 
     const print = async (request: IPrintRequest): Promise<void> => {
@@ -17,7 +33,7 @@ export const PrintOption = ({ catalogItem, controllers, title }: IReportViewerOp
             await printService.print(controllers, catalogItem, request);
         }
         catch (error) {
-            notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The report could not be printed." });
+            onError?.(error instanceof Error ? error.message : "The report could not be printed.");
         }
     };
 
@@ -30,10 +46,10 @@ export const PrintOption = ({ catalogItem, controllers, title }: IReportViewerOp
         // dialog reports each choice back into this instead, and the print action reads whatever it last held
         let request: IPrintRequest = { profileId: profiles[0]?.id ?? "", layout: profiles[0]?.layout ?? "top-down" };
 
-        // the dialog is shown through the modal service rather than rendered here, so that it lands at the root of
-        // the report viewer instead of inside the options bar. the bar is fixed positioned, which makes it a
-        // stacking context, and a modal rendered inside one is painted under the backdrop appended to the body.
-        modalService.showModal({
+        // the dialog is shown through the handed-in showModal rather than rendered here, so that it lands at the
+        // root of the report viewer instead of inside the options bar. the bar is fixed positioned, which makes it
+        // a stacking context, and a modal rendered inside one is painted under the backdrop appended to the body.
+        showModal({
             title: "Print report",
             content: PrintDialog,
             contentProps: {

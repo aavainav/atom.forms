@@ -4,7 +4,6 @@ import { IControllerManager, IFormIdentity, IFormMapper, IReportViewerData, Form
 
 export const IFormCatalogService = createService<IFormCatalogService>("forms-catalog-service");
 export const IFormCatalogRegistrationService = createService<IFormCatalogRegistrationService>("forms-catalog-registration-service");
-export const IFormDataHooks = createService<IFormDataHooks>("form-data-hooks");
 
 /** Defines the props required by a form catalog item's rendering component. */
 export interface IFormComponentProps {
@@ -14,63 +13,12 @@ export interface IFormComponentProps {
     readonly isReadOnly: boolean;
 }
 
-/** Defines the route/request context a form was loaded under (e.g. matched route params and the current query string), so a data reader can resolve a specific record. */
-export interface IFormDataContext {
-    readonly params: Readonly<Record<string, string | undefined>>;
-    readonly searchParams: URLSearchParams;
-}
-
-/** Default values for a newly created record, together with which of its own fields should come back locked rather than editable. */
-export interface IFormDefaults {
-    readonly data: IReportViewerData;
-    readonly readOnlyFields?: ReadonlySet<string>;
-}
-
 /**
- * Defines the read half of a catalog item's data boundary: a host-supplied source of its report data. Implementations
- * are responsible for fetching from whatever source(s) they need and mapping the result into the shape the target
- * form expects. The write half is `IFormDataWriter`.
+ * Defines a form registered with the form catalog, keyed by name and version. This is a form's whole definition:
+ * what builds it, what renders it, what translates it to and from the contract it publishes, and which shared
+ * lists it draws on. Where its *data* comes from is not part of it - that is the host's, handed to the report
+ * viewer as an `IDataManager` when it renders the form.
  */
-export interface IFormDataReader {
-    getData(context: IFormDataContext): Promise<IReportViewerData | undefined>;
-    /**
-     * Gets the values a new record for this form should start with, and optionally which of them should come back
-     * locked rather than editable. Called by `IReportViewerService.loadFormReport` only once `getData` has resolved
-     * nothing to load, i.e. the user is creating a record rather than opening one. Optional: a reader that only
-     * ever opens existing records can leave this unimplemented.
-     *
-     * Unrelated to `FieldModel.setDefaultValue()`, which resets a single field back to its own type's zero-value -
-     * this supplies the values a whole new record should start with, and is never called for an existing one.
-     */
-    getDefaultData?(context: IFormDataContext): Promise<IFormDefaults | undefined>;
-}
-
-/**
- * Defines the write half of a catalog item's data boundary: a host-supplied destination for its report data.
- * Implementations own persistence and any mapping back into the host's own record shape; the report viewer only
- * hands the data over. The read half is `IFormDataReader`.
- */
-export interface IFormDataWriter {
-    saveData(data: IReportViewerData, context: IFormDataContext): Promise<void>;
-}
-
-/**
- * Defines a host's hooks into a catalog form's data boundary: a way to supply a data reader/writer for a form
- * without the form package itself - which registers the catalog item and has no idea what a host's own data source
- * looks like - needing to know about it. A host implements this once and registers it as a service; whatever picks
- * up a catalog item to load or save (typically a form's own route loader) asks this for the identity's reader/writer
- * and attaches whichever it gets back onto the item before handing it to `IReportViewerService`. Optional: a host
- * with nothing to supply for a given identity, or no host implementation registered at all, simply leaves a
- * catalog item's `dataReader`/`dataWriter` unset, and it loads and saves nothing.
- */
-export interface IFormDataHooks {
-    /** Returns the data reader to use for the given form, if this host supplies one for it. */
-    getDataReader?(identity: IFormIdentity): IFormDataReader | undefined;
-    /** Returns the data writer to use for the given form, if this host supplies one for it. */
-    getDataWriter?(identity: IFormIdentity): IFormDataWriter | undefined;
-}
-
-/** Defines a form registered with the form catalog, keyed by name and version. */
 export interface IFormCatalogItem<TForm extends FormModel = FormModel, TSchema extends Schema = Schema, TData extends object = IReportViewerData> {
     readonly name: string;
     readonly description: string;
@@ -89,16 +37,8 @@ export interface IFormCatalogItem<TForm extends FormModel = FormModel, TSchema e
 
     /** Translates between this form and the data contract it publishes. A form without one simply neither populates nor saves. */
     readonly mapper?: IFormMapper<TForm, TData>;
-    /**
-     * Supplies the report data to load for this form. Never set by the catalog itself - the form package that
-     * registers this item has no host-specific data source to give it. A host attaches one via `IFormDataHooks`
-     * before handing the item to `IReportViewerService`; a form with none set never has anything to load.
-     */
-    readonly dataReader?: IFormDataReader;
-    /** Persists this form's saved report data. Attached the same way as `dataReader`, and for the same reason never set by the catalog itself. */
-    readonly dataWriter?: IFormDataWriter;
 
-    /** The id of the violation list this citation draws its charges from, for a form that has one. */
+    /** The id of the violation list this citation draws its charges from. A form that declares one is offered the violation selector. */
     readonly violationListId?: string;
     /** The ids of the value lists this form's option fields draw on. */
     readonly valueListIds?: ReadonlyArray<string>;
@@ -188,21 +128,4 @@ export class FormCatalogService implements IFormCatalogService, IFormCatalogRegi
 
         return versionMap;
     }
-}
-
-/**
- * Attaches whatever data reader/writer `hooks` answers with for the catalog item's identity, if any - the one
- * place a resolved catalog item picks up the host-supplied half of its data boundary. Called with `undefined`
- * (no `IFormDataHooks` registered) or with hooks that answer nothing for this identity, the item comes back
- * unchanged.
- */
-export function withDataHooks<TForm extends FormModel, TSchema extends Schema, TData extends object>(catalogItem: IFormCatalogItem<TForm, TSchema, TData>, hooks: IFormDataHooks | undefined): IFormCatalogItem<TForm, TSchema, TData> {
-    const dataReader = hooks?.getDataReader?.(catalogItem);
-    const dataWriter = hooks?.getDataWriter?.(catalogItem);
-
-    if (!dataReader && !dataWriter) {
-        return catalogItem;
-    }
-
-    return { ...catalogItem, dataReader: dataReader ?? catalogItem.dataReader, dataWriter: dataWriter ?? catalogItem.dataWriter };
 }

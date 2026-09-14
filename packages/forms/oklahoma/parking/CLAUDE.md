@@ -1,6 +1,6 @@
 # `@forms/ok-parking` — OKC Parking Violation
 
-Catalog identity: **name `"OKC Parking Violation"`, version `"1.0"`**. Route `ok/parking`. Module name
+Catalog identity: **name `"OKC Parking Violation"`, version `"1.0"`**. Sandbox route `ok/parking`, which the host owns. Module name
 `ok-parking-form`. Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2026"`.
 
 Oklahoma City Municipal Court parking violation. Three pages, all fixed, a synchronous mapper, one owned value

@@ -18,10 +18,11 @@
     "dependencies": {
         "@common/event-emitter": "1.0.0",
         "@common/react": "1.0.0",
-        "@common/react-router": "1.0.0",
         "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
-        "@shrub/core": "0.5.91",
-        "react-router": "8.1.0"
+        "@forms/printing": "1.0.0",
+        "@forms/value-lists": "1.0.0",
+        "@forms/violations": "1.0.0",
+        "@shrub/core": "0.5.91"
     }
 }

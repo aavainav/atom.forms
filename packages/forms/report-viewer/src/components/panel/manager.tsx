@@ -1,19 +1,24 @@
-import React from "react";
-import { useService } from "@common/react";
+import React, { lazy, Suspense } from "react";
 import { IFormCatalogItem } from "@forms/catalog";
 import { IControllerManager } from "@forms/core";
 
-import { IReportViewerService } from "../../services";
+/**
+ * The violations selector, loaded only for a form that declares a violation list -- and only then is the chunk
+ * carrying the panel and its list rows fetched at all.
+ */
+const ViolationsPanel = lazy(() => import("@forms/violations").then(module => ({ default: module.ViolationsPanel })));
 
 interface IPanelManagerProps {
     /** The catalog item the form was loaded from; a panel may be offered for some forms and not others. */
     readonly catalogItem: IFormCatalogItem;
     /** The controllers belonging to the form the panels act on. */
     readonly controllers: IControllerManager;
+    /** Reports a panel's failure through the report viewer's notifications. */
+    readonly onError: (message: string) => void;
 }
 
 /**
- * Defines a manager component for mounting the panels registered for the form.
+ * Defines a manager component for mounting the panels the form offers.
  *
  * The panels are mounted here, at the report viewer's root, rather than inside the options bar: the bar is
  * `position-fixed` and so a stacking context of its own, which ranks anything fixed within it only against the
@@ -22,14 +27,14 @@ interface IPanelManagerProps {
  * A panel is mounted for as long as the form is and decides for itself whether it is showing, which is what lets
  * the option that opens it be a plain button raising an event on a service.
  */
-export default function PanelManager({ catalogItem, controllers }: IPanelManagerProps): React.JSX.Element {
-    const reportViewerService = useService<IReportViewerService>(IReportViewerService);
-
+export default function PanelManager({ catalogItem, controllers, onError }: IPanelManagerProps): React.JSX.Element {
     return (
         <>
-            {reportViewerService.getPanels(catalogItem).map(({ id, Component }) => (
-                <Component key={id} catalogItem={catalogItem} controllers={controllers} />
-            ))}
+            {catalogItem.violationListId && (
+                <Suspense fallback={null}>
+                    <ViolationsPanel catalogItem={catalogItem} controllers={controllers} onError={onError} />
+                </Suspense>
+            )}
         </>
     );
 }

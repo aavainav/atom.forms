@@ -51,7 +51,7 @@ export type {
     FInputFontWeight,
     FInputType
 } from "./components/field-input";
-export type { IFModal, IModalAction, IModalCloseAction, IModalResult, FModalSize } from "./components/modal";
+export type { IFModal, IModalAction, IModalCloseAction, IModalOptions, IModalResult, FModalSize } from "./components/modal";
 export type { IndicatorType } from "./components/loading-indicator";
 export type { StackPanelDirection } from "./components/form-stackpanel";
 

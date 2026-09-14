@@ -29,6 +29,30 @@ export interface IModalResult {
     readonly result: boolean;
 }
 
+/**
+ * Defines options for opening a modal. The shape lives here, beside the action and size types it is built from,
+ * rather than with the service that shows one, so that a package rendering a modal through a function handed to it
+ * can describe that function without depending on whoever owns the service.
+ */
+export interface IModalOptions {
+    /** An optional title for the modal. */
+    readonly title?: string;
+    /** A React component type or a string message. */
+    readonly content: React.ComponentType<any> | string;
+    /** The options to pass to the content component as props if the content is a React component. */
+    readonly contentProps?: Record<string, unknown>;
+    /** A set of actions for the modal that will get rendered as buttons in the footer. */
+    readonly actions?: IModalAction[];
+    /** An optional close action that will enable a close button in the title bar if defined. */
+    readonly close?: IModalCloseAction;
+    /** True if the modal should be shown full screen. */
+    readonly fullscreen?: boolean;
+    /** An optional custom size for the modal when not full screen. */
+    readonly size?: FModalSize;
+    /** True if the modal should remain open if clicking outside of the box; otherwise false to indicate the modal should close automatically. */
+    readonly persistent?: boolean;
+}
+
 interface IFModalProps {
     readonly title?: string;
     readonly size?: FModalSize;

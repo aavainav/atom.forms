@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { IFormCatalogItem, IFormDataContext, IFormDataReader } from "@forms/catalog";
+import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { FormDefinition, FormModel, IFormMapper, IReportViewerData, Schema } from "@forms/core";
 
-import type { IReportViewerOptions } from "../../src/options";
-import { ReportViewerService } from "../../src/services/report-viewer";
+import { canExtractData, canSaveForm, IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
 
-const context: IFormDataContext = { params: {}, searchParams: new URLSearchParams() };
+const noopOption: Pick<IReportViewerOption, "title" | "Component"> = { title: "Stub option", Component: () => null };
 
 function record(name: string): IReportViewerData {
     return { name, status: "draft", type: "none", version: "1.0" };
@@ -34,12 +33,8 @@ class StubFormFactory {
     }
 }
 
-function createService(options: IReportViewerOptions = {}): ReportViewerService {
-    return new ReportViewerService(options);
-}
-
-/** Builds a "Stub"@"1.0" catalog item with a mapper whose populate is a spy returning the form unchanged, and whatever data reader is given. */
-function stubCatalogItem(dataReader?: IFormDataReader): { catalogItem: IFormCatalogItem<StubFormModel>; populate: ReturnType<typeof vi.fn> } {
+/** Builds a "Stub"@"1.0" catalog item with a mapper whose populate is a spy returning the form unchanged. */
+function stubCatalogItem(): { catalogItem: IFormCatalogItem<StubFormModel>; populate: ReturnType<typeof vi.fn> } {
     const populate = vi.fn(async (form: StubFormModel) => form);
     const mapper: IFormMapper<StubFormModel, IReportViewerData> = { extract: () => ({} as IReportViewerData), populate };
 
@@ -53,118 +48,161 @@ function stubCatalogItem(dataReader?: IFormDataReader): { catalogItem: IFormCata
             schema: StubSchema,
             formFactory: StubFormFactory,
             component: async () => (() => null) as never,
-            mapper,
-            dataReader
+            mapper
         },
         populate
     };
 }
 
+/** The service resolves the form itself now, so every test needs a catalog to resolve it from. */
+function createService(catalogItem: IFormCatalogItem): ReportViewerService {
+    const formCatalogService: IFormCatalogService = {
+        catalogItems: new Map(),
+        get: async () => catalogItem as IFormCatalogItem,
+        getLatestVersions: async () => new Map([[catalogItem.name, catalogItem as IFormCatalogItem]])
+    };
+
+    return new ReportViewerService(formCatalogService);
+}
+
 describe("ReportViewerService", () => {
     describe("loadForm", () => {
-        it("builds and populates a form from the given data", async () => {
-            const service = createService();
+        it("resolves the identified form from the catalog and populates it with what the data manager reads", async () => {
             const { catalogItem, populate } = stubCatalogItem();
+            const service = createService(catalogItem);
 
-            const initialForm = await service.loadForm(catalogItem, record("Stub"));
+            const initialForm = await service.loadForm({ name: "Stub", version: "1.0" }, { read: async () => ({ data: record("Stub") }) });
 
             expect(initialForm.catalogItem.name).toBe("Stub");
             expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ name: "Stub" }), undefined);
         });
 
-        it("builds a form without populating it when there is no data", async () => {
-            const service = createService();
+        it("hands the read's readOnlyFields to the mapper as a set", async () => {
             const { catalogItem, populate } = stubCatalogItem();
+            const service = createService(catalogItem);
 
-            await service.loadForm(catalogItem, undefined);
+            await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), readOnlyFields: ["name"] }) });
+
+            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.anything(), new Set(["name"]));
+        });
+
+        it("builds a form without populating it when there is no data manager", async () => {
+            const { catalogItem, populate } = stubCatalogItem();
+            const service = createService(catalogItem);
+
+            await service.loadForm({ name: "Stub" });
+
+            expect(populate).not.toHaveBeenCalled();
+        });
+
+        it("builds a form without populating it when the data manager reads nothing", async () => {
+            const { catalogItem, populate } = stubCatalogItem();
+            const service = createService(catalogItem);
+
+            await service.loadForm({ name: "Stub" }, { read: async () => undefined });
 
             expect(populate).not.toHaveBeenCalled();
         });
 
         it("builds a form without populating it when the catalog item has no mapper", async () => {
-            const service = createService();
             const { catalogItem } = stubCatalogItem();
-            const withoutMapper = { ...catalogItem, mapper: undefined };
+            const service = createService({ ...catalogItem, mapper: undefined } as IFormCatalogItem);
 
-            const initialForm = await service.loadForm(withoutMapper, record("Stub"));
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) });
 
             expect(initialForm.form).toBeInstanceOf(StubFormModel);
         });
     });
 
-    describe("loadFormReport", () => {
-        it("loads using the catalog item's reader result", async () => {
-            const service = createService();
-            const { catalogItem, populate } = stubCatalogItem({ getData: async () => record("Stub") });
+    describe("saveForm", () => {
+        it("hands the extracted data to the data manager", async () => {
+            const { catalogItem } = stubCatalogItem();
+            const service = createService(catalogItem);
+            const write = vi.fn(async () => { });
 
-            const initialForm = await service.loadFormReport(catalogItem, context);
+            const data = await service.saveForm(new StubFormModel(), catalogItem as IFormCatalogItem, { read: async () => undefined, write });
 
-            expect(initialForm.catalogItem.name).toBe("Stub");
-            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ name: "Stub" }), undefined);
+            expect(write).toHaveBeenCalledWith(data);
         });
 
-        it("falls back to the reader's getDefaultData result, and its readOnlyFields, when getData resolves undefined", async () => {
-            const service = createService();
-            const readOnlyFields = new Set(["someField"]);
-            const { catalogItem, populate } = stubCatalogItem({
-                getData: async () => undefined,
-                getDefaultData: async () => ({ data: record("Stub"), readOnlyFields })
-            });
+        it("returns the extracted data even with nothing to write it to", async () => {
+            const { catalogItem } = stubCatalogItem();
+            const service = createService(catalogItem);
 
-            await service.loadFormReport(catalogItem, context);
+            const data = await service.saveForm(new StubFormModel(), catalogItem as IFormCatalogItem);
 
-            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ name: "Stub" }), readOnlyFields);
-        });
-
-        it("never calls getDefaultData when getData already found data", async () => {
-            const service = createService();
-            const getDefaultData = vi.fn(async () => undefined);
-            const { catalogItem } = stubCatalogItem({ getData: async () => record("Stub"), getDefaultData });
-
-            await service.loadFormReport(catalogItem, context);
-
-            expect(getDefaultData).not.toHaveBeenCalled();
-        });
-
-        it("builds a form without populating it when the catalog item has no reader", async () => {
-            const service = createService();
-            const { catalogItem, populate } = stubCatalogItem();
-
-            await service.loadFormReport(catalogItem, context);
-
-            expect(populate).not.toHaveBeenCalled();
+            expect(data.name).toBe(new StubFormModel().name);
         });
     });
 
     describe("canExtractData", () => {
         it("is true once the catalog item carries a mapper", () => {
-            const service = createService();
             const { catalogItem } = stubCatalogItem();
 
-            expect(service.canExtractData(catalogItem)).toBe(true);
+            expect(createService(catalogItem).canExtractData(catalogItem as IFormCatalogItem)).toBe(true);
         });
 
         it("is false without a mapper", () => {
-            const service = createService();
             const { catalogItem } = stubCatalogItem();
 
-            expect(service.canExtractData({ ...catalogItem, mapper: undefined })).toBe(false);
+            expect(createService(catalogItem).canExtractData({ ...catalogItem, mapper: undefined } as IFormCatalogItem)).toBe(false);
         });
     });
 
     describe("canSaveForm", () => {
-        it("is true once the catalog item carries both a mapper and a data writer", () => {
-            const service = createService();
+        it("is true with both a mapper and a data manager that writes", () => {
             const { catalogItem } = stubCatalogItem();
 
-            expect(service.canSaveForm({ ...catalogItem, dataWriter: { saveData: async () => { } } })).toBe(true);
+            expect(createService(catalogItem).canSaveForm(catalogItem as IFormCatalogItem, { read: async () => undefined, write: async () => { } })).toBe(true);
         });
 
-        it("is false with a mapper but no data writer", () => {
-            const service = createService();
+        it("is false with a mapper but no data manager", () => {
             const { catalogItem } = stubCatalogItem();
 
-            expect(service.canSaveForm(catalogItem)).toBe(false);
+            expect(createService(catalogItem).canSaveForm(catalogItem as IFormCatalogItem)).toBe(false);
+        });
+
+        it("is false with a data manager that only reads", () => {
+            const { catalogItem } = stubCatalogItem();
+
+            expect(createService(catalogItem).canSaveForm(catalogItem as IFormCatalogItem, { read: async () => undefined })).toBe(false);
+        });
+    });
+
+    describe("registerOption / getOptions", () => {
+        // the production option list lives in ReportViewerModule.configure now rather than on the service, so
+        // these register a small stand-in set through the same IReportViewerOptionRegistration seam a module uses,
+        // reusing the two real gates (canExtractData/canSaveForm) rather than the module's specific six ids
+        it("offers an option with no canShow unconditionally", () => {
+            const { catalogItem } = stubCatalogItem();
+            const service = createService(catalogItem);
+
+            service.registerOption({ id: "always", ...noopOption });
+
+            expect(service.getOptions(catalogItem as IFormCatalogItem).map(option => option.id)).toEqual(["always"]);
+        });
+
+        it("filters an option by its canShow, in registration order", () => {
+            const { catalogItem } = stubCatalogItem();
+            const service = createService(catalogItem);
+
+            service.registerOption({ id: "extract", ...noopOption, canShow: canExtractData });
+            service.registerOption({ id: "save", ...noopOption, canShow: canSaveForm });
+
+            const withoutManager = service.getOptions(catalogItem as IFormCatalogItem).map(option => option.id);
+            const withManager = service.getOptions(catalogItem as IFormCatalogItem, { read: async () => undefined, write: async () => { } }).map(option => option.id);
+
+            expect(withoutManager).toEqual(["extract"]);
+            expect(withManager).toEqual(["extract", "save"]);
+        });
+
+        it("throws when the same id is registered twice", () => {
+            const { catalogItem } = stubCatalogItem();
+            const service = createService(catalogItem);
+
+            service.registerOption({ id: "dup", ...noopOption });
+
+            expect(() => service.registerOption({ id: "dup", ...noopOption })).toThrow();
         });
     });
 });

@@ -44,7 +44,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | `ControllerManager` and the four controllers. See below. |
 | [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, and `usePrintState(controller)`. |
-| [src/mapping/](src/mapping/) | `FormMapper` base and the common `ICrash` / `IReportViewerData` contracts. `populate` takes an optional `readOnlyFields` set, and `write` an optional field key + the same set, for a mapper that wants a specific defaulted field to come back locked. |
+| [src/mapping/](src/mapping/) | `FormMapper` base and the common `ICrash` / `IReportViewerData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` set through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
 | [theme/](theme/) | SCSS. `theme/_main.scss` is the entry a host imports. |
@@ -189,7 +189,7 @@ theme-aware color.
 `FOffCanvas` takes a `placement` of `"start"` (the default, where the validation panel sits) or `"end"`. Two panels
 that can be open at once need different edges, or they cover each other. It is plain markup with no backdrop and
 no portal, so it has to be rendered somewhere that is not itself a stacking context — which is why
-`@forms/report-viewer` grew `registerPanel`.
+`@forms/report-viewer` mounts every panel at its own root rather than inside its `position-fixed` options bar.
 
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab
@@ -236,11 +236,13 @@ as `yarn test`.
   section for exactly that reason.
 - `FormMapper.read` **omits** a key when the field is empty, so an untouched number field is absent rather than `0`.
   `FormMapper.write` skips `undefined`, so an unmentioned field keeps its current value.
-- `FormMapper.write`'s `key`/`readOnlyFields` parameters are both optional and off by default, so a mapper only
-  pays for lockable-field support on the fields it explicitly wires up (host-configured defaults are the caller;
-  see `@forms/report-viewer`'s `IFormDataReader.getDefaultData`). Passing `key` without `readOnlyFields`, or a
-  `readOnlyFields` that doesn't name it, leaves the field editable exactly as before — only a name present in both
-  disables it.
+- `FormMapper.write(section, definition, data, key, readOnlyFields?)` takes the **source object and key**, not a
+  value — `this.write(section, section.city, data, "agencyCity", readOnlyFields)`, mirroring `read`. `key` is
+  required, so locking is not opt-in per field: a section method that threads `readOnlyFields` locks every field it
+  writes, and one that doesn't simply never locks. That is why a sub-record method (a repeated page's person or
+  unit) is left without the parameter — `populate` only ever names top-level keys. The caller naming those keys is
+  a host's `IDataManager.read` (see `@forms/report-viewer`); a `readOnlyFields` that doesn't name a key leaves the
+  field editable.
 - A concrete field model declares `public readonly value = <default>` as a class-field initializer, which under
   `useDefineForClassFields` runs *after* `FieldModel`'s constructor has assigned `field.value` — so
   `new StringFieldModel({name, label, value: "abc"}).value` is `""`, not `"abc"`. Nothing in production notices,

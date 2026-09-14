@@ -52,25 +52,34 @@ export abstract class FormMapper<TForm extends FormModel, TData extends object> 
     }
 
     /**
-     * Returns a new section with the field set from the given value, or the section unchanged when the value is
-     * undefined. When `key` names a field the caller wants lockable and `readOnlyFields` contains it, the field
-     * also comes back disabled - for a host stamping a default value it considers settled rather than editable.
-     * Both are optional so an existing call with no need to be lockable is unaffected; a mapper only pays for this
-     * on the fields it explicitly opts in.
+     * Returns a new section with the field set from `data[key]`, or the section unchanged when that value is
+     * undefined, so a key the data does not mention leaves the field holding whatever it already had.
+     *
+     * This mirrors `read`: the target comes first and the key is named once, with the value derived rather than
+     * passed alongside it. Because the key is always in hand, every field written through here is lockable - when
+     * `readOnlyFields` contains the key the field also comes back disabled, for a host stamping a default value it
+     * considers settled rather than editable. A section method that threads `readOnlyFields` gets that for every
+     * field it writes; one that doesn't simply never locks.
+     *
+     * The source is any object rather than the mapper's own contract, for the same reason `read`'s target is: a
+     * contract that nests a record per repeated page is written through the same primitive. Such a sub-record has
+     * no locking of its own, since `populate` only ever names top-level keys.
      */
-    protected write<TSection extends SectionModel, TKey extends keyof TData = never>(
+    protected write<TSection extends SectionModel, TSource extends object, TKey extends keyof TSource>(
         section: TSection,
         definition: FieldDefinition<FieldModel<TValueType>>,
-        value: TValueType | undefined,
-        key?: TKey,
-        readOnlyFields?: ReadonlySet<keyof TData>
+        data: TSource,
+        key: TKey,
+        readOnlyFields?: ReadonlySet<keyof TSource>
     ): TSection {
+        const value = <TValueType | undefined><unknown>data[key];
+
         if (value === undefined) {
             return section;
         }
 
         let field = section.get<FieldModel<TValueType>>(definition).setValue(value);
-        if (key !== undefined && readOnlyFields?.has(key)) {
+        if (readOnlyFields?.has(key)) {
             field = field.setIsEnabled(false);
         }
 

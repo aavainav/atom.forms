@@ -1,7 +1,6 @@
 export * from "./module";
 
 export { bootstrapper as TR310CrashFormBootstrapper } from "./bootstrapper";
-export { TR310FormLoader } from "./components";
 
 /** The data contract a host app maps its own record data to and from. */
 export type { ITR310Data, ITR310PersonData, ITR310UnitData } from "./mapping";

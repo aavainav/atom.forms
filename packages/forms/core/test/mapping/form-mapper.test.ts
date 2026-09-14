@@ -43,15 +43,15 @@ class TestCitationMapper extends FormMapper<TestCitationForm, ITestCitationData>
         return data;
     }
 
-    public populate(form: TestCitationForm, data: ITestCitationData): TestCitationForm {
+    public populate(form: TestCitationForm, data: ITestCitationData, readOnlyFields?: ReadonlySet<keyof ITestCitationData>): TestCitationForm {
         const pageCollection = form.get<PageCollection>(citationPage);
         const page = pageCollection.findPageByIndex(0);
 
-        const violator = this.write(page.get<SectionModel>(violatorSection), violatorFields.firstName, data.firstName);
+        const violator = this.write(page.get<SectionModel>(violatorSection), violatorFields.firstName, data, "firstName", readOnlyFields);
 
-        let charge = this.write(page.get<SectionModel>(chargeSection), chargeFields.fineAmount, data.fineAmount);
-        charge = this.write(charge, chargeFields.isSpeedingRelated, data.isSpeedingRelated);
-        charge = this.write(charge, chargeFields.offenseDescription, data.offenseDescription);
+        let charge = this.write(page.get<SectionModel>(chargeSection), chargeFields.fineAmount, data, "fineAmount", readOnlyFields);
+        charge = this.write(charge, chargeFields.isSpeedingRelated, data, "isSpeedingRelated", readOnlyFields);
+        charge = this.write(charge, chargeFields.offenseDescription, data, "offenseDescription", readOnlyFields);
 
         return form.set(
             citationPage,
@@ -126,6 +126,36 @@ describe("FormMapper", () => {
 
             expect(populated).not.toBe(form);
             expect(getFieldValue(form, violatorSection, violatorFields.firstName).getValue()).toBe("");
+        });
+
+        /**
+         * `write` is handed the key rather than the value, so every field written through it is lockable without
+         * the mapper opting each one in -- a host stamping a default it considers settled names the key and the
+         * field comes back disabled.
+         */
+        it("disables a field whose key is named in readOnlyFields", () => {
+            const populated = mapper.populate(
+                form,
+                { firstName: "Dana", fineAmount: 250 },
+                new Set<keyof ITestCitationData>(["firstName"]));
+
+            expect(getFieldValue(populated, violatorSection, violatorFields.firstName).getValue()).toBe("Dana");
+            expect(getFieldValue(populated, violatorSection, violatorFields.firstName).isEnabled).toBe(false);
+        });
+
+        it("leaves a field editable when its key is not named", () => {
+            const populated = mapper.populate(
+                form,
+                { firstName: "Dana", fineAmount: 250 },
+                new Set<keyof ITestCitationData>(["firstName"]));
+
+            expect(getFieldValue(populated, chargeSection, chargeFields.fineAmount).isEnabled).toBe(true);
+        });
+
+        it("locks nothing when no readOnlyFields are given", () => {
+            const populated = mapper.populate(form, { firstName: "Dana" });
+
+            expect(getFieldValue(populated, violatorSection, violatorFields.firstName).isEnabled).toBe(true);
         });
     });
 

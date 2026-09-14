@@ -1,6 +1,6 @@
 # `@forms/s438` — SC S438 Uniform Traffic Ticket
 
-Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Route `sc/s438`. Module name `s438-citation-form`.
+Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Sandbox route `sc/s438`, which the host owns. Module name `s438-citation-form`.
 Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2025"`.
 
 The simplest of the citation packages: two page types, no value lists. Reach for this one as the template for
@@ -33,7 +33,7 @@ differs. The violation *location* is shared: one stop happens in one place.
 | [src/models/s438-form.ts](src/models/s438-form.ts) | `S438FormModel extends CitationForm`. |
 | [src/models/front-page/](src/models/front-page/) | `front-page.ts` + one file per section + `dropzones/`. |
 | [src/models/notice-page/notice-page.ts](src/models/notice-page/notice-page.ts) | Sectionless page model. |
-| [src/components/](src/components/) | `s438-citation-form.tsx` (root), `s438-citation-form-loader.tsx` (route), and `front-page/`+`notice-page/` mirroring the models tree. |
+| [src/components/](src/components/) | `s438-citation-form.tsx` (root) and `front-page/`+`notice-page/` mirroring the models tree. |
 | [src/mapping/s438-data.ts](src/mapping/s438-data.ts) | `IS438Data` — flat, every field optional, plus `additionalViolations` for the charges beyond the first. `IS438ViolationData` is the per-page half. |
 | [src/mapping/s438-mapper.ts](src/mapping/s438-mapper.ts) | `S438Mapper extends FormMapper<S438FormModel, IS438Data>`. `populate` is **async**, since the front page repeats and creating one means awaiting `initialize`. |
 | [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — four `apply*Dropzone` methods plus `applyViolations`. No value-list methods; this form has no option fields. |

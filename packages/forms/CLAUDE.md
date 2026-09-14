@@ -8,12 +8,12 @@ task recipes; open that one rather than reading the package's source to orient.
 | Package | Name | What it owns |
 | --- | --- | --- |
 | [core/](core/) | `@forms/core` | Form model/definition/entity tree, field models, validation rules, controllers, `F*` React components. No shrub module. |
-| [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version — the source of truth for a form's identity, definition, mapper, and data reader/writer. |
+| [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version — the source of truth for a form's identity, definition, mapper and the shared lists it draws on. Holds no data boundary. |
 | [value-lists/](value-lists/) | `@forms/value-lists` | Value-list registry + service, the code generator, and the national (jurisdiction-free) lists. |
 | [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the selector that puts them on a form. Citations only; bundles no lists of its own. |
-| [report-viewer/](report-viewer/) | `@forms/report-viewer` | Renders an already-resolved catalog item, populates it from its own data reader, saves it back. Owns routing, modals, notifications — tracks no form by identity itself. |
+| [report-viewer/](report-viewer/) | `@forms/report-viewer` | **The host-facing entry point.** `<ReportViewer identity dataManager settings />` resolves the catalog item, builds and populates the form, and mounts whatever options and panels it offers. Owns modals, notifications and validation; no routing. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
-| [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, bootstrapper. |
+| [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, the root and not-found routes, bootstrapper. Knows nothing about forms. |
 | [south-carolina/s438/](south-carolina/s438/) | `@forms/s438` | SC S438 UTT citation form. |
 | [south-carolina/public-contact-or-warning/](south-carolina/public-contact-or-warning/) | `@forms/public-contact-or-warning` | SC Form 432 public contact / warning. |
 | [south-carolina/tr310/](south-carolina/tr310/) | `@forms/tr310` | SC TR-310 traffic collision report. The largest form. |
@@ -21,20 +21,27 @@ task recipes; open that one rather than reading the package's source to orient.
 | [oklahoma/traffic/](oklahoma/traffic/) | `@forms/ok-traffic` | OKC traffic citation and complaint. |
 | [georgia/utc/](georgia/utc/) | `@forms/ga-utc` | GA uniform traffic citation, summons, and accusation (Atlanta). The checkbox-heavy form. |
 
-Dependency direction (nothing points back up):
+Dependency direction (nothing points back up). **The report viewer is the top** — it is what a host app renders,
+and nothing in this repo depends on it except a host:
 
 ```
-core  ←  catalog  ←  report-viewer  ←  workbench
-  ↑         ↑             ↑    ↑  ↑      ↑
-  │         │             │  printing    │
-  │         │             │  violations  │
-  └─────────┴─────value-lists──┴──┴──────┴───── form packages (south-carolina/*, oklahoma/*, georgia/*)
+                       report-viewer
+                    ↙   ↓      ↓    ↘
+          catalog  value-lists  violations  printing
+              ↑         ↑           ↑          ↑
+              └─────────┴───────────┴──────────┴──── form packages (south-carolina/*, oklahoma/*, georgia/*)
+                                  ↓
+                                core                        workbench → (react, react-router) only
 ```
 
-`printing` and `violations` both sit above `report-viewer` and below the form packages: each registers its button
-with the report viewer through `registerOption` rather than being imported by it, and a form package depends on
-one only to declare what it contributes — the copies it can be printed as, or the violation list it draws on and
-how a chosen violation lands on its fields.
+`printing` and `violations` sit **below** the report viewer: each exports a button (and, for violations, a panel)
+that the report viewer imports and mounts itself, rather than registering one upward. A form package depends on one
+only to declare what it contributes — the copies it can be printed as, or the violation list it draws on and how a
+chosen violation lands on its fields — and declares `violationListId` on its catalog item, which is the gate the
+viewer actually reads.
+
+`workbench` is off to the side: it hosts a react app, owns the router and the root/not-found routes, and knows
+nothing about forms at all. A host that already has a router skips it and renders `<ReportViewer />` directly.
 
 ## The five layers of a form package
 
@@ -61,12 +68,22 @@ in one is a change in all three in the same places.
 - **Each form owns its data contract and hand-writes its mapper.** No shared cross-form data model, no generic
   mapping. A mapper's `extract`/`populate` pair for a section sit adjacent so a missed field shows in one diff.
 - **A form's identity is declared once, as a `CATALOG_IDENTITY` constant beside its form model**, and the model
-  assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item and its mapper (both
-  with `@forms/catalog`) and the route (with `@forms/report-viewer`) from that constant, and the route loader pins
-  it — so the identity `extractData` stamps a saved report with is the same one the catalog resolves it by. Never
-  write a form's name or version as a literal anywhere else.
+  assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item (mapper inline) from
+  that same constant — so the identity `extractData` stamps a saved report with is the same one the catalog resolves
+  it by. Never write a form's name or version as a literal anywhere else.
+- **A form package registers a catalog item and nothing else.** No route, no loader component, no data
+  reader/writer. Routing is the host's, and so is the record: the host renders
+  `<ReportViewer identity={…} dataManager={…} />` from whatever route it likes.
 - **State is per form instance**, held by `ControllerManager`/`FormController` in the React layer — never attached
   to the immutable `FormModel`.
+- **Anything stateful or registrable is created behind a class — a service or a manager — never as bare module-scope
+  state.** A registry, a cache, or anything else that accumulates or is added to over the app's lifetime does not
+  live as a top-level `const`/`let`/`Map` in a file, however tempting for something small and closed. It goes behind
+  a `@Singleton` service when other packages need to reach it through `@shrub/core` DI (`FormCatalogService`,
+  `ViolationService`), or a plain manager class a service owns and delegates to when the state is private to that
+  service (the same shape `ControllerManager` gives a form's controllers, or `IValueListController`'s per-key
+  cache). A pure, stateless helper function is fine as a bare export either way — this is about state, not every
+  function needing a home in a class.
 - **A section declared `{ isShared: true }` holds the same values on every instance of its page.** Every citation
   page repeats once per violation, and the violator, vehicle and officer sections are shared so that only the
   charge differs between pages. A write through a shared section's binding fans out to every page, `addPage` seeds
@@ -91,14 +108,16 @@ in one is a change in all three in the same places.
 1. New package under `packages/forms/<jurisdiction>/<form>/` (copy [s438](south-carolina/s438/) for a
    fixed-page form, [tr310](south-carolina/tr310/) for one with repeating pages,
    [ga-utc](georgia/utc/) for one whose answers are printed rows of checkboxes rather than coded boxes).
-2. `package.json` deps: `@forms/catalog`, `@forms/core`, `@forms/report-viewer`, `@forms/workbench`, plus
-   `@forms/value-lists` if it has option fields. `tsconfig.json` extends `../../tsconfig.base.json`.
+2. `package.json` deps: `@forms/catalog`, `@forms/core`, `@forms/workbench` (for the `IModuleBootstrapper` type
+   only), plus `@forms/value-lists` if it has option fields and `@forms/violations`/`@forms/printing` if it
+   contributes to either. **Never `@forms/report-viewer`** — that points the wrong way and fails `tsc -b` as a
+   cycle. `tsconfig.json` extends `../../tsconfig.base.json`.
 3. Schema → form model and its `CATALOG_IDENTITY` → page/section models → section components → data contract →
    mapper → rules.
 4. `form-factory.ts`, `services/`, `options.ts`, `module.ts`, `bootstrapper.ts`, `index.ts`.
 5. Register the bootstrapper in `packages/examples/01-forms/src/main.ts`. The sandbox home page lists every catalog
-   form automatically; add the form's route to the `formRoutes` table in `src/home/home-page.tsx` so it lists as
-   reachable rather than routeless.
+   form automatically; add the form's route to the `formRoutes` table in `src/form-routes.ts` so it is registered
+   and lists as reachable rather than routeless.
 
 ## Build
 

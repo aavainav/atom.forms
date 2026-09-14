@@ -81,8 +81,8 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
      * from the data contract, and a field the data does not mention keeps the value it already holds - which is
      * how the date and time the form stamps on itself survive a partial record.
      */
-    public async populate(form: GAUTCFormModel, data: IGAUTCData): Promise<GAUTCFormModel> {
-        return this.populateCourtPage(await this.populateCitationPage(form, data), data);
+    public async populate(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): Promise<GAUTCFormModel> {
+        return this.populateCourtPage(await this.populateCitationPage(form, data, readOnlyFields), data, readOnlyFields);
     }
 
     private extractCertification(section: CertificationSectionModel, data: FormValues<IGAUTCData>): void {
@@ -93,13 +93,13 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "certificationSwornYear", section.getSwornYear());
     }
 
-    private populateCertification(section: CertificationSectionModel, data: IGAUTCData): CertificationSectionModel {
-        let updated = this.write(section, section.officerSignature, data.certificationOfficerSignature);
-        updated = this.write(updated, section.signatureAndTitle, data.certificationSignatureAndTitle);
-        updated = this.write(updated, section.swornDay, data.certificationSwornDay);
-        updated = this.write(updated, section.swornMonth, data.certificationSwornMonth);
+    private populateCertification(section: CertificationSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): CertificationSectionModel {
+        let updated = this.write(section, section.officerSignature, data, "certificationOfficerSignature", readOnlyFields);
+        updated = this.write(updated, section.signatureAndTitle, data, "certificationSignatureAndTitle", readOnlyFields);
+        updated = this.write(updated, section.swornDay, data, "certificationSwornDay", readOnlyFields);
+        updated = this.write(updated, section.swornMonth, data, "certificationSwornMonth", readOnlyFields);
 
-        return this.write(updated, section.swornYear, data.certificationSwornYear);
+        return this.write(updated, section.swornYear, data, "certificationSwornYear", readOnlyFields);
     }
 
     private extractConditions(section: ConditionsSectionModel, data: FormValues<IGAUTCData>): void {
@@ -126,29 +126,29 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "conditionsWeatherRaining", section.getWeatherRaining());
     }
 
-    private populateConditions(section: ConditionsSectionModel, data: IGAUTCData): ConditionsSectionModel {
-        let updated = this.write(section, section.commercialVehicle, data.conditionsCommercialVehicle);
-        updated = this.write(updated, section.hazardousMaterial, data.conditionsHazardousMaterial);
-        updated = this.write(updated, section.lightingDarkness, data.conditionsLightingDarkness);
-        updated = this.write(updated, section.lightingDaylight, data.conditionsLightingDaylight);
-        updated = this.write(updated, section.lightingOther, data.conditionsLightingOther);
-        updated = this.write(updated, section.roadDry, data.conditionsRoadDry);
-        updated = this.write(updated, section.roadIce, data.conditionsRoadIce);
-        updated = this.write(updated, section.roadOther, data.conditionsRoadOther);
-        updated = this.write(updated, section.roadWet, data.conditionsRoadWet);
-        updated = this.write(updated, section.sixteenPlusPassengers, data.conditionsSixteenPlusPassengers);
-        updated = this.write(updated, section.surfaceBlacktop, data.conditionsSurfaceBlacktop);
-        updated = this.write(updated, section.surfaceConcrete, data.conditionsSurfaceConcrete);
-        updated = this.write(updated, section.surfaceDirt, data.conditionsSurfaceDirt);
-        updated = this.write(updated, section.surfaceOther, data.conditionsSurfaceOther);
-        updated = this.write(updated, section.trafficHeavy, data.conditionsTrafficHeavy);
-        updated = this.write(updated, section.trafficLight, data.conditionsTrafficLight);
-        updated = this.write(updated, section.trafficMedium, data.conditionsTrafficMedium);
-        updated = this.write(updated, section.weatherClear, data.conditionsWeatherClear);
-        updated = this.write(updated, section.weatherCloudy, data.conditionsWeatherCloudy);
-        updated = this.write(updated, section.weatherOther, data.conditionsWeatherOther);
+    private populateConditions(section: ConditionsSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): ConditionsSectionModel {
+        let updated = this.write(section, section.commercialVehicle, data, "conditionsCommercialVehicle", readOnlyFields);
+        updated = this.write(updated, section.hazardousMaterial, data, "conditionsHazardousMaterial", readOnlyFields);
+        updated = this.write(updated, section.lightingDarkness, data, "conditionsLightingDarkness", readOnlyFields);
+        updated = this.write(updated, section.lightingDaylight, data, "conditionsLightingDaylight", readOnlyFields);
+        updated = this.write(updated, section.lightingOther, data, "conditionsLightingOther", readOnlyFields);
+        updated = this.write(updated, section.roadDry, data, "conditionsRoadDry", readOnlyFields);
+        updated = this.write(updated, section.roadIce, data, "conditionsRoadIce", readOnlyFields);
+        updated = this.write(updated, section.roadOther, data, "conditionsRoadOther", readOnlyFields);
+        updated = this.write(updated, section.roadWet, data, "conditionsRoadWet", readOnlyFields);
+        updated = this.write(updated, section.sixteenPlusPassengers, data, "conditionsSixteenPlusPassengers", readOnlyFields);
+        updated = this.write(updated, section.surfaceBlacktop, data, "conditionsSurfaceBlacktop", readOnlyFields);
+        updated = this.write(updated, section.surfaceConcrete, data, "conditionsSurfaceConcrete", readOnlyFields);
+        updated = this.write(updated, section.surfaceDirt, data, "conditionsSurfaceDirt", readOnlyFields);
+        updated = this.write(updated, section.surfaceOther, data, "conditionsSurfaceOther", readOnlyFields);
+        updated = this.write(updated, section.trafficHeavy, data, "conditionsTrafficHeavy", readOnlyFields);
+        updated = this.write(updated, section.trafficLight, data, "conditionsTrafficLight", readOnlyFields);
+        updated = this.write(updated, section.trafficMedium, data, "conditionsTrafficMedium", readOnlyFields);
+        updated = this.write(updated, section.weatherClear, data, "conditionsWeatherClear", readOnlyFields);
+        updated = this.write(updated, section.weatherCloudy, data, "conditionsWeatherCloudy", readOnlyFields);
+        updated = this.write(updated, section.weatherOther, data, "conditionsWeatherOther", readOnlyFields);
 
-        return this.write(updated, section.weatherRaining, data.conditionsWeatherRaining);
+        return this.write(updated, section.weatherRaining, data, "conditionsWeatherRaining", readOnlyFields);
     }
 
     private extractCourtAction(section: CourtActionSectionModel, data: FormValues<IGAUTCData>): void {
@@ -170,24 +170,24 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "courtActionWarrantServed", section.getWarrantServed());
     }
 
-    private populateCourtAction(section: CourtActionSectionModel, data: IGAUTCData): CourtActionSectionModel {
-        let updated = this.write(section, section.arraignmentPlea, data.courtActionArraignmentPlea);
-        updated = this.write(updated, section.bailFixed, data.courtActionBailFixed);
-        updated = this.write(updated, section.bailGivenBySignature, data.courtActionBailGivenBySignature);
-        updated = this.write(updated, section.bailTakenBySignature, data.courtActionBailTakenBySignature);
-        updated = this.write(updated, section.cashDeposit, data.courtActionCashDeposit);
-        updated = this.write(updated, section.clerkSignature, data.courtActionClerkSignature);
-        updated = this.write(updated, section.complaintFiled, data.courtActionComplaintFiled);
-        updated = this.write(updated, section.date, data.courtActionDate);
-        updated = this.write(updated, section.fineAmount, data.courtActionFineAmount);
-        updated = this.write(updated, section.firstContinuance, data.courtActionFirstContinuance);
-        updated = this.write(updated, section.firstContinuanceReason, data.courtActionFirstContinuanceReason);
-        updated = this.write(updated, section.secondContinuance, data.courtActionSecondContinuance);
-        updated = this.write(updated, section.secondContinuanceReason, data.courtActionSecondContinuanceReason);
-        updated = this.write(updated, section.waivesTrialByJury, data.courtActionWaivesTrialByJury);
-        updated = this.write(updated, section.warrantIssued, data.courtActionWarrantIssued);
+    private populateCourtAction(section: CourtActionSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): CourtActionSectionModel {
+        let updated = this.write(section, section.arraignmentPlea, data, "courtActionArraignmentPlea", readOnlyFields);
+        updated = this.write(updated, section.bailFixed, data, "courtActionBailFixed", readOnlyFields);
+        updated = this.write(updated, section.bailGivenBySignature, data, "courtActionBailGivenBySignature", readOnlyFields);
+        updated = this.write(updated, section.bailTakenBySignature, data, "courtActionBailTakenBySignature", readOnlyFields);
+        updated = this.write(updated, section.cashDeposit, data, "courtActionCashDeposit", readOnlyFields);
+        updated = this.write(updated, section.clerkSignature, data, "courtActionClerkSignature", readOnlyFields);
+        updated = this.write(updated, section.complaintFiled, data, "courtActionComplaintFiled", readOnlyFields);
+        updated = this.write(updated, section.date, data, "courtActionDate", readOnlyFields);
+        updated = this.write(updated, section.fineAmount, data, "courtActionFineAmount", readOnlyFields);
+        updated = this.write(updated, section.firstContinuance, data, "courtActionFirstContinuance", readOnlyFields);
+        updated = this.write(updated, section.firstContinuanceReason, data, "courtActionFirstContinuanceReason", readOnlyFields);
+        updated = this.write(updated, section.secondContinuance, data, "courtActionSecondContinuance", readOnlyFields);
+        updated = this.write(updated, section.secondContinuanceReason, data, "courtActionSecondContinuanceReason", readOnlyFields);
+        updated = this.write(updated, section.waivesTrialByJury, data, "courtActionWaivesTrialByJury", readOnlyFields);
+        updated = this.write(updated, section.warrantIssued, data, "courtActionWarrantIssued", readOnlyFields);
 
-        return this.write(updated, section.warrantServed, data.courtActionWarrantServed);
+        return this.write(updated, section.warrantServed, data, "courtActionWarrantServed", readOnlyFields);
     }
 
     private extractDisposition(section: DispositionSectionModel, data: FormValues<IGAUTCData>): void {
@@ -208,23 +208,23 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "dispositionTrialNotGuilty", section.getTrialNotGuilty());
     }
 
-    private populateDisposition(section: DispositionSectionModel, data: IGAUTCData): DispositionSectionModel {
-        let updated = this.write(section, section.alcoholDrugAssessment, data.dispositionAlcoholDrugAssessment);
-        updated = this.write(updated, section.alcoholDrugRiskReductionSchool, data.dispositionAlcoholDrugRiskReductionSchool);
-        updated = this.write(updated, section.bondForfeiture, data.dispositionBondForfeiture);
-        updated = this.write(updated, section.daysInJail, data.dispositionDaysInJail);
-        updated = this.write(updated, section.deadDocket, data.dispositionDeadDocket);
-        updated = this.write(updated, section.defensiveDrivingSchool, data.dispositionDefensiveDrivingSchool);
-        updated = this.write(updated, section.fineAmount, data.dispositionFineAmount);
-        updated = this.write(updated, section.nolleProssed, data.dispositionNolleProssed);
-        updated = this.write(updated, section.pleadsGuilty, data.dispositionPleadsGuilty);
-        updated = this.write(updated, section.pleadsNoloContendere, data.dispositionPleadsNoloContendere);
-        updated = this.write(updated, section.pleadsNotGuilty, data.dispositionPleadsNotGuilty);
-        updated = this.write(updated, section.trialCourtAdjudicated, data.dispositionTrialCourtAdjudicated);
-        updated = this.write(updated, section.trialGuilty, data.dispositionTrialGuilty);
-        updated = this.write(updated, section.trialJury, data.dispositionTrialJury);
+    private populateDisposition(section: DispositionSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): DispositionSectionModel {
+        let updated = this.write(section, section.alcoholDrugAssessment, data, "dispositionAlcoholDrugAssessment", readOnlyFields);
+        updated = this.write(updated, section.alcoholDrugRiskReductionSchool, data, "dispositionAlcoholDrugRiskReductionSchool", readOnlyFields);
+        updated = this.write(updated, section.bondForfeiture, data, "dispositionBondForfeiture", readOnlyFields);
+        updated = this.write(updated, section.daysInJail, data, "dispositionDaysInJail", readOnlyFields);
+        updated = this.write(updated, section.deadDocket, data, "dispositionDeadDocket", readOnlyFields);
+        updated = this.write(updated, section.defensiveDrivingSchool, data, "dispositionDefensiveDrivingSchool", readOnlyFields);
+        updated = this.write(updated, section.fineAmount, data, "dispositionFineAmount", readOnlyFields);
+        updated = this.write(updated, section.nolleProssed, data, "dispositionNolleProssed", readOnlyFields);
+        updated = this.write(updated, section.pleadsGuilty, data, "dispositionPleadsGuilty", readOnlyFields);
+        updated = this.write(updated, section.pleadsNoloContendere, data, "dispositionPleadsNoloContendere", readOnlyFields);
+        updated = this.write(updated, section.pleadsNotGuilty, data, "dispositionPleadsNotGuilty", readOnlyFields);
+        updated = this.write(updated, section.trialCourtAdjudicated, data, "dispositionTrialCourtAdjudicated", readOnlyFields);
+        updated = this.write(updated, section.trialGuilty, data, "dispositionTrialGuilty", readOnlyFields);
+        updated = this.write(updated, section.trialJury, data, "dispositionTrialJury", readOnlyFields);
 
-        return this.write(updated, section.trialNotGuilty, data.dispositionTrialNotGuilty);
+        return this.write(updated, section.trialNotGuilty, data, "dispositionTrialNotGuilty", readOnlyFields);
     }
 
     private extractDui(section: DuiSectionModel, data: FormValues<IGAUTCViolationData>): void {
@@ -238,14 +238,14 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     private populateDui(section: DuiSectionModel, data: IGAUTCViolationData): DuiSectionModel {
-        let updated = this.write(section, section.charged, data.duiCharged);
-        updated = this.write(updated, section.testAdministeredBy, data.duiTestAdministeredBy);
-        updated = this.write(updated, section.testBlood, data.duiTestBlood);
-        updated = this.write(updated, section.testBreath, data.duiTestBreath);
-        updated = this.write(updated, section.testOther, data.duiTestOther);
-        updated = this.write(updated, section.testResults, data.duiTestResults);
+        let updated = this.write(section, section.charged, data, "duiCharged");
+        updated = this.write(updated, section.testAdministeredBy, data, "duiTestAdministeredBy");
+        updated = this.write(updated, section.testBlood, data, "duiTestBlood");
+        updated = this.write(updated, section.testBreath, data, "duiTestBreath");
+        updated = this.write(updated, section.testOther, data, "duiTestOther");
+        updated = this.write(updated, section.testResults, data, "duiTestResults");
 
-        return this.write(updated, section.testUrine, data.duiTestUrine);
+        return this.write(updated, section.testUrine, data, "duiTestUrine");
     }
 
     private extractHeader(section: HeaderSectionModel, data: FormValues<IGAUTCData>): void {
@@ -261,18 +261,18 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "headerYear", section.getYear());
     }
 
-    private populateHeader(section: HeaderSectionModel, data: IGAUTCData): HeaderSectionModel {
-        let updated = this.write(section, section.am, data.headerAm);
-        updated = this.write(updated, section.cicaNumber, data.headerCicaNumber);
-        updated = this.write(updated, section.citationNumber, data.headerCitationNumber);
-        updated = this.write(updated, section.day, data.headerDay);
-        updated = this.write(updated, section.hour, data.headerHour);
-        updated = this.write(updated, section.minute, data.headerMinute);
-        updated = this.write(updated, section.month, data.headerMonth);
-        updated = this.write(updated, section.ncicNumber, data.headerNcicNumber);
-        updated = this.write(updated, section.pm, data.headerPm);
+    private populateHeader(section: HeaderSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): HeaderSectionModel {
+        let updated = this.write(section, section.am, data, "headerAm", readOnlyFields);
+        updated = this.write(updated, section.cicaNumber, data, "headerCicaNumber", readOnlyFields);
+        updated = this.write(updated, section.citationNumber, data, "headerCitationNumber", readOnlyFields);
+        updated = this.write(updated, section.day, data, "headerDay", readOnlyFields);
+        updated = this.write(updated, section.hour, data, "headerHour", readOnlyFields);
+        updated = this.write(updated, section.minute, data, "headerMinute", readOnlyFields);
+        updated = this.write(updated, section.month, data, "headerMonth", readOnlyFields);
+        updated = this.write(updated, section.ncicNumber, data, "headerNcicNumber", readOnlyFields);
+        updated = this.write(updated, section.pm, data, "headerPm", readOnlyFields);
 
-        return this.write(updated, section.year, data.headerYear);
+        return this.write(updated, section.year, data, "headerYear", readOnlyFields);
     }
 
     private extractJudgment(section: JudgmentSectionModel, data: FormValues<IGAUTCData>): void {
@@ -283,13 +283,13 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "judgmentJudgeSignature", section.getJudgeSignature());
     }
 
-    private populateJudgment(section: JudgmentSectionModel, data: IGAUTCData): JudgmentSectionModel {
-        let updated = this.write(section, section.appealBond, data.judgmentAppealBond);
-        updated = this.write(updated, section.confinementTerm, data.judgmentConfinementTerm);
-        updated = this.write(updated, section.date, data.judgmentDate);
-        updated = this.write(updated, section.fineAmount, data.judgmentFineAmount);
+    private populateJudgment(section: JudgmentSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): JudgmentSectionModel {
+        let updated = this.write(section, section.appealBond, data, "judgmentAppealBond", readOnlyFields);
+        updated = this.write(updated, section.confinementTerm, data, "judgmentConfinementTerm", readOnlyFields);
+        updated = this.write(updated, section.date, data, "judgmentDate", readOnlyFields);
+        updated = this.write(updated, section.fineAmount, data, "judgmentFineAmount", readOnlyFields);
 
-        return this.write(updated, section.judgeSignature, data.judgmentJudgeSignature);
+        return this.write(updated, section.judgeSignature, data, "judgmentJudgeSignature", readOnlyFields);
     }
 
     private extractLocation(section: LocationSectionModel, data: FormValues<IGAUTCData>): void {
@@ -298,11 +298,11 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "locationStreet", section.getStreet());
     }
 
-    private populateLocation(section: LocationSectionModel, data: IGAUTCData): LocationSectionModel {
-        let updated = this.write(section, section.city, data.locationCity);
-        updated = this.write(updated, section.county, data.locationCounty);
+    private populateLocation(section: LocationSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): LocationSectionModel {
+        let updated = this.write(section, section.city, data, "locationCity", readOnlyFields);
+        updated = this.write(updated, section.county, data, "locationCounty", readOnlyFields);
 
-        return this.write(updated, section.street, data.locationStreet);
+        return this.write(updated, section.street, data, "locationStreet", readOnlyFields);
     }
 
     private extractOffense(section: OffenseSectionModel, data: FormValues<IGAUTCViolationData>): void {
@@ -317,15 +317,15 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     private populateOffense(section: OffenseSectionModel, data: IGAUTCViolationData): OffenseSectionModel {
-        let updated = this.write(section, section.codeSection, data.offenseCodeSection);
-        updated = this.write(updated, section.companionCaseNo, data.offenseCompanionCaseNo);
-        updated = this.write(updated, section.companionCaseYes, data.offenseCompanionCaseYes);
-        updated = this.write(updated, section.companionCitation, data.offenseCompanionCitation);
-        updated = this.write(updated, section.description, data.offenseDescription);
-        updated = this.write(updated, section.localOrdinance, data.offenseLocalOrdinance);
-        updated = this.write(updated, section.remarks, data.offenseRemarks);
+        let updated = this.write(section, section.codeSection, data, "offenseCodeSection");
+        updated = this.write(updated, section.companionCaseNo, data, "offenseCompanionCaseNo");
+        updated = this.write(updated, section.companionCaseYes, data, "offenseCompanionCaseYes");
+        updated = this.write(updated, section.companionCitation, data, "offenseCompanionCitation");
+        updated = this.write(updated, section.description, data, "offenseDescription");
+        updated = this.write(updated, section.localOrdinance, data, "offenseLocalOrdinance");
+        updated = this.write(updated, section.remarks, data, "offenseRemarks");
 
-        return this.write(updated, section.stateLaw, data.offenseStateLaw);
+        return this.write(updated, section.stateLaw, data, "offenseStateLaw");
     }
 
     private extractOfficer(section: OfficerSectionModel, data: FormValues<IGAUTCData>): void {
@@ -343,20 +343,20 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "officerTime", section.getTime());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IGAUTCData): OfficerSectionModel {
-        let updated = this.write(section, section.apdIdNumber, data.officerApdIdNumber);
-        updated = this.write(updated, section.assignment, data.officerAssignment);
-        updated = this.write(updated, section.courtCode, data.officerCourtCode);
-        updated = this.write(updated, section.officerName, data.officerName);
-        updated = this.write(updated, section.offDays, data.officerOffDays);
-        updated = this.write(updated, section.secondApdIdNumber, data.officerSecondApdIdNumber);
-        updated = this.write(updated, section.secondAssignment, data.officerSecondAssignment);
-        updated = this.write(updated, section.secondCourtCode, data.officerSecondCourtCode);
-        updated = this.write(updated, section.secondOfficerName, data.officerSecondName);
-        updated = this.write(updated, section.secondOffDays, data.officerSecondOffDays);
-        updated = this.write(updated, section.secondTime, data.officerSecondTime);
+    private populateOfficer(section: OfficerSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): OfficerSectionModel {
+        let updated = this.write(section, section.apdIdNumber, data, "officerApdIdNumber", readOnlyFields);
+        updated = this.write(updated, section.assignment, data, "officerAssignment", readOnlyFields);
+        updated = this.write(updated, section.courtCode, data, "officerCourtCode", readOnlyFields);
+        updated = this.write(updated, section.officerName, data, "officerName", readOnlyFields);
+        updated = this.write(updated, section.offDays, data, "officerOffDays", readOnlyFields);
+        updated = this.write(updated, section.secondApdIdNumber, data, "officerSecondApdIdNumber", readOnlyFields);
+        updated = this.write(updated, section.secondAssignment, data, "officerSecondAssignment", readOnlyFields);
+        updated = this.write(updated, section.secondCourtCode, data, "officerSecondCourtCode", readOnlyFields);
+        updated = this.write(updated, section.secondOfficerName, data, "officerSecondName", readOnlyFields);
+        updated = this.write(updated, section.secondOffDays, data, "officerSecondOffDays", readOnlyFields);
+        updated = this.write(updated, section.secondTime, data, "officerSecondTime", readOnlyFields);
 
-        return this.write(updated, section.time, data.officerTime);
+        return this.write(updated, section.time, data, "officerTime", readOnlyFields);
     }
 
     private extractPlea(section: PleaSectionModel, data: FormValues<IGAUTCData>): void {
@@ -374,20 +374,20 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "pleaYear", section.getYear());
     }
 
-    private populatePlea(section: PleaSectionModel, data: IGAUTCData): PleaSectionModel {
-        let updated = this.write(section, section.accusedName, data.pleaAccusedName);
-        updated = this.write(updated, section.accusedSignature, data.pleaAccusedSignature);
-        updated = this.write(updated, section.chargedWith, data.pleaChargedWith);
-        updated = this.write(updated, section.day, data.pleaDay);
-        updated = this.write(updated, section.judgeName, data.pleaJudgeName);
-        updated = this.write(updated, section.judgeSignature, data.pleaJudgeSignature);
-        updated = this.write(updated, section.maximumFine, data.pleaMaximumFine);
-        updated = this.write(updated, section.maximumMonths, data.pleaMaximumMonths);
-        updated = this.write(updated, section.minimumFine, data.pleaMinimumFine);
-        updated = this.write(updated, section.minimumMonths, data.pleaMinimumMonths);
-        updated = this.write(updated, section.month, data.pleaMonth);
+    private populatePlea(section: PleaSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): PleaSectionModel {
+        let updated = this.write(section, section.accusedName, data, "pleaAccusedName", readOnlyFields);
+        updated = this.write(updated, section.accusedSignature, data, "pleaAccusedSignature", readOnlyFields);
+        updated = this.write(updated, section.chargedWith, data, "pleaChargedWith", readOnlyFields);
+        updated = this.write(updated, section.day, data, "pleaDay", readOnlyFields);
+        updated = this.write(updated, section.judgeName, data, "pleaJudgeName", readOnlyFields);
+        updated = this.write(updated, section.judgeSignature, data, "pleaJudgeSignature", readOnlyFields);
+        updated = this.write(updated, section.maximumFine, data, "pleaMaximumFine", readOnlyFields);
+        updated = this.write(updated, section.maximumMonths, data, "pleaMaximumMonths", readOnlyFields);
+        updated = this.write(updated, section.minimumFine, data, "pleaMinimumFine", readOnlyFields);
+        updated = this.write(updated, section.minimumMonths, data, "pleaMinimumMonths", readOnlyFields);
+        updated = this.write(updated, section.month, data, "pleaMonth", readOnlyFields);
 
-        return this.write(updated, section.year, data.pleaYear);
+        return this.write(updated, section.year, data, "pleaYear", readOnlyFields);
     }
 
     private extractStatus(section: StatusSectionModel, data: FormValues<IGAUTCData>): void {
@@ -401,16 +401,16 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "statusInjuriesYes", section.getInjuriesYes());
     }
 
-    private populateStatus(section: StatusSectionModel, data: IGAUTCData): StatusSectionModel {
-        let updated = this.write(section, section.accidentNo, data.statusAccidentNo);
-        updated = this.write(updated, section.accidentYes, data.statusAccidentYes);
-        updated = this.write(updated, section.cdlNo, data.statusCdlNo);
-        updated = this.write(updated, section.cdlYes, data.statusCdlYes);
-        updated = this.write(updated, section.fatalitiesNo, data.statusFatalitiesNo);
-        updated = this.write(updated, section.fatalitiesYes, data.statusFatalitiesYes);
-        updated = this.write(updated, section.injuriesNo, data.statusInjuriesNo);
+    private populateStatus(section: StatusSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): StatusSectionModel {
+        let updated = this.write(section, section.accidentNo, data, "statusAccidentNo", readOnlyFields);
+        updated = this.write(updated, section.accidentYes, data, "statusAccidentYes", readOnlyFields);
+        updated = this.write(updated, section.cdlNo, data, "statusCdlNo", readOnlyFields);
+        updated = this.write(updated, section.cdlYes, data, "statusCdlYes", readOnlyFields);
+        updated = this.write(updated, section.fatalitiesNo, data, "statusFatalitiesNo", readOnlyFields);
+        updated = this.write(updated, section.fatalitiesYes, data, "statusFatalitiesYes", readOnlyFields);
+        updated = this.write(updated, section.injuriesNo, data, "statusInjuriesNo", readOnlyFields);
 
-        return this.write(updated, section.injuriesYes, data.statusInjuriesYes);
+        return this.write(updated, section.injuriesYes, data, "statusInjuriesYes", readOnlyFields);
     }
 
     private extractSummons(section: SummonsSectionModel, data: FormValues<IGAUTCData>): void {
@@ -431,23 +431,23 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "summonsSignature", section.getSignature());
     }
 
-    private populateSummons(section: SummonsSectionModel, data: IGAUTCData): SummonsSectionModel {
-        let updated = this.write(section, section.am, data.summonsAm);
-        updated = this.write(updated, section.appearanceDay, data.summonsAppearanceDay);
-        updated = this.write(updated, section.appearanceMonth, data.summonsAppearanceMonth);
-        updated = this.write(updated, section.appearanceYear, data.summonsAppearanceYear);
-        updated = this.write(updated, section.city, data.summonsCity);
-        updated = this.write(updated, section.copy, data.summonsCopy);
-        updated = this.write(updated, section.courtName, data.summonsCourtName);
-        updated = this.write(updated, section.hour, data.summonsHour);
-        updated = this.write(updated, section.jail, data.summonsJail);
-        updated = this.write(updated, section.licenseDisplayedNo, data.summonsLicenseDisplayedNo);
-        updated = this.write(updated, section.licenseDisplayedYes, data.summonsLicenseDisplayedYes);
-        updated = this.write(updated, section.minute, data.summonsMinute);
-        updated = this.write(updated, section.pm, data.summonsPm);
-        updated = this.write(updated, section.releaseTo, data.summonsReleaseTo);
+    private populateSummons(section: SummonsSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): SummonsSectionModel {
+        let updated = this.write(section, section.am, data, "summonsAm", readOnlyFields);
+        updated = this.write(updated, section.appearanceDay, data, "summonsAppearanceDay", readOnlyFields);
+        updated = this.write(updated, section.appearanceMonth, data, "summonsAppearanceMonth", readOnlyFields);
+        updated = this.write(updated, section.appearanceYear, data, "summonsAppearanceYear", readOnlyFields);
+        updated = this.write(updated, section.city, data, "summonsCity", readOnlyFields);
+        updated = this.write(updated, section.copy, data, "summonsCopy", readOnlyFields);
+        updated = this.write(updated, section.courtName, data, "summonsCourtName", readOnlyFields);
+        updated = this.write(updated, section.hour, data, "summonsHour", readOnlyFields);
+        updated = this.write(updated, section.jail, data, "summonsJail", readOnlyFields);
+        updated = this.write(updated, section.licenseDisplayedNo, data, "summonsLicenseDisplayedNo", readOnlyFields);
+        updated = this.write(updated, section.licenseDisplayedYes, data, "summonsLicenseDisplayedYes", readOnlyFields);
+        updated = this.write(updated, section.minute, data, "summonsMinute", readOnlyFields);
+        updated = this.write(updated, section.pm, data, "summonsPm", readOnlyFields);
+        updated = this.write(updated, section.releaseTo, data, "summonsReleaseTo", readOnlyFields);
 
-        return this.write(updated, section.signature, data.summonsSignature);
+        return this.write(updated, section.signature, data, "summonsSignature", readOnlyFields);
     }
 
     private extractVehicle(section: VehicleSectionModel, data: FormValues<IGAUTCData>): void {
@@ -460,15 +460,15 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IGAUTCData): VehicleSectionModel {
-        let updated = this.write(section, section.color, data.vehicleColor);
-        updated = this.write(updated, section.make, data.vehicleMake);
-        updated = this.write(updated, section.model, data.vehicleModel);
-        updated = this.write(updated, section.registrationNumber, data.vehicleRegistrationNumber);
-        updated = this.write(updated, section.registrationState, data.vehicleRegistrationState);
-        updated = this.write(updated, section.registrationYear, data.vehicleRegistrationYear);
+    private populateVehicle(section: VehicleSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): VehicleSectionModel {
+        let updated = this.write(section, section.color, data, "vehicleColor", readOnlyFields);
+        updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
+        updated = this.write(updated, section.model, data, "vehicleModel", readOnlyFields);
+        updated = this.write(updated, section.registrationNumber, data, "vehicleRegistrationNumber", readOnlyFields);
+        updated = this.write(updated, section.registrationState, data, "vehicleRegistrationState", readOnlyFields);
+        updated = this.write(updated, section.registrationYear, data, "vehicleRegistrationYear", readOnlyFields);
 
-        return this.write(updated, section.year, data.vehicleYear);
+        return this.write(updated, section.year, data, "vehicleYear", readOnlyFields);
     }
 
     private extractViolation(section: ViolationSectionModel, data: FormValues<IGAUTCViolationData>): void {
@@ -486,18 +486,18 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     private populateViolation(section: ViolationSectionModel, data: IGAUTCViolationData): ViolationSectionModel {
-        let updated = this.write(section, section.calibrationCheck, data.violationCalibrationCheck);
-        updated = this.write(updated, section.clockedByOther, data.violationClockedByOther);
-        updated = this.write(updated, section.clockedByPatrolVehicle, data.violationClockedByPatrolVehicle);
-        updated = this.write(updated, section.clockedSpeed, data.violationClockedSpeed);
-        updated = this.write(updated, section.driverRequestedAccuracyCheck, data.violationDriverRequestedAccuracyCheck);
-        updated = this.write(updated, section.laser, data.violationLaser);
-        updated = this.write(updated, section.radar, data.violationRadar);
-        updated = this.write(updated, section.serialNumber, data.violationSerialNumber);
-        updated = this.write(updated, section.speedZone, data.violationSpeedZone);
-        updated = this.write(updated, section.twoLaneRoad, data.violationTwoLaneRoad);
+        let updated = this.write(section, section.calibrationCheck, data, "violationCalibrationCheck");
+        updated = this.write(updated, section.clockedByOther, data, "violationClockedByOther");
+        updated = this.write(updated, section.clockedByPatrolVehicle, data, "violationClockedByPatrolVehicle");
+        updated = this.write(updated, section.clockedSpeed, data, "violationClockedSpeed");
+        updated = this.write(updated, section.driverRequestedAccuracyCheck, data, "violationDriverRequestedAccuracyCheck");
+        updated = this.write(updated, section.laser, data, "violationLaser");
+        updated = this.write(updated, section.radar, data, "violationRadar");
+        updated = this.write(updated, section.serialNumber, data, "violationSerialNumber");
+        updated = this.write(updated, section.speedZone, data, "violationSpeedZone");
+        updated = this.write(updated, section.twoLaneRoad, data, "violationTwoLaneRoad");
 
-        return this.write(updated, section.vascar, data.violationVascar);
+        return this.write(updated, section.vascar, data, "violationVascar");
     }
 
     private extractViolator(section: ViolatorSectionModel, data: FormValues<IGAUTCData>): void {
@@ -525,30 +525,30 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "violatorZipCode", section.getZipCode());
     }
 
-    private populateViolator(section: ViolatorSectionModel, data: IGAUTCData): ViolatorSectionModel {
-        let updated = this.write(section, section.address, data.violatorAddress);
-        updated = this.write(updated, section.apartment, data.violatorApartment);
-        updated = this.write(updated, section.city, data.violatorCity);
-        updated = this.write(updated, section.dateOfBirth, data.violatorDateOfBirth);
-        updated = this.write(updated, section.eye, data.violatorEye);
-        updated = this.write(updated, section.firstName, data.violatorFirstName);
-        updated = this.write(updated, section.hair, data.violatorHair);
-        updated = this.write(updated, section.height, data.violatorHeight);
-        updated = this.write(updated, section.lastName, data.violatorLastName);
-        updated = this.write(updated, section.licenseClass, data.violatorLicenseClass);
-        updated = this.write(updated, section.licenseEndorsements, data.violatorLicenseEndorsements);
-        updated = this.write(updated, section.licenseExpires, data.violatorLicenseExpires);
-        updated = this.write(updated, section.licenseState, data.violatorLicenseState);
-        updated = this.write(updated, section.middleName, data.violatorMiddleName);
-        updated = this.write(updated, section.operatorLicenseNumber, data.violatorOperatorLicenseNumber);
-        updated = this.write(updated, section.phone, data.violatorPhone);
-        updated = this.write(updated, section.race, data.violatorRace);
-        updated = this.write(updated, section.sex, data.violatorSex);
-        updated = this.write(updated, section.state, data.violatorState);
-        updated = this.write(updated, section.suffix, data.violatorSuffix);
-        updated = this.write(updated, section.weight, data.violatorWeight);
+    private populateViolator(section: ViolatorSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): ViolatorSectionModel {
+        let updated = this.write(section, section.address, data, "violatorAddress", readOnlyFields);
+        updated = this.write(updated, section.apartment, data, "violatorApartment", readOnlyFields);
+        updated = this.write(updated, section.city, data, "violatorCity", readOnlyFields);
+        updated = this.write(updated, section.dateOfBirth, data, "violatorDateOfBirth", readOnlyFields);
+        updated = this.write(updated, section.eye, data, "violatorEye", readOnlyFields);
+        updated = this.write(updated, section.firstName, data, "violatorFirstName", readOnlyFields);
+        updated = this.write(updated, section.hair, data, "violatorHair", readOnlyFields);
+        updated = this.write(updated, section.height, data, "violatorHeight", readOnlyFields);
+        updated = this.write(updated, section.lastName, data, "violatorLastName", readOnlyFields);
+        updated = this.write(updated, section.licenseClass, data, "violatorLicenseClass", readOnlyFields);
+        updated = this.write(updated, section.licenseEndorsements, data, "violatorLicenseEndorsements", readOnlyFields);
+        updated = this.write(updated, section.licenseExpires, data, "violatorLicenseExpires", readOnlyFields);
+        updated = this.write(updated, section.licenseState, data, "violatorLicenseState", readOnlyFields);
+        updated = this.write(updated, section.middleName, data, "violatorMiddleName", readOnlyFields);
+        updated = this.write(updated, section.operatorLicenseNumber, data, "violatorOperatorLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.phone, data, "violatorPhone", readOnlyFields);
+        updated = this.write(updated, section.race, data, "violatorRace", readOnlyFields);
+        updated = this.write(updated, section.sex, data, "violatorSex", readOnlyFields);
+        updated = this.write(updated, section.state, data, "violatorState", readOnlyFields);
+        updated = this.write(updated, section.suffix, data, "violatorSuffix", readOnlyFields);
+        updated = this.write(updated, section.weight, data, "violatorWeight", readOnlyFields);
 
-        return this.write(updated, section.zipCode, data.violatorZipCode);
+        return this.write(updated, section.zipCode, data, "violatorZipCode", readOnlyFields);
     }
 
     /** Returns a new form with the data applied to its twelve citation page sections. */
@@ -560,7 +560,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
      * `additionalViolations` are left alone rather than removed, so a record naming fewer charges than the form
      * holds never silently discards a page an officer added.
      */
-    private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData): Promise<GAUTCFormModel> {
+    private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): Promise<GAUTCFormModel> {
         const additional = data.additionalViolations ?? [];
 
         let form2 = form;
@@ -573,15 +573,15 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         let collection = form2.getCitationPageCollection();
 
         collection.getPages<CitationPageModel>().forEach((page, index) => {
-            let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data));
-            updated = updated.set(updated.violatorSection, this.populateViolator(updated.getViolatorSection(), data));
-            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-            updated = updated.set(updated.statusSection, this.populateStatus(updated.getStatusSection(), data));
-            updated = updated.set(updated.conditionsSection, this.populateConditions(updated.getConditionsSection(), data));
-            updated = updated.set(updated.locationSection, this.populateLocation(updated.getLocationSection(), data));
-            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
-            updated = updated.set(updated.summonsSection, this.populateSummons(updated.getSummonsSection(), data));
-            updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data));
+            let updated = page.set(page.headerSection, this.populateHeader(page.getHeaderSection(), data, readOnlyFields));
+            updated = updated.set(updated.violatorSection, this.populateViolator(updated.getViolatorSection(), data, readOnlyFields));
+            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data, readOnlyFields));
+            updated = updated.set(updated.statusSection, this.populateStatus(updated.getStatusSection(), data, readOnlyFields));
+            updated = updated.set(updated.conditionsSection, this.populateConditions(updated.getConditionsSection(), data, readOnlyFields));
+            updated = updated.set(updated.locationSection, this.populateLocation(updated.getLocationSection(), data, readOnlyFields));
+            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data, readOnlyFields));
+            updated = updated.set(updated.summonsSection, this.populateSummons(updated.getSummonsSection(), data, readOnlyFields));
+            updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data, readOnlyFields));
 
             // Section II is what differs page to page; the first charge comes from the flat fields and the rest
             // from the array, and a page the data does not reach keeps what it holds
@@ -599,14 +599,14 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     /** Returns a new form with the data applied to its four court page sections. */
-    private populateCourtPage(form: GAUTCFormModel, data: IGAUTCData): GAUTCFormModel {
+    private populateCourtPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): GAUTCFormModel {
         const collection = form.getCourtPageCollection();
         const page = collection.getFirstPage<CourtPageModel>();
 
-        let updated = page.set(page.courtActionSection, this.populateCourtAction(page.getCourtActionSection(), data));
-        updated = updated.set(updated.pleaSection, this.populatePlea(updated.getPleaSection(), data));
-        updated = updated.set(updated.dispositionSection, this.populateDisposition(updated.getDispositionSection(), data));
-        updated = updated.set(updated.judgmentSection, this.populateJudgment(updated.getJudgmentSection(), data));
+        let updated = page.set(page.courtActionSection, this.populateCourtAction(page.getCourtActionSection(), data, readOnlyFields));
+        updated = updated.set(updated.pleaSection, this.populatePlea(updated.getPleaSection(), data, readOnlyFields));
+        updated = updated.set(updated.dispositionSection, this.populateDisposition(updated.getDispositionSection(), data, readOnlyFields));
+        updated = updated.set(updated.judgmentSection, this.populateJudgment(updated.getJudgmentSection(), data, readOnlyFields));
 
         return form.set(form.courtPage, collection.replace(0, updated));
     }

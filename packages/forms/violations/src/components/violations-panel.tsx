@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useService } from "@common/react";
-import { FButton, FOffCanvas, useForm } from "@forms/core";
-import { INotificationService, IReportViewerPanelProps } from "@forms/report-viewer";
+import { IFormCatalogItem } from "@forms/catalog";
+import { useForm, IControllerManager, FButton, FOffCanvas } from "@forms/core";
 
 import { ViolationSelectionList } from "./violation-selection-list";
 import { IViolation } from "../models";
@@ -10,16 +10,29 @@ import { IViolationSelectorService, IViolationService } from "../services";
 /** How many violations may be ticked before the rest of the list stops accepting picks. */
 const maxSelectedViolations = 5;
 
+/**
+ * Defines the props the violations panel is rendered with. Declared here rather than imported so that nothing in
+ * this package depends on whoever renders it; reporting a failure goes out through `onError` for the same reason,
+ * since the notification service belongs to the host of the panel rather than to the panel.
+ */
+export interface IViolationsPanelProps {
+    /** The catalog item the form was loaded from, which the binding is resolved by. */
+    readonly catalogItem: IFormCatalogItem;
+    /** The controllers belonging to the form the panel acts on. */
+    readonly controllers: IControllerManager;
+    /** Invoked when the list cannot be loaded or a chosen violation cannot be applied. */
+    readonly onError?: (message: string) => void;
+}
+
 /** Defines a manager component for the violation selector off canvas. */
-export function ViolationsPanel({ catalogItem, controllers }: IReportViewerPanelProps): React.JSX.Element {
-    const notificationService = useService<INotificationService>(INotificationService);
+export function ViolationsPanel({ catalogItem, controllers, onError }: IViolationsPanelProps): React.JSX.Element {
     const violationSelectorService = useService<IViolationSelectorService>(IViolationSelectorService);
     const violationService = useService<IViolationService>(IViolationService);
 
-    const [violations, setViolations] = useState<ReadonlyArray<IViolation>>([]);
-    const [selected, setSelected] = useState<ReadonlySet<string>>(new Set<string>());
-    const [isOpen, setIsOpen] = useState(false);
     const [isApplying, setIsApplying] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [selected, setSelected] = useState<ReadonlySet<string>>(new Set<string>());
+    const [violations, setViolations] = useState<ReadonlyArray<IViolation>>([]);
 
     const binding = violationService.getBinding(catalogItem);
 
@@ -55,12 +68,12 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerPanel
             .then(result => { if (isCurrent) { setViolations(result); } })
             .catch(() => {
                 if (isCurrent) {
-                    notificationService.showNotification({ type: "danger", message: "The violations could not be loaded." });
+                    onError?.("The violations could not be loaded.");
                 }
             });
 
         return () => { isCurrent = false; };
-    }, [isOpen, binding, violationService, notificationService]);
+    }, [isOpen, binding, violationService, onError]);
 
     const toggle = useCallback((code: string) => {
         // a violation already on the citation is ticked and locked, and is taken off only by deleting its page
@@ -102,7 +115,7 @@ export function ViolationsPanel({ catalogItem, controllers }: IReportViewerPanel
             close();
         }
         catch (error) {
-            notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The violations could not be added to the form." });
+            onError?.(error instanceof Error ? error.message : "The violations could not be added to the form.");
         }
         finally {
             setIsApplying(false);

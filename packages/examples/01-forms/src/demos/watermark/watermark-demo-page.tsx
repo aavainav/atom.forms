@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
-import { useService, useServices } from "@common/react";
-import { IFormCatalogService, IFormDataHooks, withDataHooks } from "@forms/catalog";
+import { useSearchParams } from "react-router";
+import { useService } from "@common/react";
 import { ControllerManager, FAsyncLoader, FormStatus, IControllerManager, getStatusWatermark } from "@forms/core";
 import { IInitialForm, IReportViewerService, ReportViewerForm } from "@forms/report-viewer";
+
+import { createExampleDataManager } from "../../example-data";
 
 /** The catalog form the demo stamps. The public contact/warning form is a single page, so the watermark is in view without paging. */
 const catalogIdentity = { name: "SC Form 432 - Public Contact / Warning", version: "1.0" };
@@ -50,15 +51,14 @@ function WatermarkDemoForm({ controllers, initialForm, isReadOnly, status }: IWa
 
 /** Demonstrates the watermark each form status stamps across a page, and that a form carries one only while it renders read-only. */
 export default function WatermarkDemoPage(): React.JSX.Element {
-    const formCatalogService = useService<IFormCatalogService>(IFormCatalogService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
-    const services = useServices();
 
-    const params = useParams();
     const [searchParams] = useSearchParams();
 
     // the controls are rendered outside the form, so the page owns the controllers and hands them to the form
     const controllers = useMemo(() => new ControllerManager(), []);
+
+    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams), [searchParams]);
 
     const [status, setStatus] = useState<FormStatus>("voided");
     const [isReadOnly, setIsReadOnly] = useState(true);
@@ -98,10 +98,7 @@ export default function WatermarkDemoPage(): React.JSX.Element {
             */}
             <FAsyncLoader<IInitialForm>
                 key={`${status}:${isReadOnly}`}
-                op={async () => {
-                    const catalogItem = withDataHooks(await formCatalogService.get(catalogIdentity), services.tryGet(IFormDataHooks));
-                    return reportViewerService.loadFormReport(catalogItem, { params, searchParams });
-                }}
+                op={() => reportViewerService.loadForm(catalogIdentity, dataManager)}
             >
                 {(initialForm) => (
                     <WatermarkDemoForm controllers={controllers} initialForm={initialForm} isReadOnly={isReadOnly} status={status} />

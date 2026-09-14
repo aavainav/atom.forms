@@ -1,29 +1,60 @@
 import React from "react";
-import { Outlet } from "react-router";
 import { useService } from "@common/react";
-import { IControllerManager } from "@forms/core";
+import { FAsyncLoader, IFormIdentity, IReportViewerData } from "@forms/core";
 
-import { ModalManager } from "./modal";
 import { ReportViewerForm } from "./report-viewer-form";
-import { IInitialForm, IReportViewerService } from "../services";
+import { IDataManager, IInitialForm, IReportViewerService } from "../services";
 
-interface IReportViewerProps {
-    /** The controllers to use for the form; when omitted the viewer creates and owns a set of its own. Supply this when something outside the viewer, such as a panel of draggable items, needs the same controllers as the form. */
-    readonly controllers?: IControllerManager;
-    readonly initialForm?: IInitialForm;
+import "@forms/core/theme/_main.scss";
+
+/** Defines how a report is rendered, as opposed to which one is rendered or where its data comes from. */
+export interface IReportViewerSettings {
+    /** When true, every field on the form is disabled and its editing affordances (add/delete page, drag-and-drop import) are not offered. */
+    readonly isReadOnly?: boolean;
+    /** Whether the options bar is rendered beneath the form. */
+    readonly showOptions?: boolean;
 }
 
-/** Defines the report viewer component, used to render a form into view from the form catalog. */
-export const ReportViewer = ({ controllers, initialForm }: IReportViewerProps): React.JSX.Element => {
-    const reportViewerService = useService<IReportViewerService>(IReportViewerService);
+export interface IReportViewerProps<TData extends object = IReportViewerData> {
+    /** Which form to render. The catalog resolves it, and answers with its latest version when no version is named. */
+    readonly identity: IFormIdentity;
+    /** Where the form's data is read from and written back to. A viewer without one renders a blank, unsaveable form. */
+    readonly dataManager?: IDataManager<TData>;
+    /** How the form is rendered. */
+    readonly settings?: IReportViewerSettings;
+}
 
-    const isReadOnly = reportViewerService.isReadOnly;
+/**
+ * Renders a report: the host names a form and hands over its data, and everything else -- resolving the catalog
+ * item, building the model, populating it, and mounting the options and panels the form offers -- happens here.
+ * This is the whole of what a host app needs; nothing below it has to be reached for.
+ *
+ * A host that needs more than these three props -- controllers shared with something rendered outside the form, or
+ * a mutation of the model after it loads -- takes the longer way round instead: `IReportViewerService.loadForm`
+ * and then `ReportViewerForm`, which is exactly what this does.
+ */
+export function ReportViewer<TData extends object = IReportViewerData>({ identity, dataManager, settings }: IReportViewerProps<TData>): React.JSX.Element {
+    const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     return (
         <div id="report-viewer" className="d-flex flex-column">
-            {initialForm
-                ? <ReportViewerForm controllers={controllers} initialForm={initialForm} isReadOnly={isReadOnly} showOptions />
-                : <><Outlet /><ModalManager /></>}
+            {/*
+              * FAsyncLoader runs its op once, on mount, so a changed identity would otherwise leave the previously
+              * loaded form on screen. The key remounts it instead, which is also what drops the old form's
+              * controllers rather than re-seeding them with a form from a different definition tree.
+              */}
+            <FAsyncLoader<IInitialForm>
+                key={`${identity.name}@${identity.version ?? ""}`}
+                op={() => reportViewerService.loadForm(identity, dataManager)}>
+                {initialForm => (
+                    <ReportViewerForm
+                        initialForm={initialForm}
+                        dataManager={dataManager}
+                        isReadOnly={!!settings?.isReadOnly}
+                        showOptions={settings?.showOptions}
+                    />
+                )}
+            </FAsyncLoader>
         </div>
     );
 }

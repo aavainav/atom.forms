@@ -1,6 +1,6 @@
 # `@forms/public-contact-or-warning` — SC Form 432 (Public Contact / Warning)
 
-Catalog identity: **name `"SC Form 432 - Public Contact / Warning"`, version `"1.0"`**. Route `sc/432`. Module name
+Catalog identity: **name `"SC Form 432 - Public Contact / Warning"`, version `"1.0"`**. Sandbox route `sc/432`, which the host owns. Module name
 `public-contact-or-warning`. Form type **`"none"`** (extends `FormModel` directly — it is neither a citation nor a
 crash). Form factory version string `"v2025"`.
 
@@ -31,7 +31,7 @@ the **person** section, splitting it visually to match the printed form.
 | [src/models/record-page/](src/models/record-page/) | `record-page.ts` + one file per section + `dropzones/`. |
 | [src/components/](src/components/) | Root form, route loader, and `record-page/` mirroring the models tree. |
 | [src/mapping/public-contact-or-warning-data.ts](src/mapping/public-contact-or-warning-data.ts) | `IPublicContactOrWarningData` — **flat**, ~70 optional fields. Option fields are typed `IOptionValue`. |
-| [src/mapping/public-contact-or-warning-mapper.ts](src/mapping/public-contact-or-warning-mapper.ts) | `populate` is **synchronous**; one `extract`/`populate` pair per section, adjacent. The agency section's three fields (`populateAgency`) are the worked example of a lockable field: each `write()` call passes its own contract key plus `readOnlyFields`, so a host's `getDefaultData` can lock, say, the agency name while leaving city and county editable. No other section is wired up for locking. |
+| [src/mapping/public-contact-or-warning-mapper.ts](src/mapping/public-contact-or-warning-mapper.ts) | `populate` is **synchronous**; one `extract`/`populate` pair per section, adjacent. Every section method threads `readOnlyFields`, so any top-level key a host's `IDataManager.read` names comes back locked — the agency section is simply the one the sandbox demonstrates it on (`/sc/432?record=new`), locking the agency name while leaving city and county editable. |
 | [src/services/public-contact-or-warning.ts](src/services/public-contact-or-warning.ts) | `IPublicContactOrWarningService` — 2 `apply*Dropzone`, 6 `get*Options`, and `resolveVehicleDropzone`. |
 | [src/value-lists.ts](src/value-lists.ts) | `PublicContactOrWarningValueListId` + `publicContactOrWarningValueLists`. |
 | [src/generated/](src/generated/) · [data/](data/) | 2 generated lists (counties, race-ethnicities) + their source JSON and `lists.json`. |

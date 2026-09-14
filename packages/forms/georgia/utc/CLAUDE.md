@@ -1,6 +1,6 @@
 # `@forms/ga-utc` — Georgia Uniform Traffic Citation, Summons, and Accusation
 
-Catalog identity: **name `"GA Uniform Traffic Citation"`, version `"1.0"`**. Route `ga/utc`. Module name
+Catalog identity: **name `"GA Uniform Traffic Citation"`, version `"1.0"`**. Sandbox route `ga/utc`, which the host owns. Module name
 `ga-utc-form`. Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2026"`.
 
 City of Atlanta Department of Police. Form APD 008E Rev 4/10 = DPS-32C (1/02), authorized under GA Code 40-13-1 and

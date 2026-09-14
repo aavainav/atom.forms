@@ -1,7 +1,6 @@
 export * from "./module";
 
 export { bootstrapper as OKParkingFormBootstrapper } from "./bootstrapper";
-export { OKParkingFormLoader } from "./components";
 
 /** The data contract a host app maps its own record data to and from. */
 export type { IOKParkingData, IOKParkingViolationData } from "./mapping";

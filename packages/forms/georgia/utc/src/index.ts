@@ -1,7 +1,6 @@
 export * from "./module";
 
 export { bootstrapper as GAUTCFormBootstrapper } from "./bootstrapper";
-export { GAUTCFormLoader } from "./components";
 
 /** The data contract a host app maps its own record data to and from. */
 export type { IGAUTCData, IGAUTCViolationData } from "./mapping";

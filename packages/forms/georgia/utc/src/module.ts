@@ -1,5 +1,4 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
@@ -20,7 +19,7 @@ export interface IGAUTCConfiguration {
 /** Defines the Georgia uniform traffic citation module. */
 export class GAUTCModule implements IModule {
     readonly name = "ga-utc-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule, ViolationsModule];
+    readonly dependencies = [FormCatalogModule, ValueListsModule, ViolationsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IGAUTCOptions>(IGAUTCOptions);
@@ -71,14 +70,11 @@ export class GAUTCModule implements IModule {
             schema: GAUTCFormSchema,
             formFactory: GAUTCFormFactory,
             component: () => import("./components").then(module => module.GAUTCForm),
-            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
-            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
+            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
             mapper: new GAUTCMapper(),
             valueListIds: gaUtcValueLists.map(definition => definition.id),
             violationListId: GAUTCValueViolationListId.violation
         });
-
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerRoute("report-viewer", { path: "ga/utc", lazy: () => import("./components").then(module => ({ Component: module.GAUTCFormLoader })) });
     }
 }

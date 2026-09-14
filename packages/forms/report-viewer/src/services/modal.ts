@@ -1,10 +1,11 @@
-import * as React from "react";
 import { EventEmitter, IEvent } from "@common/event-emitter";
 import { createService, Singleton } from "@shrub/core";
-import { IModalAction, IModalCloseAction, IModalResult, FModalSize } from "@forms/core";
+import { IModalAction, IModalCloseAction, IModalOptions, IModalResult, FModalSize } from "@forms/core";
 
-// re-export the modal types for other modules to import
-export type { IModalAction, IModalCloseAction, IModalResult, FModalSize };
+// re-export the modal types for other modules to import. IModalOptions is among them because it describes the
+// modal itself rather than this service: @forms/printing types the showModal it is handed against it, and it sits
+// below this package, so the shape has to be reachable without depending on the report viewer.
+export type { IModalAction, IModalCloseAction, IModalOptions, IModalResult, FModalSize };
 
 export const IModalService = createService<IModalService>("report-viewer-modal-service");
 
@@ -57,26 +58,6 @@ export interface IConfirmOptions {
 
 export interface IModal {
     close(): void;
-}
-
-/** Defines options for opening a modal. */
-export interface IModalOptions {
-    /** An optional title for the modal. */
-    readonly title?: string;
-    /** A React component type or a string message. */
-    readonly content: React.ComponentType<any> | string;
-    /** The options to pass to the content component as props if the content is a React component. */
-    readonly contentProps?: Record<string, unknown>;
-    /** A set of actions for the modal that will get rendered as buttons in the footer. */
-    readonly actions?: IModalAction[];
-    /** An optional close action that will enable a close button in the title bar if defined. */
-    readonly close?: IModalCloseAction;
-    /** True if the modal should be shown full screen. */
-    readonly fullscreen?: boolean;
-    /** An optional custom size for the modal when not full screen. */
-    readonly size?: FModalSize;
-    /** True if the modal should remain open if clicking outside of the box; otherwise false to indicate the modal should close automatically. */
-    readonly persistent?: boolean;
 }
 
 @Singleton

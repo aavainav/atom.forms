@@ -1,10 +1,13 @@
 # `@forms/printing`
 
 Puts a form onto paper. Owns the **copies** a form publishes, the dialog for choosing between them, the print
-button in the report viewer's options bar, and the `@page` rules a print needs. Depends on `@forms/catalog`,
-`@forms/core`, `@forms/report-viewer`, `@forms/workbench`.
+button an options bar renders, and the `@page` rules a print needs. Depends on `@forms/catalog`, `@forms/core`.
 
-Module dependencies: `ReportViewerModule`, `FormCatalogModule`.
+Module dependencies: `FormCatalogModule`.
+
+**This package sits below whatever renders a form, and reaches nothing upward.** It registers its option nowhere;
+`@forms/report-viewer` imports `PrintOption` and mounts it itself. There is no bootstrapper here either — a host
+gets printing by rendering a report, not by naming it at startup.
 
 **There is no PDF library here.** Printing is a print stylesheet plus `window.print()`; the user takes the PDF from
 the browser's own print dialog with "Save as PDF". That keeps the text vector rather than a rasterized image, keeps
@@ -21,12 +24,12 @@ they sit on the sheet. Nothing else about a form changes to support one.
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `PrintingModule` + `IPrintingConfiguration` (`registerProfiles`). Registers the print option with the report viewer at order 300, between save and day/night. |
+| [src/module.ts](src/module.ts) | `PrintingModule` + `IPrintingConfiguration` (`registerProfiles`). Registers the print service and nothing else. |
 | [src/options.ts](src/options.ts) | `IPrintingOptions`: `margin` (inches), `orientation`, `paper`. Bound to module settings; these are the defaults a copy naming none of its own is printed with. |
 | [src/models/print-profile.ts](src/models/print-profile.ts) | `IPrintProfile`, `PrintOrientation`, `PrintPaper`. |
 | [src/services/print.ts](src/services/print.ts) | **The heart.** `IPrintService` (read) / `IPrintRegistrationService` (write) and the `PrintService` implementing both. |
-| [src/components/print-option.tsx](src/components/print-option.tsx) | The `#print-button` in the options bar, and the `showModal` call that opens the dialog. |
-| [src/components/print-dialog.tsx](src/components/print-dialog.tsx) | The copy + layout picker. The **body** of the modal only — the chrome belongs to the report viewer's `IModalService`. |
+| [src/components/print-option.tsx](src/components/print-option.tsx) | The `#print-button` for an options bar, `IPrintOptionProps`, and the `showModal` call that opens the dialog. |
+| [src/components/print-dialog.tsx](src/components/print-dialog.tsx) | The copy + layout picker. The **body** of the modal only — the chrome belongs to whoever handed down `showModal`. |
 
 The print **layout** itself is not here — it is `FPageCollection`'s print branch and
 [`@forms/core/theme/components/_print.scss`](../core/theme/components/_print.scss), because core owns `.f-page` and
@@ -87,13 +90,31 @@ config.get<IPrintingConfiguration>(IPrintingConfiguration).registerProfiles({ na
 - **A form that registers nothing still prints.** `getProfiles` falls back to a single "All pages" copy of every
   page type, top-down. Printing works for every form in the catalog on the day it is registered.
 
+## The option's props — what the host hands down
+
+`PrintOption` resolves only `IPrintService`. Everything else arrives as `IPrintOptionProps`:
+
+```ts
+{ catalogItem, controllers, title,
+  showModal: (options: IModalOptions) => void,   // opens the dialog at the host's root
+  onError?:  (message: string) => void }         // reports a print that could not run
+```
+
+Both functions are props rather than services because this package sits below whoever renders it and cannot resolve
+the report viewer's `IModalService` or `INotificationService` — and because a modal and a notification belong to the
+host of an option rather than to the option. `IModalOptions` is typed from `@forms/core`, which is what makes the
+`showModal` prop expressible from down here at all.
+
+`showDialog`'s logic stays in this package: it owns the `IPrintRequest`, the profiles lookup, and the Cancel/Print
+actions. Moving that up would couple far more than passing one function down.
+
 ## Gotchas
 
-- **The dialog is opened through `IModalService.showModal`, never rendered from the option.** The options bar is
+- **The dialog is opened through the handed-in `showModal`, never rendered from the option.** An options bar is
   `position-fixed`, which makes it a stacking context whatever its `z-index`; a modal rendered inside it ranks only
   *within* that context, while `FModal` appends its backdrop to `document.body` at `z-index: 1050` — so the backdrop
-  paints over the whole bar, dialog included. Going through the service puts the modal under `ModalManager` at the
-  report viewer's root, outside the bar.
+  paints over the whole bar, dialog included. The handed-in `showModal` puts the modal at the host's root instead,
+  outside the bar.
 - **The dialog reports its choice back through `onChange`, it is not read off the component.** The modal service is
   handed its actions when the modal opens, so those actions cannot re-render with the dialog's state; the option
   holds the latest request in a closure and the Print action reads it.
@@ -102,5 +123,7 @@ config.get<IPrintingConfiguration>(IPrintingConfiguration).registerProfiles({ na
   component about to unmount.
 - Picking a copy **moves the layout with it**, since each copy knows how it is meant to print. Changing the layout
   afterwards overrides that for the one print and is not remembered against the copy.
-- The print option is registered with the report viewer, not imported by it. `@forms/report-viewer` has no
-  dependency on this package, which is why the option-registration seam exists at all.
+- The print option is **imported** by `@forms/report-viewer`, not registered with it. There is no registration seam
+  in either direction: this package depends only on the catalog and core, and the viewer reaches down for the
+  component. Which is also why nothing here can assume a report viewer is present — `PrintOption` works for anything
+  that hands it the props above.

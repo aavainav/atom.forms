@@ -2,25 +2,29 @@
 
 The registry and service for the violations a citation can be written for, plus the selector that puts them on a
 form. Two halves in one package, the way `@forms/printing` is: a registry shaped like
-[`@forms/value-lists`](../value-lists/), and a capability that registers its own button and panel with the report
-viewer so nothing there has to import this.
+[`@forms/value-lists`](../value-lists/), and a button and panel it **exports** for whoever renders a form to mount.
 
-Depends on `@shrub/core`, `@common/react`, `@common/event-emitter`, `@forms/core`, `@forms/catalog`,
-`@forms/report-viewer`. Module dependencies: `ReportViewerModule`, `FormCatalogModule`.
+Depends on `@shrub/core`, `@common/react`, `@common/event-emitter`, `@forms/core`, `@forms/catalog`.
+Module dependencies: `FormCatalogModule`.
+
+**This package sits below whatever renders a form, and reaches nothing upward.** It registers its option and panel
+nowhere; `@forms/report-viewer` imports them and mounts them itself, gated on the catalog item's own
+`violationListId`. That is why there is no dependency on the report viewer here — and why putting the selector on a
+form is a change to that form's catalog item, not to this package.
 
 ## Files
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `ViolationsModule` + `IViolationsConfiguration` (`registerList`, `registerViolations`). Registers the option at order 150 and the panel, both gated by `canShow`. |
+| [src/module.ts](src/module.ts) | `ViolationsModule` + `IViolationsConfiguration` (`registerList`, `registerViolations`). Registers the bundled lists and nothing else. |
 | [src/services/violation.ts](src/services/violation.ts) | `IViolationService` (read) / `IViolationRegistrationService` (write) / `ViolationService`. Holds both the lists and the per-form bindings. |
 | [src/services/violation-selector.ts](src/services/violation-selector.ts) | `IViolationSelectorService` — `openSelector()` / `onOpenSelector`. Event only; the panel owns whether it is showing. |
 | [src/models/violation.ts](src/models/violation.ts) | `IViolation`, `ViolationRow`, `toViolations(rows)`. |
 | [src/models/violation-list.ts](src/models/violation-list.ts) | `ViolationList` — a loaded list, its lazy code and category indexes, `getCategories` and `search`. |
 | [src/models/violation-list-definition.ts](src/models/violation-list-definition.ts) | `IViolationListDefinition`: `{ id, load() }`. |
 | [src/models/violation-binding.ts](src/models/violation-binding.ts) | `IViolationBinding` — the per-form seam. |
-| [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` in the options bar. Raises the event, nothing more. |
-| [src/components/violations-panel.tsx](src/components/violations-panel.tsx) | The manager — owns `isOpen` and the newly ticked set, reads the applied set off the form, loads the list, calls the form's `apply`. |
+| [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` for an options bar, plus `IViolationsOptionProps` (`title`). Raises the event, nothing more. |
+| [src/components/violations-panel.tsx](src/components/violations-panel.tsx) | The manager — owns `isOpen` and the newly ticked set, reads the applied set off the form, loads the list, calls the form's `apply`. Takes `IViolationsPanelProps` (`catalogItem`, `controllers`, `onError?`). |
 | [src/components/violation-selection-list.tsx](src/components/violation-selection-list.tsx) | The list: category filter, search box, tickable and draggable rows. |
 | [src/violations.ts](src/violations.ts) | `ViolationListId` and `standardViolationLists`. **Both empty, deliberately** — see below. |
 | [scripts/generate-violation-lists.mjs](scripts/generate-violation-lists.mjs) | The generator, also exposed to form packages as the `generate-violation-lists` bin. |
@@ -43,18 +47,26 @@ is one global namespace and otherwise whichever jurisdiction loaded last would c
 which is the point rather than an omission: a violation code list belongs to the agency writing the citations and
 there is no national one, so every list is declared in the form package that draws on it.
 
-## The citations-only gate
+## The gate — declared, not inferred
 
-`canShow` on both the option and the panel is two conditions:
+Whether a form is offered the selector is decided by **the form**: a catalog item declares `violationListId`, and
+`@forms/report-viewer` mounts the option and the panel on `!!catalogItem.violationListId`.
 
-```ts
-!!violationService.getBinding(catalogItem) && catalogItem.ctor.prototype instanceof CitationForm
-```
+A form declaring a list is expected to `registerViolations` a binding too, since the panel needs an `apply` and a
+`getApplied` to do anything; both go in the same `configure()` call, next to each other. `getBinding` answering
+`undefined` is handled gracefully — the panel renders and the Add button does nothing — rather than being a second
+gate, because a form that declared a list and forgot its binding is a bug to see, not a feature to hide.
 
-The registration is the working half — a form that declared no binding has nowhere to put a charge — while the
-`CitationForm` check states the rule the feature is bound by rather than leaving it to be inferred from which
-forms happened to register. The form family is read off `catalogItem.ctor` rather than `catalogItem.type`, since
-the check predates that field and nothing has forced a reason to migrate it yet.
+This replaced a `canShow` that asked the binding registry *plus* `catalogItem.ctor.prototype instanceof
+CitationForm`. The declaration is the better gate: it is the form saying what it draws on, in the one place a form's
+whole registration lives, rather than the renderer working it out from what happened to be registered elsewhere.
+
+## Reporting a failure
+
+Neither component resolves a notification service. The panel takes an `onError?: (message: string) => void` and
+calls it when a list cannot be loaded or a chosen violation cannot be applied; whoever mounts it wires that to their
+own notifications. Notifications belong to the host of a panel rather than to the panel — and this package sits
+below the report viewer, so it could not reach that one anyway.
 
 ## Why an off canvas and not a modal
 
@@ -62,10 +74,10 @@ A modal's backdrop covers the form, and a violation has to be draggable out of t
 behind it. The panel is therefore an `FOffCanvas` with `placement="end"` — the validation panel holds the start
 edge, and both can be open at once.
 
-It is registered through `IReportViewerConfiguration.registerPanel` rather than rendered from the option, because
-the options bar is `position-fixed` and so a stacking context: anything fixed inside it is ranked only against the
-bar's own contents however high its z-index. `registerPanel` mounts it at the report viewer's root instead, beside
-`ModalManager` and `ValidationManager`. This is the same trap `@forms/printing` documents for its modal.
+It has to be mounted somewhere that is **not** the options bar, and never rendered from the option itself: the bar
+is `position-fixed` and so a stacking context, and anything fixed inside it is ranked only against the bar's own
+contents however high its z-index. The report viewer mounts it at its own root instead, beside `ModalManager` and
+`ValidationManager`. This is the same trap `@forms/printing` documents for its modal.
 
 ## Loading and caching
 
@@ -157,8 +169,9 @@ form module's `configure` through `IViolationsConfiguration.registerList`.
 `applyViolations(controllers, violations)` and `getAppliedViolations(controllers, violations)` to its service,
 disabling the boxes the violation fills in both `applyViolations` and the dropzone's apply → subclass
 `ViolationDropzone` and register it in the page model's `initialize()` → wrap the charge section in `<FDropzone>` →
-`registerViolations` from `configure`, wiring both `apply` and `getApplied` → make the mapper handle repeating
-pages. See [`@forms/s438`](../south-carolina/s438/) for the worked example.
+`registerViolations` from `configure`, wiring both `apply` and `getApplied` → **declare `violationListId` on the
+catalog item**, which is what actually puts the button on the form → make the mapper handle repeating pages. See
+[`@forms/s438`](../south-carolina/s438/) for the worked example.
 
 **Serve a list from a host**: `registerList` a definition under the same id from a module that depends on the one
 that registered it. Later registration wins, and anything cached under the id is dropped.

@@ -1,6 +1,5 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IPrintingConfiguration, PrintingModule } from "@forms/printing";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
@@ -21,7 +20,7 @@ export interface IOKTrafficConfiguration {
 /** Defines the Oklahoma City traffic citation module. */
 export class OKTrafficModule implements IModule {
     readonly name = "ok-traffic-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, PrintingModule, ValueListsModule, ViolationsModule];
+    readonly dependencies = [FormCatalogModule, PrintingModule, ValueListsModule, ViolationsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IOKTrafficOptions>(IOKTrafficOptions);
@@ -92,14 +91,11 @@ export class OKTrafficModule implements IModule {
             schema: OKTrafficFormSchema,
             formFactory: OKTrafficFormFactory,
             component: () => import("./components").then(module => module.OKTrafficForm),
-            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
-            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
+            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
             mapper: new OKTrafficMapper(),
             valueListIds: okTrafficValueLists.map(definition => definition.id),
             violationListId: OKTrafficViolationListId.violation
         });
-
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerRoute("report-viewer", { path: "ok/traffic", lazy: () => import("./components").then(module => ({ Component: module.OKTrafficFormLoader })) });
     }
 }

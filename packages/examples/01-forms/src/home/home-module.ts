@@ -1,19 +1,21 @@
 import { IModule, IModuleConfigurator } from "@shrub/core";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
-import { IModuleBootstrapper } from "@forms/workbench";
+import { ReportViewerModule } from "@forms/report-viewer";
+import { IModuleBootstrapper, IWorkbenchConfiguration, WorkbenchModule } from "@forms/workbench";
 
 /**
  * Registers the sandbox home route, listing every form registered with the catalog alongside the demo routes.
  *
- * It is the **index** route of the report viewer's layout, so the sandbox opens on the menu rather than on a form.
- * The report viewer registers nothing there itself, so this is the sandbox's own choice to make.
+ * It is the **index** route of the app's root route, so the sandbox opens on the menu rather than on a form. The
+ * workbench registers nothing there itself, so the root is the host's to claim.
+ *
+ * It depends on the report viewer only because the page asks it which options each form offers, for the badges.
  */
 export class HomeModule implements IModule {
     readonly name = "home";
-    readonly dependencies = [ReportViewerModule];
+    readonly dependencies = [ReportViewerModule, WorkbenchModule];
 
     async configure({ config }: IModuleConfigurator): Promise<void> {
-        config.get<IReportViewerConfiguration>(IReportViewerConfiguration).registerRoute("report-viewer", {
+        config.get<IWorkbenchConfiguration>(IWorkbenchConfiguration).registerRoute({
             index: true,
             lazy: () => import("./home-page").then(module => ({ Component: module.default }))
         });

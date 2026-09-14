@@ -1,5 +1,4 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
@@ -18,7 +17,7 @@ export interface ITR310Configuration {
 /** Defines the TR-310 traffic collision report module. */
 export class TR310Module implements IModule {
     readonly name = "tr310-crash-form";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule];
+    readonly dependencies = [FormCatalogModule, ValueListsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<ITR310Options>(ITR310Options);
@@ -54,13 +53,10 @@ export class TR310Module implements IModule {
             schema: TR310FormSchema,
             formFactory: TR310FormFactory,
             component: () => import("./components").then(module => module.TR310Form),
-            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
-            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
+            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
             mapper: new TR310Mapper(),
             valueListIds: tr310ValueLists.map(definition => definition.id)
         });
-
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerRoute("report-viewer", { path: "sc/tr310", lazy: () => import("./components").then(module => ({ Component: module.TR310FormLoader })) });
     }
 }

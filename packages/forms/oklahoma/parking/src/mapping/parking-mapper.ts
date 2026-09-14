@@ -72,11 +72,11 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
      * and a field the data does not mention keeps the value it already holds - which is how the date and time of
      * violation the form stamps on itself survive a partial record.
      */
-    public async populate(form: OKParkingFormModel, data: IOKParkingData): Promise<OKParkingFormModel> {
-        let updated = await this.populateCitationPage(form, data);
-        updated = this.populateComplaintPage(updated, data);
+    public async populate(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): Promise<OKParkingFormModel> {
+        let updated = await this.populateCitationPage(form, data, readOnlyFields);
+        updated = this.populateComplaintPage(updated, data, readOnlyFields);
 
-        return this.populateDetailPage(updated, data);
+        return this.populateDetailPage(updated, data, readOnlyFields);
     }
 
     /**
@@ -87,7 +87,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
      * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
      * `additionalViolations` are left alone rather than removed.
      */
-    private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData): Promise<OKParkingFormModel> {
+    private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): Promise<OKParkingFormModel> {
         const additional = data.additionalViolations ?? [];
 
         let result = form;
@@ -100,9 +100,9 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         let collection = result.getCitationPageCollection();
 
         collection.getPages<CitationPageModel>().forEach((page, index) => {
-            let updated = page.set(page.courtSection, this.populateCourt(page.getCourtSection(), data));
-            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data));
-            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data));
+            let updated = page.set(page.courtSection, this.populateCourt(page.getCourtSection(), data, readOnlyFields));
+            updated = updated.set(updated.vehicleSection, this.populateVehicle(updated.getVehicleSection(), data, readOnlyFields));
+            updated = updated.set(updated.officerSection, this.populateOfficer(updated.getOfficerSection(), data, readOnlyFields));
 
             // the violation and payment blocks are what differ page to page; the first comes from the flat fields
             // and the rest from the array, and a page the data does not reach keeps what it holds
@@ -119,26 +119,26 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     /** Returns a form with the complaint page's half of the data contract applied. */
-    private populateComplaintPage(form: OKParkingFormModel, data: IOKParkingData): OKParkingFormModel {
+    private populateComplaintPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OKParkingFormModel {
         const collection = form.getComplaintPageCollection();
         const page = collection.getFirstPage<ComplaintPageModel>();
 
-        let updated = page.set(page.complaintSection, this.populateComplaint(page.getComplaintSection(), data));
-        updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data));
-        updated = updated.set(updated.warrantSection, this.populateWarrant(updated.getWarrantSection(), data));
+        let updated = page.set(page.complaintSection, this.populateComplaint(page.getComplaintSection(), data, readOnlyFields));
+        updated = updated.set(updated.certificationSection, this.populateCertification(updated.getCertificationSection(), data, readOnlyFields));
+        updated = updated.set(updated.warrantSection, this.populateWarrant(updated.getWarrantSection(), data, readOnlyFields));
 
         return form.set(form.complaintPage, collection.replace(0, updated));
     }
 
     /** Returns a form with the detail page's half of the data contract applied. */
-    private populateDetailPage(form: OKParkingFormModel, data: IOKParkingData): OKParkingFormModel {
+    private populateDetailPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OKParkingFormModel {
         const collection = form.getDetailPageCollection();
         const page = collection.getFirstPage<DetailPageModel>();
 
-        let updated = page.set(page.recordSection, this.populateRecord(page.getRecordSection(), data));
-        updated = updated.set(updated.registeredOwnerSection, this.populateRegisteredOwner(updated.getRegisteredOwnerSection(), data));
-        updated = updated.set(updated.vehicleDetailSection, this.populateVehicleDetail(updated.getVehicleDetailSection(), data));
-        updated = updated.set(updated.notesSection, this.populateNotes(updated.getNotesSection(), data));
+        let updated = page.set(page.recordSection, this.populateRecord(page.getRecordSection(), data, readOnlyFields));
+        updated = updated.set(updated.registeredOwnerSection, this.populateRegisteredOwner(updated.getRegisteredOwnerSection(), data, readOnlyFields));
+        updated = updated.set(updated.vehicleDetailSection, this.populateVehicleDetail(updated.getVehicleDetailSection(), data, readOnlyFields));
+        updated = updated.set(updated.notesSection, this.populateNotes(updated.getNotesSection(), data, readOnlyFields));
 
         return form.set(form.detailPage, collection.replace(0, updated));
     }
@@ -152,12 +152,12 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     private populateViolation(section: ViolationSectionModel, data: IOKParkingViolationData): ViolationSectionModel {
-        let updated = this.write(section, section.code, data.violationCode);
-        updated = this.write(updated, section.date, data.violationDate);
-        updated = this.write(updated, section.description, data.violationDescription);
-        updated = this.write(updated, section.location, data.violationLocation);
+        let updated = this.write(section, section.code, data, "violationCode");
+        updated = this.write(updated, section.date, data, "violationDate");
+        updated = this.write(updated, section.description, data, "violationDescription");
+        updated = this.write(updated, section.location, data, "violationLocation");
 
-        return this.write(updated, section.time, data.violationTime);
+        return this.write(updated, section.time, data, "violationTime");
     }
 
     private extractPayment(section: PaymentSectionModel, data: FormValues<IOKParkingViolationData>): void {
@@ -168,11 +168,11 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     private populatePayment(section: PaymentSectionModel, data: IOKParkingViolationData): PaymentSectionModel {
-        let updated = this.write(section, section.amountDue, data.paymentAmountDue);
-        updated = this.write(updated, section.dueDate, data.paymentDueDate);
-        updated = this.write(updated, section.increasedAmountDue, data.paymentIncreasedAmountDue);
+        let updated = this.write(section, section.amountDue, data, "paymentAmountDue");
+        updated = this.write(updated, section.dueDate, data, "paymentDueDate");
+        updated = this.write(updated, section.increasedAmountDue, data, "paymentIncreasedAmountDue");
 
-        return this.write(updated, section.increasedDueDate, data.paymentIncreasedDueDate);
+        return this.write(updated, section.increasedDueDate, data, "paymentIncreasedDueDate");
     }
 
     private extractCourt(section: CourtSectionModel, data: FormValues<IOKParkingData>): void {
@@ -180,10 +180,10 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "courtTime", section.getTime());
     }
 
-    private populateCourt(section: CourtSectionModel, data: IOKParkingData): CourtSectionModel {
-        const updated = this.write(section, section.date, data.courtDate);
+    private populateCourt(section: CourtSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): CourtSectionModel {
+        const updated = this.write(section, section.date, data, "courtDate", readOnlyFields);
 
-        return this.write(updated, section.time, data.courtTime);
+        return this.write(updated, section.time, data, "courtTime", readOnlyFields);
     }
 
     private extractVehicle(section: VehicleSectionModel, data: FormValues<IOKParkingData>): void {
@@ -192,11 +192,11 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "vehicleMeterNumber", section.getMeterNumber());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IOKParkingData): VehicleSectionModel {
-        let updated = this.write(section, section.licenseNumber, data.vehicleLicenseNumber);
-        updated = this.write(updated, section.make, data.vehicleMake);
+    private populateVehicle(section: VehicleSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): VehicleSectionModel {
+        let updated = this.write(section, section.licenseNumber, data, "vehicleLicenseNumber", readOnlyFields);
+        updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
 
-        return this.write(updated, section.meterNumber, data.vehicleMeterNumber);
+        return this.write(updated, section.meterNumber, data, "vehicleMeterNumber", readOnlyFields);
     }
 
     private extractOfficer(section: OfficerSectionModel, data: FormValues<IOKParkingData>): void {
@@ -204,10 +204,10 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "officerName", section.getOfficerName());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IOKParkingData): OfficerSectionModel {
-        const updated = this.write(section, section.commissionNumber, data.officerCommissionNumber);
+    private populateOfficer(section: OfficerSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OfficerSectionModel {
+        const updated = this.write(section, section.commissionNumber, data, "officerCommissionNumber", readOnlyFields);
 
-        return this.write(updated, section.officerName, data.officerName);
+        return this.write(updated, section.officerName, data, "officerName", readOnlyFields);
     }
 
     private extractComplaint(section: ComplaintSectionModel, data: FormValues<IOKParkingData>): void {
@@ -216,11 +216,11 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "complaintDate", section.getDate());
     }
 
-    private populateComplaint(section: ComplaintSectionModel, data: IOKParkingData): ComplaintSectionModel {
-        let updated = this.write(section, section.citationNumber, data.complaintCitationNumber);
-        updated = this.write(updated, section.counselor, data.complaintCounselor);
+    private populateComplaint(section: ComplaintSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): ComplaintSectionModel {
+        let updated = this.write(section, section.citationNumber, data, "complaintCitationNumber", readOnlyFields);
+        updated = this.write(updated, section.counselor, data, "complaintCounselor", readOnlyFields);
 
-        return this.write(updated, section.date, data.complaintDate);
+        return this.write(updated, section.date, data, "complaintDate", readOnlyFields);
     }
 
     private extractCertification(section: CertificationSectionModel, data: FormValues<IOKParkingData>): void {
@@ -228,10 +228,10 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "certificationDate", section.getDate());
     }
 
-    private populateCertification(section: CertificationSectionModel, data: IOKParkingData): CertificationSectionModel {
-        const updated = this.write(section, section.clerkSignature, data.certificationClerkSignature);
+    private populateCertification(section: CertificationSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): CertificationSectionModel {
+        const updated = this.write(section, section.clerkSignature, data, "certificationClerkSignature", readOnlyFields);
 
-        return this.write(updated, section.date, data.certificationDate);
+        return this.write(updated, section.date, data, "certificationDate", readOnlyFields);
     }
 
     private extractWarrant(section: WarrantSectionModel, data: FormValues<IOKParkingData>): void {
@@ -239,10 +239,10 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "warrantCounselor", section.getCounselor());
     }
 
-    private populateWarrant(section: WarrantSectionModel, data: IOKParkingData): WarrantSectionModel {
-        const updated = this.write(section, section.approved, data.warrantApproved);
+    private populateWarrant(section: WarrantSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): WarrantSectionModel {
+        const updated = this.write(section, section.approved, data, "warrantApproved", readOnlyFields);
 
-        return this.write(updated, section.counselor, data.warrantCounselor);
+        return this.write(updated, section.counselor, data, "warrantCounselor", readOnlyFields);
     }
 
     private extractRecord(section: RecordSectionModel, data: FormValues<IOKParkingData>): void {
@@ -253,13 +253,13 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "recordVoidReason", section.getVoidReason());
     }
 
-    private populateRecord(section: RecordSectionModel, data: IOKParkingData): RecordSectionModel {
-        let updated = this.write(section, section.beat, data.recordBeat);
-        updated = this.write(updated, section.citationNumber, data.recordCitationNumber);
-        updated = this.write(updated, section.county, data.recordCounty);
-        updated = this.write(updated, section.tribe, data.recordTribe);
+    private populateRecord(section: RecordSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): RecordSectionModel {
+        let updated = this.write(section, section.beat, data, "recordBeat", readOnlyFields);
+        updated = this.write(updated, section.citationNumber, data, "recordCitationNumber", readOnlyFields);
+        updated = this.write(updated, section.county, data, "recordCounty", readOnlyFields);
+        updated = this.write(updated, section.tribe, data, "recordTribe", readOnlyFields);
 
-        return this.write(updated, section.voidReason, data.recordVoidReason);
+        return this.write(updated, section.voidReason, data, "recordVoidReason", readOnlyFields);
     }
 
     private extractRegisteredOwner(section: RegisteredOwnerSectionModel, data: FormValues<IOKParkingData>): void {
@@ -273,16 +273,16 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "ownerZipCode", section.getZipCode());
     }
 
-    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKParkingData): RegisteredOwnerSectionModel {
-        let updated = this.write(section, section.address, data.ownerAddress);
-        updated = this.write(updated, section.city, data.ownerCity);
-        updated = this.write(updated, section.firstName, data.ownerFirstName);
-        updated = this.write(updated, section.lastName, data.ownerLastName);
-        updated = this.write(updated, section.middleName, data.ownerMiddleName);
-        updated = this.write(updated, section.state, data.ownerState);
-        updated = this.write(updated, section.suffix, data.ownerSuffix);
+    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): RegisteredOwnerSectionModel {
+        let updated = this.write(section, section.address, data, "ownerAddress", readOnlyFields);
+        updated = this.write(updated, section.city, data, "ownerCity", readOnlyFields);
+        updated = this.write(updated, section.firstName, data, "ownerFirstName", readOnlyFields);
+        updated = this.write(updated, section.lastName, data, "ownerLastName", readOnlyFields);
+        updated = this.write(updated, section.middleName, data, "ownerMiddleName", readOnlyFields);
+        updated = this.write(updated, section.state, data, "ownerState", readOnlyFields);
+        updated = this.write(updated, section.suffix, data, "ownerSuffix", readOnlyFields);
 
-        return this.write(updated, section.zipCode, data.ownerZipCode);
+        return this.write(updated, section.zipCode, data, "ownerZipCode", readOnlyFields);
     }
 
     private extractVehicleDetail(section: VehicleDetailSectionModel, data: FormValues<IOKParkingData>): void {
@@ -295,15 +295,15 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicleDetail(section: VehicleDetailSectionModel, data: IOKParkingData): VehicleDetailSectionModel {
-        let updated = this.write(section, section.color, data.vehicleColor);
-        updated = this.write(updated, section.model, data.vehicleModel);
-        updated = this.write(updated, section.noLicensePlate, data.vehicleNoLicensePlate);
-        updated = this.write(updated, section.registrationExpires, data.vehicleRegistrationExpires);
-        updated = this.write(updated, section.type, data.vehicleType);
-        updated = this.write(updated, section.vin, data.vehicleVin);
+    private populateVehicleDetail(section: VehicleDetailSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): VehicleDetailSectionModel {
+        let updated = this.write(section, section.color, data, "vehicleColor", readOnlyFields);
+        updated = this.write(updated, section.model, data, "vehicleModel", readOnlyFields);
+        updated = this.write(updated, section.noLicensePlate, data, "vehicleNoLicensePlate", readOnlyFields);
+        updated = this.write(updated, section.registrationExpires, data, "vehicleRegistrationExpires", readOnlyFields);
+        updated = this.write(updated, section.type, data, "vehicleType", readOnlyFields);
+        updated = this.write(updated, section.vin, data, "vehicleVin", readOnlyFields);
 
-        return this.write(updated, section.year, data.vehicleYear);
+        return this.write(updated, section.year, data, "vehicleYear", readOnlyFields);
     }
 
     private extractNotes(section: NotesSectionModel, data: FormValues<IOKParkingData>): void {
@@ -311,9 +311,9 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "notesOfficerNotes", section.getOfficerNotes());
     }
 
-    private populateNotes(section: NotesSectionModel, data: IOKParkingData): NotesSectionModel {
-        const updated = this.write(section, section.offenseNotes, data.notesOffenseNotes);
+    private populateNotes(section: NotesSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): NotesSectionModel {
+        const updated = this.write(section, section.offenseNotes, data, "notesOffenseNotes", readOnlyFields);
 
-        return this.write(updated, section.officerNotes, data.notesOfficerNotes);
+        return this.write(updated, section.officerNotes, data, "notesOfficerNotes", readOnlyFields);
     }
 }

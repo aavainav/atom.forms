@@ -1,117 +1,92 @@
-import { ReactRouterModule } from "@common/react-router";
+import { lazy } from "react";
 import { FormCatalogModule } from "@forms/catalog";
-import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
+import { PrintingModule } from "@forms/printing";
+import { ValueListsModule } from "@forms/value-lists";
+import { ViolationsModule } from "@forms/violations";
+import { IModule, IModuleConfigurator, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
-import { DayNightModeOption, ReportDataOption, SaveOption, ValidateOption } from "./components/options";
-import { IReportViewerOptions } from "./options";
 import {
+    canExtractData,
+    canSaveForm,
     IModalService,
-    INavigationRegistrationService,
-    INavigationService,
     INotificationService,
-    IReportViewerOption,
-    IReportViewerPanel,
-    IReportViewerRegistrationService,
-    IReportViewerRoute,
+    IReportViewerOptionRegistration,
     IReportViewerService,
     IThemeService,
     IValidationService,
     ModalService,
-    NavigationService,
     NotificationService,
     ReportViewerService,
     ThemeService,
     ValidationService,
 } from "./services";
 
-/** Where the report viewer's own options sit in the bar. A package registering one places it against these. */
-const validateOptionOrder = 100;
-const saveOptionOrder = 200;
-const reportDataOptionOrder = 250;
-const dayNightModeOptionOrder = 900;
-
-export const IReportViewerConfiguration = createConfig<IReportViewerConfiguration>();
-export interface IReportViewerConfiguration {
-    /** Registers an option to render in the report viewer's options bar, alongside the built-in validate and save. */
-    registerOption: (option: IReportViewerOption) => void;
-    /** Registers a panel to mount at the report viewer's root, which is where an off canvas belongs rather than inside the options bar. */
-    registerPanel: (panel: IReportViewerPanel) => void;
-    /** Registers a route with the report viewer. For a catalog form, this is where its own route is registered too, since the report viewer tracks no identity-to-route pairing of its own. */
-    registerRoute: (name: string, route: IReportViewerRoute) => void;
-}
-
-/** Defines the report viewer module. This module handles displaying and interacting with reports. */
+/**
+ * Defines the report viewer module -- the top of this stack and the only part of it a host app renders.
+ *
+ * It depends on every package whose capability it offers rather than letting them register into it: the catalog it
+ * resolves a form from, the value lists a form's option fields draw on, and the violations and printing whose
+ * option and panel it mounts itself. That direction is the point: a form package, a violation list and a print
+ * copy are all things that exist without a viewer, while a viewer is not much without them.
+ *
+ * The options bar is the one thing left to configure, and even that is this module registering into its own
+ * service -- `@forms/violations`/`@forms/printing` stay unaware that a report viewer exists at all.
+ */
 export class ReportViewerModule implements IModule {
     readonly name = "report-viewer";
-    readonly dependencies = [FormCatalogModule, ReactRouterModule];
-
-    initialize(init: IModuleInitializer): void {
-        init.settings.bindToOptions<IReportViewerOptions>(IReportViewerOptions);
-        init.config(IReportViewerConfiguration).register(({ services }: IModuleConfigurator) => ({
-            registerOption: option => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerOption(option),
-            registerPanel: panel => services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService).registerPanel(panel),
-            registerRoute: (name, route) => services.get<INavigationRegistrationService>(INavigationRegistrationService).registerChildRoute(name, route)
-        }));
-    }
+    readonly dependencies = [FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule];
 
     configureServices(registration: IServiceRegistration): void {
         registration.register<IModalService, ModalService>(IModalService, ModalService);
         registration.register<INotificationService, NotificationService>(INotificationService, NotificationService);
-        registration.register<IThemeService, ThemeService>(IThemeService, ThemeService);
-        registration.register<IValidationService, ValidationService>(IValidationService, ValidationService);
 
-        const navigationServiceFactory = new SingletonServiceFactory(NavigationService);
-        registration.registerSingleton<INavigationService, NavigationService>(INavigationService, navigationServiceFactory);
-        registration.registerSingleton<INavigationRegistrationService, NavigationService>(INavigationRegistrationService, navigationServiceFactory);
-
+        // one instance behind two interfaces, since the options bar's read side (getOptions) and its write side
+        // (registerOption) are the same registry
         const reportViewerServiceFactory = new SingletonServiceFactory(ReportViewerService);
         registration.registerSingleton<IReportViewerService, ReportViewerService>(IReportViewerService, reportViewerServiceFactory);
-        registration.registerSingleton<IReportViewerRegistrationService, ReportViewerService>(IReportViewerRegistrationService, reportViewerServiceFactory);
+        registration.registerSingleton<IReportViewerOptionRegistration, ReportViewerService>(IReportViewerOptionRegistration, reportViewerServiceFactory);
+
+        registration.register<IThemeService, ThemeService>(IThemeService, ThemeService);
+        registration.register<IValidationService, ValidationService>(IValidationService, ValidationService);
     }
 
     async configure({ services, next }: IModuleConfigurator): Promise<void> {
-        // We need to initialize the top level report viewer route so that the modules can register their child routes.
-        // The route itself is just a layout that renders the matched child via <Outlet />, which is a form-specific
-        // route registered by a form package, or whatever the host registers as the index.
+        // registered here, in order, rather than as a bare array: this is the seam a host's own option would go
+        // through too, so the report viewer's own six are registered through it rather than special-cased.
         //
-        // Nothing is registered as that index here -- a host is rarely asking for a form at its root, and
-        // registering one there would take the root away from the host before it had a say. A host that wants a
-        // form at its root registers that form's own route there instead.
-        const registration = services.get<INavigationRegistrationService>(INavigationRegistrationService);
-        registration.registerRoute({
-            id: "report-viewer",
-            path: "/",
-            lazy: () => import("./components/").then(module => ({ Component: module.ReportViewerLayout })) });
+        // violations and printing sit *below* this module, so their option is imported directly rather than
+        // handed up through this registration -- registering them here is what keeps that direction one-way. each
+        // is loaded through `lazy` so a host still only downloads the selector or the print dialog once a form
+        // that offers one is opened; the four built here go through the same door for one rule rather than two.
+        const options = services.get<IReportViewerOptionRegistration>(IReportViewerOptionRegistration);
 
-        registration.registerRoute({ id: "not-found", path: "*", lazy: () => import("./components/").then(module => ({ Component: module.NotFound })) });
-
-        // the report viewer's own options go through the same seam a package adding one uses, so the bar has no
-        // built-ins of its own to special case and every option is gated, ordered and describable the same way
-        const reportViewer = services.get<IReportViewerRegistrationService>(IReportViewerRegistrationService);
-        const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
-
-        reportViewer.registerOption({ id: "validate", order: validateOptionOrder, title: "Validate", Component: ValidateOption });
-        reportViewer.registerOption({
-            id: "save",
-            order: saveOptionOrder,
-            title: "Save",
-            Component: SaveOption,
-            // saving needs both halves: a mapper to extract the data and a writer to hand it to. with a mapper and
-            // no writer the data would be extracted, dropped, and the report reported as saved.
-            canShow: catalogItem => reportViewerService.canSaveForm(catalogItem)
+        options.registerOption({ id: "validate", title: "Validate", Component: lazy(() => import("./components/options").then(m => ({ default: m.ValidateOption }))) });
+        options.registerOption({
+            id: "violations",
+            title: "Violations",
+            Component: lazy(() => import("@forms/violations").then(m => ({ default: m.ViolationsOption }))),
+            // the catalog item's own declaration is the gate: a form that draws its charges from a violation list
+            // says so there, and nothing else has to be asked whether the selector belongs on it
+            canShow: catalogItem => !!catalogItem.violationListId
         });
-        reportViewer.registerOption({
+        options.registerOption({
+            id: "save",
+            title: "Save",
+            Component: lazy(() => import("./components/options").then(m => ({ default: m.SaveOption }))),
+            canShow: canSaveForm
+        });
+        options.registerOption({
             id: "report-data",
-            order: reportDataOptionOrder,
             title: "View report data",
-            Component: ReportDataOption,
+            Component: lazy(() => import("./components/options").then(m => ({ default: m.ReportDataOption }))),
             // the data is only worth showing once a mapper can produce it; without one the payload is the stamped
             // identity and nothing the user filled in
-            canShow: catalogItem => reportViewerService.canExtractData(catalogItem)
+            canShow: canExtractData
         });
-        reportViewer.registerOption({ id: "day-night-mode", order: dayNightModeOptionOrder, title: "Toggle day/night mode", Component: DayNightModeOption });
+        options.registerOption({ id: "print", title: "Print", Component: lazy(() => import("@forms/printing").then(m => ({ default: m.PrintOption }))) });
+        options.registerOption({ id: "day-night-mode", title: "Toggle day/night mode", Component: lazy(() => import("./components/options").then(m => ({ default: m.DayNightModeOption }))) });
 
-        // allow other modules the ability to configure the report viewer before the host renders.
+        // lets a host register its own option before anything renders
         await next();
     }
 }

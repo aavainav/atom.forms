@@ -2,12 +2,16 @@ import React from "react";
 import { useService } from "@common/react";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
-import { IReportViewerOptionProps } from "@forms/report-viewer";
-
 import { IViolationSelectorService } from "../services";
 
+/** Defines the props the violations option is rendered with. Declared here rather than imported so that nothing in this package depends on whoever renders it. */
+export interface IViolationsOptionProps {
+    /** The name the option is offered under, shown as its tooltip. */
+    readonly title: string;
+}
+
 /** Defines the option for choosing the violations the citation is written for. */
-export const ViolationsOption = ({ title }: IReportViewerOptionProps): React.JSX.Element => {
+export const ViolationsOption = ({ title }: IViolationsOptionProps): React.JSX.Element => {
     const violationSelectorService = useService<IViolationSelectorService>(IViolationSelectorService);
 
     return (

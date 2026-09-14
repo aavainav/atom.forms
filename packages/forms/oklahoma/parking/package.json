@@ -19,7 +19,6 @@
     "dependencies": {
         "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
-        "@forms/report-viewer": "1.0.0",
         "@forms/violations": "1.0.0",
         "@forms/value-lists": "1.0.0",
         "@forms/workbench": "1.0.0"

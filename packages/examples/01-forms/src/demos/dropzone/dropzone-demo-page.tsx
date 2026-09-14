@@ -1,7 +1,14 @@
 import React, { useMemo } from "react";
-import { ControllerManager, FDraggableItem, IDraggableItem, IImportablePerson, IImportableVehicle } from "@forms/core";
-import { PublicContactOrWarningFormLoader } from "@forms/public-contact-or-warning";
+import { useSearchParams } from "react-router";
+import { useService } from "@common/react";
+import { ControllerManager, FAsyncLoader, FDraggableItem, IDraggableItem, IImportablePerson, IImportableVehicle } from "@forms/core";
+import { IInitialForm, IReportViewerService, ReportViewerForm } from "@forms/report-viewer";
+
 import { dropzoneDemoItems } from "./dropzone-demo-data";
+import { createExampleDataManager } from "../../example-data";
+
+/** The catalog form the items are dropped onto. */
+const catalogIdentity = { name: "SC Form 432 - Public Contact / Warning", version: "1.0" };
 
 function describeItem(item: IDraggableItem<IImportablePerson | IImportableVehicle>): string {
     if (item.type === "person") {
@@ -13,11 +20,22 @@ function describeItem(item: IDraggableItem<IImportablePerson | IImportableVehicl
     return `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 }
 
-/** Demonstrates dragging mock person/vehicle records onto the public contact/warning form's dropzones. */
+/**
+ * Demonstrates dragging mock person/vehicle records onto the public contact/warning form's dropzones.
+ *
+ * It takes the long way round -- `loadForm` and `ReportViewerForm` rather than `<ReportViewer />` -- because the
+ * draggable items are rendered outside the form and have to share its `DragAndDropController`, which means the page
+ * has to own the controllers. That is the one thing `ReportViewer`'s three props deliberately do not expose.
+ */
 export default function DropzoneDemoPage(): React.JSX.Element {
+    const reportViewerService = useService<IReportViewerService>(IReportViewerService);
+    const [searchParams] = useSearchParams();
+
     // the draggable items are rendered outside the form, so the page owns the controllers and hands the same set to both
     const controllers = useMemo(() => new ControllerManager(), []);
     const dragAndDropController = controllers.getDragAndDropController();
+
+    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams), [searchParams]);
 
     return (
         <div className="d-flex" style={{ gap: "1rem" }}>
@@ -30,7 +48,17 @@ export default function DropzoneDemoPage(): React.JSX.Element {
                 ))}
             </div>
             <div className="flex-grow-1">
-                <PublicContactOrWarningFormLoader controllers={controllers} />
+                <FAsyncLoader<IInitialForm> op={() => reportViewerService.loadForm(catalogIdentity, dataManager)}>
+                    {(initialForm) => (
+                        <ReportViewerForm
+                            controllers={controllers}
+                            initialForm={initialForm}
+                            dataManager={dataManager}
+                            isReadOnly={false}
+                            showOptions
+                        />
+                    )}
+                </FAsyncLoader>
             </div>
         </div>
     );

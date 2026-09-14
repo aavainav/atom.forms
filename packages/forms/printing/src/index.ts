@@ -1,8 +1,10 @@
 export * from "./module";
 export * from "./services";
 
-export { bootstrapper as PrintingBootstrapper } from "./bootstrapper";
+// there is no bootstrapper here any more: @forms/report-viewer depends on this module and renders the print
+// option itself, so a host gets printing by rendering a report rather than by naming it at startup.
 export { PrintDialog, PrintOption } from "./components";
+export type { IPrintOptionProps } from "./components";
 
 export { IPrintingOptions } from "./options";
 

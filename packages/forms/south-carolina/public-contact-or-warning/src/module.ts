@@ -1,5 +1,4 @@
 import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
-import { IReportViewerConfiguration, ReportViewerModule } from "@forms/report-viewer";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
@@ -18,7 +17,7 @@ export interface IPublicContactOrWarningConfiguration {
 /** Defines the public contact/warning form module. */
 export class PublicContactOrWarningModule implements IModule {
     readonly name = "public-contact-or-warning";
-    readonly dependencies = [ReportViewerModule, FormCatalogModule, ValueListsModule];
+    readonly dependencies = [FormCatalogModule, ValueListsModule];
 
     initialize(init: IModuleInitializer): void {
         init.settings.bindToOptions<IPublicContactOrWarningOptions>(IPublicContactOrWarningOptions);
@@ -54,13 +53,10 @@ export class PublicContactOrWarningModule implements IModule {
             schema: PublicContactOrWarningFormSchema,
             formFactory: PublicContactOrWarningFormFactory,
             component: () => import("./components").then(module => module.PublicContactOrWarningForm),
-            // the mapper is hand-written by this same package, so it's supplied inline rather than through a
-            // separate call - unlike a data reader/writer, which a host attaches later via IFormDataHooks.
+            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
+            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
             mapper: new PublicContactOrWarningMapper(),
             valueListIds: publicContactOrWarningValueLists.map(definition => definition.id)
         });
-
-        const reportViewer = config.get<IReportViewerConfiguration>(IReportViewerConfiguration);
-        reportViewer.registerRoute("report-viewer", { path: "sc/432", lazy: () => import("./components").then(module => ({ Component: module.PublicContactOrWarningFormLoader })) });
     }
 }

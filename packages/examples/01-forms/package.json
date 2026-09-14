@@ -14,12 +14,12 @@
         "@forms/ga-utc": "1.0.0",
         "@forms/ok-parking": "1.0.0",
         "@forms/ok-traffic": "1.0.0",
-        "@forms/printing": "1.0.0",
         "@forms/public-contact-or-warning": "1.0.0",
         "@forms/report-viewer": "1.0.0",
         "@forms/s438": "1.0.0",
         "@forms/tr310": "1.0.0",
         "@forms/workbench": "1.0.0",
+        "@popperjs/core": "^2.11.8",
         "bootstrap": "5.3.8",
         "sass-embedded": "1.100.0"
     },
