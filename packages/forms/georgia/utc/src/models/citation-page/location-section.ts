@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface ILocationSection extends ISection {
@@ -14,11 +14,11 @@ export interface ILocationSectionModel extends ILocationSection {
  * beside the box rather than every county in Georgia.
  */
 export class LocationSectionModel extends SectionModel implements ILocationSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly city: FieldDefinition<StringFieldModel> = this.schema.locationFields.locationCity;
-    public readonly county: FieldDefinition<OptionFieldModel> = this.schema.locationFields.locationCounty;
-    public readonly street: FieldDefinition<StringFieldModel> = this.schema.locationFields.locationStreet;
+    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.locationFields.locationCity;
+    public readonly county: FieldDefinition<OptionFieldModel> = this.formSchema.locationFields.locationCounty;
+    public readonly street: FieldDefinition<StringFieldModel> = this.formSchema.locationFields.locationStreet;
 
     public getCity(): StringFieldModel { return this.get<StringFieldModel>(this.city); }
     public getCounty(): OptionFieldModel { return this.get<OptionFieldModel>(this.county); }

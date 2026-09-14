@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -15,15 +15,15 @@ export interface IDuiSectionModel extends IDuiSection {
  * group naming the single test that was administered.
  */
 export class DuiSectionModel extends SectionModel implements IDuiSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly charged: FieldDefinition<BooleanFieldModel> = this.schema.duiFields.duiCharged;
-    public readonly testBlood: FieldDefinition<BooleanFieldModel> = this.schema.duiFields.duiTestBlood;
-    public readonly testBreath: FieldDefinition<BooleanFieldModel> = this.schema.duiFields.duiTestBreath;
-    public readonly testUrine: FieldDefinition<BooleanFieldModel> = this.schema.duiFields.duiTestUrine;
-    public readonly testOther: FieldDefinition<BooleanFieldModel> = this.schema.duiFields.duiTestOther;
-    public readonly testResults: FieldDefinition<StringFieldModel> = this.schema.duiFields.duiTestResults;
-    public readonly testAdministeredBy: FieldDefinition<StringFieldModel> = this.schema.duiFields.duiTestAdministeredBy;
+    public readonly charged: FieldDefinition<BooleanFieldModel> = this.formSchema.duiFields.duiCharged;
+    public readonly testBlood: FieldDefinition<BooleanFieldModel> = this.formSchema.duiFields.duiTestBlood;
+    public readonly testBreath: FieldDefinition<BooleanFieldModel> = this.formSchema.duiFields.duiTestBreath;
+    public readonly testUrine: FieldDefinition<BooleanFieldModel> = this.formSchema.duiFields.duiTestUrine;
+    public readonly testOther: FieldDefinition<BooleanFieldModel> = this.formSchema.duiFields.duiTestOther;
+    public readonly testResults: FieldDefinition<StringFieldModel> = this.formSchema.duiFields.duiTestResults;
+    public readonly testAdministeredBy: FieldDefinition<StringFieldModel> = this.formSchema.duiFields.duiTestAdministeredBy;
 
     /** The blood / breath / urine / other group naming the test that was administered. */
     public readonly testAdministered: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.testBlood, this.testBreath, this.testUrine, this.testOther];

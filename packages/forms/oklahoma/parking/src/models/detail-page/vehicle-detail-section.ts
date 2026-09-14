@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface IVehicleDetailSection extends ISection {
@@ -15,15 +15,15 @@ export interface IVehicleDetailSectionModel extends IVehicleDetailSection {
  * dependent select needs both fields on one section to clear the child when the parent changes.
  */
 export class VehicleDetailSectionModel extends SectionModel implements IVehicleDetailSectionModel {
-    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
 
-    public readonly vin: FieldDefinition<StringFieldModel> = this.schema.vehicleDetailFields.vehicleVin;
-    public readonly registrationExpires: FieldDefinition<StringFieldModel> = this.schema.vehicleDetailFields.vehicleRegistrationExpires;
-    public readonly year: FieldDefinition<NumberFieldModel> = this.schema.vehicleDetailFields.vehicleYear;
-    public readonly type: FieldDefinition<StringFieldModel> = this.schema.vehicleDetailFields.vehicleType;
-    public readonly color: FieldDefinition<StringFieldModel> = this.schema.vehicleDetailFields.vehicleColor;
-    public readonly model: FieldDefinition<StringFieldModel> = this.schema.vehicleDetailFields.vehicleModel;
-    public readonly noLicensePlate: FieldDefinition<BooleanFieldModel> = this.schema.vehicleDetailFields.vehicleNoLicensePlate;
+    public readonly vin: FieldDefinition<StringFieldModel> = this.formSchema.vehicleDetailFields.vehicleVin;
+    public readonly registrationExpires: FieldDefinition<StringFieldModel> = this.formSchema.vehicleDetailFields.vehicleRegistrationExpires;
+    public readonly year: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleDetailFields.vehicleYear;
+    public readonly type: FieldDefinition<StringFieldModel> = this.formSchema.vehicleDetailFields.vehicleType;
+    public readonly color: FieldDefinition<StringFieldModel> = this.formSchema.vehicleDetailFields.vehicleColor;
+    public readonly model: FieldDefinition<StringFieldModel> = this.formSchema.vehicleDetailFields.vehicleModel;
+    public readonly noLicensePlate: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleDetailFields.vehicleNoLicensePlate;
 
     public getColor(): StringFieldModel { return this.get<StringFieldModel>(this.color); }
     public getModel(): StringFieldModel { return this.get<StringFieldModel>(this.model); }

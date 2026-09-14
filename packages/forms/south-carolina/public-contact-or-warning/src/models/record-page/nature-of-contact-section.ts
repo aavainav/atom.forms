@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { PublicContactOrWarningFormSchema } from "../public-contact-or-warning-form-schema";
 
 export interface INatureOfContactSection extends ISection {
@@ -9,30 +9,30 @@ export interface INatureOfContactSectionModel extends INatureOfContactSection {
 
 /** Represents the model for the "Nature of Contact" section (check only one) of the public contact/warning record. */
 export class NatureOfContactSectionModel extends SectionModel implements INatureOfContactSectionModel {
-    private schema: PublicContactOrWarningFormSchema = FormModel.getSchema<PublicContactOrWarningFormSchema>(PublicContactOrWarningFormSchema);
+    private formSchema: PublicContactOrWarningFormSchema = this.getSchema<PublicContactOrWarningFormSchema>();
 
-    public readonly speeding: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureSpeeding;
-    public readonly contactOnly: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureContactOnly;
-    public readonly improperLaneUse: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImproperLaneUse;
-    public readonly failureToDimLights: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureFailureToDimLights;
-    public readonly improperBacking: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImproperBacking;
-    public readonly improperLights: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImproperLights;
-    public readonly improperTurn: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImproperTurn;
-    public readonly disregardingStopSign: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureDisregardingStopSign;
-    public readonly seatBeltViolation: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureSeatBeltViolation;
-    public readonly handsFreeViolation: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureHandsFreeViolation;
-    public readonly disregardingTrafficSignal: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureDisregardingTrafficSignal;
-    public readonly followingTooClose: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureFollowingTooClose;
-    public readonly changingLanesUnlawfully: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureChangingLanesUnlawfully;
-    public readonly noRightOfWay: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureNoRightOfWay;
-    public readonly defectiveEquipment: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureDefectiveEquipment;
-    public readonly improperPassing: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImproperPassing;
-    public readonly driversLicenseViolation: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureDriversLicenseViolation;
-    public readonly vehicleLicenseViolation: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureVehicleLicenseViolation;
-    public readonly pedestrian: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.naturePedestrian;
-    public readonly immigrationStop: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureImmigrationStop;
-    public readonly other: FieldDefinition<BooleanFieldModel> = this.schema.natureOfContactFields.natureOther;
-    public readonly otherSpecify: FieldDefinition<StringFieldModel> = this.schema.natureOfContactFields.natureOtherSpecify;
+    public readonly speeding: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureSpeeding;
+    public readonly contactOnly: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureContactOnly;
+    public readonly improperLaneUse: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImproperLaneUse;
+    public readonly failureToDimLights: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureFailureToDimLights;
+    public readonly improperBacking: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImproperBacking;
+    public readonly improperLights: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImproperLights;
+    public readonly improperTurn: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImproperTurn;
+    public readonly disregardingStopSign: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureDisregardingStopSign;
+    public readonly seatBeltViolation: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureSeatBeltViolation;
+    public readonly handsFreeViolation: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureHandsFreeViolation;
+    public readonly disregardingTrafficSignal: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureDisregardingTrafficSignal;
+    public readonly followingTooClose: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureFollowingTooClose;
+    public readonly changingLanesUnlawfully: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureChangingLanesUnlawfully;
+    public readonly noRightOfWay: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureNoRightOfWay;
+    public readonly defectiveEquipment: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureDefectiveEquipment;
+    public readonly improperPassing: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImproperPassing;
+    public readonly driversLicenseViolation: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureDriversLicenseViolation;
+    public readonly vehicleLicenseViolation: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureVehicleLicenseViolation;
+    public readonly pedestrian: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.naturePedestrian;
+    public readonly immigrationStop: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureImmigrationStop;
+    public readonly other: FieldDefinition<BooleanFieldModel> = this.formSchema.natureOfContactFields.natureOther;
+    public readonly otherSpecify: FieldDefinition<StringFieldModel> = this.formSchema.natureOfContactFields.natureOtherSpecify;
 
     /** The mutually-exclusive boolean fields making up the "check all that apply" group turned "check only one" (excludes the free-text field). */
     private readonly exclusiveFields: FieldDefinition<BooleanFieldModel>[] = [

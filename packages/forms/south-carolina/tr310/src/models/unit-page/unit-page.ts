@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { UnitHeaderSectionModel } from "./unit-header-section";
 import { VehicleSectionModel } from "./vehicle-section";
@@ -22,26 +22,26 @@ export interface IUnitPageModel extends IUnitPage {
 
 /** Represents one unit page of the TR-310. The report carries a page per unit involved, so the form holds as many of these as the collision had units. */
 export class UnitPageModel extends PageModel implements IUnitPageModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly unitHeaderSection: SectionDefinition<UnitHeaderSectionModel> = this.schema.unitHeaderSection;
-    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.schema.vehicleSection;
-    public readonly insuranceSection: SectionDefinition<InsuranceSectionModel> = this.schema.insuranceSection;
-    public readonly ownerSection: SectionDefinition<OwnerSectionModel> = this.schema.ownerSection;
-    public readonly travelSection: SectionDefinition<TravelSectionModel> = this.schema.travelSection;
-    public readonly damageSection: SectionDefinition<DamageSectionModel> = this.schema.damageSection;
-    public readonly unitTypeSection: SectionDefinition<UnitTypeSectionModel> = this.schema.unitTypeSection;
-    public readonly eventsSection: SectionDefinition<EventsSectionModel> = this.schema.eventsSection;
-    public readonly roadwaySection: SectionDefinition<RoadwaySectionModel> = this.schema.roadwaySection;
-    public readonly violationsSection: SectionDefinition<ViolationsSectionModel> = this.schema.violationsSection;
-    public readonly unitOfficerSection: SectionDefinition<UnitOfficerSectionModel> = this.schema.unitOfficerSection;
+    public readonly unitHeaderSection: SectionDefinition<UnitHeaderSectionModel> = this.formSchema.unitHeaderSection;
+    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.formSchema.vehicleSection;
+    public readonly insuranceSection: SectionDefinition<InsuranceSectionModel> = this.formSchema.insuranceSection;
+    public readonly ownerSection: SectionDefinition<OwnerSectionModel> = this.formSchema.ownerSection;
+    public readonly travelSection: SectionDefinition<TravelSectionModel> = this.formSchema.travelSection;
+    public readonly damageSection: SectionDefinition<DamageSectionModel> = this.formSchema.damageSection;
+    public readonly unitTypeSection: SectionDefinition<UnitTypeSectionModel> = this.formSchema.unitTypeSection;
+    public readonly eventsSection: SectionDefinition<EventsSectionModel> = this.formSchema.eventsSection;
+    public readonly roadwaySection: SectionDefinition<RoadwaySectionModel> = this.formSchema.roadwaySection;
+    public readonly violationsSection: SectionDefinition<ViolationsSectionModel> = this.formSchema.violationsSection;
+    public readonly unitOfficerSection: SectionDefinition<UnitOfficerSectionModel> = this.formSchema.unitOfficerSection;
 
     /** Initializes the page and registers its dropzones. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new UnitPageVehicleDropzone(page, page.schema));
-        page = page.setDropzone(new UnitPageOwnerDropzone(page, page.schema));
+        page = page.setDropzone(new UnitPageVehicleDropzone(page, this.formSchema));
+        page = page.setDropzone(new UnitPageOwnerDropzone(page, this.formSchema));
 
         return page;
     }

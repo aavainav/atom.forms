@@ -2,7 +2,6 @@ import {
     ISection,
     BooleanFieldModel,
     FieldDefinition,
-    FormModel, 
     NumberFieldModel, 
     SectionModel, 
     StringFieldModel } from "@forms/core";
@@ -16,27 +15,27 @@ export interface IViolatorSectionModel extends IViolatorSection {
 
 /** Represents the model for the violator section of the s438 form's front page. */
 export class ViolatorSectionModel extends SectionModel implements IViolatorSectionModel {
-    private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
+    private formSchema: S438FormSchema = this.getSchema<S438FormSchema>();
 
-    public readonly firstName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorFirstName;
-    public readonly middleName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorMiddleName;
-    public readonly lastName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorLastName;
-    public readonly streetAddress: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorStreetAddress;
-    public readonly city: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorCity;
-    public readonly state: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorZipCode;
-    public readonly driverLicenseState: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorDriverLicenseState;
-    public readonly driverLicenseNumber: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorDriverLicenseNumber;
-    public readonly driverLicenseClass: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorDriverLicenseClass;
-    public readonly commercialDriverLicenseYes: FieldDefinition<BooleanFieldModel> = this.schema.violatorFields.violatorCommercialDriverLicenseYes;
-    public readonly commercialDriverLicenseNo: FieldDefinition<BooleanFieldModel> = this.schema.violatorFields.violatorCommercialDriverLicenseNo;
-    public readonly race: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorRace;
-    public readonly sex: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorSex;
-    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorDateOfBirth;
-    public readonly height: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorHeight;
-    public readonly weight: FieldDefinition<NumberFieldModel> = this.schema.violatorFields.violatorWeight;
-    public readonly hairColor: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorHairColor;
-    public readonly eyeColor: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorEyeColor;
+    public readonly firstName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorFirstName;
+    public readonly middleName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorMiddleName;
+    public readonly lastName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorLastName;
+    public readonly streetAddress: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorStreetAddress;
+    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorCity;
+    public readonly state: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorZipCode;
+    public readonly driverLicenseState: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorDriverLicenseState;
+    public readonly driverLicenseNumber: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorDriverLicenseNumber;
+    public readonly driverLicenseClass: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorDriverLicenseClass;
+    public readonly commercialDriverLicenseYes: FieldDefinition<BooleanFieldModel> = this.formSchema.violatorFields.violatorCommercialDriverLicenseYes;
+    public readonly commercialDriverLicenseNo: FieldDefinition<BooleanFieldModel> = this.formSchema.violatorFields.violatorCommercialDriverLicenseNo;
+    public readonly race: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorRace;
+    public readonly sex: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorSex;
+    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorDateOfBirth;
+    public readonly height: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorHeight;
+    public readonly weight: FieldDefinition<NumberFieldModel> = this.formSchema.violatorFields.violatorWeight;
+    public readonly hairColor: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorHairColor;
+    public readonly eyeColor: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorEyeColor;
 
     public getFirstName(): StringFieldModel { return this.get<StringFieldModel>(this.firstName); }
     public getMiddleName(): StringFieldModel { return this.get<StringFieldModel>(this.middleName); }

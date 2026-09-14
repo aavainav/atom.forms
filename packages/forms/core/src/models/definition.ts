@@ -1,4 +1,5 @@
 import { IEntity } from "./entity";
+import type { ISchema } from "./schema";
 
 /** Constructs the model instance that values conforming to a definition resolve to. */
 export type ValueTypeConstructor = new (...args: any[]) => unknown;
@@ -13,6 +14,8 @@ export interface IDefinition {
     readonly valueType: ValueTypeConstructor;
     /** The parent definition, if any. */
     readonly parent?: IDefinition;
+    /** The schema this definition was built from. Only ever set on the form definition at the root of the tree. */
+    readonly schema?: ISchema;
 
     /** The child definitions declared beneath this definition. */
     readonly children: ReadonlyArray<IDefinition>;
@@ -24,10 +27,11 @@ export abstract class Definition implements IDefinition {
     public readonly name: string;
     public readonly valueType: ValueTypeConstructor;
     public readonly parent?: IDefinition;
+    public readonly schema?: ISchema;
 
     private readonly _children: Array<IDefinition> = [];
 
-    constructor(name: string, valueType: ValueTypeConstructor, parent?: IDefinition) {
+    constructor(name: string, valueType: ValueTypeConstructor, parent?: IDefinition, schema?: ISchema) {
         if (!valueType) {
             throw new Error(`Definition: No value type constructor defined for definition '${name}'.`);
         }
@@ -36,6 +40,7 @@ export abstract class Definition implements IDefinition {
         this.name = name;
         this.valueType = valueType;
         this.parent = parent;
+        this.schema = schema;
     }
 
     public get children(): ReadonlyArray<IDefinition> {

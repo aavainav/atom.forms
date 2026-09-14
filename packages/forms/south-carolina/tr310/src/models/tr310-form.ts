@@ -1,4 +1,4 @@
-import { ICrash, IForm, CrashForm, FieldDefinition, FormModel, NumberFieldModel, PageCollection, PageDefinition, StringFieldModel } from "@forms/core";
+import { ICrash, IForm, CrashForm, FieldDefinition, NumberFieldModel, PageCollection, PageDefinition, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "./tr310-form-schema";
 import { CollisionPageModel } from "./collision-page/collision-page";
 import { NarrativePageModel } from "./narrative-page/narrative-page";
@@ -57,12 +57,12 @@ export class TR310FormModel extends CrashForm implements ITR310FormModel {
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
 
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly collisionPage: PageDefinition<CollisionPageModel> = this.schema.collisionPage;
-    public readonly personPage: PageDefinition<PersonPageModel> = this.schema.personPage;
-    public readonly unitPage: PageDefinition<UnitPageModel> = this.schema.unitPage;
-    public readonly narrativePage: PageDefinition<NarrativePageModel> = this.schema.narrativePage;
+    public readonly collisionPage: PageDefinition<CollisionPageModel> = this.formSchema.collisionPage;
+    public readonly personPage: PageDefinition<PersonPageModel> = this.formSchema.personPage;
+    public readonly unitPage: PageDefinition<UnitPageModel> = this.formSchema.unitPage;
+    public readonly narrativePage: PageDefinition<NarrativePageModel> = this.formSchema.narrativePage;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();
@@ -71,7 +71,7 @@ export class TR310FormModel extends CrashForm implements ITR310FormModel {
             .setDateOfCrash()
             .setTimeOfCrash()
             .setCrashNumber()
-            .addRuleCollection(this.schema.ruleCollection);
+            .addRuleCollection(this.formSchema.ruleCollection);
     }
 
     /** Builds the common crash contract from the report. */
@@ -158,12 +158,12 @@ export class TR310FormModel extends CrashForm implements ITR310FormModel {
 
     /** Returns a form with today's date stamped on the collision, and that box closed to editing. */
     public setDateOfCrash(): this {
-        return this.setCollisionValue(this.schema.collisionFields.collisionDate, formatDate(new Date()), false);
+        return this.setCollisionValue(this.formSchema.collisionFields.collisionDate, formatDate(new Date()), false);
     }
 
     /** Returns a form with the current time stamped on the collision; unlike the date, the officer may correct it. */
     public setTimeOfCrash(): this {
-        return this.setCollisionValue(this.schema.collisionFields.collisionTime, new Date().toLocaleTimeString(), true);
+        return this.setCollisionValue(this.formSchema.collisionFields.collisionTime, new Date().toLocaleTimeString(), true);
     }
 
     /** Builds the common contract's unit from a unit page, taking the driver from the person page recording that unit. */

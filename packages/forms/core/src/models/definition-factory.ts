@@ -4,6 +4,7 @@ import { FormDefinition } from "./form-definition";
 import { FormModel, FormModelConstructor } from "./form";
 import { PageDefinition } from "./page-definition";
 import { PageModel, PageModelConstructor } from "./page";
+import type { ISchema } from "./schema";
 import { ISectionDefinitionOptions, SectionDefinition } from "./section-definition";
 import { SectionModel, SectionModelConstructor } from "./section";
 
@@ -27,8 +28,8 @@ function camelToKebab(value: string): string {
 
 /** Centralizes construction of the Form/Page/Section definition tree. */
 export class DefinitionFactory {
-    static form<TForm extends FormModel>(name: string, ctor: FormModelConstructor<TForm>): FormDefinition<TForm> {
-        return new FormDefinition<TForm>(name, ctor);
+    static form<TForm extends FormModel>(name: string, ctor: FormModelConstructor<TForm>, schema: ISchema): FormDefinition<TForm> {
+        return new FormDefinition<TForm>(name, ctor, schema);
     }
 
     static page<TPage extends PageModel>(name: string, form: FormDefinition<FormModel>, ctor: PageModelConstructor<TPage>): PageDefinition<TPage> {

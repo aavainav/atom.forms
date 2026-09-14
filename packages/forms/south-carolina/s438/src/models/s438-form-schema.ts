@@ -137,7 +137,7 @@ export interface IS438FormSchema extends ISchema {
 
 /** Represents the schema definition for the S438 form, defining its pages, sections, and fields. */
 export class S438FormSchema extends Schema implements IS438FormSchema {
-    readonly formDefinition: FormDefinition<S438FormModel> = DefinitionFactory.form<S438FormModel>("s438-form", S438FormModel);
+    readonly formDefinition: FormDefinition<S438FormModel> = DefinitionFactory.form<S438FormModel>("s438-form", S438FormModel, this);
 
     readonly frontPage: PageDefinition<FrontPageModel> = DefinitionFactory.page<FrontPageModel>("front-page", this.formDefinition, FrontPageModel);
 

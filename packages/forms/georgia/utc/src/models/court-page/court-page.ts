@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { CourtActionSectionModel } from "./court-action-section";
 import { DispositionSectionModel } from "./disposition-section";
@@ -18,12 +18,12 @@ export interface ICourtPageModel extends ICourtPage {
  * It registers no dropzones: nothing on this side of the citation is imported from a person or vehicle record.
  */
 export class CourtPageModel extends PageModel implements ICourtPageModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly courtActionSection: SectionDefinition<CourtActionSectionModel> = this.schema.courtActionSection;
-    public readonly pleaSection: SectionDefinition<PleaSectionModel> = this.schema.pleaSection;
-    public readonly dispositionSection: SectionDefinition<DispositionSectionModel> = this.schema.dispositionSection;
-    public readonly judgmentSection: SectionDefinition<JudgmentSectionModel> = this.schema.judgmentSection;
+    public readonly courtActionSection: SectionDefinition<CourtActionSectionModel> = this.formSchema.courtActionSection;
+    public readonly pleaSection: SectionDefinition<PleaSectionModel> = this.formSchema.pleaSection;
+    public readonly dispositionSection: SectionDefinition<DispositionSectionModel> = this.formSchema.dispositionSection;
+    public readonly judgmentSection: SectionDefinition<JudgmentSectionModel> = this.formSchema.judgmentSection;
 
     public getCourtActionSection(): CourtActionSectionModel { return this.get<CourtActionSectionModel>(this.courtActionSection); }
     public getDispositionSection(): DispositionSectionModel { return this.get<DispositionSectionModel>(this.dispositionSection); }

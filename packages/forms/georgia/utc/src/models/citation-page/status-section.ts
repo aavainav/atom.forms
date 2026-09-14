@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -16,16 +16,16 @@ export interface IStatusSectionModel extends IStatusSection {
  * form records a question the officer did not answer.
  */
 export class StatusSectionModel extends SectionModel implements IStatusSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly cdlYes: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusCdlYes;
-    public readonly cdlNo: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusCdlNo;
-    public readonly accidentYes: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusAccidentYes;
-    public readonly accidentNo: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusAccidentNo;
-    public readonly injuriesYes: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusInjuriesYes;
-    public readonly injuriesNo: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusInjuriesNo;
-    public readonly fatalitiesYes: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusFatalitiesYes;
-    public readonly fatalitiesNo: FieldDefinition<BooleanFieldModel> = this.schema.statusFields.statusFatalitiesNo;
+    public readonly cdlYes: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusCdlYes;
+    public readonly cdlNo: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusCdlNo;
+    public readonly accidentYes: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusAccidentYes;
+    public readonly accidentNo: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusAccidentNo;
+    public readonly injuriesYes: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusInjuriesYes;
+    public readonly injuriesNo: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusInjuriesNo;
+    public readonly fatalitiesYes: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusFatalitiesYes;
+    public readonly fatalitiesNo: FieldDefinition<BooleanFieldModel> = this.formSchema.statusFields.statusFatalitiesNo;
 
     /** The accident YES/NO pair. */
     public readonly accident: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.accidentYes, this.accidentNo];

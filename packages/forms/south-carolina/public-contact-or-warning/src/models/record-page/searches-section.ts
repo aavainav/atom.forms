@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { PublicContactOrWarningFormSchema } from "../public-contact-or-warning-form-schema";
 
 export interface ISearchesSection extends ISection {
@@ -9,24 +9,24 @@ export interface ISearchesSectionModel extends ISearchesSection {
 
 /** Represents the model for the "Searches" section of the public contact/warning record. */
 export class SearchesSectionModel extends SectionModel implements ISearchesSectionModel {
-    private schema: PublicContactOrWarningFormSchema = FormModel.getSchema<PublicContactOrWarningFormSchema>(PublicContactOrWarningFormSchema);
+    private formSchema: PublicContactOrWarningFormSchema = this.getSchema<PublicContactOrWarningFormSchema>();
 
-    public readonly ofDriver: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfDriver;
-    public readonly ofPedestrian: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfPedestrian;
-    public readonly ofVehicle: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfVehicle;
-    public readonly ofPassenger: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfPassenger;
+    public readonly ofDriver: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesOfDriver;
+    public readonly ofPedestrian: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesOfPedestrian;
+    public readonly ofVehicle: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesOfVehicle;
+    public readonly ofPassenger: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesOfPassenger;
 
-    public readonly consentRequestedYes: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentRequestedYes;
-    public readonly consentRequestedNo: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentRequestedNo;
-    public readonly consentGivenYes: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentGivenYes;
-    public readonly consentGivenNo: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentGivenNo;
+    public readonly consentRequestedYes: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesConsentRequestedYes;
+    public readonly consentRequestedNo: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesConsentRequestedNo;
+    public readonly consentGivenYes: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesConsentGivenYes;
+    public readonly consentGivenNo: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesConsentGivenNo;
 
-    public readonly madeByConsent: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesMadeByConsent;
-    public readonly incidentToArrest: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesIncidentToArrest;
-    public readonly inventoryVehicleTowed: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesInventoryVehicleTowed;
-    public readonly probableCause: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesProbableCause;
-    public readonly basisOther: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesBasisOther;
-    public readonly basisOtherSpecify: FieldDefinition<StringFieldModel> = this.schema.searchesFields.searchesBasisOtherSpecify;
+    public readonly madeByConsent: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesMadeByConsent;
+    public readonly incidentToArrest: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesIncidentToArrest;
+    public readonly inventoryVehicleTowed: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesInventoryVehicleTowed;
+    public readonly probableCause: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesProbableCause;
+    public readonly basisOther: FieldDefinition<BooleanFieldModel> = this.formSchema.searchesFields.searchesBasisOther;
+    public readonly basisOtherSpecify: FieldDefinition<StringFieldModel> = this.formSchema.searchesFields.searchesBasisOtherSpecify;
 
     private readonly consentRequestedFields: FieldDefinition<BooleanFieldModel>[] = [this.consentRequestedYes, this.consentRequestedNo];
     private readonly consentGivenFields: FieldDefinition<BooleanFieldModel>[] = [this.consentGivenYes, this.consentGivenNo];

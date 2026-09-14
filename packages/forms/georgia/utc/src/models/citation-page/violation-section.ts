@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -16,19 +16,19 @@ export interface IViolationSectionModel extends IViolationSection {
  * are left independent, since the paper asks them as their own questions rather than as one row of answers.
  */
 export class ViolationSectionModel extends SectionModel implements IViolationSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly twoLaneRoad: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationTwoLaneRoad;
-    public readonly driverRequestedAccuracyCheck: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationDriverRequestedAccuracyCheck;
-    public readonly vascar: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationVascar;
-    public readonly laser: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationLaser;
-    public readonly radar: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationRadar;
-    public readonly clockedByPatrolVehicle: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationClockedByPatrolVehicle;
-    public readonly clockedByOther: FieldDefinition<BooleanFieldModel> = this.schema.violationFields.violationClockedByOther;
-    public readonly serialNumber: FieldDefinition<StringFieldModel> = this.schema.violationFields.violationSerialNumber;
-    public readonly calibrationCheck: FieldDefinition<StringFieldModel> = this.schema.violationFields.violationCalibrationCheck;
-    public readonly clockedSpeed: FieldDefinition<NumberFieldModel> = this.schema.violationFields.violationClockedSpeed;
-    public readonly speedZone: FieldDefinition<NumberFieldModel> = this.schema.violationFields.violationSpeedZone;
+    public readonly twoLaneRoad: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationTwoLaneRoad;
+    public readonly driverRequestedAccuracyCheck: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationDriverRequestedAccuracyCheck;
+    public readonly vascar: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationVascar;
+    public readonly laser: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationLaser;
+    public readonly radar: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationRadar;
+    public readonly clockedByPatrolVehicle: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationClockedByPatrolVehicle;
+    public readonly clockedByOther: FieldDefinition<BooleanFieldModel> = this.formSchema.violationFields.violationClockedByOther;
+    public readonly serialNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationFields.violationSerialNumber;
+    public readonly calibrationCheck: FieldDefinition<StringFieldModel> = this.formSchema.violationFields.violationCalibrationCheck;
+    public readonly clockedSpeed: FieldDefinition<NumberFieldModel> = this.formSchema.violationFields.violationClockedSpeed;
+    public readonly speedZone: FieldDefinition<NumberFieldModel> = this.formSchema.violationFields.violationSpeedZone;
 
     /** The patrol vehicle / other pair naming what the speed was clocked from. */
     public readonly clockedBy: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.clockedByPatrolVehicle, this.clockedByOther];

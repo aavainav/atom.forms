@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IComplaintSection extends ISection {
@@ -14,11 +14,11 @@ export interface IComplaintSectionModel extends IComplaintSection {
  * the citation it belongs to and the counselor who found probable cause for filing it.
  */
 export class ComplaintSectionModel extends SectionModel implements IComplaintSectionModel {
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.schema.complaintFields.complaintCitationNumber;
-    public readonly counselor: FieldDefinition<StringFieldModel> = this.schema.complaintFields.complaintCounselor;
-    public readonly date: FieldDefinition<StringFieldModel> = this.schema.complaintFields.complaintDate;
+    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.formSchema.complaintFields.complaintCitationNumber;
+    public readonly counselor: FieldDefinition<StringFieldModel> = this.formSchema.complaintFields.complaintCounselor;
+    public readonly date: FieldDefinition<StringFieldModel> = this.formSchema.complaintFields.complaintDate;
 
     public getCitationNumber(): StringFieldModel { return this.get<StringFieldModel>(this.citationNumber); }
     public getCounselor(): StringFieldModel { return this.get<StringFieldModel>(this.counselor); }

@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface IVehicleSection extends ISection {
@@ -15,11 +15,11 @@ export interface IVehicleSectionModel extends IVehicleSection {
  * of it the citation page carries.
  */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
-    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
 
-    public readonly licenseNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleLicenseNumber;
-    public readonly make: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleMake;
-    public readonly meterNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleMeterNumber;
+    public readonly licenseNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleLicenseNumber;
+    public readonly make: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleMake;
+    public readonly meterNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleMeterNumber;
 
     public getLicenseNumber(): StringFieldModel { return this.get<StringFieldModel>(this.licenseNumber); }
     public getMake(): OptionFieldModel { return this.get<OptionFieldModel>(this.make); }

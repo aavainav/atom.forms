@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface IPleaSection extends ISection {
@@ -17,20 +17,20 @@ export interface IPleaSectionModel extends IPleaSection {
  * declares for the section's own name.
  */
 export class PleaSectionModel extends SectionModel implements IPleaSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly accusedName: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaAccusedName;
-    public readonly chargedWith: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaChargedWith;
-    public readonly minimumMonths: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaMinimumMonths;
-    public readonly minimumFine: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaMinimumFine;
-    public readonly maximumMonths: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaMaximumMonths;
-    public readonly maximumFine: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaMaximumFine;
-    public readonly day: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaDay;
-    public readonly month: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaMonth;
-    public readonly year: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaYear;
-    public readonly accusedSignature: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaAccusedSignature;
-    public readonly judgeName: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaJudgeName;
-    public readonly judgeSignature: FieldDefinition<StringFieldModel> = this.schema.pleaFields.pleaJudgeSignature;
+    public readonly accusedName: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaAccusedName;
+    public readonly chargedWith: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaChargedWith;
+    public readonly minimumMonths: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaMinimumMonths;
+    public readonly minimumFine: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaMinimumFine;
+    public readonly maximumMonths: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaMaximumMonths;
+    public readonly maximumFine: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaMaximumFine;
+    public readonly day: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaDay;
+    public readonly month: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaMonth;
+    public readonly year: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaYear;
+    public readonly accusedSignature: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaAccusedSignature;
+    public readonly judgeName: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaJudgeName;
+    public readonly judgeSignature: FieldDefinition<StringFieldModel> = this.formSchema.pleaFields.pleaJudgeSignature;
 
     public getAccusedName(): StringFieldModel { return this.get<StringFieldModel>(this.accusedName); }
     public getAccusedSignature(): StringFieldModel { return this.get<StringFieldModel>(this.accusedSignature); }

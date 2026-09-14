@@ -140,7 +140,7 @@ export interface IPublicContactOrWarningFormSchema extends ISchema {
 
 /** Represents the schema definition for the SC Form 432 (Public Contact / Warning) form, defining its pages, sections, and fields. */
 export class PublicContactOrWarningFormSchema extends Schema implements IPublicContactOrWarningFormSchema {
-    readonly formDefinition: FormDefinition<PublicContactOrWarningFormModel> = DefinitionFactory.form<PublicContactOrWarningFormModel>("public-contact-or-warning-form", PublicContactOrWarningFormModel);
+    readonly formDefinition: FormDefinition<PublicContactOrWarningFormModel> = DefinitionFactory.form<PublicContactOrWarningFormModel>("public-contact-or-warning-form", PublicContactOrWarningFormModel, this);
 
     readonly recordPage: PageDefinition<RecordPageModel> = DefinitionFactory.page<RecordPageModel>("record-page", this.formDefinition, RecordPageModel);
 

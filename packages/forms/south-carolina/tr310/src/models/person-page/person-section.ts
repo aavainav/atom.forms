@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IPersonSection extends ISection {
@@ -9,20 +9,20 @@ export interface IPersonSectionModel extends IPersonSection {
 
 /** Represents the model for the person the page records. The form prints one name box; the name is held as three fields so a person dropped onto the page lands in the right part of it. */
 export class PersonSectionModel extends SectionModel implements IPersonSectionModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly firstName: FieldDefinition<StringFieldModel> = this.schema.personFields.personFirstName;
-    public readonly middleName: FieldDefinition<StringFieldModel> = this.schema.personFields.personMiddleName;
-    public readonly lastName: FieldDefinition<StringFieldModel> = this.schema.personFields.personLastName;
-    public readonly phoneNumber: FieldDefinition<StringFieldModel> = this.schema.personFields.personPhoneNumber;
-    public readonly contributedTo: FieldDefinition<OptionFieldModel> = this.schema.personFields.personContributedTo;
-    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.schema.personFields.personDateOfBirth;
-    public readonly address: FieldDefinition<StringFieldModel> = this.schema.personFields.personAddress;
-    public readonly city: FieldDefinition<StringFieldModel> = this.schema.personFields.personCity;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.personFields.personState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.personFields.personZipCode;
-    public readonly sex: FieldDefinition<OptionFieldModel> = this.schema.personFields.personSex;
-    public readonly race: FieldDefinition<StringFieldModel> = this.schema.personFields.personRace;
+    public readonly firstName: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personFirstName;
+    public readonly middleName: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personMiddleName;
+    public readonly lastName: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personLastName;
+    public readonly phoneNumber: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personPhoneNumber;
+    public readonly contributedTo: FieldDefinition<OptionFieldModel> = this.formSchema.personFields.personContributedTo;
+    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personDateOfBirth;
+    public readonly address: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personAddress;
+    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personCity;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.personFields.personState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personZipCode;
+    public readonly sex: FieldDefinition<OptionFieldModel> = this.formSchema.personFields.personSex;
+    public readonly race: FieldDefinition<StringFieldModel> = this.formSchema.personFields.personRace;
 
     public getFirstName(): StringFieldModel { return this.get<StringFieldModel>(this.firstName); }
     public getMiddleName(): StringFieldModel { return this.get<StringFieldModel>(this.middleName); }

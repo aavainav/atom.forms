@@ -232,7 +232,7 @@ export interface IOKTrafficFormSchema extends ISchema {
  * `DateRangeFieldRule` parses and a value it cannot parse silently skips date validation.
  */
 export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema {
-    readonly formDefinition: FormDefinition<OKTrafficFormModel> = DefinitionFactory.form<OKTrafficFormModel>("ok-traffic-form", OKTrafficFormModel);
+    readonly formDefinition: FormDefinition<OKTrafficFormModel> = DefinitionFactory.form<OKTrafficFormModel>("ok-traffic-form", OKTrafficFormModel, this);
 
     readonly complaintPage: PageDefinition<ComplaintPageModel> = DefinitionFactory.page<ComplaintPageModel>("complaint-page", this.formDefinition, ComplaintPageModel);
 

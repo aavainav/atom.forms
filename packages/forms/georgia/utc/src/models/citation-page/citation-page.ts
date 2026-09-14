@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { CitationPageVehicleDropzone } from "./dropzones/citation-page-vehicle-dropzone";
 import { CitationPageViolationDropzone } from "./dropzones/citation-page-violation-dropzone";
@@ -29,28 +29,28 @@ export interface ICitationPageModel extends ICitationPage {
  * one block of boxes.
  */
 export class CitationPageModel extends PageModel implements ICitationPageModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.schema.headerSection;
-    public readonly violatorSection: SectionDefinition<ViolatorSectionModel> = this.schema.violatorSection;
-    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.schema.vehicleSection;
-    public readonly statusSection: SectionDefinition<StatusSectionModel> = this.schema.statusSection;
-    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.schema.violationSection;
-    public readonly duiSection: SectionDefinition<DuiSectionModel> = this.schema.duiSection;
-    public readonly offenseSection: SectionDefinition<OffenseSectionModel> = this.schema.offenseSection;
-    public readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = this.schema.conditionsSection;
-    public readonly locationSection: SectionDefinition<LocationSectionModel> = this.schema.locationSection;
-    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.schema.officerSection;
-    public readonly summonsSection: SectionDefinition<SummonsSectionModel> = this.schema.summonsSection;
-    public readonly certificationSection: SectionDefinition<CertificationSectionModel> = this.schema.certificationSection;
+    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.formSchema.headerSection;
+    public readonly violatorSection: SectionDefinition<ViolatorSectionModel> = this.formSchema.violatorSection;
+    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.formSchema.vehicleSection;
+    public readonly statusSection: SectionDefinition<StatusSectionModel> = this.formSchema.statusSection;
+    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.formSchema.violationSection;
+    public readonly duiSection: SectionDefinition<DuiSectionModel> = this.formSchema.duiSection;
+    public readonly offenseSection: SectionDefinition<OffenseSectionModel> = this.formSchema.offenseSection;
+    public readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = this.formSchema.conditionsSection;
+    public readonly locationSection: SectionDefinition<LocationSectionModel> = this.formSchema.locationSection;
+    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.formSchema.officerSection;
+    public readonly summonsSection: SectionDefinition<SummonsSectionModel> = this.formSchema.summonsSection;
+    public readonly certificationSection: SectionDefinition<CertificationSectionModel> = this.formSchema.certificationSection;
 
     /** Initializes the page and registers its violator and vehicle dropzones. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new CitationPageViolatorDropzone(page, page.schema));
-        page = page.setDropzone(new CitationPageVehicleDropzone(page, page.schema));
-        page = page.setDropzone(new CitationPageViolationDropzone(page, page.schema));
+        page = page.setDropzone(new CitationPageViolatorDropzone(page, this.formSchema));
+        page = page.setDropzone(new CitationPageVehicleDropzone(page, this.formSchema));
+        page = page.setDropzone(new CitationPageViolationDropzone(page, this.formSchema));
 
         return page;
     }

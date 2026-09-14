@@ -146,7 +146,7 @@ export interface IOKParkingFormSchema extends ISchema {
  * `DateRangeFieldRule` parses and a value it cannot parse silently skips date validation.
  */
 export class OKParkingFormSchema extends Schema implements IOKParkingFormSchema {
-    readonly formDefinition: FormDefinition<OKParkingFormModel> = DefinitionFactory.form<OKParkingFormModel>("ok-parking-form", OKParkingFormModel);
+    readonly formDefinition: FormDefinition<OKParkingFormModel> = DefinitionFactory.form<OKParkingFormModel>("ok-parking-form", OKParkingFormModel, this);
 
     readonly citationPage: PageDefinition<CitationPageModel> = DefinitionFactory.page<CitationPageModel>("citation-page", this.formDefinition, CitationPageModel);
 

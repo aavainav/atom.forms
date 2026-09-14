@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 import { ComplaintPageDefendantDropzone } from "./dropzones/complaint-page-defendant-dropzone";
 import { ComplaintPageVehicleDropzone } from "./dropzones/complaint-page-vehicle-dropzone";
@@ -23,27 +23,27 @@ export interface IComplaintPageModel extends IComplaintPage {
 
 /** Represents the complaint page of the traffic citation form, the complaint and information sworn by the issuing officer. */
 export class ComplaintPageModel extends PageModel implements IComplaintPageModel {
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.schema.headerSection;
-    public readonly defendantSection: SectionDefinition<DefendantSectionModel> = this.schema.defendantSection;
-    public readonly licenseSection: SectionDefinition<LicenseSectionModel> = this.schema.licenseSection;
-    public readonly descriptionSection: SectionDefinition<DescriptionSectionModel> = this.schema.descriptionSection;
-    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.schema.vehicleSection;
-    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.schema.violationSection;
-    public readonly offenseSection: SectionDefinition<OffenseSectionModel> = this.schema.offenseSection;
-    public readonly violationInformationSection: SectionDefinition<ViolationInformationSectionModel> = this.schema.violationInformationSection;
-    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.schema.officerSection;
-    public readonly swornSection: SectionDefinition<SwornSectionModel> = this.schema.swornSection;
-    public readonly arraignmentSection: SectionDefinition<ArraignmentSectionModel> = this.schema.arraignmentSection;
+    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.formSchema.headerSection;
+    public readonly defendantSection: SectionDefinition<DefendantSectionModel> = this.formSchema.defendantSection;
+    public readonly licenseSection: SectionDefinition<LicenseSectionModel> = this.formSchema.licenseSection;
+    public readonly descriptionSection: SectionDefinition<DescriptionSectionModel> = this.formSchema.descriptionSection;
+    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.formSchema.vehicleSection;
+    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.formSchema.violationSection;
+    public readonly offenseSection: SectionDefinition<OffenseSectionModel> = this.formSchema.offenseSection;
+    public readonly violationInformationSection: SectionDefinition<ViolationInformationSectionModel> = this.formSchema.violationInformationSection;
+    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.formSchema.officerSection;
+    public readonly swornSection: SectionDefinition<SwornSectionModel> = this.formSchema.swornSection;
+    public readonly arraignmentSection: SectionDefinition<ArraignmentSectionModel> = this.formSchema.arraignmentSection;
 
     /** Initializes the page and registers its defendant and vehicle dropzones. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new ComplaintPageDefendantDropzone(page, page.schema));
-        page = page.setDropzone(new ComplaintPageVehicleDropzone(page, page.schema));
-        page = page.setDropzone(new ComplaintPageViolationDropzone(page, page.schema));
+        page = page.setDropzone(new ComplaintPageDefendantDropzone(page, this.formSchema));
+        page = page.setDropzone(new ComplaintPageVehicleDropzone(page, this.formSchema));
+        page = page.setDropzone(new ComplaintPageViolationDropzone(page, this.formSchema));
 
         return page;
     }

@@ -17,7 +17,7 @@ class SelectionTestPage extends PageModel { }
 class SelectionTestSharedSection extends SectionModel { }
 class SelectionTestPageSection extends SectionModel { }
 
-const formDefinition = DefinitionFactory.form("selection-test", SelectionTestForm);
+const formDefinition = DefinitionFactory.form("selection-test", SelectionTestForm, {});
 const pageDefinition = DefinitionFactory.page("violations", formDefinition, SelectionTestPage);
 const sharedSection = DefinitionFactory.section("conditions", pageDefinition, SelectionTestSharedSection, { isShared: true });
 const pageSection = DefinitionFactory.section("charge", pageDefinition, SelectionTestPageSection);

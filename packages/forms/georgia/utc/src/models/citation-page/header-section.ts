@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -16,18 +16,18 @@ export interface IHeaderSectionModel extends IHeaderSection {
  * citation has room for.
  */
 export class HeaderSectionModel extends SectionModel implements IHeaderSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly cicaNumber: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerCicaNumber;
-    public readonly ncicNumber: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerNcicNumber;
-    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerCitationNumber;
-    public readonly month: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerMonth;
-    public readonly day: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerDay;
-    public readonly year: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerYear;
-    public readonly hour: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerHour;
-    public readonly minute: FieldDefinition<StringFieldModel> = this.schema.headerFields.headerMinute;
-    public readonly am: FieldDefinition<BooleanFieldModel> = this.schema.headerFields.headerAm;
-    public readonly pm: FieldDefinition<BooleanFieldModel> = this.schema.headerFields.headerPm;
+    public readonly cicaNumber: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerCicaNumber;
+    public readonly ncicNumber: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerNcicNumber;
+    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerCitationNumber;
+    public readonly month: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerMonth;
+    public readonly day: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerDay;
+    public readonly year: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerYear;
+    public readonly hour: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerHour;
+    public readonly minute: FieldDefinition<StringFieldModel> = this.formSchema.headerFields.headerMinute;
+    public readonly am: FieldDefinition<BooleanFieldModel> = this.formSchema.headerFields.headerAm;
+    public readonly pm: FieldDefinition<BooleanFieldModel> = this.formSchema.headerFields.headerPm;
 
     /** The AM/PM pair, which answers one question and so holds at most one box. */
     public readonly meridiem: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.am, this.pm];

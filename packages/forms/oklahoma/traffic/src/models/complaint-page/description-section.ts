@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IDescriptionSection extends ISection {
@@ -15,14 +15,14 @@ export interface IDescriptionSectionModel extends IDescriptionSection {
  * arrives, by registering it in `value-lists.ts` and changing the field's constructor in the schema.
  */
 export class DescriptionSectionModel extends SectionModel implements IDescriptionSectionModel {
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.schema.descriptionFields.descriptionDateOfBirth;
-    public readonly race: FieldDefinition<StringFieldModel> = this.schema.descriptionFields.descriptionRace;
-    public readonly ethnicity: FieldDefinition<StringFieldModel> = this.schema.descriptionFields.descriptionEthnicity;
-    public readonly sex: FieldDefinition<OptionFieldModel> = this.schema.descriptionFields.descriptionSex;
-    public readonly height: FieldDefinition<StringFieldModel> = this.schema.descriptionFields.descriptionHeight;
-    public readonly weight: FieldDefinition<NumberFieldModel> = this.schema.descriptionFields.descriptionWeight;
+    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.formSchema.descriptionFields.descriptionDateOfBirth;
+    public readonly race: FieldDefinition<StringFieldModel> = this.formSchema.descriptionFields.descriptionRace;
+    public readonly ethnicity: FieldDefinition<StringFieldModel> = this.formSchema.descriptionFields.descriptionEthnicity;
+    public readonly sex: FieldDefinition<OptionFieldModel> = this.formSchema.descriptionFields.descriptionSex;
+    public readonly height: FieldDefinition<StringFieldModel> = this.formSchema.descriptionFields.descriptionHeight;
+    public readonly weight: FieldDefinition<NumberFieldModel> = this.formSchema.descriptionFields.descriptionWeight;
 
     public getDateOfBirth(): StringFieldModel { return this.get<StringFieldModel>(this.dateOfBirth); }
     public getEthnicity(): StringFieldModel { return this.get<StringFieldModel>(this.ethnicity); }

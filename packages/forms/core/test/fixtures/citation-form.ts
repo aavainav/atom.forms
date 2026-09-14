@@ -32,7 +32,7 @@ export class TestCitationPage extends PageModel { }
 export class TestChargeSection extends SectionModel { }
 export class TestViolatorSection extends SectionModel { }
 
-export const citationForm = DefinitionFactory.form("test-citation", TestCitationForm);
+export const citationForm = DefinitionFactory.form("test-citation", TestCitationForm, {});
 export const citationPage = DefinitionFactory.page("citation", citationForm, TestCitationPage);
 
 export const violatorSection = DefinitionFactory.section("violator", citationPage, TestViolatorSection, { isShared: true });

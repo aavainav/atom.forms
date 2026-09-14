@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IDamageSection extends ISection {
@@ -9,21 +9,21 @@ export interface IDamageSectionModel extends IDamageSection {
 
 /** Represents the model for where the unit was damaged: the initial point of contact and the twelve other areas the form prints boxes for, all drawn from the same list of clock positions and named areas. */
 export class DamageSectionModel extends SectionModel implements IDamageSectionModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly initialPointOfContact: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageInitialPointOfContact;
-    public readonly areaOne: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaOne;
-    public readonly areaTwo: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaTwo;
-    public readonly areaThree: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaThree;
-    public readonly areaFour: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaFour;
-    public readonly areaFive: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaFive;
-    public readonly areaSix: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaSix;
-    public readonly areaSeven: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaSeven;
-    public readonly areaEight: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaEight;
-    public readonly areaNine: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaNine;
-    public readonly areaTen: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaTen;
-    public readonly areaEleven: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaEleven;
-    public readonly areaTwelve: FieldDefinition<OptionFieldModel> = this.schema.damageFields.damageAreaTwelve;
+    public readonly initialPointOfContact: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageInitialPointOfContact;
+    public readonly areaOne: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaOne;
+    public readonly areaTwo: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaTwo;
+    public readonly areaThree: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaThree;
+    public readonly areaFour: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaFour;
+    public readonly areaFive: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaFive;
+    public readonly areaSix: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaSix;
+    public readonly areaSeven: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaSeven;
+    public readonly areaEight: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaEight;
+    public readonly areaNine: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaNine;
+    public readonly areaTen: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaTen;
+    public readonly areaEleven: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaEleven;
+    public readonly areaTwelve: FieldDefinition<OptionFieldModel> = this.formSchema.damageFields.damageAreaTwelve;
 
     public getInitialPointOfContact(): OptionFieldModel { return this.get<OptionFieldModel>(this.initialPointOfContact); }
     public getAreaOne(): OptionFieldModel { return this.get<OptionFieldModel>(this.areaOne); }

@@ -1,4 +1,4 @@
-import { IForm, CitationForm, FieldDefinition, FormModel, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { IForm, CitationForm, FieldDefinition, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "./traffic-form-schema";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
 import { SupplementPageModel } from "./supplement-page/supplement-page";
@@ -49,11 +49,11 @@ export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormMo
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
 
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly complaintPage: PageDefinition<ComplaintPageModel> = this.schema.complaintPage;
-    public readonly warrantPage: PageDefinition<WarrantPageModel> = this.schema.warrantPage;
-    public readonly supplementPage: PageDefinition<SupplementPageModel> = this.schema.supplementPage;
+    public readonly complaintPage: PageDefinition<ComplaintPageModel> = this.formSchema.complaintPage;
+    public readonly warrantPage: PageDefinition<WarrantPageModel> = this.formSchema.warrantPage;
+    public readonly supplementPage: PageDefinition<SupplementPageModel> = this.formSchema.supplementPage;
 
     public async initialize(): Promise<this> {
         // the base stamps the date of violation and the ticket number; the time is this form's own addition
@@ -61,7 +61,7 @@ export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormMo
 
         return form
             .setTimeOfViolation()
-            .addRuleCollection(this.schema.ruleCollection);
+            .addRuleCollection(this.formSchema.ruleCollection);
     }
 
     /** Retrieves the single complaint page of the form. */
@@ -97,8 +97,8 @@ export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormMo
     /** Returns a form with today's date stamped as the date of the offense, and that box closed to editing. */
     public setDateOfViolation(): this {
         return this.setComplaintPageValue(
-            this.schema.violationSection,
-            this.schema.violationFields.violationDate,
+            this.formSchema.violationSection,
+            this.formSchema.violationFields.violationDate,
             formatDate(new Date()),
             false);
     }
@@ -126,8 +126,8 @@ export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormMo
     /** Returns a form with the current time stamped as the time of the offense; unlike the date, the officer may correct it. */
     public setTimeOfViolation(): this {
         return this.setComplaintPageValue(
-            this.schema.violationSection,
-            this.schema.violationFields.violationTime,
+            this.formSchema.violationSection,
+            this.formSchema.violationFields.violationTime,
             new Date().toLocaleTimeString(),
             true);
     }

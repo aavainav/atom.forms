@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 import { CertificationSectionModel } from "./certification-section";
 import { ComplaintSectionModel } from "./complaint-section";
@@ -17,11 +17,11 @@ export interface IWarrantPageModel extends IWarrantPage {
  * once the complaint on page one has been filed.
  */
 export class WarrantPageModel extends PageModel implements IWarrantPageModel {
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly complaintSection: SectionDefinition<ComplaintSectionModel> = this.schema.complaintSection;
-    public readonly certificationSection: SectionDefinition<CertificationSectionModel> = this.schema.certificationSection;
-    public readonly warrantSection: SectionDefinition<WarrantSectionModel> = this.schema.warrantSection;
+    public readonly complaintSection: SectionDefinition<ComplaintSectionModel> = this.formSchema.complaintSection;
+    public readonly certificationSection: SectionDefinition<CertificationSectionModel> = this.formSchema.certificationSection;
+    public readonly warrantSection: SectionDefinition<WarrantSectionModel> = this.formSchema.warrantSection;
 
     public getCertificationSection(): CertificationSectionModel { return this.get<CertificationSectionModel>(this.certificationSection); }
     public getComplaintSection(): ComplaintSectionModel { return this.get<ComplaintSectionModel>(this.complaintSection); }

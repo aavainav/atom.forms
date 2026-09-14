@@ -1,4 +1,5 @@
-import { Definition } from "./definition";
+import { Definition, IDefinition } from "./definition";
+import type { ISchema } from "./schema";
 import { withChanges } from "../utils/clone";
 
 export type EntityConstructor<TChildDefinition extends Definition> = new (id?: string, revision?: number, definition?: Definition) => Entity<TChildDefinition>;
@@ -12,9 +13,13 @@ export interface IEntity<TChildDefinition extends Definition> {
 
     /** The definition that describes this entity's shape. */
     readonly definition: Definition;
+    /** The schema of the form this entity belongs to. */
+    readonly schema: ISchema;
 
     /** Returns the entity's definition cast to the requested type. */
     getDefinition<TDefinition>(): TDefinition;
+    /** Returns the entity's schema cast to the requested type. */
+    getSchema<TSchema extends ISchema>(): TSchema;
     /** Returns the child definitions declared by this entity's definition. */
     getChildDefinitions(): TChildDefinition[];
     /** Returns the child definition with the given name, throwing if none is found. */
@@ -29,6 +34,7 @@ export abstract class Entity<TChildDefinition extends Definition> implements IEn
     readonly revision?: number;
 
     readonly definition: Definition;
+    readonly schema: ISchema;
 
     private static definitionRegistry: Map<EntityConstructor<Definition>, Definition> = new Map<EntityConstructor<Definition>, Definition>();
     private readonly values: Map<TChildDefinition, any> = new Map<TChildDefinition, any>();
@@ -37,12 +43,17 @@ export abstract class Entity<TChildDefinition extends Definition> implements IEn
         this.id = id ?? crypto.randomUUID();
         this.revision = revision ?? 0;
         this.definition = definition ?? Entity.resolveDefinition<TChildDefinition>(this.constructor as EntityConstructor<TChildDefinition>);
+        this.schema = Entity.resolveSchema(this.definition);
 
         this.initializeDefinitionValues();
     }
 
     public getDefinition<TDefinition>(): TDefinition {
         return <TDefinition>this.definition;
+    }
+
+    public getSchema<TSchema extends ISchema>(): TSchema {
+        return <TSchema>this.schema;
     }
 
     public getChildDefinitions(): Array<TChildDefinition> {
@@ -101,6 +112,21 @@ export abstract class Entity<TChildDefinition extends Definition> implements IEn
         }
 
         return definition as TDefinition;
+    }
+
+    /** Walks a definition up to the form definition at the root of its tree and returns the schema it was built from. */
+    protected static resolveSchema(definition: Definition): ISchema {
+        let current: IDefinition = definition;
+
+        while (current.parent) {
+            current = current.parent;
+        }
+
+        if (!current.schema) {
+            throw new Error(`No schema is registered for the form definition '${current.name}'.`);
+        }
+
+        return current.schema;
     }
 
     private initializeDefinitionValues(): void {

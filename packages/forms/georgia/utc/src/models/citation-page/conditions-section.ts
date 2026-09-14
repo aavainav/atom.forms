@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -19,29 +19,29 @@ export interface IConditionsSectionModel extends IConditionsSection {
  * they are held here as the separate `road` and `surface` groups.
  */
 export class ConditionsSectionModel extends SectionModel implements IConditionsSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly weatherClear: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsWeatherClear;
-    public readonly weatherCloudy: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsWeatherCloudy;
-    public readonly weatherRaining: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsWeatherRaining;
-    public readonly weatherOther: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsWeatherOther;
-    public readonly roadDry: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsRoadDry;
-    public readonly roadWet: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsRoadWet;
-    public readonly roadIce: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsRoadIce;
-    public readonly roadOther: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsRoadOther;
-    public readonly surfaceConcrete: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsSurfaceConcrete;
-    public readonly surfaceBlacktop: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsSurfaceBlacktop;
-    public readonly surfaceDirt: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsSurfaceDirt;
-    public readonly surfaceOther: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsSurfaceOther;
-    public readonly trafficLight: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsTrafficLight;
-    public readonly trafficMedium: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsTrafficMedium;
-    public readonly trafficHeavy: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsTrafficHeavy;
-    public readonly lightingDaylight: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsLightingDaylight;
-    public readonly lightingDarkness: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsLightingDarkness;
-    public readonly lightingOther: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsLightingOther;
-    public readonly sixteenPlusPassengers: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsSixteenPlusPassengers;
-    public readonly commercialVehicle: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsCommercialVehicle;
-    public readonly hazardousMaterial: FieldDefinition<BooleanFieldModel> = this.schema.conditionsFields.conditionsHazardousMaterial;
+    public readonly weatherClear: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsWeatherClear;
+    public readonly weatherCloudy: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsWeatherCloudy;
+    public readonly weatherRaining: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsWeatherRaining;
+    public readonly weatherOther: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsWeatherOther;
+    public readonly roadDry: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsRoadDry;
+    public readonly roadWet: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsRoadWet;
+    public readonly roadIce: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsRoadIce;
+    public readonly roadOther: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsRoadOther;
+    public readonly surfaceConcrete: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsSurfaceConcrete;
+    public readonly surfaceBlacktop: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsSurfaceBlacktop;
+    public readonly surfaceDirt: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsSurfaceDirt;
+    public readonly surfaceOther: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsSurfaceOther;
+    public readonly trafficLight: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsTrafficLight;
+    public readonly trafficMedium: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsTrafficMedium;
+    public readonly trafficHeavy: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsTrafficHeavy;
+    public readonly lightingDaylight: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsLightingDaylight;
+    public readonly lightingDarkness: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsLightingDarkness;
+    public readonly lightingOther: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsLightingOther;
+    public readonly sixteenPlusPassengers: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsSixteenPlusPassengers;
+    public readonly commercialVehicle: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsCommercialVehicle;
+    public readonly hazardousMaterial: FieldDefinition<BooleanFieldModel> = this.formSchema.conditionsFields.conditionsHazardousMaterial;
 
     /** The daylight / darkness / other column. */
     public readonly lighting: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.lightingDaylight, this.lightingDarkness, this.lightingOther];

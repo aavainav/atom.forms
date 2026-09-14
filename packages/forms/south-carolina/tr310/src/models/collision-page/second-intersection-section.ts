@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface ISecondIntersectionSection extends ISection {
@@ -9,12 +9,12 @@ export interface ISecondIntersectionSectionModel extends ISecondIntersectionSect
 
 /** Represents the model for the second intersection, recorded when the collision occurred where two routes meet. */
 export class SecondIntersectionSectionModel extends SectionModel implements ISecondIntersectionSectionModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly category: FieldDefinition<StringFieldModel> = this.schema.secondIntersectionFields.secondIntersectionCategory;
-    public readonly auxiliary: FieldDefinition<StringFieldModel> = this.schema.secondIntersectionFields.secondIntersectionAuxiliary;
-    public readonly routeNumber: FieldDefinition<StringFieldModel> = this.schema.secondIntersectionFields.secondIntersectionRouteNumber;
-    public readonly routeName: FieldDefinition<StringFieldModel> = this.schema.secondIntersectionFields.secondIntersectionRouteName;
+    public readonly category: FieldDefinition<StringFieldModel> = this.formSchema.secondIntersectionFields.secondIntersectionCategory;
+    public readonly auxiliary: FieldDefinition<StringFieldModel> = this.formSchema.secondIntersectionFields.secondIntersectionAuxiliary;
+    public readonly routeNumber: FieldDefinition<StringFieldModel> = this.formSchema.secondIntersectionFields.secondIntersectionRouteNumber;
+    public readonly routeName: FieldDefinition<StringFieldModel> = this.formSchema.secondIntersectionFields.secondIntersectionRouteName;
 
     public getCategory(): StringFieldModel { return this.get<StringFieldModel>(this.category); }
     public getAuxiliary(): StringFieldModel { return this.get<StringFieldModel>(this.auxiliary); }

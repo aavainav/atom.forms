@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IAlcoholDrugsSection extends ISection {
@@ -9,15 +9,15 @@ export interface IAlcoholDrugsSectionModel extends IAlcoholDrugsSection {
 
 /** Represents the model for what the officer suspected the person had used and what the alcohol and drug tests found. */
 export class AlcoholDrugsSectionModel extends SectionModel implements IAlcoholDrugsSectionModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly suspectedUse: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsSuspectedUse;
-    public readonly alcoholTestStatus: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsAlcoholTestStatus;
-    public readonly alcoholTestType: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsAlcoholTestType;
-    public readonly bloodAlcoholContent: FieldDefinition<StringFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsBloodAlcoholContent;
-    public readonly drugTestStatus: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsDrugTestStatus;
-    public readonly drugTestType: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsDrugTestType;
-    public readonly drugTestResult: FieldDefinition<OptionFieldModel> = this.schema.alcoholDrugsFields.alcoholDrugsDrugTestResult;
+    public readonly suspectedUse: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsSuspectedUse;
+    public readonly alcoholTestStatus: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsAlcoholTestStatus;
+    public readonly alcoholTestType: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsAlcoholTestType;
+    public readonly bloodAlcoholContent: FieldDefinition<StringFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsBloodAlcoholContent;
+    public readonly drugTestStatus: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsDrugTestStatus;
+    public readonly drugTestType: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsDrugTestType;
+    public readonly drugTestResult: FieldDefinition<OptionFieldModel> = this.formSchema.alcoholDrugsFields.alcoholDrugsDrugTestResult;
 
     public getSuspectedUse(): OptionFieldModel { return this.get<OptionFieldModel>(this.suspectedUse); }
     public getAlcoholTestStatus(): OptionFieldModel { return this.get<OptionFieldModel>(this.alcoholTestStatus); }

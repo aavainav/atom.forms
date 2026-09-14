@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -19,23 +19,23 @@ export interface IDispositionSectionModel extends IDispositionSection {
  * the labels the paper prints and are kept in them.
  */
 export class DispositionSectionModel extends SectionModel implements IDispositionSectionModel {
-    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
 
-    public readonly pleadsGuilty: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionPleadsGuilty;
-    public readonly pleadsNotGuilty: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionPleadsNotGuilty;
-    public readonly pleadsNoloContendere: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionPleadsNoloContendere;
-    public readonly trialJury: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionTrialJury;
-    public readonly trialCourtAdjudicated: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionTrialCourtAdjudicated;
-    public readonly trialGuilty: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionTrialGuilty;
-    public readonly trialNotGuilty: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionTrialNotGuilty;
-    public readonly bondForfeiture: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionBondForfeiture;
-    public readonly nolleProssed: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionNolleProssed;
-    public readonly deadDocket: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionDeadDocket;
-    public readonly fineAmount: FieldDefinition<StringFieldModel> = this.schema.dispositionFields.dispositionFineAmount;
-    public readonly daysInJail: FieldDefinition<StringFieldModel> = this.schema.dispositionFields.dispositionDaysInJail;
-    public readonly alcoholDrugRiskReductionSchool: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionAlcoholDrugRiskReductionSchool;
-    public readonly alcoholDrugAssessment: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionAlcoholDrugAssessment;
-    public readonly defensiveDrivingSchool: FieldDefinition<BooleanFieldModel> = this.schema.dispositionFields.dispositionDefensiveDrivingSchool;
+    public readonly pleadsGuilty: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionPleadsGuilty;
+    public readonly pleadsNotGuilty: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionPleadsNotGuilty;
+    public readonly pleadsNoloContendere: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionPleadsNoloContendere;
+    public readonly trialJury: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionTrialJury;
+    public readonly trialCourtAdjudicated: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionTrialCourtAdjudicated;
+    public readonly trialGuilty: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionTrialGuilty;
+    public readonly trialNotGuilty: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionTrialNotGuilty;
+    public readonly bondForfeiture: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionBondForfeiture;
+    public readonly nolleProssed: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionNolleProssed;
+    public readonly deadDocket: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionDeadDocket;
+    public readonly fineAmount: FieldDefinition<StringFieldModel> = this.formSchema.dispositionFields.dispositionFineAmount;
+    public readonly daysInJail: FieldDefinition<StringFieldModel> = this.formSchema.dispositionFields.dispositionDaysInJail;
+    public readonly alcoholDrugRiskReductionSchool: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionAlcoholDrugRiskReductionSchool;
+    public readonly alcoholDrugAssessment: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionAlcoholDrugAssessment;
+    public readonly defensiveDrivingSchool: FieldDefinition<BooleanFieldModel> = this.formSchema.dispositionFields.dispositionDefensiveDrivingSchool;
 
     /** The bond forfeiture / nolle prossed / dead docket group, naming the other action the court took. */
     public readonly otherAction: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.bondForfeiture, this.nolleProssed, this.deadDocket];

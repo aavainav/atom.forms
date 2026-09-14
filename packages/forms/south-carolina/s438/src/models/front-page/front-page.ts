@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { PageModel, SectionDefinition } from "@forms/core";
 import { S438FormSchema } from "../s438-form-schema";
 import { FrontPageOwnerDropzone } from "./dropzones/front-page-owner-dropzone";
 import { FrontPageVehicleDropzone } from "./dropzones/front-page-vehicle-dropzone";
@@ -22,25 +22,25 @@ export interface IFrontPageModel extends IFrontPage {
 
 /** Represents the front page of the s438 form, providing access to its sections and their dropzones. */
 export class FrontPageModel extends PageModel implements IFrontPageModel {
-    private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
-    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.schema.headerSection;
-    public readonly violatorSection: SectionDefinition<ViolatorSectionModel> = this.schema.violatorSection;
-    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.schema.violationSection;
-    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.schema.vehicleSection;
-    public readonly ownerSection: SectionDefinition<OwnerSectionModel> = this.schema.ownerSection;
-    public readonly courtSection: SectionDefinition<CourtSectionModel> = this.schema.courtSection;
-    public readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel> = this.schema.violationLocationSection;
-    public readonly arrestingOfficerSection: SectionDefinition<ArrestingOfficerSectionModel> = this.schema.arrestingOfficerSection;
-    public readonly footerSection: SectionDefinition<FooterSectionModel> = this.schema.footerSection;
+    private formSchema: S438FormSchema = this.getSchema<S438FormSchema>();
+    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.formSchema.headerSection;
+    public readonly violatorSection: SectionDefinition<ViolatorSectionModel> = this.formSchema.violatorSection;
+    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.formSchema.violationSection;
+    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.formSchema.vehicleSection;
+    public readonly ownerSection: SectionDefinition<OwnerSectionModel> = this.formSchema.ownerSection;
+    public readonly courtSection: SectionDefinition<CourtSectionModel> = this.formSchema.courtSection;
+    public readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel> = this.formSchema.violationLocationSection;
+    public readonly arrestingOfficerSection: SectionDefinition<ArrestingOfficerSectionModel> = this.formSchema.arrestingOfficerSection;
+    public readonly footerSection: SectionDefinition<FooterSectionModel> = this.formSchema.footerSection;
 
     /** Initializes the page and registers its person/vehicle/violation dropzones. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        const violatorDropzone = new FrontPageViolatorDropzone(page, page.schema);
-        const ownerDropzone = new FrontPageOwnerDropzone(page, page.schema);
-        const vehicleDropzone = new FrontPageVehicleDropzone(page, page.schema);
-        const violationDropzone = new FrontPageViolationDropzone(page, page.schema);
+        const violatorDropzone = new FrontPageViolatorDropzone(page, this.formSchema);
+        const ownerDropzone = new FrontPageOwnerDropzone(page, this.formSchema);
+        const vehicleDropzone = new FrontPageVehicleDropzone(page, this.formSchema);
+        const violationDropzone = new FrontPageViolationDropzone(page, this.formSchema);
 
         page = page.setDropzone(violatorDropzone);
         page = page.setDropzone(ownerDropzone);

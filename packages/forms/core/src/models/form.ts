@@ -87,8 +87,6 @@ export class FormModel extends Entity<PageDefinition> implements IFormModel {
 
     public readonly ruleCollection: RuleCollection = new RuleCollection([]);
 
-    private static readonly schema: Map<Function, ISchema> = new Map<Function, ISchema>();
-
     public async initialize(): Promise<this> {
         let form = this;
 
@@ -209,7 +207,6 @@ export class FormModel extends Entity<PageDefinition> implements IFormModel {
     }
 
     public dispose(): void {
-        FormModel.schema.clear();
         Entity.clearDefinitionRegistry();
     }
 
@@ -217,17 +214,15 @@ export class FormModel extends Entity<PageDefinition> implements IFormModel {
         Entity.registerDefinition(ctor, definition);
     }
 
+    /** Gets the schema registered for the given form model constructor, for a caller that isn't itself an entity and so has no `schema` of its own to read. */
     public static getSchema<TSchema extends ISchema>(ctor: Function): TSchema {
-        const schema = FormModel.schema.get(ctor) as TSchema;
-        if (!schema) {
-            throw new Error(`A schema for the specified form model constructor does not exist.`);
+        const formDefinition = Entity.resolveDefinition<Definition>(ctor as EntityConstructor<Definition>);
+
+        if (!formDefinition.schema) {
+            throw new Error(`No schema is registered for the form definition '${formDefinition.name}'.`);
         }
 
-        return schema;
-    }
-
-    public static registerSchema(ctor: Function, schema: ISchema): void {
-        FormModel.schema.set(ctor, schema);
+        return formDefinition.schema as TSchema;
     }
 
     /** Returns a new form with every field on every page replaced by the result of the given mapping. */

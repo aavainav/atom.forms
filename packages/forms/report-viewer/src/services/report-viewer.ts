@@ -4,45 +4,24 @@ import { FormFactory, FormModel, IControllerManager, IFormIdentity, IModalOption
 import { createService, Singleton } from "@shrub/core";
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
-export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
 
 /**
  * Defines the host's side of a form's data: where the record the form is populated from comes from, and where the
  * data the form publishes goes back to. It is handed to the report viewer as a prop rather than registered
  * anywhere, so a host holds one per record it is showing rather than one per form.
  */
-export interface IDataManager<TData extends object = IReportViewerData> {
-    /**
-     * Reads the host's record and transforms it into the contract the form publishes. Resolving `undefined` loads
-     * a blank form; there is no separate notion of defaults, so a host with no record yet simply answers with the
-     * values a new one should start with.
-     *
-     * It takes no arguments: the host owns its own routing, so a manager closes over whichever record it was built
-     * for rather than being handed a context to guess from.
-     */
-    read(): Promise<IDataManagerResult<TData> | undefined>;
-    /**
-     * Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable.
-     *
-     * This always takes the full `IReportViewerData` rather than `TData`: `extractData` stamps `name`/`status`/
-     * `type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never just the
-     * contract that went in. Because this signature doesn't depend on `TData`, everything downstream of the load
-     * (the options bar, `saveForm`) types its `dataManager` as `IDataManager<any>` rather than threading the
-     * specific `TData` through props that never call `read()` and so never need to know it.
-     */
+export interface IReportViewerDataManager<TData extends object = IReportViewerData> {
+    /** Reads the host's record and transforms it into the contract the form publishes. */
+    read(): Promise<IReadDataResult<TData> | undefined>;
+    /** Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable. */
     write?(data: IReportViewerData): Promise<void>;
 }
 
 /** Defines what a data manager read. */
-export interface IDataManagerResult<TData extends object = IReportViewerData> {
+export interface IReadDataResult<TData extends object = IReportViewerData> {
     /** The record, in the shape the target form's own contract publishes. */
     readonly data: TData;
-    /**
-     * Which of `data`'s own fields come back locked rather than editable -- a value the host considers settled
-     * rather than an editable suggestion. It is typed against the contract, so a misspelled key is a compile error
-     * rather than a silent no-op, and it is an array because a host writes a literal here. A field the form's
-     * mapper has not wired up for locking (see `FormMapper.write`) stays editable regardless of being named.
-     */
+    /** Which of `data`'s own fields come back locked rather than editable. */
     readonly readOnlyFields?: ReadonlyArray<keyof TData & string>;
 }
 

@@ -1,7 +1,6 @@
 import { 
     ISection, 
     BooleanFieldModel,
-    FormModel, 
     NumberFieldModel, 
     SectionModel, 
     FieldDefinition, 
@@ -16,21 +15,21 @@ export interface IVehicleSectionModel extends IVehicleSection {
 
 /** Represents the model for the vehicle section of the s438 form's front page. */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
-    private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
+    private formSchema: S438FormSchema = this.getSchema<S438FormSchema>();
 
-    public readonly licenseNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleLicenseNumber;
-    public readonly licenseState: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleLicenseState;
-    public readonly make: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleMake;
-    public readonly year: FieldDefinition<NumberFieldModel> = this.schema.vehicleFields.vehicleYear;
-    public readonly auto: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleAuto;
-    public readonly bicycle: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleBicycle;
-    public readonly combination: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleCombination;
-    public readonly commercial: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleCommercialVehicle;
-    public readonly hazardousMaterials: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleHazardousMaterials;
-    public readonly moped: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleMoped;
-    public readonly motorcycle: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleMotorcycle;
-    public readonly pedestrian: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehiclePedestrian;
-    public readonly other: FieldDefinition<BooleanFieldModel> = this.schema.vehicleFields.vehicleOther;
+    public readonly licenseNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleLicenseNumber;
+    public readonly licenseState: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleLicenseState;
+    public readonly make: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleMake;
+    public readonly year: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleFields.vehicleYear;
+    public readonly auto: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleAuto;
+    public readonly bicycle: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleBicycle;
+    public readonly combination: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleCombination;
+    public readonly commercial: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleCommercialVehicle;
+    public readonly hazardousMaterials: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleHazardousMaterials;
+    public readonly moped: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleMoped;
+    public readonly motorcycle: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleMotorcycle;
+    public readonly pedestrian: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehiclePedestrian;
+    public readonly other: FieldDefinition<BooleanFieldModel> = this.formSchema.vehicleFields.vehicleOther;
 
     public getLicenseNumber(): StringFieldModel { return this.get<StringFieldModel>(this.licenseNumber); }
     public getLicenseState(): StringFieldModel { return this.get<StringFieldModel>(this.licenseState); }

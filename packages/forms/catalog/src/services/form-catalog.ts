@@ -34,14 +34,6 @@ export interface IFormCatalogItem<TForm extends FormModel = FormModel, TSchema e
 
     /** The main form component to render the form in the ui. */
     readonly component: () => Promise<ComponentType<IFormComponentProps>>;
-
-    /** Translates between this form and the data contract it publishes. A form without one simply neither populates nor saves. */
-    readonly mapper?: IFormMapper<TForm, TData>;
-
-    /** The id of the violation list this citation draws its charges from. A form that declares one is offered the violation selector. */
-    readonly violationListId?: string;
-    /** The ids of the value lists this form's option fields draw on. */
-    readonly valueListIds?: ReadonlyArray<string>;
 }
 
 /** Defines a service for resolving forms registered with the form catalog. */

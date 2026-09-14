@@ -292,7 +292,7 @@ export interface IGAUTCFormSchema extends ISchema {
  * becomes the violation, DUI, offense and conditions sections. The court page is the reverse of the court's copy.
  */
 export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
-    readonly formDefinition: FormDefinition<GAUTCFormModel> = DefinitionFactory.form<GAUTCFormModel>("ga-utc-form", GAUTCFormModel);
+    readonly formDefinition: FormDefinition<GAUTCFormModel> = DefinitionFactory.form<GAUTCFormModel>("ga-utc-form", GAUTCFormModel, this);
 
     readonly citationPage: PageDefinition<CitationPageModel> = DefinitionFactory.page<CitationPageModel>("citation-page", this.formDefinition, CitationPageModel);
 

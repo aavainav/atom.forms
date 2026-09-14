@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IWitnessSection extends ISection {
@@ -9,41 +9,41 @@ export interface IWitnessSectionModel extends IWitnessSection {
 
 /** Represents the model for the three witness or property owner rows the collision page carries. The form prints a fixed three rows, so they are three numbered groups of fields rather than a collection. */
 export class WitnessSectionModel extends SectionModel implements IWitnessSectionModel {
-    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormSchema);
+    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
 
-    public readonly oneType: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneType;
-    public readonly oneFirstName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneFirstName;
-    public readonly oneMiddleInitial: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneMiddleInitial;
-    public readonly oneLastName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneLastName;
-    public readonly oneAddress: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneAddress;
-    public readonly oneCity: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneCity;
-    public readonly oneState: FieldDefinition<OptionFieldModel> = this.schema.witnessFields.witnessOneState;
-    public readonly oneZipCode: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneZipCode;
-    public readonly oneTelephone: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOneTelephone;
-    public readonly onePropertyDamageAmount: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOnePropertyDamageAmount;
-    public readonly onePropertyDamageDescription: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessOnePropertyDamageDescription;
-    public readonly twoType: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoType;
-    public readonly twoFirstName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoFirstName;
-    public readonly twoMiddleInitial: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoMiddleInitial;
-    public readonly twoLastName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoLastName;
-    public readonly twoAddress: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoAddress;
-    public readonly twoCity: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoCity;
-    public readonly twoState: FieldDefinition<OptionFieldModel> = this.schema.witnessFields.witnessTwoState;
-    public readonly twoZipCode: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoZipCode;
-    public readonly twoTelephone: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoTelephone;
-    public readonly twoPropertyDamageAmount: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoPropertyDamageAmount;
-    public readonly twoPropertyDamageDescription: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessTwoPropertyDamageDescription;
-    public readonly threeType: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeType;
-    public readonly threeFirstName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeFirstName;
-    public readonly threeMiddleInitial: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeMiddleInitial;
-    public readonly threeLastName: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeLastName;
-    public readonly threeAddress: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeAddress;
-    public readonly threeCity: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeCity;
-    public readonly threeState: FieldDefinition<OptionFieldModel> = this.schema.witnessFields.witnessThreeState;
-    public readonly threeZipCode: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeZipCode;
-    public readonly threeTelephone: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreeTelephone;
-    public readonly threePropertyDamageAmount: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreePropertyDamageAmount;
-    public readonly threePropertyDamageDescription: FieldDefinition<StringFieldModel> = this.schema.witnessFields.witnessThreePropertyDamageDescription;
+    public readonly oneType: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneType;
+    public readonly oneFirstName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneFirstName;
+    public readonly oneMiddleInitial: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneMiddleInitial;
+    public readonly oneLastName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneLastName;
+    public readonly oneAddress: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneAddress;
+    public readonly oneCity: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneCity;
+    public readonly oneState: FieldDefinition<OptionFieldModel> = this.formSchema.witnessFields.witnessOneState;
+    public readonly oneZipCode: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneZipCode;
+    public readonly oneTelephone: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOneTelephone;
+    public readonly onePropertyDamageAmount: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOnePropertyDamageAmount;
+    public readonly onePropertyDamageDescription: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessOnePropertyDamageDescription;
+    public readonly twoType: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoType;
+    public readonly twoFirstName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoFirstName;
+    public readonly twoMiddleInitial: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoMiddleInitial;
+    public readonly twoLastName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoLastName;
+    public readonly twoAddress: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoAddress;
+    public readonly twoCity: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoCity;
+    public readonly twoState: FieldDefinition<OptionFieldModel> = this.formSchema.witnessFields.witnessTwoState;
+    public readonly twoZipCode: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoZipCode;
+    public readonly twoTelephone: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoTelephone;
+    public readonly twoPropertyDamageAmount: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoPropertyDamageAmount;
+    public readonly twoPropertyDamageDescription: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessTwoPropertyDamageDescription;
+    public readonly threeType: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeType;
+    public readonly threeFirstName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeFirstName;
+    public readonly threeMiddleInitial: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeMiddleInitial;
+    public readonly threeLastName: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeLastName;
+    public readonly threeAddress: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeAddress;
+    public readonly threeCity: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeCity;
+    public readonly threeState: FieldDefinition<OptionFieldModel> = this.formSchema.witnessFields.witnessThreeState;
+    public readonly threeZipCode: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeZipCode;
+    public readonly threeTelephone: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreeTelephone;
+    public readonly threePropertyDamageAmount: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreePropertyDamageAmount;
+    public readonly threePropertyDamageDescription: FieldDefinition<StringFieldModel> = this.formSchema.witnessFields.witnessThreePropertyDamageDescription;
 
     public getOneType(): StringFieldModel { return this.get<StringFieldModel>(this.oneType); }
     public getOneFirstName(): StringFieldModel { return this.get<StringFieldModel>(this.oneFirstName); }

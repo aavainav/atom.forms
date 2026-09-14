@@ -1,4 +1,4 @@
-import { IForm, CitationForm, FieldDefinition, FormModel, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { IForm, CitationForm, FieldDefinition, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { S438FormSchema } from "./s438-form-schema";
 import { FrontPageModel } from "./front-page/front-page";
 import { NoticePageModel } from "./notice-page/notice-page";
@@ -36,13 +36,13 @@ export class S438FormModel extends CitationForm implements IS438Form {
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
 
-    private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormSchema);
-    public readonly frontPage: PageDefinition<FrontPageModel> = this.schema.frontPage;
-    public readonly noticePage: PageDefinition<NoticePageModel> = this.schema.noticePage;
+    private formSchema: S438FormSchema = this.getSchema<S438FormSchema>();
+    public readonly frontPage: PageDefinition<FrontPageModel> = this.formSchema.frontPage;
+    public readonly noticePage: PageDefinition<NoticePageModel> = this.formSchema.noticePage;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();
-        return form.addRuleCollection(this.schema.ruleCollection);
+        return form.addRuleCollection(this.formSchema.ruleCollection);
     }
 
     /** Retrieves the collection of front pages for the form. */
@@ -58,8 +58,8 @@ export class S438FormModel extends CitationForm implements IS438Form {
     /** Returns a form with today's date stamped as the date of violation, and that box closed to editing. */
     public setDateOfViolation(): this {
         return this.setFrontPageValue(
-            this.schema.violationSection,
-            this.schema.violationFields.violationDateOfViolation,
+            this.formSchema.violationSection,
+            this.formSchema.violationFields.violationDateOfViolation,
             formatDate(new Date()),
             false);
     }
@@ -78,8 +78,8 @@ export class S438FormModel extends CitationForm implements IS438Form {
     public setTicketNumber(): this {
         // TODO: the number is a placeholder until a ticket number source is wired up; the citation cannot issue its own.
         return this.setFrontPageValue(
-            this.schema.footerSection,
-            this.schema.footerFields.footerTicketNumber,
+            this.formSchema.footerSection,
+            this.formSchema.footerFields.footerTicketNumber,
             "20250000000000",
             false);
     }
@@ -87,8 +87,8 @@ export class S438FormModel extends CitationForm implements IS438Form {
     /** Returns a form with the current time stamped as the time of violation; unlike the date, the officer may correct it. */
     public setTimeOfViolation(): this {
         return this.setFrontPageValue(
-            this.schema.violationSection,
-            this.schema.violationFields.violationTimeOfViolation,
+            this.formSchema.violationSection,
+            this.formSchema.violationFields.violationTimeOfViolation,
             new Date().toLocaleTimeString(),
             true);
     }

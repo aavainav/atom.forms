@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IStatusSection extends ISection {
@@ -18,25 +18,25 @@ export interface IStatusSectionModel extends IStatusSection {
  * the printed form takes a code in each, but Oklahoma City's code sets for them are not published with the form.
  */
 export class StatusSectionModel extends SectionModel implements IStatusSectionModel {
-    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
 
-    public readonly signed: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusSigned;
-    public readonly requestWarrant: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusRequestWarrant;
-    public readonly mainPhone: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusMainPhone;
-    public readonly directionOfTravel: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusDirectionOfTravel;
-    public readonly jailed: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusJailed;
-    public readonly trailerTag: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusTrailerTag;
-    public readonly releaseType: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusReleaseType;
-    public readonly trailerState: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusTrailerState;
-    public readonly tribe: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusTribe;
-    public readonly schoolZone: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusSchoolZone;
-    public readonly voidReason: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusVoidReason;
-    public readonly constructionWorkZone: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusConstructionWorkZone;
-    public readonly assignment: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusAssignment;
-    public readonly ethnicity: FieldDefinition<StringFieldModel> = this.schema.statusFields.statusEthnicity;
-    public readonly transient: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusTransient;
-    public readonly witnessCaptured: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusWitnessCaptured;
-    public readonly noLicensePlate: FieldDefinition<OptionFieldModel> = this.schema.statusFields.statusNoLicensePlate;
+    public readonly signed: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusSigned;
+    public readonly requestWarrant: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusRequestWarrant;
+    public readonly mainPhone: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusMainPhone;
+    public readonly directionOfTravel: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusDirectionOfTravel;
+    public readonly jailed: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusJailed;
+    public readonly trailerTag: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusTrailerTag;
+    public readonly releaseType: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusReleaseType;
+    public readonly trailerState: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusTrailerState;
+    public readonly tribe: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusTribe;
+    public readonly schoolZone: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusSchoolZone;
+    public readonly voidReason: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusVoidReason;
+    public readonly constructionWorkZone: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusConstructionWorkZone;
+    public readonly assignment: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusAssignment;
+    public readonly ethnicity: FieldDefinition<StringFieldModel> = this.formSchema.statusFields.statusEthnicity;
+    public readonly transient: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusTransient;
+    public readonly witnessCaptured: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusWitnessCaptured;
+    public readonly noLicensePlate: FieldDefinition<OptionFieldModel> = this.formSchema.statusFields.statusNoLicensePlate;
 
     public getAssignment(): StringFieldModel { return this.get<StringFieldModel>(this.assignment); }
     public getConstructionWorkZone(): OptionFieldModel { return this.get<OptionFieldModel>(this.constructionWorkZone); }

@@ -581,7 +581,7 @@ export interface ITR310FormSchema extends ISchema {
 
 /** Represents the schema definition for the SC TR-310 traffic collision report, defining its pages, sections, and fields. */
 export class TR310FormSchema extends Schema implements ITR310FormSchema {
-    readonly formDefinition: FormDefinition<TR310FormModel> = DefinitionFactory.form<TR310FormModel>("tr310-form", TR310FormModel);
+    readonly formDefinition: FormDefinition<TR310FormModel> = DefinitionFactory.form<TR310FormModel>("tr310-form", TR310FormModel, this);
 
     readonly collisionPage: PageDefinition<CollisionPageModel> = DefinitionFactory.page<CollisionPageModel>("collision-page", this.formDefinition, CollisionPageModel);
 

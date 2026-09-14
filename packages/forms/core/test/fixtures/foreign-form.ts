@@ -15,7 +15,7 @@ class ForeignForm extends FormModel { }
 class ForeignPage extends PageModel { }
 class ForeignSection extends SectionModel { }
 
-export const formDefinition = DefinitionFactory.form("foreign", ForeignForm);
+export const formDefinition = DefinitionFactory.form("foreign", ForeignForm, {});
 export const pageDefinition = DefinitionFactory.page("foreign-page", formDefinition, ForeignPage);
 export const sectionDefinition = DefinitionFactory.section("foreign-section", pageDefinition, ForeignSection);
 

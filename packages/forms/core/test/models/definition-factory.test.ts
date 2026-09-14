@@ -16,7 +16,7 @@ class FactoryTestPage extends PageModel { }
 class FactoryTestSection extends SectionModel { }
 class FactoryTestSharedSection extends SectionModel { }
 
-const formDefinition = DefinitionFactory.form("factory-test", FactoryTestForm);
+const formDefinition = DefinitionFactory.form("factory-test", FactoryTestForm, {});
 const pageDefinition = DefinitionFactory.page("details", formDefinition, FactoryTestPage);
 const sectionDefinition = DefinitionFactory.section("vehicle", pageDefinition, FactoryTestSection);
 const sharedSectionDefinition = DefinitionFactory.section("owner", pageDefinition, FactoryTestSharedSection, { isShared: true });

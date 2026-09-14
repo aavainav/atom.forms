@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface IOfficerSection extends ISection {
@@ -14,10 +14,10 @@ export interface IOfficerSectionModel extends IOfficerSection {
  * holding the section's own name and a field definition cannot shadow it.
  */
 export class OfficerSectionModel extends SectionModel implements IOfficerSectionModel {
-    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
 
-    public readonly officerName: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerName;
-    public readonly commissionNumber: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerCommissionNumber;
+    public readonly officerName: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerName;
+    public readonly commissionNumber: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerCommissionNumber;
 
     public getCommissionNumber(): StringFieldModel { return this.get<StringFieldModel>(this.commissionNumber); }
     public getOfficerName(): StringFieldModel { return this.get<StringFieldModel>(this.officerName); }

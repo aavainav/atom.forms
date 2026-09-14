@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, FormModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface IRecordSection extends ISection {
@@ -15,13 +15,13 @@ export interface IRecordSectionModel extends IRecordSection {
  * that list arrives, by registering it in `value-lists.ts` and changing the field's constructor in the schema.
  */
 export class RecordSectionModel extends SectionModel implements IRecordSectionModel {
-    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
 
-    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.schema.recordFields.recordCitationNumber;
-    public readonly county: FieldDefinition<OptionFieldModel> = this.schema.recordFields.recordCounty;
-    public readonly beat: FieldDefinition<StringFieldModel> = this.schema.recordFields.recordBeat;
-    public readonly tribe: FieldDefinition<StringFieldModel> = this.schema.recordFields.recordTribe;
-    public readonly voidReason: FieldDefinition<StringFieldModel> = this.schema.recordFields.recordVoidReason;
+    public readonly citationNumber: FieldDefinition<StringFieldModel> = this.formSchema.recordFields.recordCitationNumber;
+    public readonly county: FieldDefinition<OptionFieldModel> = this.formSchema.recordFields.recordCounty;
+    public readonly beat: FieldDefinition<StringFieldModel> = this.formSchema.recordFields.recordBeat;
+    public readonly tribe: FieldDefinition<StringFieldModel> = this.formSchema.recordFields.recordTribe;
+    public readonly voidReason: FieldDefinition<StringFieldModel> = this.formSchema.recordFields.recordVoidReason;
 
     public getBeat(): StringFieldModel { return this.get<StringFieldModel>(this.beat); }
     public getCitationNumber(): StringFieldModel { return this.get<StringFieldModel>(this.citationNumber); }

@@ -1,13 +1,15 @@
 import { IDefinition, Definition } from "./definition";
 import { FormModel, FormModelConstructor } from "./form";
 import { IPageDefinition } from "./page-definition";
+import type { ISchema } from "./schema";
 
 export type FormDefinitionConstructor<
     TForm extends FormModel,
     TDefinition extends FormDefinition<TForm>
 > = new (
     name: string,
-    ctor: FormModelConstructor<TForm>
+    ctor: FormModelConstructor<TForm>,
+    schema: ISchema
 ) => TDefinition;
 
 /** Defines the definition of a form. */
@@ -27,11 +29,12 @@ export class NotSupportedError extends Error {
 
 /** Represents the definition of a form, serving as a blueprint for creating form models. */
 export class FormDefinition<TForm extends FormModel = FormModel> extends Definition implements IFormDefinition {
-    constructor(name: string, ctor: FormModelConstructor<TForm>) {
+    constructor(name: string, ctor: FormModelConstructor<TForm>, schema: ISchema) {
         super(
             name,
             ctor,
             undefined, // No parent for the form definition
+            schema
         );
 
         FormModel.registerDefinition(ctor, this);
