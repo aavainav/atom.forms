@@ -6,8 +6,6 @@ import { ViolationsModule } from "@forms/violations";
 import { IModule, IModuleConfigurator, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
 import {
-    canExtractData,
-    canSaveForm,
     IModalService,
     INotificationService,
     IReportViewerOptionRegistrationService,
@@ -59,6 +57,7 @@ export class ReportViewerModule implements IModule {
         // is loaded through `lazy` so a host still only downloads the selector or the print dialog once a form
         // that offers one is opened; the four built here go through the same door for one rule rather than two.
         const options = services.get<IReportViewerOptionRegistrationService>(IReportViewerOptionRegistrationService);
+        const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
 
         options.registerOption({ id: "validate", title: "Validate", Component: lazy(() => import("./components/options").then(m => ({ default: m.ValidateOption }))) });
         options.registerOption({
@@ -73,7 +72,7 @@ export class ReportViewerModule implements IModule {
             id: "save",
             title: "Save",
             Component: lazy(() => import("./components/options").then(m => ({ default: m.SaveOption }))),
-            canShow: canSaveForm
+            canShow: (form, dataManager) => reportViewerService.canSaveForm(form, dataManager)
         });
         options.registerOption({
             id: "report-data",
@@ -81,7 +80,7 @@ export class ReportViewerModule implements IModule {
             Component: lazy(() => import("./components/options").then(m => ({ default: m.ReportDataOption }))),
             // the data is only worth showing once a mapper can produce it; without one the payload is the stamped
             // identity and nothing the user filled in
-            canShow: canExtractData
+            canShow: form => reportViewerService.canExtractData(form)
         });
         options.registerOption({ id: "print", title: "Print", Component: lazy(() => import("@forms/printing").then(m => ({ default: m.PrintOption }))) });
         options.registerOption({ id: "day-night-mode", title: "Toggle day/night mode", Component: lazy(() => import("./components/options").then(m => ({ default: m.DayNightModeOption }))) });

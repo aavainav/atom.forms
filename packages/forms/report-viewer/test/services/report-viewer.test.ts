@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
 
-import { canExtractData, canSaveForm, IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
+import { IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
 
 const noopOption: Pick<IReportViewerOption, "title" | "Component"> = { title: "Stub option", Component: () => null };
 
@@ -16,7 +16,7 @@ function record(name: string): IReportData {
  * a static slot rather than passed to the constructor, since a form model's constructor takes no arguments; each
  * test that needs a specific mapper (or none) sets the slot before constructing or loading the form.
  */
-class StubFormModel extends FormModel {
+class StubFormModel extends FormModel<IReportData> {
     static mapper: IFormMapper<StubFormModel, IReportData> | undefined = undefined;
     public readonly mapper: IFormMapper<StubFormModel, IReportData> | undefined = StubFormModel.mapper;
 }
@@ -134,32 +134,38 @@ describe("ReportViewerService", () => {
     describe("canExtractData", () => {
         it("is true once the form carries a mapper", () => {
             stubMapper();
+            const service = createService(catalogItem);
 
-            expect(canExtractData(new StubFormModel())).toBe(true);
+            expect(service.canExtractData(new StubFormModel())).toBe(true);
         });
 
         it("is false without a mapper", () => {
-            expect(canExtractData(new StubFormModel())).toBe(false);
+            const service = createService(catalogItem);
+
+            expect(service.canExtractData(new StubFormModel())).toBe(false);
         });
     });
 
     describe("canSaveForm", () => {
         it("is true with both a mapper and a data manager that writes", () => {
             stubMapper();
+            const service = createService(catalogItem);
 
-            expect(canSaveForm(new StubFormModel(), { read: async () => undefined, write: async () => { } })).toBe(true);
+            expect(service.canSaveForm(new StubFormModel(), { read: async () => undefined, write: async () => { } })).toBe(true);
         });
 
         it("is false with a mapper but no data manager", () => {
             stubMapper();
+            const service = createService(catalogItem);
 
-            expect(canSaveForm(new StubFormModel())).toBe(false);
+            expect(service.canSaveForm(new StubFormModel())).toBe(false);
         });
 
         it("is false with a data manager that only reads", () => {
             stubMapper();
+            const service = createService(catalogItem);
 
-            expect(canSaveForm(new StubFormModel(), { read: async () => undefined })).toBe(false);
+            expect(service.canSaveForm(new StubFormModel(), { read: async () => undefined })).toBe(false);
         });
     });
 
@@ -179,8 +185,8 @@ describe("ReportViewerService", () => {
             stubMapper();
             const service = createService(catalogItem);
 
-            service.registerOption({ id: "extract", ...noopOption, canShow: canExtractData });
-            service.registerOption({ id: "save", ...noopOption, canShow: canSaveForm });
+            service.registerOption({ id: "extract", ...noopOption, canShow: form => service.canExtractData(form) });
+            service.registerOption({ id: "save", ...noopOption, canShow: (form, dataManager) => service.canSaveForm(form, dataManager) });
 
             const form = new StubFormModel();
             const withoutManager = service.getOptions(form).map(option => option.id);

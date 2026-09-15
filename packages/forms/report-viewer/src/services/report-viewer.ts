@@ -106,14 +106,6 @@ export interface IReportViewerOptionProps extends IReportViewerPanelProps {
     readonly showModal: (options: IModalOptions) => void;
 }
 
-/** Gets whether the given form's report data can be extracted, which it can once it carries a mapper. */
-export const canExtractData = (form: FormModel<any>): boolean => !!form.mapper;
-
-// saving needs both halves: a mapper to extract the data and somewhere to hand it to. with a mapper and no writer
-// the data would be extracted, dropped, and the report still reported as saved.
-/** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
-export const canSaveForm = (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean => !!form.mapper && !!dataManager?.write;
-
 @Singleton
 export class ReportViewerService implements IReportViewerService, IReportViewerOptionRegistrationService {
     private readonly options = new Map<string, IReportViewerOption>();
@@ -121,12 +113,16 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
     constructor(@IFormCatalogService private readonly formCatalogService: IFormCatalogService) {
     }
 
+    /** Gets whether the given form's report data can be extracted, which it can once it carries a mapper. */
     canExtractData(form: FormModel<any>): boolean {
-        return canExtractData(form);
+        return !!form.mapper;
     }
 
+    // saving needs both halves: a mapper to extract the data and somewhere to hand it to. with a mapper and no
+    // writer the data would be extracted, dropped, and the report still reported as saved.
+    /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
     canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
-        return canSaveForm(form, dataManager);
+        return !!form.mapper && !!dataManager?.write;
     }
 
     extractData(form: FormModel<any>): IReportData {
