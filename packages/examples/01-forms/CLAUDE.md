@@ -2,7 +2,7 @@
 
 The standalone app the forms stack is developed against. It is a **host**, not a library, and it supplies the three
 things the stack leaves to whoever embeds it: a list of bootstrappers to load, a **route** per form, and an
-`IDataManager` per record. It adds a home page and two demo routes of its own.
+`IReportViewerDataManager` per record. It adds a home page and two demo routes of its own.
 
 Nothing depends on this package. It is the top of the graph, so anything here can be changed freely.
 
@@ -52,23 +52,21 @@ for the title, description and version and joins each against [src/form-routes.t
 form with no entry there is still listed, greyed out and marked "no route registered", so registering a form's
 bootstrapper without adding a route shows up as a visible gap rather than a silently missing row.
 
-Each form also lists **the options its report viewer offers**, from `IReportViewerService.getOptions(catalogItem)`
-— the same call the options bar renders from, so the badges here and the buttons there cannot disagree. It is the
-quickest way to see a per-form gate working: the four citations list Violations and the TR-310 and Form 432 do not,
-because that option is gated on the catalog item's own `violationListId`.
-
-**Save is absent from the badges on purpose.** Its gate needs a data manager that can write, and only the route
-that actually opens a record has one; `getOptions(catalogItem)` with no manager honestly answers "not this list".
+**It does not preview a form's options.** `getLatestVersions()` deliberately never constructs a form or calls its
+catalog item's `load()`, so nothing about a form's `mapper`/`violationListId` — which the options bar's gates now
+read off the constructed form instance, not the catalog item — is knowable from this listing alone. Answering that
+here would mean either loading every registered form's code just to render badges, or reintroducing a catalog-level
+declaration the rest of the stack deliberately moved away from; the home page just lists what's registered instead.
 
 Rows are real anchors (`href` set) whose plain click is intercepted and routed with react-router's `useNavigate`, so
 the url shows on hover and ctrl/cmd/shift-click still open a new tab, while a plain click routes without reloading.
 
 ## The host data boundary — what this package exists to demonstrate
 
-[example-data.ts](src/example-data.ts) is the reference `IDataManager`:
+[example-data.ts](src/example-data.ts) is the reference `IReportViewerDataManager`:
 
 ```ts
-createExampleDataManager(identity, searchParams): IDataManager | undefined
+createExampleDataManager(identity, searchParams): IReportViewerDataManager | undefined
 //   read():  looks `identity` up in the `forms` fixture table, prefers a saved record, stamps the identity
 //   write(): puts the extracted data in sessionStorage
 ```

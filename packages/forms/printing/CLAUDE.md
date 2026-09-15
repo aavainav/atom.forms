@@ -43,7 +43,7 @@ the component that renders it. This package owns every decision *about* a print;
    default). A side-by-side copy naming no orientation is printed **landscape** — a pair of pages is half again as
    wide as a sheet is tall;
 2. `validateProfile` — a copy naming a page the form does not carry **throws**, rather than printing a blank sheet.
-   The page names are checked against `new catalogItem.formFactory().getPageTypes()`;
+   The page names are checked against `new catalogItem.ctor().getChildDefinitions()`;
 3. write `@page { size: <paper> <orientation>; margin: <margin>in }` into a `<style id="f-print-page-rules">` in the
    head. An `@page` rule cannot be selected by a class, so it has to be swapped at print time;
 4. `printController.begin({ layout, pageNames, scale })` — the page collection drops its tab strip and renders the
@@ -81,7 +81,7 @@ config.get<IPrintingConfiguration>(IPrintingConfiguration).registerProfiles({ na
 ]);
 ```
 
-- `pages` are page definition **names** — the keys of the form factory's `getPageTypes()`. Selecting by name rather
+- `pages` are page definition **names** — the keys of the form's own `getChildDefinitions()`. Selecting by name rather
   than by definition is what lets a copy be declared as plain strings, and it means a name belonging to a page type
   that **repeats** contributes every instance of it (TR-310's "All pages" prints all seven).
 - Keyed `` `${name}@${version}` ``. **Registration throws without a version**, for the same reason a catalog item's

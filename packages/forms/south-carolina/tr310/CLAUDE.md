@@ -126,6 +126,5 @@ dynamic-`load` definition in `tr310ValueLists` → `get*Options` on `ITR310Servi
 component → an `extract`/`populate` pair in the mapper's per-page block.
 
 **Add a page type**: page model + its sections → `DefinitionFactory.page` in the schema → `TR310FormModel`
-(`readonly xPage`, `getXPageCollection()`, and `getXPages()` if it repeats) → `getPageTypes()` in the form factory →
-a group in `tr310-form.tsx` → for a repeating page, an `ITR310XData` array on the contract plus `addPages` handling
-in `populate`.
+(`readonly xPage`, `getXPageCollection()`, and `getXPages()` if it repeats) → a group in `tr310-form.tsx` → for a
+repeating page, an `ITR310XData` array on the contract plus `addPages` handling in `populate`.

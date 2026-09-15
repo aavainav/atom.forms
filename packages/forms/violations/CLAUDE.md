@@ -49,8 +49,8 @@ there is no national one, so every list is declared in the form package that dra
 
 ## The gate — declared, not inferred
 
-Whether a form is offered the selector is decided by **the form**: a catalog item declares `violationListId`, and
-`@forms/report-viewer` mounts the option and the panel on `!!catalogItem.violationListId`.
+Whether a form is offered the selector is decided by **the form**: a `FormModel` self-describes `violationListId`,
+and `@forms/report-viewer` mounts the option and the panel on `!!form.violationListId`.
 
 A form declaring a list is expected to `registerViolations` a binding too, since the panel needs an `apply` and a
 `getApplied` to do anything; both go in the same `configure()` call, next to each other. `getBinding` answering

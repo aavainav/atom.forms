@@ -21,10 +21,15 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
   returns a **new** entity. `Entity.set` throws if the definition is not a child of this entity's definition.
 - A definition's constructor registers the model constructor → definition in `Entity.definitionRegistry`, which is
   how `new SomePageModel()` resolves its own definition with no arguments. This registry is **static and global**,
-  so a model constructor may back exactly one definition.
-- `FormModel.registerSchema` / `FormModel.getSchema(ctor)` is the same trick for schemas: a `Schema` subclass
-  self-registers in its base constructor, and models read it back with `FormModel.getSchema<TSchema>(TSchema)`.
-- `FormModel.dispose()` clears both registries — it tears down every form in the process, not just one.
+  so a model constructor may back exactly one definition. It is the one registry considered legitimate to keep,
+  since it resolves an entity's own identity — needed because `Entity.create()` does a bare `new ctor()` with
+  nothing else to go on — rather than data *about* an already-known identity.
+- **There is no separate schema registry.** `FormModel.getSchema<TSchema>(ctor)` resolves a schema by walking the
+  *definition* tree: `Entity.resolveDefinition(ctor)` finds the constructor's own definition in
+  `Entity.definitionRegistry`, then walks its `.parent` chain up to the root `FormDefinition`, which carries a
+  `schema` field set when it was constructed. `Schema`'s own constructor does nothing — a schema is discoverable
+  because the definition tree it built already leads back to it, not because it registered itself anywhere.
+- `FormModel.dispose()` clears `Entity.definitionRegistry` — it tears down every form in the process, not just one.
 
 ## File map
 
@@ -33,18 +38,17 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/definition.ts](src/models/definition.ts) | `Definition` base: `id` (uuid), `name`, `valueType` ctor, `parent`, `children`. |
 | [src/models/form-definition.ts](src/models/form-definition.ts) · [page-definition.ts](src/models/page-definition.ts) · [section-definition.ts](src/models/section-definition.ts) · [field-definition.ts](src/models/field-definition.ts) | The four definition types. Each registers itself with its parent in its constructor. `FieldDefinition` also carries `label` and `isDeprecated`. |
 | [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. `section` takes an optional `ISectionDefinitionOptions` — today just `isShared`. |
-| [src/models/schema.ts](src/models/schema.ts) | `Schema` base — self-registers with `FormModel` in the constructor. |
+| [src/models/schema.ts](src/models/schema.ts) | `Schema` base — an empty constructor; a schema is found through the definition tree it builds, not by registering itself. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
 | [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setReadOnly`, `setStatus`, `clean`, `validate`. |
 | [src/models/page.ts](src/models/page.ts) · [page-collection.ts](src/models/page-collection.ts) · [section.ts](src/models/section.ts) | `PageModel` (also holds dropzones), the immutable `PageCollection`, `SectionModel`. |
 | [src/models/field.ts](src/models/field.ts) + [boolean-](src/models/boolean-field.ts)/[number-](src/models/number-field.ts)/[string-](src/models/string-field.ts)/[option-field.ts](src/models/option-field.ts) | `FieldModel` and its four concrete types. |
 | [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. |
-| [src/models/form-factory.ts](src/models/form-factory.ts) | `FormFactory` interface: `createForm()` + `getPageTypes()`. |
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | `ControllerManager` and the four controllers. See below. |
 | [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, and `usePrintState(controller)`. |
-| [src/mapping/](src/mapping/) | `FormMapper` base and the common `ICrash` / `IReportViewerData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` set through its section methods. |
+| [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData`/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
 | [theme/](theme/) | SCSS. `theme/_main.scss` is the entry a host imports. |
@@ -232,15 +236,18 @@ as `yarn test`.
   page's sections. Anything creating a page (`FormController.addPage`, a mapper adding pages) has to await it.
 - `Dropzone.section`/`page` are snapshots from construction time. `applyTo(section, fieldMap)` takes the *current*
   section for exactly that reason.
-- `FormMapper.read` **omits** a key when the field is empty, so an untouched number field is absent rather than `0`.
-  `FormMapper.write` skips `undefined`, so an unmentioned field keeps its current value.
+- `FormMapper.read` **always** assigns a field's current value, whether or not it has been answered — an untouched
+  number field reports `0`, not a missing key. `FormMapper.write` skips `undefined`, so an unmentioned field keeps
+  its current value.
 - `FormMapper.write(section, definition, data, key, readOnlyFields?)` takes the **source object and key**, not a
   value — `this.write(section, section.city, data, "agencyCity", readOnlyFields)`, mirroring `read`. `key` is
   required, so locking is not opt-in per field: a section method that threads `readOnlyFields` locks every field it
-  writes, and one that doesn't simply never locks. That is why a sub-record method (a repeated page's person or
-  unit) is left without the parameter — `populate` only ever names top-level keys. The caller naming those keys is
-  a host's `IDataManager.read` (see `@forms/report-viewer`); a `readOnlyFields` that doesn't name a key leaves the
-  field editable.
+  writes, and one that doesn't simply never locks. `readOnlyFields` is a `ReadOnlyFields<T>` — a mirror of `T`'s own
+  shape with `boolean`s in place of values — checked with `readOnlyFields?.[key]` rather than a collection lookup.
+  Most section methods for a repeated page's person or unit record are left without the parameter today, so nothing
+  in those sub-records is lockable yet, though the type itself is shaped to express it if a mapper wires it up. The
+  caller naming a field is a host's `IReportViewerDataManager.read` (see `@forms/report-viewer`); a `readOnlyFields`
+  that doesn't mark a key leaves the field editable.
 - A concrete field model declares `public readonly value = <default>` as a class-field initializer, which under
   `useDefineForClassFields` runs *after* `FieldModel`'s constructor has assigned `field.value` — so
   `new StringFieldModel({name, label, value: "abc"}).value` is `""`, not `"abc"`. Nothing in production notices,

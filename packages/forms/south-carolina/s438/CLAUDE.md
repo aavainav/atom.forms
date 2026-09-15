@@ -1,7 +1,7 @@
 # `@forms/s438` — SC S438 Uniform Traffic Ticket
 
 Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Sandbox route `sc/s438`, which the host owns. Module name `s438-citation-form`.
-Form type `"citation"` (extends `CitationForm`). Form factory version string `"v2025"`.
+Form type `"citation"` (extends `CitationForm`).
 
 The simplest of the citation packages: two page types, no value lists. Reach for this one as the template for
 putting the violation selector on a form — it is where that pattern was worked out first.
@@ -26,8 +26,7 @@ differs. The violation *location* is shared: one stop happens in one place.
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `S438CitationModule`. Registers the form and its route with the report viewer, registers the mapper, constructs `new S438FormSchema()`, registers the catalog item. |
-| [src/form-factory.ts](src/form-factory.ts) | `S438FormFactory` — `createForm()` and `getPageTypes()` (`front-page`, `notice-page`). |
+| [src/module.ts](src/module.ts) | `S438CitationModule` and its exported `CATALOG_IDENTITY`. `configure` registers the catalog item with a `load()` that dynamically imports the model, schema, components and violations, registers the mapper and violations, and constructs `new S438FormSchema()` -- none of it runs until a host actually opens this form. |
 | [src/bootstrapper.ts](src/bootstrapper.ts) · [src/options.ts](src/options.ts) · [src/index.ts](src/index.ts) | Wiring. `options.ts` is currently empty. |
 | [src/models/s438-form-schema.ts](src/models/s438-form-schema.ts) | **The one file to read first.** The whole definition tree plus an inline `ruleCollection`. |
 | [src/models/s438-form.ts](src/models/s438-form.ts) | `S438FormModel extends CitationForm`. |

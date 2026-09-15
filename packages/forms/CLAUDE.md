@@ -143,10 +143,11 @@ is roughly five times quicker without a DOM.
 A new package adopts tests by copying a one-line `vitest.config.ts`, a `test/tsconfig.json`, and the three scripts.
 See [core/CLAUDE.md](core/CLAUDE.md) for the rules a test has to follow to stay clear of the global registries.
 
-**A form package's mapper is tested by a round trip.** `extract(populate(form, data))` must equal `data`, over a
+**A form package's mapper is tested by a round trip.** `extract(populate(form, { data }))` must equal `data`, over a
 fixture holding a value for **every** field the contract publishes. The fixture is typed `Required<IFormData>`, so
 a field added to the contract and forgotten in the fixture fails `yarn test-types` — which is what keeps the round
 trip covering the whole contract rather than slowly falling behind it. Every value is distinct and derived from its
-own field name, so a mapper writing one field into a neighbouring box fails rather than passes; and every value is
-non-empty, because `FormMapper.read` omits an empty field and `""`, `0` and `false` all read as empty. TR-310's
+own field name, so a mapper writing one field into a neighbouring box fails rather than passes. `FormMapper.read`
+reports every field regardless of emptiness, so the fixture no longer needs to dodge `""`/`0`/`false` the way it
+once did — it stays non-empty here mainly so a swapped pair of values is still visible as a mismatch. TR-310's
 fixture carries 347 fields and was generated from its contract rather than typed by hand.

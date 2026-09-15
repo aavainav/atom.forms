@@ -29,7 +29,7 @@ Three props, nothing else:
 | Prop | |
 | --- | --- |
 | `identity` | `IFormIdentity`. The catalog resolves it, answering with the latest version when none is named. |
-| `dataManager` | `IDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
+| `dataManager` | `IReportViewerDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
 | `settings` | `IReportViewerSettings` — `isReadOnly?` and `showOptions?`. How the report renders, as opposed to which one. |
 
 There is deliberately **no `controllers` prop**. A host needing shared controllers or a mutation of the loaded model
@@ -45,7 +45,7 @@ the previously loaded form on screen.
 | Path | Contents |
 | --- | --- |
 | [src/module.ts](src/module.ts) | `ReportViewerModule`. Registers five services and nothing else — there is no configuration seam, because there is nothing left to register with it. |
-| [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IDataManager`/`IDataManagerResult`, `IInitialForm`, `IReportViewerService`, `IReportViewerOption(Props)`, `IReportViewerPanelProps`, and **the built-in option table**. |
+| [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerDataManager`/`IReadDataResult`, `IInitialForm`, `IReportViewerService`, `IReportViewerOption(Props)`, `IReportViewerPanelProps`, and **the built-in option table**. |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. Re-exports core's modal types, `IModalOptions` included. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. |
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
@@ -58,17 +58,17 @@ the previously loaded form on screen.
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, alongside the other managers. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
-## `IDataManager` — the host's side of the data
+## `IReportViewerDataManager` — the host's side of the data
 
 ```ts
-interface IDataManager<TData extends object = IReportViewerData> {
-    read(): Promise<IDataManagerResult<TData> | undefined>;
-    write?(data: IReportViewerData): Promise<void>;
+interface IReportViewerDataManager<TData extends object = IReportData> {
+    read(): Promise<IReadDataResult<TData> | undefined>;
+    write?(data: IReportData): Promise<void>;
 }
 
-interface IDataManagerResult<TData extends object = IReportViewerData> {
+interface IReadDataResult<TData extends object = IReportData> {
     readonly data: TData;
-    readonly readOnlyFields?: ReadonlyArray<keyof TData & string>;
+    readonly readOnlyFields?: ReadOnlyFields<TData>;
 }
 ```
 
@@ -76,61 +76,67 @@ interface IDataManagerResult<TData extends object = IReportViewerData> {
   built for rather than being handed a context to guess from.
 - **There is no separate notion of defaults.** A host with no record yet answers with the values a new one should
   start with; resolving `undefined` loads a blank form. One path, not two.
-- **`readOnlyFields` is typed against the contract**, so a misspelled key is a compile error rather than a lock that
-  silently does nothing, and it is an **array** because a host writes a literal here. `loadForm` converts it to the
-  `ReadonlySet` the mapper looks keys up in — sets are what the mapper wants, arrays are what the caller wants to
-  write. A field the mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable
-  regardless of being named.
-- **`write` doesn't depend on `TData`.** It always takes the full `IReportViewerData` -- `extractData` stamps
+- **`readOnlyFields` mirrors the shape of `data` itself**, marking whichever fields -- at any depth -- should come
+  back locked rather than editable, e.g. `{ agencyName: true }`. `ReadOnlyFields<TData>` (from `@forms/core`) is
+  typed against the contract, so a misspelled key is a compile error rather than a lock that silently does nothing.
+  `IReadDataResult` and `data`/`readOnlyFields` travel together as one `IPopulateData<TData>` object all the way
+  down to `FormModel.populate`, rather than being split into separate parameters partway through. A field the
+  mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable regardless of being
+  marked.
+- **`write` doesn't depend on `TData`.** It always takes the full `IReportData` -- `FormModel.extractData()` stamps
   `name`/`status`/`type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never
   just the contract that went in. That's why the props, the options bar and `saveForm` all type their `dataManager`
-  as `IDataManager<any>` rather than being made generic over a `TData` they never call `read()` with: `any` erases
-  only the part of the type they don't use, and `IDataManager<IS438Data>` (say) is freely assignable to it either
-  way, which a concrete default like `IDataManager<IReportViewerData>` is not -- `IS438Data` doesn't itself carry
-  `name`/`status`/`type`/`version`, so it isn't assignable to `IReportViewerData`.
+  as `IReportViewerDataManager<any>` rather than being made generic over a `TData` they never call `read()` with:
+  `any` erases only the part of the type they don't use, and `IReportViewerDataManager<IS438Data>` (say) is freely
+  assignable to it either way, which a concrete default like `IReportViewerDataManager<IReportData>` is not --
+  `IS438Data` doesn't itself carry `name`/`status`/`type`/`version`, so it isn't assignable to `IReportData`.
 
 ## Load and save
 
 `loadForm(identity, dataManager?)`:
-1. `formCatalogService.get(identity)` — **this package does the lookup now**, which is what lets a host hand over an
-   identity rather than a resolved catalog item.
-2. `await catalogItem.component()`, `new catalogItem.formFactory()`, `await formFactory.createForm().initialize()`.
-3. `await dataManager?.read()`; if it answered and the item has a mapper,
-   `form = await catalogItem.mapper.populate(form, data, new Set(readOnlyFields))` (awaited because a
-   repeating-page mapper must create pages, which is async).
-4. → `IInitialForm { catalogItem, form, formFactory, Component }`.
+1. `formCatalogService.get(identity)` — resolves and caches the catalog item, calling its `load()` at most once per
+   identity, ever.
+2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages.
+3. `await dataManager?.read()`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
+   decides for itself whether it has a mapper to run (awaited either way, since a repeating-page mapper must create
+   pages, which is async; a form with no mapper just returns itself unchanged).
+4. → `IInitialForm { catalogItem, form, Component }`.
 
-`extractData(form, catalogItem)`: `catalogItem.mapper?.extract(form)` (or `{}`), then **stamps the whole of
-`IForm` — `name`, `description`, `status`, `type`, `version` — from the form model**, which declares the identity
-it is registered under and assigns it to itself. Without the stamp the saved data could not be resolved back to a
-form. Persists nothing.
+**The form is self-describing -- its own `mapper`, `valueListIds` and `violationListId` travel with it.** Nothing
+here reaches into the catalog item to decide what the form can do; it asks the constructed `form` instead.
 
-`saveForm(form, catalogItem, dataManager?)` is `extractData` then `dataManager?.write?.(data)`, returning the data
-whether or not it was consumed. The extract-and-stamp lives in `extractData` alone so that **what a preview shows
-and what a save sends cannot drift** — the report-data option renders exactly this payload without touching the
-writer.
+`ReportViewerService.extractData(form)` delegates to `form.extractData()`: `form.mapper?.extract(form)` (or `{}`),
+then **stamps the whole of `IForm` -- `name`, `description`, `status`, `type`, `version` -- from the form model
+itself**, which declares the identity it is registered under and assigns it to itself. Without the stamp the saved
+data could not be resolved back to a form. Persists nothing.
 
-`canExtractData(catalogItem)` is `!!catalogItem.mapper`. `canSaveForm(catalogItem, dataManager?)` is that *plus*
-`!!dataManager?.write`. They are different gates on purpose: a form with a mapper but nowhere to write still
-produces perfectly good outgoing data, so the report-data option is offered where save is not.
+`saveForm(form, dataManager?)` is `extractData(form)` then `dataManager?.write?.(data)`, returning the data whether
+or not it was consumed. The extract-and-stamp lives on the form alone so that **what a preview shows and what a
+save sends cannot drift** — the report-data option renders exactly this payload without touching the writer.
 
-## The options bar — a closed list, gated by the catalog item
+`canExtractData(form)` is `!!form.mapper`. `canSaveForm(form, dataManager?)` is that *plus* `!!dataManager?.write`.
+They are different gates on purpose: a form with a mapper but nowhere to write still produces perfectly good
+outgoing data, so the report-data option is offered where save is not. Both exist only as `ReportViewerService`
+instance methods now -- not free functions -- so `ReportViewerModule.configure` reaches the singleton through
+`services.get<IReportViewerService>(IReportViewerService)` to pass them as `canShow` closures.
+
+## The options bar — a closed list, gated by the form instance
 
 `registerOption`/`registerPanel` are **gone**. The options are declared in one table in
-[src/services/report-viewer.ts](src/services/report-viewer.ts), in the order the bar renders them:
+[src/module.ts](src/module.ts)'s `configure`, in the order the bar renders them:
 
 | id | offered when |
 | --- | --- |
 | `validate` | always |
-| `violations` | `!!catalogItem.violationListId` |
-| `save` | `!!catalogItem.mapper && !!dataManager?.write` |
-| `report-data` | `!!catalogItem.mapper` |
+| `violations` | `!!form.violationListId` |
+| `save` | `!!form.mapper && !!dataManager?.write` |
+| `report-data` | `!!form.mapper` |
 | `print` | always |
 | `day-night-mode` | always |
 
-`getOptions(catalogItem, dataManager?)` **stays** as a read API: it answers with a complete, ordered, already
-filtered list, so **what a form offers can be asked for without rendering any of it**. The sandbox home page lists
-each form's option badges from exactly that call.
+`getOptions(form, dataManager?)` **stays** as a read API: it answers with a complete, ordered, already filtered
+list, so **what a form offers can be asked for without rendering any of it** -- `ReportViewerOptions` calls it with
+`controllers.getFormController().form`, deciding per rendered instance rather than off anything static.
 
 Two of the six components are imported from packages *below* this one (`ViolationsOption` from `@forms/violations`,
 `PrintOption` from `@forms/printing`) rather than being handed up through a registration seam. All six go through
@@ -148,11 +154,13 @@ for the dependency direction.
 
 ### Where a per-form gate should live
 
-A gate reads the catalog item, so it can use anything the catalog knows: the identity, the form's `type`, its
-declared `violationListId`/`valueListIds`, and the form family via `catalogItem.ctor.prototype instanceof
-CitationForm`. Prefer a declaration on the catalog item over an inferred one — the violations gate is
-`!!catalogItem.violationListId` precisely because that is the form saying so, rather than the viewer working it out
-from what happened to be registered elsewhere.
+A gate reads the form instance, so it can use anything the form self-describes: its identity, `type`, declared
+`violationListId`/`valueListIds`, and the form family via `form instanceof CitationForm`. Prefer a declaration on
+the form over an inferred one — the violations gate is `!!form.violationListId` precisely because that is the form
+saying so, rather than the viewer working it out from what happened to be registered elsewhere. A gate that needs
+something before the form is even constructed (the catalog listing, say) only has the cheap, registered
+`IFormCatalogItem` to work with -- `type` is there for exactly that; nothing else about the form's own behavior is
+knowable without loading and constructing it.
 
 ## The panel seam — where an off canvas goes
 
