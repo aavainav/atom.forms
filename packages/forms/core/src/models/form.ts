@@ -14,6 +14,7 @@ import { RuleIssueSeverity } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
 
 import type { IFormMapper } from "../mapping/form-mapper";
+import type { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
 export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
@@ -60,6 +61,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     addPage(page: PageModel, pageDefinition: PageDefinition): this;
     /** Adds a rule collection used to validate the form. */
     addRuleCollection(ruleCollection: RuleCollection): this;
+    /** Extracts this form's data through its own mapper, stamped with the identity it carries. A form without a mapper returns just the identity. */
+    extractData(): IReportData;
     /** Gets the child entity registered for the specified page definition. */
     get<TPage>(pageDefinition: PageDefinition): TPage;
     /** Gets the first field across all pages that matches the specified field definition. */
@@ -72,16 +75,18 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     getPagesFor(pageDefinition: PageDefinition): Array<PageModel>;
     /** Gets the rule collection used to validate the form. */
     getRuleCollection(): RuleCollection;
+    /** Returns a new form with the given data applied through its own mapper. A form without one returns itself unchanged. */
+    populate(data: IReportData, readOnlyFields?: ReadonlyArray<string>): FormModel<TData> | Promise<FormModel<TData>>;
     /** Removes the page at the specified index from the page collection for the specified page definition. */
     removePage(index: number, pageDefinition: PageDefinition): this;
     /** Disables every field on the form, so it renders read-only. */
     setReadOnly(): this;
     /** Returns a form with the given status, which determines the watermark stamped across its pages. */
     setStatus(status: FormStatus): this;
-    /** Marks every field on the form as not dirty. */
-    clean(): this;
     /** Applies the given issue collection, setting the has error state for every field on the form. */
     validate(issueCollection: RuleIssueCollection): this;
+    /** Marks every field on the form as not dirty. */
+    clean(): this;
     /** Releases resources held by the form model, such as registered schemas and definitions. */
     dispose(): void;
 }
@@ -121,6 +126,21 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public addRuleCollection(ruleCollection: RuleCollection): this {
         return withChanges(this, { ruleCollection: this.ruleCollection.addRuleCollection(ruleCollection) });
+    }
+
+    public extractData(): IReportData {
+        const values = this.mapper ? this.mapper.extract(this) : {};
+
+        // a form model declares the identity it is registered under and stamps it on itself, so the whole of
+        // IForm comes off the form; without it, saved data could not be resolved back to a form by loadForm.
+        return {
+            ...values,
+            name: this.name,
+            description: this.description,
+            status: this.status,
+            type: this.type,
+            version: this.version
+        };
     }
 
     public get<TPage>(pageDefinition: PageDefinition): TPage {
@@ -184,6 +204,14 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public getRuleCollection(): RuleCollection {
         return this.ruleCollection;
+    }
+
+    public populate(data: IReportData, readOnlyFields?: ReadonlyArray<string>): FormModel<TData> | Promise<FormModel<TData>> {
+        if (!this.mapper) {
+            return this;
+        }
+
+        return this.mapper.populate(this, <TData>data, <ReadonlySet<keyof TData> | undefined>(readOnlyFields && new Set(readOnlyFields)));
     }
 
     public removePage(index: number, pageDefinition: PageDefinition): this {

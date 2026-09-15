@@ -126,18 +126,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
     }
 
     extractData(form: FormModel<any>): IReportData {
-        const values = form.mapper ? form.mapper.extract(form) : {};
-
-        // a form model declares the identity it is registered under and stamps it on itself, so the whole of
-        // IForm comes off the form; without it, saved data could not be resolved back to a form by loadForm.
-        return {
-            ...values,
-            name: form.name,
-            description: form.description,
-            status: form.status,
-            type: form.type,
-            version: form.version
-        };
+        return form.extractData();
     }
 
     /** Gets the registered options offered for the given form, in the order they were registered. */
@@ -151,14 +140,8 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
 
         const result = await dataManager?.read();
 
-        if (result && form.mapper) {
-            // the mapper takes the locked fields as a set because that is what it looks them up in, while the host
-            // hands them over as an array because that is what a caller writes
-            const readOnlyFields = result.readOnlyFields && new Set<string>(result.readOnlyFields);
-
-            // a mapper for a form whose pages repeat has to create a page per record the data carries, which it
-            // can only do asynchronously; one for a form of fixed pages returns the form itself and this awaits nothing
-            form = await form.mapper.populate(form, <IReportData><unknown>result.data, readOnlyFields);
+        if (result) {
+            form = await form.populate(<IReportData>result.data, result.readOnlyFields);
         }
 
         return { catalogItem, form, Component: catalogItem.component };
