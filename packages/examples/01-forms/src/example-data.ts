@@ -1,7 +1,7 @@
-import { FormType, IFormIdentity, IReportViewerData } from "@forms/core";
+import { IFormIdentity, IReportData, FormType, ReadOnlyFields } from "@forms/core";
 import { IGAUTCData } from "@forms/ga-utc";
 import { IPublicContactOrWarningData } from "@forms/public-contact-or-warning";
-import { IDataManager } from "@forms/report-viewer";
+import { IReportViewerDataManager } from "@forms/report-viewer";
 import { IS438Data } from "@forms/s438";
 import { ITR310Data } from "@forms/tr310";
 
@@ -26,7 +26,7 @@ interface IExampleForm<TData extends object> {
          * this form's own contract, so a misspelled key here is a compile error rather than a lock that silently
          * does nothing.
          */
-        readonly readOnlyFields?: ReadonlyArray<keyof TData & string>;
+        readonly readOnlyFields?: ReadOnlyFields<TData>;
     };
 }
 
@@ -53,7 +53,7 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
         // and locked; the city stays editable in case an officer is typing up a record for a different one.
         defaults: {
             data: { agencyCity: "Columbia", agencyName: "Columbia Police Department" },
-            readOnlyFields: ["agencyName"]
+            readOnlyFields: { agencyName: true }
         }
     }),
     defineForm<ITR310Data>({
@@ -70,7 +70,7 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
         // one municipal court, so its name is stamped and locked while the trial date and time stay editable.
         defaults: {
             data: { courtName: "Columbia Municipal Court", courtCity: "Columbia", courtState: "SC" },
-            readOnlyFields: ["courtName"]
+            readOnlyFields: { courtName: true }
         }
     })
 ];
@@ -90,7 +90,7 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
  * A form this host holds no fixtures for gets **no manager at all**, which is what a blank, unsaveable form looks
  * like from the report viewer's side.
  */
-export function createExampleDataManager(identity: IFormIdentity, searchParams: URLSearchParams): IDataManager | undefined {
+export function createExampleDataManager(identity: IFormIdentity, searchParams: URLSearchParams): IReportViewerDataManager | undefined {
     const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);
 
     if (!form) {
@@ -123,9 +123,9 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
 }
 
 /** Returns the record last saved for the given form, or undefined when nothing has been saved for it. */
-function getSavedData(identity: IFormIdentity): IReportViewerData | undefined {
+function getSavedData(identity: IFormIdentity): IReportData | undefined {
     const saved = sessionStorage.getItem(getStorageKey(identity));
-    return saved ? JSON.parse(saved) as IReportViewerData : undefined;
+    return saved ? JSON.parse(saved) as IReportData : undefined;
 }
 
 /** Keyed by identity so a record saved for one form is never read back into another. */
@@ -134,6 +134,6 @@ function getStorageKey({ name, version }: IFormIdentity): string {
 }
 
 /** A fixture is the target form's own contract, which carries no identity of its own, so the host stamps the one it is loading -- the same identity a save is stamped with. */
-function stamp(form: IExampleForm<any>, data: object): IReportViewerData {
+function stamp(form: IExampleForm<any>, data: object): IReportData {
     return { ...data, ...form.identity, status: "draft", type: form.type };
 }

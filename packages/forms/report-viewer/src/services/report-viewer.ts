@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { FormModel, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData } from "@forms/core";
+import { IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
