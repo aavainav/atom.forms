@@ -4,7 +4,6 @@ import {
     FControlBorderEdges,
     FInputType,
     IOptionValue,
-    IValueListController,
     NumberFieldModel,
     OptionFieldModel,
     TValueType,
@@ -13,8 +12,6 @@ import {
     FFieldSelect,
     FSelectFormat
 } from "@forms/core";
-
-import { OKTrafficValueListId } from "../value-lists";
 
 /** The width of a Y/N box, sized for the single letter the form prints in it. */
 const yesNoBoxWidth = 90;
@@ -81,10 +78,6 @@ export const NumberBox = ({ field, borderEdges, label, width, onChange }: INumbe
 );
 
 interface ISelectBoxProps {
-    /** Identifies the list in the controller's cache; boxes sharing a list load it once. */
-    readonly cacheKey: string;
-    /** Caches the value lists backing the form's option fields, so they are only loaded once per form. */
-    readonly controller: IValueListController;
     /** The option field the box holds. */
     readonly field: OptionFieldModel;
     /** Loads the list's options. */
@@ -97,7 +90,7 @@ interface ISelectBoxProps {
     readonly label?: string;
     /**
      * The value of the option this box's list hangs off, for a list with a parent. It reaches the loader as its
-     * argument and joins the cache key, which is the whole of the dependency between two boxes.
+     * argument, which is the whole of the dependency between two boxes.
      */
     readonly parentValue?: string;
     /** Exact width in pixels. */
@@ -107,12 +100,10 @@ interface ISelectBoxProps {
 }
 
 /** One of the form's coded boxes, choosing from a registered value list. */
-export const SelectBox = ({ cacheKey, controller, field, load, borderEdges, format = "descriptionOnly", label, parentValue, width, onChange }: ISelectBoxProps): React.JSX.Element => (
+export const SelectBox = ({ field, load, borderEdges, format = "descriptionOnly", label, parentValue, width, onChange }: ISelectBoxProps): React.JSX.Element => (
     <FFieldControl width={width} label={label ?? field.label} labelFor={field.id} borderEdges={borderEdges}>
         <FFieldSelect
             id={field.id}
-            cacheKey={cacheKey}
-            controller={controller}
             disabled={!field.getIsEnabled()}
             format={format}
             invalid={field.getHasError()}
@@ -126,8 +117,6 @@ export const SelectBox = ({ cacheKey, controller, field, load, borderEdges, form
 );
 
 interface IYesNoBoxProps {
-    /** Caches the value lists backing the form's option fields, so they are only loaded once per form. */
-    readonly controller: IValueListController;
     /** The option field the box holds. */
     readonly field: OptionFieldModel;
     /** Loads the Y/N options; the service's `getYesNoOptions`, wrapped so the reference is stable. */
@@ -145,14 +134,10 @@ interface IYesNoBoxProps {
 /**
  * One of the form's Y/N boxes.
  *
- * Every one of them draws on a single registered list, so they share one cache key and cost one load between them
- * however many appear on a page. The box shows the letter the form prints, while the menu it opens spells out YES
- * and NO.
+ * The box shows the letter the form prints, while the menu it opens spells out YES and NO.
  */
-export const YesNoBox = ({ controller, field, load, borderEdges, label, width = yesNoBoxWidth, onChange }: IYesNoBoxProps): React.JSX.Element => (
+export const YesNoBox = ({ field, load, borderEdges, label, width = yesNoBoxWidth, onChange }: IYesNoBoxProps): React.JSX.Element => (
     <SelectBox
-        cacheKey={OKTrafficValueListId.yesNo}
-        controller={controller}
         field={field}
         load={load}
         borderEdges={borderEdges}

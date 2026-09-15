@@ -1,21 +1,18 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FLabel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FLabel, FSection } from "@forms/core";
 
 import { OccupantSectionModel } from "../../models/person-page/occupant-section";
 import { ITR310Service } from "../../services";
-import { TR310ValueListId } from "../../value-lists";
 import { CodedField, TextField } from "../fields";
 
 interface IOccupantSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<OccupantSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the occupant section of the TR-310 - where the person sat, whether they were ejected, and what restrained them. */
-export const OccupantSection = ({ binding, valueListController }: IOccupantSectionProps): React.JSX.Element => {
+export const OccupantSection = ({ binding }: IOccupantSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
@@ -31,9 +28,7 @@ export const OccupantSection = ({ binding, valueListController }: IOccupantSecti
             <FFormStackPanel direction="horizontal">
                 <TextField field={section.getSeatingLocation()} width={330} height={44} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.seatingLocation, value)} />
                 <CodedField
-                    cacheKey={TR310ValueListId.ejection}
                     columns={1}
-                    controller={valueListController}
                     field={section.getEjection()}
                     load={loadEjectionOptions}
                     title="Ejection"
@@ -41,8 +36,6 @@ export const OccupantSection = ({ binding, valueListController }: IOccupantSecti
                     onChange={(value) => binding.setValue(section.ejection, value)}
                 />
                 <CodedField
-                    cacheKey={TR310ValueListId.medicalFacilityTransport}
-                    controller={valueListController}
                     field={section.getMedicalFacilityTransport()}
                     load={loadTransportOptions}
                     title="Transported To Medical Facility"
@@ -52,9 +45,7 @@ export const OccupantSection = ({ binding, valueListController }: IOccupantSecti
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <CodedField
-                    cacheKey={TR310ValueListId.yesNo}
                     columns={1}
-                    controller={valueListController}
                     field={section.getHeadInjury()}
                     load={loadHeadInjuryOptions}
                     title="Motorcycle/Moped Head Injury-HI"
@@ -62,8 +53,6 @@ export const OccupantSection = ({ binding, valueListController }: IOccupantSecti
                     onChange={(value) => binding.setValue(section.headInjury, value)}
                 />
                 <CodedField
-                    cacheKey={TR310ValueListId.airBagDeployment}
-                    controller={valueListController}
                     field={section.getAirBagDeployment()}
                     load={loadAirBagOptions}
                     title="Air Bag Deployment-ABD"
@@ -71,8 +60,6 @@ export const OccupantSection = ({ binding, valueListController }: IOccupantSecti
                     onChange={(value) => binding.setValue(section.airBagDeployment, value)}
                 />
                 <CodedField
-                    cacheKey={TR310ValueListId.restraintDevice}
-                    controller={valueListController}
                     field={section.getRestraintDevice()}
                     load={loadRestraintOptions}
                     title="Restraint Device-RD"

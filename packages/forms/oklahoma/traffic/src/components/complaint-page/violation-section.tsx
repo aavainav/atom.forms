@@ -1,21 +1,18 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { ViolationSectionModel } from "../../models/complaint-page/violation-section";
 import { IOKTrafficService } from "../../services";
-import { OKTrafficValueListId } from "../../value-lists";
 import { SelectBox, TextBox, YesNoBox } from "../fields";
 
 interface IViolationSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<ViolationSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the violation section of the Oklahoma City traffic citation form's complaint page. */
-export const ViolationSection = ({ binding, valueListController }: IViolationSectionProps): React.JSX.Element => {
+export const ViolationSection = ({ binding }: IViolationSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -41,15 +38,13 @@ export const ViolationSection = ({ binding, valueListController }: IViolationSec
                 <TextBox field={date} type="date" width={170} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.date, value)} />
                 <TextBox field={time} width={140} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.time, value)} />
                 <SelectBox
-                    cacheKey={OKTrafficValueListId.county}
-                    controller={valueListController}
                     field={county}
                     load={loadCountyOptions}
                     width={200}
                     borderEdges={["left", "top"]}
                     onChange={(value) => binding.setValue(section.county, value)}
                 />
-                <YesNoBox controller={valueListController} field={isBlock} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.isBlock, value)} />
+                <YesNoBox field={isBlock} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.isBlock, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={location} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.location, value)} /></div>

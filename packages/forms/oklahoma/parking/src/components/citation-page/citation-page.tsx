@@ -25,7 +25,6 @@ interface ICitationPageProps {
 /** Defines the citation page of the Oklahoma City parking violation form. */
 export default function CitationPage({ controllers, binding, isReadOnly }: ICitationPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
     const citationPage = binding.get();
@@ -58,7 +57,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                         .then((resolved) => binding.update((page) => okParkingService.applyVehicleDropzone(page, resolved)));
                 }}
             >
-                <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} valueListController={valueListController} />
+                <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} />
             </FDropzone>
 
             <OfficerSection binding={binding.getSection(citationPage.officerSection)} />

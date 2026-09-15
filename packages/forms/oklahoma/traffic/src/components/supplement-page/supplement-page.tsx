@@ -17,7 +17,6 @@ interface ISupplementPageProps {
 
 /** Defines the supplement page of the Oklahoma City traffic citation form. */
 export default function SupplementPage({ controllers, binding }: ISupplementPageProps): React.JSX.Element {
-    const valueListController = controllers.getValueListController();
     const supplementPage = binding.get();
 
     return (
@@ -26,9 +25,9 @@ export default function SupplementPage({ controllers, binding }: ISupplementPage
                 <FLabel fontSize="5" textAlignment="center">Citation Number</FLabel>
             </div>
 
-            <WitnessSection binding={binding.getSection(supplementPage.witnessSection)} valueListController={valueListController} />
-            <RegisteredOwnerSection binding={binding.getSection(supplementPage.registeredOwnerSection)} valueListController={valueListController} />
-            <StatusSection binding={binding.getSection(supplementPage.statusSection)} valueListController={valueListController} />
+            <WitnessSection binding={binding.getSection(supplementPage.witnessSection)} />
+            <RegisteredOwnerSection binding={binding.getSection(supplementPage.registeredOwnerSection)} />
+            <StatusSection binding={binding.getSection(supplementPage.statusSection)} />
             <NotesSection binding={binding.getSection(supplementPage.notesSection)} />
         </>
     );

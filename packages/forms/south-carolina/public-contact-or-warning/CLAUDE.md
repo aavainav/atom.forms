@@ -87,7 +87,7 @@ component → `IPublicContactOrWarningData` → the mapper's `extract`/`populate
 **Add an option field backed by a new list**: drop the JSON in `data/`, add it to `data/lists.json`, `yarn generate`,
 add the id to `PublicContactOrWarningValueListId` and a dynamic-`load` definition to
 `publicContactOrWarningValueLists`, add a `get*Options` method to the service, then use `FFieldSelect` with
-`cacheKey`, `controller={valueListController}` and `options={loadXOptions}` (wrapped in `useCallback`).
+`options={loadXOptions}` (wrapped in `useCallback`).
 
 **Add a checkbox to a mutually-exclusive group**: add it to `defineFields`, the section model, the component, the
 data contract, the mapper, **and** the corresponding options array at the top of

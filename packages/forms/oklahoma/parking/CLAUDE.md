@@ -90,4 +90,4 @@ Also drawn from `@forms/value-lists`: `ValueListId.state` (owner), `ValueListId.
 
 **Add a value list**: JSON in `data/` → entry in `data/lists.json` → `yarn generate` → id in
 `OKParkingValueListId` → dynamic-`load` definition in `okParkingValueLists` → `get*Options` on the service → use
-`FFieldSelect` with `cacheKey`, `controller` and a `useCallback`-wrapped loader.
+`FFieldSelect` with a `useCallback`-wrapped loader.

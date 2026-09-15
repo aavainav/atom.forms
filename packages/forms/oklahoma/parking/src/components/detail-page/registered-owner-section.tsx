@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { RegisteredOwnerSectionModel } from "../../models/detail-page/registered-owner-section";
 import { IOKParkingService } from "../../services";
@@ -9,12 +8,10 @@ import { IOKParkingService } from "../../services";
 interface IRegisteredOwnerSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<RegisteredOwnerSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the registered owner section of the Oklahoma City parking violation form's detail page. */
-export const RegisteredOwnerSection = ({ binding, valueListController }: IRegisteredOwnerSectionProps): React.JSX.Element => {
+export const RegisteredOwnerSection = ({ binding }: IRegisteredOwnerSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
 
@@ -106,8 +103,6 @@ export const RegisteredOwnerSection = ({ binding, valueListController }: IRegist
                 <FFieldControl width={110} label={state.label} labelFor={state.id} borderEdges={["left", "top"]}>
                     <FFieldSelect
                         id={state.id}
-                        cacheKey={ValueListId.state}
-                        controller={valueListController}
                         disabled={!state.getIsEnabled()}
                         format="valueOnly"
                         invalid={state.getHasError()}

@@ -32,7 +32,6 @@ interface IComplaintPageProps {
 /** Defines the complaint page of the Oklahoma City traffic citation form. */
 export default function ComplaintPage({ controllers, binding, isReadOnly }: IComplaintPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
     const complaintPage = binding.get();
@@ -46,11 +45,11 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
             >
-                <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} valueListController={valueListController} />
+                <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
 
-            <LicenseSection binding={binding.getSection(complaintPage.licenseSection)} valueListController={valueListController} />
-            <DescriptionSection binding={binding.getSection(complaintPage.descriptionSection)} valueListController={valueListController} />
+            <LicenseSection binding={binding.getSection(complaintPage.licenseSection)} />
+            <DescriptionSection binding={binding.getSection(complaintPage.descriptionSection)} />
 
             <FDropzone
                 controller={dragAndDropController}
@@ -63,7 +62,7 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
                         .then((resolved) => binding.update((page) => okTrafficService.applyVehicleDropzone(page, resolved)));
                 }}
             >
-                <VehicleSection binding={binding.getSection(complaintPage.vehicleSection)} valueListController={valueListController} />
+                <VehicleSection binding={binding.getSection(complaintPage.vehicleSection)} />
             </FDropzone>
 
             <FDropzone
@@ -71,11 +70,11 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
             >
-                <ViolationSection binding={binding.getSection(complaintPage.violationSection)} valueListController={valueListController} />
+                <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>
             <OffenseSection binding={binding.getSection(complaintPage.offenseSection)} />
-            <ViolationInformationSection binding={binding.getSection(complaintPage.violationInformationSection)} valueListController={valueListController} />
-            <OfficerSection binding={binding.getSection(complaintPage.officerSection)} valueListController={valueListController} />
+            <ViolationInformationSection binding={binding.getSection(complaintPage.violationInformationSection)} />
+            <OfficerSection binding={binding.getSection(complaintPage.officerSection)} />
             <SwornSection binding={binding.getSection(complaintPage.swornSection)} />
             <ArraignmentSection binding={binding.getSection(complaintPage.arraignmentSection)} />
         </>

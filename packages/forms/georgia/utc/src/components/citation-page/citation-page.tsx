@@ -33,7 +33,6 @@ interface ICitationPageProps {
 /** Defines the citation page of the Georgia uniform traffic citation - the face of the printed form. */
 export default function CitationPage({ controllers, binding, isReadOnly }: ICitationPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const gaUtcService = useService<IGAUTCService>(IGAUTCService);
     const citationPage = binding.get();
@@ -47,7 +46,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                 dropzone={citationPage.getDropzone(CitationPageViolatorDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolatorDropzone(page, dropzone))}
             >
-                <ViolatorSection binding={binding.getSection(citationPage.violatorSection)} valueListController={valueListController} />
+                <ViolatorSection binding={binding.getSection(citationPage.violatorSection)} />
             </FDropzone>
 
             <FDropzone
@@ -61,7 +60,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                         .then((resolved) => binding.update((page) => gaUtcService.applyVehicleDropzone(page, resolved)));
                 }}
             >
-                <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} valueListController={valueListController} />
+                <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} />
             </FDropzone>
 
             <StatusSection binding={binding.getSection(citationPage.statusSection)} />
@@ -75,7 +74,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                 <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
             </FDropzone>
             <ConditionsSection binding={binding.getSection(citationPage.conditionsSection)} />
-            <LocationSection binding={binding.getSection(citationPage.locationSection)} valueListController={valueListController} />
+            <LocationSection binding={binding.getSection(citationPage.locationSection)} />
             <OfficerSection binding={binding.getSection(citationPage.officerSection)} />
             <SummonsSection binding={binding.getSection(citationPage.summonsSection)} />
             <CertificationSection binding={binding.getSection(citationPage.certificationSection)} />

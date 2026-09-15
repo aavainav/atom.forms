@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { VehicleSectionModel } from "../../models/citation-page/vehicle-section";
 import { IOKParkingService } from "../../services";
@@ -9,12 +8,10 @@ import { IOKParkingService } from "../../services";
 interface IVehicleSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<VehicleSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the vehicle section of the Oklahoma City parking violation form's citation page. */
-export const VehicleSection = ({ binding, valueListController }: IVehicleSectionProps): React.JSX.Element => {
+export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
 
@@ -44,8 +41,6 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                 <FFieldControl width={220} label={make.label} labelFor={make.id} borderEdges={["left", "top"]}>
                     <FFieldSelect
                         id={make.id}
-                        cacheKey={ValueListId.vehicleMake}
-                        controller={valueListController}
                         disabled={!make.getIsEnabled()}
                         format="descriptionOnly"
                         invalid={make.getHasError()}

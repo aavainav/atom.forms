@@ -1,20 +1,17 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { AgencySectionModel } from "../../models/record-page/agency-section";
 import { IPublicContactOrWarningService } from "../../services";
-import { PublicContactOrWarningValueListId } from "../../value-lists";
 
 interface IAgencySectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<AgencySectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the agency section of the public contact/warning record. */
-export const AgencySection = ({ binding, valueListController }: IAgencySectionProps): React.JSX.Element => {
+export const AgencySection = ({ binding }: IAgencySectionProps): React.JSX.Element => {
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
 
@@ -55,8 +52,6 @@ export const AgencySection = ({ binding, valueListController }: IAgencySectionPr
                     <FFieldControl border="hidden" height={20} label={county.label} labelFor={county.id} width={240}>
                         <FFieldSelect
                             id={county.id}
-                            cacheKey={PublicContactOrWarningValueListId.county}
-                            controller={valueListController}
                             disabled={!county.getIsEnabled()}
                             format="descriptionOnly"
                             invalid={county.getHasError()}

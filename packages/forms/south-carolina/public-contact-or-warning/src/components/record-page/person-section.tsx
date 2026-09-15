@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { PersonSectionModel } from "../../models/record-page/person-section";
 import { IPublicContactOrWarningService } from "../../services";
@@ -9,12 +8,10 @@ import { IPublicContactOrWarningService } from "../../services";
 interface IPersonSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<PersonSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the person section (the person contacted) of the public contact/warning record. */
-export const PersonSection = ({ binding, valueListController }: IPersonSectionProps): React.JSX.Element => {
+export const PersonSection = ({ binding }: IPersonSectionProps): React.JSX.Element => {
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
 
@@ -61,8 +58,6 @@ export const PersonSection = ({ binding, valueListController }: IPersonSectionPr
                 <FFieldControl borderEdges={["top"]} label={licensedState.label} labelFor={licensedState.id} width={118}>
                     <FFieldSelect
                         id={licensedState.id}
-                        cacheKey={ValueListId.state}
-                        controller={valueListController}
                         disabled={!licensedState.getIsEnabled()}
                         format="valueOnly"
                         invalid={licensedState.getHasError()}

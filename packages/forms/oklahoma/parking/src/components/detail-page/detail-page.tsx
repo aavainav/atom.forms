@@ -23,7 +23,6 @@ interface IDetailPageProps {
 /** Defines the detail page of the Oklahoma City parking violation form. */
 export default function DetailPage({ controllers, binding, isReadOnly }: IDetailPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
     const detailPage = binding.get();
@@ -34,14 +33,14 @@ export default function DetailPage({ controllers, binding, isReadOnly }: IDetail
                 <FLabel fontSize="5" textAlignment="center">Parking Citation Number</FLabel>
             </div>
 
-            <RecordSection binding={binding.getSection(detailPage.recordSection)} valueListController={valueListController} />
+            <RecordSection binding={binding.getSection(detailPage.recordSection)} />
 
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={detailPage.getDropzone(DetailPageOwnerDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okParkingService.applyOwnerDropzone(page, dropzone))}
             >
-                <RegisteredOwnerSection binding={binding.getSection(detailPage.registeredOwnerSection)} valueListController={valueListController} />
+                <RegisteredOwnerSection binding={binding.getSection(detailPage.registeredOwnerSection)} />
             </FDropzone>
 
             <VehicleDetailSection binding={binding.getSection(detailPage.vehicleDetailSection)} />

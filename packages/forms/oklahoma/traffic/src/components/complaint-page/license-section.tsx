@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { LicenseSectionModel } from "../../models/complaint-page/license-section";
 import { IOKTrafficService } from "../../services";
@@ -10,12 +9,10 @@ import { SelectBox, TextBox } from "../fields";
 interface ILicenseSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<LicenseSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the driver license section of the Oklahoma City traffic citation form's complaint page. */
-export const LicenseSection = ({ binding, valueListController }: ILicenseSectionProps): React.JSX.Element => {
+export const LicenseSection = ({ binding }: ILicenseSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -36,8 +33,6 @@ export const LicenseSection = ({ binding, valueListController }: ILicenseSection
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <SelectBox
-                    cacheKey={ValueListId.state}
-                    controller={valueListController}
                     field={state}
                     load={loadStateOptions}
                     format="valueOnly"

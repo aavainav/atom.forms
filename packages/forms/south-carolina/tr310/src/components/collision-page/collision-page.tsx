@@ -27,24 +27,23 @@ interface ICollisionPageProps {
 
 /** Defines the collision page of the TR-310, the one page describing the collision itself. */
 export default function CollisionPage({ controllers, binding }: ICollisionPageProps): React.JSX.Element {
-    const valueListController = controllers.getValueListController();
     const page = binding.get();
 
     return (
         <>
             <HeaderSection binding={binding.getSection(page.headerSection)} />
-            <CollisionSection binding={binding.getSection(page.collisionSection)} valueListController={valueListController} />
+            <CollisionSection binding={binding.getSection(page.collisionSection)} />
             <RouteSection binding={binding.getSection(page.routeSection)} />
             <BaseIntersectionSection binding={binding.getSection(page.baseIntersectionSection)} />
             <SecondIntersectionSection binding={binding.getSection(page.secondIntersectionSection)} />
             <CoordinatesSection binding={binding.getSection(page.coordinatesSection)} />
-            <TrafficwaySection binding={binding.getSection(page.trafficwaySection)} valueListController={valueListController} />
-            <BarrierSection binding={binding.getSection(page.barrierSection)} valueListController={valueListController} />
-            <ConditionsSection binding={binding.getSection(page.conditionsSection)} valueListController={valueListController} />
-            <HarmfulEventSection binding={binding.getSection(page.harmfulEventSection)} valueListController={valueListController} />
-            <JunctionSection binding={binding.getSection(page.junctionSection)} valueListController={valueListController} />
-            <WorkZoneSection binding={binding.getSection(page.workZoneSection)} valueListController={valueListController} />
-            <WitnessSection binding={binding.getSection(page.witnessSection)} valueListController={valueListController} />
+            <TrafficwaySection binding={binding.getSection(page.trafficwaySection)} />
+            <BarrierSection binding={binding.getSection(page.barrierSection)} />
+            <ConditionsSection binding={binding.getSection(page.conditionsSection)} />
+            <HarmfulEventSection binding={binding.getSection(page.harmfulEventSection)} />
+            <JunctionSection binding={binding.getSection(page.junctionSection)} />
+            <WorkZoneSection binding={binding.getSection(page.workZoneSection)} />
+            <WitnessSection binding={binding.getSection(page.witnessSection)} />
             <CollisionOfficerSection binding={binding.getSection(page.collisionOfficerSection)} />
         </>
     );

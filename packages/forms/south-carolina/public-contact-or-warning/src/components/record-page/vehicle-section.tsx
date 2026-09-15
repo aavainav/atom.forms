@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FBorder, FFieldCheckbox, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection, setOptionWithDependents } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { IOptionValue, ISectionBinding, FBorder, FFieldCheckbox, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection, setOptionWithDependents } from "@forms/core";
 
 import { VehicleSectionModel } from "../../models/record-page/vehicle-section";
 import { IPublicContactOrWarningService } from "../../services";
@@ -9,12 +8,10 @@ import { IPublicContactOrWarningService } from "../../services";
 interface IVehicleSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<VehicleSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the vehicle section of the public contact/warning record. */
-export const VehicleSection = ({ binding, valueListController }: IVehicleSectionProps): React.JSX.Element => {
+export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Element => {
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
 
@@ -56,8 +53,6 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                 <FFieldControl borderEdges={["left", "top"]} label={state.label} labelFor={state.id} width={85}>
                     <FFieldSelect
                         id={state.id}
-                        cacheKey={ValueListId.state}
-                        controller={valueListController}
                         disabled={!state.getIsEnabled()}
                         format="valueOnly"
                         invalid={state.getHasError()}
@@ -70,8 +65,6 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                 <FFieldControl borderEdges={["left", "top"]} label={make.label} labelFor={make.id} width={150}>
                     <FFieldSelect
                         id={make.id}
-                        cacheKey={ValueListId.vehicleMake}
-                        controller={valueListController}
                         disabled={!make.getIsEnabled()}
                         format="valueOnly"
                         invalid={make.getHasError()}
@@ -105,8 +98,6 @@ export const VehicleSection = ({ binding, valueListController }: IVehicleSection
                 <FFieldControl borderEdges={["top"]} label={model.label} labelFor={model.id} width={588}>
                     <FFieldSelect
                         id={model.id}
-                        cacheKey={ValueListId.vehicleModel}
-                        controller={valueListController}
                         // a model only means anything underneath a make, so the field stays shut until one is
                         // chosen - which also keeps the model list from being fetched at all until then
                         disabled={!makeCode || !model.getIsEnabled()}

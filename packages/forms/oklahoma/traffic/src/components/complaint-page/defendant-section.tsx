@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { DefendantSectionModel } from "../../models/complaint-page/defendant-section";
 import { IOKTrafficService } from "../../services";
@@ -10,12 +9,10 @@ import { SelectBox, TextBox } from "../fields";
 interface IDefendantSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<DefendantSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the defendant section of the Oklahoma City traffic citation form's complaint page. */
-export const DefendantSection = ({ binding, valueListController }: IDefendantSectionProps): React.JSX.Element => {
+export const DefendantSection = ({ binding }: IDefendantSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -42,8 +39,6 @@ export const DefendantSection = ({ binding, valueListController }: IDefendantSec
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={city} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} /></div>
                 <SelectBox
-                    cacheKey={ValueListId.state}
-                    controller={valueListController}
                     field={state}
                     load={loadStateOptions}
                     format="valueOnly"

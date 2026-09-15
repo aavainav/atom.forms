@@ -30,29 +30,28 @@ interface IPersonPageProps {
 /** Defines one person page of the TR-310, recording a driver or a non-motorist and the passengers riding with them. */
 export default function PersonPage({ controllers, binding, isReadOnly }: IPersonPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const tr310Service = useService<ITR310Service>(ITR310Service);
     const page = binding.get();
 
     return (
         <>
-            <PersonHeaderSection binding={binding.getSection(page.personHeaderSection)} valueListController={valueListController} />
+            <PersonHeaderSection binding={binding.getSection(page.personHeaderSection)} />
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(PersonPagePersonDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((current) => tr310Service.applyPersonDropzone(current, dropzone))}
             >
-                <PersonSection binding={binding.getSection(page.personSection)} valueListController={valueListController} />
+                <PersonSection binding={binding.getSection(page.personSection)} />
             </FDropzone>
-            <DriverLicenseSection binding={binding.getSection(page.driverLicenseSection)} valueListController={valueListController} />
-            <DriverActionsSection binding={binding.getSection(page.driverActionsSection)} valueListController={valueListController} />
-            <OccupantSection binding={binding.getSection(page.occupantSection)} valueListController={valueListController} />
-            <NonMotoristSection binding={binding.getSection(page.nonMotoristSection)} valueListController={valueListController} />
-            <InjurySection binding={binding.getSection(page.injurySection)} valueListController={valueListController} />
-            <SafetyEquipmentSection binding={binding.getSection(page.safetyEquipmentSection)} valueListController={valueListController} />
-            <AlcoholDrugsSection binding={binding.getSection(page.alcoholDrugsSection)} valueListController={valueListController} />
-            <PassengersSection binding={binding.getSection(page.passengersSection)} valueListController={valueListController} />
+            <DriverLicenseSection binding={binding.getSection(page.driverLicenseSection)} />
+            <DriverActionsSection binding={binding.getSection(page.driverActionsSection)} />
+            <OccupantSection binding={binding.getSection(page.occupantSection)} />
+            <NonMotoristSection binding={binding.getSection(page.nonMotoristSection)} />
+            <InjurySection binding={binding.getSection(page.injurySection)} />
+            <SafetyEquipmentSection binding={binding.getSection(page.safetyEquipmentSection)} />
+            <AlcoholDrugsSection binding={binding.getSection(page.alcoholDrugsSection)} />
+            <PassengersSection binding={binding.getSection(page.passengersSection)} />
             <PersonOfficerSection binding={binding.getSection(page.personOfficerSection)} />
         </>
     );

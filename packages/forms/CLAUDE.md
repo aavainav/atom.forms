@@ -81,9 +81,8 @@ in one is a change in all three in the same places.
   live as a top-level `const`/`let`/`Map` in a file, however tempting for something small and closed. It goes behind
   a `@Singleton` service when other packages need to reach it through `@shrub/core` DI (`FormCatalogService`,
   `ViolationService`), or a plain manager class a service owns and delegates to when the state is private to that
-  service (the same shape `ControllerManager` gives a form's controllers, or `IValueListController`'s per-key
-  cache). A pure, stateless helper function is fine as a bare export either way — this is about state, not every
-  function needing a home in a class.
+  service (the same shape `ControllerManager` gives a form's controllers). A pure, stateless helper function is fine
+  as a bare export either way — this is about state, not every function needing a home in a class.
 - **A section declared `{ isShared: true }` holds the same values on every instance of its page.** Every citation
   page repeats once per violation, and the violator, vehicle and officer sections are shared so that only the
   charge differs between pages. A write through a shared section's binding fans out to every page, `addPage` seeds

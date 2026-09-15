@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { FieldDefinition, IOptionValue, ISectionBinding, IValueListController, OptionFieldModel, StringFieldModel, FFieldControl, FFieldSelect, FFormStackPanel, FLabel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { FieldDefinition, IOptionValue, ISectionBinding, OptionFieldModel, StringFieldModel, FFieldControl, FFieldSelect, FFormStackPanel, FLabel, FSection } from "@forms/core";
 
 import { WitnessSectionModel } from "../../models/collision-page/witness-section";
 import { ITR310Service } from "../../services";
@@ -10,8 +9,6 @@ import { TextField } from "../fields";
 interface IWitnessSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<WitnessSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** One of the three rows the section prints, gathered so the row can be rendered once rather than three times. */
@@ -35,7 +32,7 @@ interface IWitnessRow {
  * The form prints a fixed three rows, so they are three numbered groups of fields rather than a collection; the
  * rows are gathered into a shape the row renderer takes so the eleven columns are laid out once.
  */
-export const WitnessSection = ({ binding, valueListController }: IWitnessSectionProps): React.JSX.Element => {
+export const WitnessSection = ({ binding }: IWitnessSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
@@ -76,8 +73,6 @@ export const WitnessSection = ({ binding, valueListController }: IWitnessSection
                         <FFieldControl width={60} label={state.label} labelFor={state.id} borderEdges={["top", "left"]}>
                             <FFieldSelect
                                 id={state.id}
-                                cacheKey={ValueListId.state}
-                                controller={valueListController}
                                 disabled={!state.getIsEnabled()}
                                 format="valueOnly"
                                 invalid={state.getHasError()}

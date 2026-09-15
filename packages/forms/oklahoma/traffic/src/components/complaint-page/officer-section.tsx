@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FBorder, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FBorder, FFormStackPanel, FSection } from "@forms/core";
 
 import { OfficerSectionModel } from "../../models/complaint-page/officer-section";
 import { IOKTrafficService } from "../../services";
@@ -9,12 +9,10 @@ import { TextBox, YesNoBox } from "../fields";
 interface IOfficerSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<OfficerSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the officer section of the Oklahoma City traffic citation form's complaint page. */
-export const OfficerSection = ({ binding, valueListController }: IOfficerSectionProps): React.JSX.Element => {
+export const OfficerSection = ({ binding }: IOfficerSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -43,12 +41,12 @@ export const OfficerSection = ({ binding, valueListController }: IOfficerSection
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={officerName} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.officerName, value)} /></div>
                 <TextBox field={commissionNumber} width={170} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.commissionNumber, value)} />
-                <YesNoBox controller={valueListController} field={bodyWornCamera} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bodyWornCamera, value)} />
+                <YesNoBox field={bodyWornCamera} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bodyWornCamera, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={secondOfficerName} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.secondOfficerName, value)} /></div>
                 <TextBox field={secondCommissionNumber} width={170} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.secondCommissionNumber, value)} />
-                <YesNoBox controller={valueListController} field={secondBodyWornCamera} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.secondBodyWornCamera, value)} />
+                <YesNoBox field={secondBodyWornCamera} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.secondBodyWornCamera, value)} />
             </FFormStackPanel>
             <div className="text-center fw-bold mt-3">
                 <div>Oklahoma City Police Department</div>

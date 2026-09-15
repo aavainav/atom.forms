@@ -31,7 +31,6 @@ interface IUnitPageProps {
 /** Defines one unit page of the TR-310, recording a vehicle involved in the collision and its owner. */
 export default function UnitPage({ controllers, binding, isReadOnly }: IUnitPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
 
     const tr310Service = useService<ITR310Service>(ITR310Service);
     const page = binding.get();
@@ -50,21 +49,21 @@ export default function UnitPage({ controllers, binding, isReadOnly }: IUnitPage
                         .then((resolved) => binding.update((current) => tr310Service.applyVehicleDropzone(current, resolved)));
                 }}
             >
-                <VehicleSection binding={binding.getSection(page.vehicleSection)} valueListController={valueListController} />
+                <VehicleSection binding={binding.getSection(page.vehicleSection)} />
             </FDropzone>
-            <InsuranceSection binding={binding.getSection(page.insuranceSection)} valueListController={valueListController} />
+            <InsuranceSection binding={binding.getSection(page.insuranceSection)} />
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageOwnerDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((current) => tr310Service.applyOwnerDropzone(current, dropzone))}
             >
-                <OwnerSection binding={binding.getSection(page.ownerSection)} valueListController={valueListController} />
+                <OwnerSection binding={binding.getSection(page.ownerSection)} />
             </FDropzone>
-            <TravelSection binding={binding.getSection(page.travelSection)} valueListController={valueListController} />
-            <DamageSection binding={binding.getSection(page.damageSection)} valueListController={valueListController} />
-            <UnitTypeSection binding={binding.getSection(page.unitTypeSection)} valueListController={valueListController} />
-            <EventsSection binding={binding.getSection(page.eventsSection)} valueListController={valueListController} />
-            <RoadwaySection binding={binding.getSection(page.roadwaySection)} valueListController={valueListController} />
+            <TravelSection binding={binding.getSection(page.travelSection)} />
+            <DamageSection binding={binding.getSection(page.damageSection)} />
+            <UnitTypeSection binding={binding.getSection(page.unitTypeSection)} />
+            <EventsSection binding={binding.getSection(page.eventsSection)} />
+            <RoadwaySection binding={binding.getSection(page.roadwaySection)} />
             <ViolationsSection binding={binding.getSection(page.violationsSection)} />
             <UnitOfficerSection binding={binding.getSection(page.unitOfficerSection)} />
         </>

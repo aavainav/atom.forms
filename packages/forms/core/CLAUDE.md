@@ -78,8 +78,6 @@ and re-broadcasts each one's `onChanged` through `onControllerChanged`.
     `addPage` copies the page definition's **shared** sections from the first page onto the new one, field by
     field — not by carrying the section across, since every field's uuid is the DOM id of the input rendered for
     it and pages print together.
-- **`ValueListController`** caches option lists by key. Caches the *promise*, not the result, so concurrent selects
-  share one load; a rejection is evicted so the next request retries.
 - **`DragAndDropController`** relays `onDragStart`/`onDragEnd` between `FDraggableItem` and `FDropzone`. Stateless.
 - **`PrintController`** holds the `IPrintState` (`layout`, `pageNames`, `scale`) of a print in progress, or
   `undefined` when there is none. `FPageCollection` reads it through `usePrintState` and swaps its tab strip for the
@@ -203,8 +201,8 @@ be declared as plain strings by a form module and a name matching a repeating pa
 of it. The watermark is derived once and passed to both branches, so a read-only form is stamped on paper too.
 
 `FFieldSelect` takes `options` as an array **or** a loader `(parentValue?) => Promise<IOptionValue[]>`, plus
-`cacheKey`, `controller` (an `IValueListController`) and `parentValue`. A dependent select is expressed entirely by
-passing the parent's code as `parentValue` — no field carries knowledge of another field.
+`parentValue`. A dependent select is expressed entirely by passing the parent's code as `parentValue` — no field
+carries knowledge of another field.
 
 ## Recipes
 

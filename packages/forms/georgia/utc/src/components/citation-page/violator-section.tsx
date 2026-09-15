@@ -1,22 +1,18 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { ViolatorSectionModel } from "../../models/citation-page/violator-section";
 import { IGAUTCService } from "../../services";
-import { GAUTCValueListId } from "../../value-lists";
 import { NumberBox, SelectBox, TextBox } from "../fields";
 
 interface IViolatorSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<ViolatorSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines Section I (Violator) of the Georgia uniform traffic citation. */
-export const ViolatorSection = ({ binding, valueListController }: IViolatorSectionProps): React.JSX.Element => {
+export const ViolatorSection = ({ binding }: IViolatorSectionProps): React.JSX.Element => {
     const section = binding.get();
     const gaUtcService = useService<IGAUTCService>(IGAUTCService);
 
@@ -52,8 +48,6 @@ export const ViolatorSection = ({ binding, valueListController }: IViolatorSecti
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={licenseClass} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.licenseClass, value)} /></div>
                 <SelectBox
-                    cacheKey={ValueListId.state}
-                    controller={valueListController}
                     field={licenseState}
                     load={loadStateOptions}
                     format="valueOnly"
@@ -74,8 +68,6 @@ export const ViolatorSection = ({ binding, valueListController }: IViolatorSecti
                 <div className="w-100"><TextBox field={middleName} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.middleName, value)} /></div>
                 <TextBox field={race} width={130} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.race, value)} />
                 <SelectBox
-                    cacheKey={GAUTCValueListId.sex}
-                    controller={valueListController}
                     field={sex}
                     load={loadSexOptions}
                     format="valueOnly"
@@ -91,8 +83,6 @@ export const ViolatorSection = ({ binding, valueListController }: IViolatorSecti
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={city} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} /></div>
                 <SelectBox
-                    cacheKey={ValueListId.state}
-                    controller={valueListController}
                     field={state}
                     load={loadStateOptions}
                     format="valueOnly"

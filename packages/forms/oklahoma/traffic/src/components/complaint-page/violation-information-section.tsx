@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { ViolationInformationSectionModel } from "../../models/complaint-page/violation-information-section";
 import { IOKTrafficService } from "../../services";
@@ -9,12 +9,10 @@ import { NumberBox, TextBox, YesNoBox } from "../fields";
 interface IViolationInformationSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<ViolationInformationSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the violation information section of the Oklahoma City traffic citation form's complaint page. */
-export const ViolationInformationSection = ({ binding, valueListController }: IViolationInformationSectionProps): React.JSX.Element => {
+export const ViolationInformationSection = ({ binding }: IViolationInformationSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -34,7 +32,7 @@ export const ViolationInformationSection = ({ binding, valueListController }: IV
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={incidentNumber} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.incidentNumber, value)} /></div>
                 <TextBox field={offenseLevel} width={170} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.offenseLevel, value)} />
-                <YesNoBox controller={valueListController} field={highFatalitySpeed} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.highFatalitySpeed, value)} />
+                <YesNoBox field={highFatalitySpeed} load={loadYesNoOptions} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.highFatalitySpeed, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
                 <NumberBox field={actualSpeed} width={140} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.actualSpeed, value)} />

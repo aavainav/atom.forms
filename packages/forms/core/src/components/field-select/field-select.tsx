@@ -2,7 +2,6 @@ import { createPopper, Instance, Options, Placement } from "@popperjs/core";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FButton } from "../button";
-import { IValueListController } from "../../controllers/value-list-controller";
 import FFieldInput, { IFieldInputComponent } from "../field-input/field-input";
 import { IOptionValue } from "../../models/field";
 
@@ -47,10 +46,6 @@ function isSelected(option: IOptionValue, value: IOptionValue | IOptionValue[] |
 }
 
 interface IFFieldSelectProps {
-    /** Identifies this value list in the `controller`'s cache; caching is only applied when a `controller` is also given. */
-    readonly cacheKey?: string;
-    /** An optional value list controller used to cache the resolved options, so selects sharing a `cacheKey` only load them once. */
-    readonly controller?: IValueListController;
     /** Disables the toggle button, preventing the menu from being opened. Default false. */
     readonly disabled?: boolean;
     /** Controls how the selected option's text is displayed; the dropdown menu always shows the value and description. The default is `"valueAndDescription"`. */
@@ -92,8 +87,6 @@ interface IFFieldSelectProps {
 
 /** A field control for selecting one or more value/description options, bound directly to a field model's value via `value`/`onChange`. */
 export default function FFieldSelect({
-    cacheKey,
-    controller,
     disabled = false,
     format = "valueAndDescription",
     id,
@@ -125,20 +118,10 @@ export default function FFieldSelect({
     const popperRef = useRef<Instance | undefined>(undefined);
     const searchInputRef = useRef<IFieldInputComponent>(null);
 
-    // A list hanging off another field caches under a key carrying the parent's value, so each parent's options
-    // are cached separately and, more importantly, so that choosing a different parent changes the key this
-    // select is bound to.
-    //
-    // The separator is a pipe because a list id may carry a colon - they are namespaced by the form that owns
-    // them - and joining on a character an id can contain would let two different pairs collide on one key. A
-    // pipe cannot appear in either half: ids are hand-written and option values are asserted pipe-free where
-    // they are generated.
-    const resolvedCacheKey = cacheKey !== undefined && parentValue !== undefined ? `${cacheKey}|${parentValue}` : cacheKey;
-
     // the options are not loaded until the menu has been opened once, so a select backed by a large lazily
     // imported value list costs nothing on a form nobody opens it on. The toggle's text is read off `value`
     // rather than looked up here, so a field that already holds a selection still reads correctly beforehand.
-    // The flag is sticky rather than tied to `isOpen` because a later cache key change - a model list whose
+    // The flag is sticky rather than tied to `isOpen` because a later parent value change - a model list whose
     // make has changed - must still reload while the menu is closed.
     useEffect(() => {
         if (!hasOpened) {
@@ -148,11 +131,7 @@ export default function FFieldSelect({
         let isMounted = true;
         setIsLoading(true);
 
-        const loadOptions = Array.isArray(options)
-            ? Promise.resolve(options)
-            : resolvedCacheKey && controller
-                ? controller.getOptions(resolvedCacheKey, () => options(parentValue))
-                : options(parentValue);
+        const loadOptions = Array.isArray(options) ? Promise.resolve(options) : options(parentValue);
 
         loadOptions.then(resolved => {
             if (isMounted) {
@@ -162,7 +141,7 @@ export default function FFieldSelect({
         });
 
         return () => { isMounted = false; };
-    }, [hasOpened, options, resolvedCacheKey, parentValue, controller]);
+    }, [hasOpened, options, parentValue]);
 
     const destroyPopper = useCallback((): void => {
         if (popperRef.current) {

@@ -1,21 +1,18 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FBorder, FFieldCheckbox, FFieldControl, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
+import { IOptionValue, ISectionBinding, FBorder, FFieldCheckbox, FFieldControl, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { CollisionSectionModel } from "../../models/collision-page/collision-section";
 import { ITR310Service } from "../../services";
-import { TR310ValueListId } from "../../value-lists";
 import { CodeBox, TextField } from "../fields";
 
 interface ICollisionSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<CollisionSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the collision section of the TR-310 - when and where the collision happened, and the three questions asked about it. */
-export const CollisionSection = ({ binding, valueListController }: ICollisionSectionProps): React.JSX.Element => {
+export const CollisionSection = ({ binding }: ICollisionSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
@@ -33,8 +30,6 @@ export const CollisionSection = ({ binding, valueListController }: ICollisionSec
                 <FFieldControl width={180} label={county.label} labelFor={county.id} borderEdges={["top", "left"]}>
                     <FFieldSelect
                         id={county.id}
-                        cacheKey={TR310ValueListId.county}
-                        controller={valueListController}
                         disabled={!county.getIsEnabled()}
                         format="descriptionOnly"
                         invalid={county.getHasError()}
@@ -48,8 +43,6 @@ export const CollisionSection = ({ binding, valueListController }: ICollisionSec
             </FFormStackPanel>
             <FFormStackPanel height={44} direction="horizontal">
                 <CodeBox
-                    cacheKey={TR310ValueListId.yesNoUnknown}
-                    controller={valueListController}
                     field={section.getSecondaryCrash()}
                     label={section.getSecondaryCrash().label}
                     load={loadYesNoUnknownOptions}
@@ -58,8 +51,6 @@ export const CollisionSection = ({ binding, valueListController }: ICollisionSec
                     onChange={(value) => binding.setValue(section.secondaryCrash, value)}
                 />
                 <CodeBox
-                    cacheKey={TR310ValueListId.yesNoUnknown}
-                    controller={valueListController}
                     field={section.getPrivatePropertyCollision()}
                     label={section.getPrivatePropertyCollision().label}
                     load={loadYesNoUnknownOptions}
@@ -68,8 +59,6 @@ export const CollisionSection = ({ binding, valueListController }: ICollisionSec
                     onChange={(value) => binding.setValue(section.privatePropertyCollision, value)}
                 />
                 <CodeBox
-                    cacheKey={TR310ValueListId.yesNoUnknown}
-                    controller={valueListController}
                     field={section.getTotalDamageOverThreshold()}
                     label={section.getTotalDamageOverThreshold().label}
                     load={loadYesNoUnknownOptions}

@@ -1,21 +1,18 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { LocationSectionModel } from "../../models/citation-page/location-section";
 import { IGAUTCService } from "../../services";
-import { GAUTCValueListId } from "../../value-lists";
 import { SelectBox, TextBox } from "../fields";
 
 interface ILocationSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<LocationSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines Section III (Location) of the Georgia uniform traffic citation. */
-export const LocationSection = ({ binding, valueListController }: ILocationSectionProps): React.JSX.Element => {
+export const LocationSection = ({ binding }: ILocationSectionProps): React.JSX.Element => {
     const section = binding.get();
     const gaUtcService = useService<IGAUTCService>(IGAUTCService);
 
@@ -31,8 +28,6 @@ export const LocationSection = ({ binding, valueListController }: ILocationSecti
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={city} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} /></div>
                 <SelectBox
-                    cacheKey={GAUTCValueListId.county}
-                    controller={valueListController}
                     field={county}
                     load={loadCountyOptions}
                     width={200}

@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FFormStackPanel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { ISectionBinding, FFormStackPanel, FSection } from "@forms/core";
 
 import { RegisteredOwnerSectionModel } from "../../models/supplement-page/registered-owner-section";
 import { IOKTrafficService } from "../../services";
@@ -10,12 +9,10 @@ import { SelectBox, TextBox, YesNoBox } from "../fields";
 interface IRegisteredOwnerSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<RegisteredOwnerSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the registered owner section of the Oklahoma City traffic citation form's supplement page. */
-export const RegisteredOwnerSection = ({ binding, valueListController }: IRegisteredOwnerSectionProps): React.JSX.Element => {
+export const RegisteredOwnerSection = ({ binding }: IRegisteredOwnerSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
 
@@ -33,7 +30,7 @@ export const RegisteredOwnerSection = ({ binding, valueListController }: IRegist
         <FSection>
             <div className="fw-bold mt-3">Registered Owner</div>
             <FFormStackPanel direction="horizontal">
-                <YesNoBox controller={valueListController} field={sameAsSuspect} load={loadYesNoOptions} width={190} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.sameAsSuspect, value)} />
+                <YesNoBox field={sameAsSuspect} load={loadYesNoOptions} width={190} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.sameAsSuspect, value)} />
                 <div className="w-100"><TextBox field={ownerName} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.ownerName, value)} /></div>
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
@@ -42,8 +39,6 @@ export const RegisteredOwnerSection = ({ binding, valueListController }: IRegist
             <FFormStackPanel direction="horizontal">
                 <div className="w-100"><TextBox field={city} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} /></div>
                 <SelectBox
-                    cacheKey={ValueListId.state}
-                    controller={valueListController}
                     field={state}
                     load={loadStateOptions}
                     format="valueOnly"

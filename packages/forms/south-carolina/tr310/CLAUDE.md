@@ -65,14 +65,11 @@ import (including a type-only one a later edit turns into a value import) silent
 ## The code box pattern
 
 The printed form pairs a numbered box with a legend of the codes it accepts. `CodedField` renders both **from the
-same options**, so the legend cannot drift from what the box will accept, and `useOptions`/`FFieldSelect` share one
-cached load per `cacheKey`. `CodeBox` shows the code alone as the paper form does, while the open menu shows code
-plus description.
+same options**, so the legend cannot drift from what the box will accept. `CodeBox` shows the code alone as the
+paper form does, while the open menu shows code plus description.
 
 ```tsx
 <CodedField
-    cacheKey={TR310ValueListId.lightCondition}
-    controller={valueListController}
     field={section.getLight()}
     load={loadLightConditionOptions}   // useCallback around service.getLightConditionOptions()
     title="Light Condition"

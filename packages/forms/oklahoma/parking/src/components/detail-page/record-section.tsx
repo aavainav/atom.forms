@@ -1,20 +1,17 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { RecordSectionModel } from "../../models/detail-page/record-section";
 import { IOKParkingService } from "../../services";
-import { OKParkingValueListId } from "../../value-lists";
 
 interface IRecordSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<RecordSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the record section of the Oklahoma City parking violation form's detail page. */
-export const RecordSection = ({ binding, valueListController }: IRecordSectionProps): React.JSX.Element => {
+export const RecordSection = ({ binding }: IRecordSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
 
@@ -42,8 +39,6 @@ export const RecordSection = ({ binding, valueListController }: IRecordSectionPr
                 <FFieldControl width={220} label={county.label} labelFor={county.id} borderEdges={["left", "top", "right"]}>
                     <FFieldSelect
                         id={county.id}
-                        cacheKey={OKParkingValueListId.county}
-                        controller={valueListController}
                         disabled={!county.getIsEnabled()}
                         format="descriptionOnly"
                         invalid={county.getHasError()}

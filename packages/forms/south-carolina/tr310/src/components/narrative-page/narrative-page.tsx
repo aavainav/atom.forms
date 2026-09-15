@@ -18,7 +18,6 @@ interface INarrativePageProps {
 
 /** Defines the narrative page of the TR-310, carrying the officer's account, the diagram, and the passengers that did not fit on a person page. */
 export default function NarrativePage({ controllers, binding }: INarrativePageProps): React.JSX.Element {
-    const valueListController = controllers.getValueListController();
     const page = binding.get();
 
     return (
@@ -26,7 +25,7 @@ export default function NarrativePage({ controllers, binding }: INarrativePagePr
             <NarrativeHeaderSection binding={binding.getSection(page.narrativeHeaderSection)} />
             <NarrativeSection binding={binding.getSection(page.narrativeSection)} />
             <DiagramSection binding={binding.getSection(page.diagramSection)} />
-            <AdditionalPassengersSection binding={binding.getSection(page.additionalPassengersSection)} valueListController={valueListController} />
+            <AdditionalPassengersSection binding={binding.getSection(page.additionalPassengersSection)} />
             <NarrativeOfficerSection binding={binding.getSection(page.narrativeOfficerSection)} />
         </>
     );

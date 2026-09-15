@@ -31,29 +31,28 @@ interface IRecordPageProps {
 /** Defines the record page of the public contact/warning form. */
 export default function RecordPage({ controllers, binding, isReadOnly }: IRecordPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
-    const valueListController = controllers.getValueListController();
     
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
     const recordPage = binding.get();
 
     return (
         <>
-            <AgencySection binding={binding.getSection(recordPage.agencySection)} valueListController={valueListController} />
+            <AgencySection binding={binding.getSection(recordPage.agencySection)} />
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPagePersonDropzone)}
                 onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone))}
             >
-                <PersonSection binding={binding.getSection(recordPage.personSection)} valueListController={valueListController} />
+                <PersonSection binding={binding.getSection(recordPage.personSection)} />
             </FDropzone>
 
             <FFormStackPanel direction="horizontal">
-                <PersonRaceSection binding={binding.getSection(recordPage.personSection)} valueListController={valueListController} />
+                <PersonRaceSection binding={binding.getSection(recordPage.personSection)} />
                 <LatitudeLongitudeSection binding={binding.getSection(recordPage.personSection)} />
             </FFormStackPanel>
 
             <RouteSection binding={binding.getSection(recordPage.routeSection)} />
-            <StopSection binding={binding.getSection(recordPage.stopSection)} valueListController={valueListController} />
+            <StopSection binding={binding.getSection(recordPage.stopSection)} />
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPageVehicleDropzone)}
@@ -65,7 +64,7 @@ export default function RecordPage({ controllers, binding, isReadOnly }: IRecord
                         .then((resolved) => binding.update((page) => publicContactOrWarningService.applyVehicleDropzone(page, resolved)));
                 }}
             >
-                <VehicleSection binding={binding.getSection(recordPage.vehicleSection)} valueListController={valueListController} />
+                <VehicleSection binding={binding.getSection(recordPage.vehicleSection)} />
             </FDropzone>
             <OfficerSection binding={binding.getSection(recordPage.officerSection)} />
             <NatureOfContactSection binding={binding.getSection(recordPage.natureOfContactSection)} />

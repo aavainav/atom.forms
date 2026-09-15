@@ -1,20 +1,17 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
 
 import { StopSectionModel } from "../../models/record-page/stop-section";
 import { IPublicContactOrWarningService } from "../../services";
-import { PublicContactOrWarningValueListId } from "../../value-lists";
 
 interface IStopSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<StopSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the stop section (CTY/Date/Time/CAD Call Number) of the public contact/warning record. */
-export const StopSection = ({ binding, valueListController }: IStopSectionProps): React.JSX.Element => {
+export const StopSection = ({ binding }: IStopSectionProps): React.JSX.Element => {
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
 
@@ -31,8 +28,6 @@ export const StopSection = ({ binding, valueListController }: IStopSectionProps)
                 <FFieldControl borderEdges={["top", "bottom"]} label={county.label} labelFor={county.id} width={75}>
                     <FFieldSelect
                         id={county.id}
-                        cacheKey={PublicContactOrWarningValueListId.county}
-                        controller={valueListController}
                         disabled={!county.getIsEnabled()}
                         format="valueOnly"
                         invalid={county.getHasError()}

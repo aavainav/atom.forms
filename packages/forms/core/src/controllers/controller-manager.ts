@@ -4,7 +4,6 @@ import { IController } from "./controller";
 import { DragAndDropController, IDragAndDropController } from "./drag-and-drop-controller";
 import { FormController, IFormController } from "./form-controller";
 import { IPrintController, PrintController } from "./print-controller";
-import { IValueListController, ValueListController } from "./value-list-controller";
 
 import { FormModel } from "../models/form";
 import { RuleCollection } from "../models/validation/rule-collection";
@@ -16,8 +15,7 @@ export const ControllerKey = {
     dragAndDrop: "drag-and-drop",
     form: "form",
     print: "print",
-    rules: "rules",
-    valueList: "value-list"
+    rules: "rules"
 } as const;
 
 /** Describes which controller raised a change through its manager. */
@@ -48,8 +46,6 @@ export interface IControllerManager {
     getPrintController(): IPrintController;
     /** Gets the rules controller, refreshed with the form the form controller currently holds. */
     getRulesController(ruleCollection?: RuleCollection): IRulesController;
-    /** Gets the value list controller for the form. */
-    getValueListController(): IValueListController;
 
     /** Disposes every controller owned by this manager. */
     dispose(): void;
@@ -106,10 +102,6 @@ export class ControllerManager implements IControllerManager {
         controller.ruleCollection = rules;
 
         return controller;
-    }
-
-    public getValueListController(): IValueListController {
-        return this.getController<ValueListController>(ControllerKey.valueList, () => new ValueListController());
     }
 
     public dispose(): void {

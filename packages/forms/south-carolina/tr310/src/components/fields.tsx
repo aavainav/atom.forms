@@ -3,7 +3,6 @@ import {
     FieldModel,
     FControlBorderEdges,
     IOptionValue,
-    IValueListController,
     OptionFieldModel,
     TValueType,
     FBorder,
@@ -18,33 +17,29 @@ import {
 const codeBoxWidth = 44;
 
 /**
- * Loads a value list through the controller's cache, answering with an empty list until it resolves.
+ * Loads a value list, answering with an empty list until it resolves.
  *
  * The legend a box is printed beside is the list itself, so it is rendered from the same options the box chooses
  * from rather than restated as text - one place for the codes, and a legend that cannot drift from what the box
- * will accept. The controller caches by key, so a box and its legend, and two boxes sharing a list, cost one load.
+ * will accept.
  */
-export function useOptions(controller: IValueListController, cacheKey: string, load: () => Promise<Array<IOptionValue>>): Array<IOptionValue> {
+export function useOptions(load: () => Promise<Array<IOptionValue>>): Array<IOptionValue> {
     const [options, setOptions] = useState<Array<IOptionValue>>([]);
 
     useEffect(() => {
         let isCurrent = true;
 
-        controller.getOptions(cacheKey, load).then(
+        load().then(
             resolved => { if (isCurrent) { setOptions(resolved); } },
             () => { /* a list that will not load leaves the legend empty rather than failing the page */ });
 
         return () => { isCurrent = false; };
-    }, [controller, cacheKey, load]);
+    }, [load]);
 
     return options;
 }
 
 interface ICodeBoxProps {
-    /** Identifies the list in the controller's cache; boxes sharing a list load it once. */
-    readonly cacheKey: string;
-    /** Caches the value lists backing the report's option fields, so they are only loaded once per form. */
-    readonly controller: IValueListController;
     /** The option field the box holds. */
     readonly field: OptionFieldModel;
     /** Loads the list's options. */
@@ -67,12 +62,10 @@ interface ICodeBoxProps {
  * The box shows the code alone, as the printed form does, while the menu it opens shows each code with its
  * description so the officer need not read the legend to choose.
  */
-export const CodeBox = ({ cacheKey, controller, disabled, field, load, label, borderEdges, width = codeBoxWidth, onChange }: ICodeBoxProps): React.JSX.Element => (
+export const CodeBox = ({ disabled, field, load, label, borderEdges, width = codeBoxWidth, onChange }: ICodeBoxProps): React.JSX.Element => (
     <FFieldControl width={width} label={label} labelFor={field.id} borderEdges={borderEdges}>
         <FFieldSelect
             id={field.id}
-            cacheKey={cacheKey}
-            controller={controller}
             disabled={disabled || !field.getIsEnabled()}
             format="valueOnly"
             invalid={field.getHasError()}
@@ -115,16 +108,14 @@ interface ICodedFieldProps extends ICodeBoxProps {
 }
 
 /** A code box with its heading and the legend printed beside it, which is how the report presents most of its coded fields. */
-export const CodedField = ({ cacheKey, columns, controller, disabled, field, load, title, borderEdges, width, onChange }: ICodedFieldProps): React.JSX.Element => {
-    const options = useOptions(controller, cacheKey, load);
+export const CodedField = ({ columns, disabled, field, load, title, borderEdges, width, onChange }: ICodedFieldProps): React.JSX.Element => {
+    const options = useOptions(load);
 
     return (
         <FBorder borderEdges={borderEdges}>
             <FLabel fontSize="6" textAlignment="center"><span className="fw-bold">{title}</span></FLabel>
             <FFormStackPanel direction="horizontal">
                 <CodeBox
-                    cacheKey={cacheKey}
-                    controller={controller}
                     disabled={disabled}
                     field={field}
                     load={load}

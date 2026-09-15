@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, IValueListController, FFieldControl, FFieldSelect, FFormStackPanel, FLabel, FSection } from "@forms/core";
-import { ValueListId } from "@forms/value-lists";
+import { IOptionValue, ISectionBinding, FFieldControl, FFieldSelect, FFormStackPanel, FLabel, FSection } from "@forms/core";
 
 import { OwnerSectionModel } from "../../models/unit-page/owner-section";
 import { ITR310Service } from "../../services";
@@ -10,12 +9,10 @@ import { TextField } from "../fields";
 interface IOwnerSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<OwnerSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the registered owner section of the TR-310 unit page. */
-export const OwnerSection = ({ binding, valueListController }: IOwnerSectionProps): React.JSX.Element => {
+export const OwnerSection = ({ binding }: IOwnerSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
@@ -36,8 +33,6 @@ export const OwnerSection = ({ binding, valueListController }: IOwnerSectionProp
                 <FFieldControl width={80} label={state.label} labelFor={state.id} borderEdges={["top", "left"]}>
                     <FFieldSelect
                         id={state.id}
-                        cacheKey={ValueListId.state}
-                        controller={valueListController}
                         disabled={!state.getIsEnabled()}
                         format="valueOnly"
                         invalid={state.getHasError()}

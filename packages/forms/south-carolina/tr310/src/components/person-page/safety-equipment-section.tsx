@@ -1,26 +1,23 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { ISectionBinding, IValueListController, FBorder, FFormStackPanel, FLabel, FSection } from "@forms/core";
+import { ISectionBinding, FBorder, FFormStackPanel, FLabel, FSection } from "@forms/core";
 
 import { SafetyEquipmentSectionModel } from "../../models/person-page/safety-equipment-section";
 import { ITR310Service } from "../../services";
-import { TR310ValueListId } from "../../value-lists";
 import { CodeBox, CodeLegend, useOptions } from "../fields";
 
 interface ISafetyEquipmentSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
     readonly binding: ISectionBinding<SafetyEquipmentSectionModel>;
-    /** Caches the value lists backing this section's option fields, so they are only loaded once per form. */
-    readonly valueListController: IValueListController;
 }
 
 /** Defines the safety equipment section of the TR-310; every box takes the same yes/no/unknown/not-applicable answer, so one legend serves all six. */
-export const SafetyEquipmentSection = ({ binding, valueListController }: ISafetyEquipmentSectionProps): React.JSX.Element => {
+export const SafetyEquipmentSection = ({ binding }: ISafetyEquipmentSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
     const load = useCallback(() => tr310Service.getSafetyEquipmentUseOptions(), [tr310Service]);
-    const options = useOptions(valueListController, TR310ValueListId.safetyEquipmentUse, load);
+    const options = useOptions(load);
 
     const boxes = [
         { field: section.getHelmetUse(), definition: section.helmetUse },
@@ -44,8 +41,6 @@ export const SafetyEquipmentSection = ({ binding, valueListController }: ISafety
                         {row.map(({ field, definition }) => (
                             <CodeBox
                                 key={field.id}
-                                cacheKey={TR310ValueListId.safetyEquipmentUse}
-                                controller={valueListController}
                                 field={field}
                                 label={field.label}
                                 load={load}
