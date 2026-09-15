@@ -4,6 +4,7 @@ import { FormModel, IControllerManager, IFormIdentity, IModalOptions, IReportDat
 import { createService, Singleton } from "@shrub/core";
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
+export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
 
 /**
  * Defines the host's side of a form's data: where the record the form is populated from comes from, and where the
@@ -39,7 +40,7 @@ export interface IReportViewerService {
     /** Gets whether the given form's report data can be extracted, which it can once it carries a mapper. */
     canExtractData: (form: FormModel<any>) => boolean;
     /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
-    canSaveForm: (form: FormModel<any>, dataManager?: IDataManager<any>) => boolean;
+    canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /**
      * Extracts the report data the given form publishes, stamped with the identity the form model carries. The
      * form's own mapper is what does the extracting. This is the data `saveForm` hands to the data manager,
@@ -47,18 +48,18 @@ export interface IReportViewerService {
      */
     extractData: (form: FormModel<any>) => IReportData;
     /** Gets the options the given form offers, in the order they are rendered in the options bar. */
-    getOptions: (form: FormModel<any>, dataManager?: IDataManager<any>) => Array<IReportViewerOption>;
+    getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
      * Resolves the identified form from the catalog, builds it, and populates it with whatever the data manager
      * reads, through the form's own mapper. A manager that reads nothing, or a form with no mapper, simply leaves
      * the form as its constructor built it.
      */
-    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IDataManager<TData>) => Promise<IInitialForm>;
+    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>) => Promise<IInitialForm>;
     /**
      * Extracts report data from the given form and hands it to the data manager, if it can write. The data is
      * returned whether or not it was consumed, so a host that persists the data itself can use this too.
      */
-    saveForm: (form: FormModel<any>, dataManager?: IDataManager<any>) => Promise<IReportData>;
+    saveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Promise<IReportData>;
 }
 
 /** Describes an option offered in the report viewer's options bar, in the order the bar renders them. */
@@ -70,7 +71,7 @@ export interface IReportViewerOption {
     /** The component rendered for the option. Every one of them is loaded lazily, so the bar renders them under a suspense boundary. */
     readonly Component: ComponentType<IReportViewerOptionProps>;
     /** Whether the option is offered for the given form; it is always offered when omitted. */
-    readonly canShow?: (form: FormModel<any>, dataManager?: IDataManager<any>) => boolean;
+    readonly canShow?: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
 }
 
 /**
@@ -100,7 +101,7 @@ export interface IReportViewerOptionProps extends IReportViewerPanelProps {
     /** The name the option is offered under, which it shows as its tooltip. */
     readonly title: string;
     /** The data manager the form was rendered with, if any. Save writes through it. */
-    readonly dataManager?: IDataManager<any>;
+    readonly dataManager?: IReportViewerDataManager<any>;
     /** Opens a modal at the report viewer's root -- never inside the options bar, which is a stacking context. */
     readonly showModal: (options: IModalOptions) => void;
 }
@@ -111,7 +112,7 @@ export const canExtractData = (form: FormModel<any>): boolean => !!form.mapper;
 // saving needs both halves: a mapper to extract the data and somewhere to hand it to. with a mapper and no writer
 // the data would be extracted, dropped, and the report still reported as saved.
 /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
-export const canSaveForm = (form: FormModel<any>, dataManager?: IDataManager<any>): boolean => !!form.mapper && !!dataManager?.write;
+export const canSaveForm = (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean => !!form.mapper && !!dataManager?.write;
 
 @Singleton
 export class ReportViewerService implements IReportViewerService, IReportViewerOptionRegistrationService {
@@ -124,7 +125,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return canExtractData(form);
     }
 
-    canSaveForm(form: FormModel<any>, dataManager?: IDataManager<any>): boolean {
+    canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
         return canSaveForm(form, dataManager);
     }
 
@@ -144,11 +145,11 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
     }
 
     /** Gets the registered options offered for the given form, in the order they were registered. */
-    getOptions(form: FormModel<any>, dataManager?: IDataManager<any>): Array<IReportViewerOption> {
+    getOptions(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): Array<IReportViewerOption> {
         return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(form, dataManager));
     }
 
-    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IDataManager<TData>): Promise<IInitialForm> {
+    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>): Promise<IInitialForm> {
         const catalogItem = await this.formCatalogService.get(identity);
         let form = await new catalogItem.ctor().initialize();
 
@@ -175,7 +176,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         this.options.set(option.id, option);
     }
 
-    async saveForm(form: FormModel<any>, dataManager?: IDataManager<any>): Promise<IReportData> {
+    async saveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): Promise<IReportData> {
         const data = this.extractData(form);
 
         await dataManager?.write?.(data);

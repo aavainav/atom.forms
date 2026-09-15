@@ -10,7 +10,7 @@ import {
     canSaveForm,
     IModalService,
     INotificationService,
-    IReportViewerOptionRegistration,
+    IReportViewerOptionRegistrationService,
     IReportViewerService,
     IThemeService,
     IValidationService,
@@ -44,7 +44,7 @@ export class ReportViewerModule implements IModule {
         // (registerOption) are the same registry
         const reportViewerServiceFactory = new SingletonServiceFactory(ReportViewerService);
         registration.registerSingleton<IReportViewerService, ReportViewerService>(IReportViewerService, reportViewerServiceFactory);
-        registration.registerSingleton<IReportViewerOptionRegistration, ReportViewerService>(IReportViewerOptionRegistration, reportViewerServiceFactory);
+        registration.registerSingleton<IReportViewerOptionRegistrationService, ReportViewerService>(IReportViewerOptionRegistrationService, reportViewerServiceFactory);
 
         registration.register<IThemeService, ThemeService>(IThemeService, ThemeService);
         registration.register<IValidationService, ValidationService>(IValidationService, ValidationService);
@@ -58,7 +58,7 @@ export class ReportViewerModule implements IModule {
         // handed up through this registration -- registering them here is what keeps that direction one-way. each
         // is loaded through `lazy` so a host still only downloads the selector or the print dialog once a form
         // that offers one is opened; the four built here go through the same door for one rule rather than two.
-        const options = services.get<IReportViewerOptionRegistration>(IReportViewerOptionRegistration);
+        const options = services.get<IReportViewerOptionRegistrationService>(IReportViewerOptionRegistrationService);
 
         options.registerOption({ id: "validate", title: "Validate", Component: lazy(() => import("./components/options").then(m => ({ default: m.ValidateOption }))) });
         options.registerOption({

@@ -3,7 +3,7 @@ import { useService } from "@common/react";
 import { IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager } from "@forms/core";
 
-import { IDataManager, IModalService, IReportViewerService } from "../services";
+import { IModalService, IReportViewerDataManager, IReportViewerService } from "../services";
 
 interface IFormViewerOptionsProps {
     /** The catalog item the form was loaded from; printing/violations options resolve against it. */
@@ -11,7 +11,7 @@ interface IFormViewerOptionsProps {
     /** The controllers belonging to the form the options act on. */
     readonly controllers: IControllerManager;
     /** Where the form's data goes when it is saved; the save option is offered only with one. */
-    readonly dataManager?: IDataManager<any>;
+    readonly dataManager?: IReportViewerDataManager<any>;
     /** Reports an option's failure through the report viewer's notifications. */
     readonly onError: (message: string) => void;
 }

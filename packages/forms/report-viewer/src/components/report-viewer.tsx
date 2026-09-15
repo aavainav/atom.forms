@@ -3,7 +3,7 @@ import { useService } from "@common/react";
 import { FAsyncLoader, IFormIdentity, IReportData } from "@forms/core";
 
 import { ReportViewerForm } from "./report-viewer-form";
-import { IDataManager, IInitialForm, IReportViewerService } from "../services";
+import { IInitialForm, IReportViewerDataManager, IReportViewerService } from "../services";
 
 import "@forms/core/theme/_main.scss";
 
@@ -19,7 +19,7 @@ export interface IReportViewerProps<TData extends object = IReportData> {
     /** Which form to render. The catalog resolves it, and answers with its latest version when no version is named. */
     readonly identity: IFormIdentity;
     /** Where the form's data is read from and written back to. A viewer without one renders a blank, unsaveable form. */
-    readonly dataManager?: IDataManager<TData>;
+    readonly dataManager?: IReportViewerDataManager<TData>;
     /** How the form is rendered. */
     readonly settings?: IReportViewerSettings;
 }
