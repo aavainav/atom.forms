@@ -1,4 +1,4 @@
-import { PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 import { DetailPageOwnerDropzone } from "./dropzones/detail-page-owner-dropzone";
 import { NotesSectionModel } from "./notes-section";
@@ -14,18 +14,18 @@ export interface IDetailPageModel extends IDetailPage {
 
 /** Represents the detail page of the parking violation form, carrying the registered owner and the vehicle's description. */
 export class DetailPageModel extends PageModel implements IDetailPageModel {
-    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
+    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(DetailPageModel);
 
-    public readonly recordSection: SectionDefinition<RecordSectionModel> = this.formSchema.recordSection;
-    public readonly registeredOwnerSection: SectionDefinition<RegisteredOwnerSectionModel> = this.formSchema.registeredOwnerSection;
-    public readonly vehicleDetailSection: SectionDefinition<VehicleDetailSectionModel> = this.formSchema.vehicleDetailSection;
-    public readonly notesSection: SectionDefinition<NotesSectionModel> = this.formSchema.notesSection;
+    public readonly recordSection: SectionDefinition<RecordSectionModel> = this.schema.recordSection;
+    public readonly registeredOwnerSection: SectionDefinition<RegisteredOwnerSectionModel> = this.schema.registeredOwnerSection;
+    public readonly vehicleDetailSection: SectionDefinition<VehicleDetailSectionModel> = this.schema.vehicleDetailSection;
+    public readonly notesSection: SectionDefinition<NotesSectionModel> = this.schema.notesSection;
 
     /** Initializes the page and registers its registered owner dropzone. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new DetailPageOwnerDropzone(page, this.formSchema));
+        page = page.setDropzone(new DetailPageOwnerDropzone(page, this.schema));
 
         return page;
     }

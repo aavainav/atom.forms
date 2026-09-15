@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface ICertificationSection extends ISection {
@@ -9,10 +9,10 @@ export interface ICertificationSectionModel extends ICertificationSection {
 
 /** Represents the model for the clerk's certification that the record is a true and correct copy. */
 export class CertificationSectionModel extends SectionModel implements ICertificationSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(CertificationSectionModel);
 
-    public readonly clerkSignature: FieldDefinition<StringFieldModel> = this.formSchema.certificationFields.certificationClerkSignature;
-    public readonly date: FieldDefinition<StringFieldModel> = this.formSchema.certificationFields.certificationDate;
+    public readonly clerkSignature: FieldDefinition<StringFieldModel> = this.schema.certificationFields.certificationClerkSignature;
+    public readonly date: FieldDefinition<StringFieldModel> = this.schema.certificationFields.certificationDate;
 
     public getClerkSignature(): StringFieldModel { return this.get<StringFieldModel>(this.clerkSignature); }
     public getDate(): StringFieldModel { return this.get<StringFieldModel>(this.date); }

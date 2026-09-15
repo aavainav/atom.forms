@@ -1,4 +1,4 @@
-import { IForm, BooleanFieldModel, CitationForm, FieldDefinition, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { BooleanFieldModel, CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "./utc-form-schema";
 import { CitationPageModel } from "./citation-page/citation-page";
 import { CourtPageModel } from "./court-page/court-page";
@@ -45,10 +45,10 @@ export class GAUTCFormModel extends CitationForm implements IGAUTCFormModel {
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
 
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormModel);
 
-    public readonly citationPage: PageDefinition<CitationPageModel> = this.formSchema.citationPage;
-    public readonly courtPage: PageDefinition<CourtPageModel> = this.formSchema.courtPage;
+    public readonly citationPage: PageDefinition<CitationPageModel> = this.schema.citationPage;
+    public readonly courtPage: PageDefinition<CourtPageModel> = this.schema.courtPage;
 
     public async initialize(): Promise<this> {
         // the base stamps the date of the offense and the citation number; the time is this form's own addition
@@ -56,7 +56,7 @@ export class GAUTCFormModel extends CitationForm implements IGAUTCFormModel {
 
         return form
             .setTimeOfViolation()
-            .addRuleCollection(this.formSchema.ruleCollection);
+            .addRuleCollection(this.schema.ruleCollection);
     }
 
     /** Retrieves the single citation page of the form. */
@@ -88,9 +88,9 @@ export class GAUTCFormModel extends CitationForm implements IGAUTCFormModel {
      */
     public setDateOfViolation(): this {
         const now = new Date();
-        const header = this.formSchema.headerFields;
+        const header = this.schema.headerFields;
 
-        return this.updateCitationPageSection(this.formSchema.headerSection, (section) => {
+        return this.updateCitationPageSection(this.schema.headerSection, (section) => {
             let updated = stampText(section, header.headerMonth, abbreviatedMonths[now.getMonth()], false);
             updated = stampText(updated, header.headerDay, twoDigits(now.getDate()), false);
 
@@ -126,11 +126,11 @@ export class GAUTCFormModel extends CitationForm implements IGAUTCFormModel {
      */
     public setTimeOfViolation(): this {
         const now = new Date();
-        const header = this.formSchema.headerFields;
+        const header = this.schema.headerFields;
         const isAfternoon = now.getHours() >= 12;
         const hour = now.getHours() % 12 || 12;
 
-        return this.updateCitationPageSection(this.formSchema.headerSection, (section) => {
+        return this.updateCitationPageSection(this.schema.headerSection, (section) => {
             let updated = stampText(section, header.headerHour, twoDigits(hour), true);
             updated = stampText(updated, header.headerMinute, twoDigits(now.getMinutes()), true);
             updated = stampCheckbox(updated, header.headerAm, !isAfternoon);

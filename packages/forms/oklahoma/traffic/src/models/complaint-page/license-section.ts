@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface ILicenseSection extends ISection {
@@ -14,13 +14,13 @@ export interface ILicenseSectionModel extends ILicenseSection {
  * section's own identity and a field definition cannot shadow it.
  */
 export class LicenseSectionModel extends SectionModel implements ILicenseSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(LicenseSectionModel);
 
-    public readonly identifier: FieldDefinition<StringFieldModel> = this.formSchema.licenseFields.licenseIdentifier;
-    public readonly licenseClass: FieldDefinition<StringFieldModel> = this.formSchema.licenseFields.licenseClass;
-    public readonly endorsements: FieldDefinition<StringFieldModel> = this.formSchema.licenseFields.licenseEndorsements;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.licenseFields.licenseState;
-    public readonly expires: FieldDefinition<StringFieldModel> = this.formSchema.licenseFields.licenseExpires;
+    public readonly identifier: FieldDefinition<StringFieldModel> = this.schema.licenseFields.licenseIdentifier;
+    public readonly licenseClass: FieldDefinition<StringFieldModel> = this.schema.licenseFields.licenseClass;
+    public readonly endorsements: FieldDefinition<StringFieldModel> = this.schema.licenseFields.licenseEndorsements;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.licenseFields.licenseState;
+    public readonly expires: FieldDefinition<StringFieldModel> = this.schema.licenseFields.licenseExpires;
 
     public getEndorsements(): StringFieldModel { return this.get<StringFieldModel>(this.endorsements); }
     public getExpires(): StringFieldModel { return this.get<StringFieldModel>(this.expires); }

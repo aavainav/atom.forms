@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { BooleanFieldModel, FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -16,23 +16,23 @@ export interface ISummonsSectionModel extends ISummonsSection {
  * and the YES/NO of whether a licence was displayed in lieu of bail.
  */
 export class SummonsSectionModel extends SectionModel implements ISummonsSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(SummonsSectionModel);
 
-    public readonly appearanceDay: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsAppearanceDay;
-    public readonly appearanceMonth: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsAppearanceMonth;
-    public readonly appearanceYear: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsAppearanceYear;
-    public readonly hour: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsHour;
-    public readonly minute: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsMinute;
-    public readonly am: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsAm;
-    public readonly pm: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsPm;
-    public readonly courtName: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsCourtName;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsCity;
-    public readonly copy: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsCopy;
-    public readonly jail: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsJail;
-    public readonly licenseDisplayedYes: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsLicenseDisplayedYes;
-    public readonly licenseDisplayedNo: FieldDefinition<BooleanFieldModel> = this.formSchema.summonsFields.summonsLicenseDisplayedNo;
-    public readonly releaseTo: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsReleaseTo;
-    public readonly signature: FieldDefinition<StringFieldModel> = this.formSchema.summonsFields.summonsSignature;
+    public readonly appearanceDay: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsAppearanceDay;
+    public readonly appearanceMonth: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsAppearanceMonth;
+    public readonly appearanceYear: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsAppearanceYear;
+    public readonly hour: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsHour;
+    public readonly minute: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsMinute;
+    public readonly am: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsAm;
+    public readonly pm: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsPm;
+    public readonly courtName: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsCourtName;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsCity;
+    public readonly copy: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsCopy;
+    public readonly jail: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsJail;
+    public readonly licenseDisplayedYes: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsLicenseDisplayedYes;
+    public readonly licenseDisplayedNo: FieldDefinition<BooleanFieldModel> = this.schema.summonsFields.summonsLicenseDisplayedNo;
+    public readonly releaseTo: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsReleaseTo;
+    public readonly signature: FieldDefinition<StringFieldModel> = this.schema.summonsFields.summonsSignature;
 
     /** The copy / jail pair naming how the violator was disposed of. */
     public readonly disposition: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.copy, this.jail];

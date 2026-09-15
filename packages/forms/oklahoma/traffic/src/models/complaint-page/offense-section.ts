@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IOffenseSection extends ISection {
@@ -9,11 +9,11 @@ export interface IOffenseSectionModel extends IOffenseSection {
 
 /** Represents the model for the offense notes and the amount due on the traffic citation form's complaint page. */
 export class OffenseSectionModel extends SectionModel implements IOffenseSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OffenseSectionModel);
 
-    public readonly notes: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseNotes;
-    public readonly dueDate: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseDueDate;
-    public readonly amountDue: FieldDefinition<NumberFieldModel> = this.formSchema.offenseFields.offenseAmountDue;
+    public readonly notes: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseNotes;
+    public readonly dueDate: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseDueDate;
+    public readonly amountDue: FieldDefinition<NumberFieldModel> = this.schema.offenseFields.offenseAmountDue;
 
     public getAmountDue(): NumberFieldModel { return this.get<NumberFieldModel>(this.amountDue); }
     public getDueDate(): StringFieldModel { return this.get<StringFieldModel>(this.dueDate); }

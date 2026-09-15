@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface IVehicleSection extends ISection {
@@ -14,15 +14,15 @@ export interface IVehicleSectionModel extends IVehicleSection {
  * from the names it arrives with to the codes stored here - see `IGAUTCService.resolveVehicleDropzone`.
  */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(VehicleSectionModel);
 
-    public readonly year: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleFields.vehicleYear;
-    public readonly make: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleMake;
-    public readonly model: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleModel;
-    public readonly color: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleColor;
-    public readonly registrationNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleRegistrationNumber;
-    public readonly registrationYear: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleRegistrationYear;
-    public readonly registrationState: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleRegistrationState;
+    public readonly year: FieldDefinition<NumberFieldModel> = this.schema.vehicleFields.vehicleYear;
+    public readonly make: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleMake;
+    public readonly model: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleModel;
+    public readonly color: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleColor;
+    public readonly registrationNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleRegistrationNumber;
+    public readonly registrationYear: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleRegistrationYear;
+    public readonly registrationState: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleRegistrationState;
 
     public getColor(): StringFieldModel { return this.get<StringFieldModel>(this.color); }
     public getMake(): OptionFieldModel { return this.get<OptionFieldModel>(this.make); }

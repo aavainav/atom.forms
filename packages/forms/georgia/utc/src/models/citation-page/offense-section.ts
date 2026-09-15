@@ -1,4 +1,4 @@
-import { ISection, BooleanFieldModel, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { BooleanFieldModel, FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 import { selectExclusive } from "../exclusive-group";
 
@@ -16,16 +16,16 @@ export interface IOffenseSectionModel extends IOffenseSection {
  * the companion case YES/NO pair.
  */
 export class OffenseSectionModel extends SectionModel implements IOffenseSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(OffenseSectionModel);
 
-    public readonly description: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseDescription;
-    public readonly codeSection: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseCodeSection;
-    public readonly stateLaw: FieldDefinition<BooleanFieldModel> = this.formSchema.offenseFields.offenseStateLaw;
-    public readonly localOrdinance: FieldDefinition<BooleanFieldModel> = this.formSchema.offenseFields.offenseLocalOrdinance;
-    public readonly companionCaseYes: FieldDefinition<BooleanFieldModel> = this.formSchema.offenseFields.offenseCompanionCaseYes;
-    public readonly companionCaseNo: FieldDefinition<BooleanFieldModel> = this.formSchema.offenseFields.offenseCompanionCaseNo;
-    public readonly companionCitation: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseCompanionCitation;
-    public readonly remarks: FieldDefinition<StringFieldModel> = this.formSchema.offenseFields.offenseRemarks;
+    public readonly description: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseDescription;
+    public readonly codeSection: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseCodeSection;
+    public readonly stateLaw: FieldDefinition<BooleanFieldModel> = this.schema.offenseFields.offenseStateLaw;
+    public readonly localOrdinance: FieldDefinition<BooleanFieldModel> = this.schema.offenseFields.offenseLocalOrdinance;
+    public readonly companionCaseYes: FieldDefinition<BooleanFieldModel> = this.schema.offenseFields.offenseCompanionCaseYes;
+    public readonly companionCaseNo: FieldDefinition<BooleanFieldModel> = this.schema.offenseFields.offenseCompanionCaseNo;
+    public readonly companionCitation: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseCompanionCitation;
+    public readonly remarks: FieldDefinition<StringFieldModel> = this.schema.offenseFields.offenseRemarks;
 
     /** The companion case YES/NO pair. */
     public readonly companionCase: ReadonlyArray<FieldDefinition<BooleanFieldModel>> = [this.companionCaseYes, this.companionCaseNo];

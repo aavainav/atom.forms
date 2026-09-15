@@ -1,4 +1,4 @@
-import { IForm, CitationForm, FieldDefinition, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "./parking-form-schema";
 import { CitationPageModel } from "./citation-page/citation-page";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
@@ -49,11 +49,11 @@ export class OKParkingFormModel extends CitationForm implements IOKParkingFormMo
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
 
-    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
+    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormModel);
 
-    public readonly citationPage: PageDefinition<CitationPageModel> = this.formSchema.citationPage;
-    public readonly complaintPage: PageDefinition<ComplaintPageModel> = this.formSchema.complaintPage;
-    public readonly detailPage: PageDefinition<DetailPageModel> = this.formSchema.detailPage;
+    public readonly citationPage: PageDefinition<CitationPageModel> = this.schema.citationPage;
+    public readonly complaintPage: PageDefinition<ComplaintPageModel> = this.schema.complaintPage;
+    public readonly detailPage: PageDefinition<DetailPageModel> = this.schema.detailPage;
 
     public async initialize(): Promise<this> {
         // the base stamps the date of violation and the ticket number; the time is this form's own addition
@@ -61,7 +61,7 @@ export class OKParkingFormModel extends CitationForm implements IOKParkingFormMo
 
         return form
             .setTimeOfViolation()
-            .addRuleCollection(this.formSchema.ruleCollection);
+            .addRuleCollection(this.schema.ruleCollection);
     }
 
     /** Retrieves the single citation page of the form. */
@@ -97,8 +97,8 @@ export class OKParkingFormModel extends CitationForm implements IOKParkingFormMo
     /** Returns a form with today's date stamped as the date of violation, and that box closed to editing. */
     public setDateOfViolation(): this {
         return this.setCitationPageValue(
-            this.formSchema.violationSection,
-            this.formSchema.violationFields.violationDate,
+            this.schema.violationSection,
+            this.schema.violationFields.violationDate,
             formatDate(new Date()),
             false);
     }
@@ -126,8 +126,8 @@ export class OKParkingFormModel extends CitationForm implements IOKParkingFormMo
     /** Returns a form with the current time stamped as the time of violation; unlike the date, the officer may correct it. */
     public setTimeOfViolation(): this {
         return this.setCitationPageValue(
-            this.formSchema.violationSection,
-            this.formSchema.violationFields.violationTime,
+            this.schema.violationSection,
+            this.schema.violationFields.violationTime,
             new Date().toLocaleTimeString(),
             true);
     }

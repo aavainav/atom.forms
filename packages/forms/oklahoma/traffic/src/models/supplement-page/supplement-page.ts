@@ -1,4 +1,4 @@
-import { PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 import { NotesSectionModel } from "./notes-section";
 import { RegisteredOwnerSectionModel } from "./registered-owner-section";
@@ -19,12 +19,12 @@ export interface ISupplementPageModel extends ISupplementPage {
  * distinction between its parts.
  */
 export class SupplementPageModel extends PageModel implements ISupplementPageModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(SupplementPageModel);
 
-    public readonly witnessSection: SectionDefinition<WitnessSectionModel> = this.formSchema.witnessSection;
-    public readonly registeredOwnerSection: SectionDefinition<RegisteredOwnerSectionModel> = this.formSchema.registeredOwnerSection;
-    public readonly statusSection: SectionDefinition<StatusSectionModel> = this.formSchema.statusSection;
-    public readonly notesSection: SectionDefinition<NotesSectionModel> = this.formSchema.notesSection;
+    public readonly witnessSection: SectionDefinition<WitnessSectionModel> = this.schema.witnessSection;
+    public readonly registeredOwnerSection: SectionDefinition<RegisteredOwnerSectionModel> = this.schema.registeredOwnerSection;
+    public readonly statusSection: SectionDefinition<StatusSectionModel> = this.schema.statusSection;
+    public readonly notesSection: SectionDefinition<NotesSectionModel> = this.schema.notesSection;
 
     public getNotesSection(): NotesSectionModel { return this.get<NotesSectionModel>(this.notesSection); }
     public getRegisteredOwnerSection(): RegisteredOwnerSectionModel { return this.get<RegisteredOwnerSectionModel>(this.registeredOwnerSection); }

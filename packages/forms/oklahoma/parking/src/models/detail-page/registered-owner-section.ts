@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface IRegisteredOwnerSection extends ISection {
@@ -14,16 +14,16 @@ export interface IRegisteredOwnerSectionModel extends IRegisteredOwnerSection {
  * and none of these fields is required for the citation to be valid.
  */
 export class RegisteredOwnerSectionModel extends SectionModel implements IRegisteredOwnerSectionModel {
-    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
+    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(RegisteredOwnerSectionModel);
 
-    public readonly firstName: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerFirstName;
-    public readonly middleName: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerMiddleName;
-    public readonly lastName: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerLastName;
-    public readonly suffix: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerSuffix;
-    public readonly address: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerAddress;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerCity;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.registeredOwnerFields.ownerState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerZipCode;
+    public readonly firstName: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerFirstName;
+    public readonly middleName: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerMiddleName;
+    public readonly lastName: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerLastName;
+    public readonly suffix: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerSuffix;
+    public readonly address: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerAddress;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerCity;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.registeredOwnerFields.ownerState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerZipCode;
 
     public getAddress(): StringFieldModel { return this.get<StringFieldModel>(this.address); }
     public getCity(): StringFieldModel { return this.get<StringFieldModel>(this.city); }

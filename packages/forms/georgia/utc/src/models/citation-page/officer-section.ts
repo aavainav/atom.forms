@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface IOfficerSection extends ISection {
@@ -14,20 +14,20 @@ export interface IOfficerSectionModel extends IOfficerSection {
  * `name` holding the section's own name and a field definition cannot shadow it.
  */
 export class OfficerSectionModel extends SectionModel implements IOfficerSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(OfficerSectionModel);
 
-    public readonly officerName: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerName;
-    public readonly apdIdNumber: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerApdIdNumber;
-    public readonly assignment: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerAssignment;
-    public readonly courtCode: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerCourtCode;
-    public readonly offDays: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerOffDays;
-    public readonly time: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerTime;
-    public readonly secondOfficerName: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondName;
-    public readonly secondApdIdNumber: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondApdIdNumber;
-    public readonly secondAssignment: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondAssignment;
-    public readonly secondCourtCode: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondCourtCode;
-    public readonly secondOffDays: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondOffDays;
-    public readonly secondTime: FieldDefinition<StringFieldModel> = this.formSchema.officerFields.officerSecondTime;
+    public readonly officerName: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerName;
+    public readonly apdIdNumber: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerApdIdNumber;
+    public readonly assignment: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerAssignment;
+    public readonly courtCode: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerCourtCode;
+    public readonly offDays: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerOffDays;
+    public readonly time: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerTime;
+    public readonly secondOfficerName: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondName;
+    public readonly secondApdIdNumber: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondApdIdNumber;
+    public readonly secondAssignment: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondAssignment;
+    public readonly secondCourtCode: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondCourtCode;
+    public readonly secondOffDays: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondOffDays;
+    public readonly secondTime: FieldDefinition<StringFieldModel> = this.schema.officerFields.officerSecondTime;
 
     public getApdIdNumber(): StringFieldModel { return this.get<StringFieldModel>(this.apdIdNumber); }
     public getAssignment(): StringFieldModel { return this.get<StringFieldModel>(this.assignment); }

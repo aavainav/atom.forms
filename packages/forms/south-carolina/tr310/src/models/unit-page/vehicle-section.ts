@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IVehicleSection extends ISection {
@@ -9,20 +9,20 @@ export interface IVehicleSectionModel extends IVehicleSection {
 
 /** Represents the model for the vehicle the unit page records, from its plate and VIN through to how badly it was damaged. */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
-    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
+    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(VehicleSectionModel);
 
-    public readonly status: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleStatus;
-    public readonly plateNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehiclePlateNumber;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleState;
-    public readonly plateExpires: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehiclePlateExpires;
-    public readonly identificationNumber: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleIdentificationNumber;
-    public readonly damageExtent: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleDamageExtent;
-    public readonly hitAndRun: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleHitAndRun;
-    public readonly year: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleFields.vehicleYear;
-    public readonly make: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleMake;
-    public readonly model: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleModel;
-    public readonly bodyType: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleBodyType;
-    public readonly occupantCount: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleFields.vehicleOccupantCount;
+    public readonly status: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleStatus;
+    public readonly plateNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehiclePlateNumber;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleState;
+    public readonly plateExpires: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehiclePlateExpires;
+    public readonly identificationNumber: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleIdentificationNumber;
+    public readonly damageExtent: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleDamageExtent;
+    public readonly hitAndRun: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleHitAndRun;
+    public readonly year: FieldDefinition<NumberFieldModel> = this.schema.vehicleFields.vehicleYear;
+    public readonly make: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleMake;
+    public readonly model: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleModel;
+    public readonly bodyType: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleBodyType;
+    public readonly occupantCount: FieldDefinition<NumberFieldModel> = this.schema.vehicleFields.vehicleOccupantCount;
 
     public getStatus(): OptionFieldModel { return this.get<OptionFieldModel>(this.status); }
     public getPlateNumber(): StringFieldModel { return this.get<StringFieldModel>(this.plateNumber); }

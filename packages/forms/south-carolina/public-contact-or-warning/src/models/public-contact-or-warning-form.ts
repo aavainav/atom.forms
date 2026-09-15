@@ -27,12 +27,12 @@ export class PublicContactOrWarningFormModel extends FormModel implements IPubli
     public readonly version: string = CATALOG_IDENTITY.version;
     public readonly type: "none" = "none";
 
-    private formSchema: PublicContactOrWarningFormSchema = this.getSchema<PublicContactOrWarningFormSchema>();
-    public readonly recordPage: PageDefinition<RecordPageModel> = this.formSchema.recordPage;
+    private schema: PublicContactOrWarningFormSchema = FormModel.getSchema<PublicContactOrWarningFormSchema>(PublicContactOrWarningFormModel);
+    public readonly recordPage: PageDefinition<RecordPageModel> = this.schema.recordPage;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();
-        return form.addRuleCollection(this.formSchema.ruleCollection);
+        return form.addRuleCollection(this.schema.ruleCollection);
     }
 
     /** Retrieves the collection of record pages for the form. */

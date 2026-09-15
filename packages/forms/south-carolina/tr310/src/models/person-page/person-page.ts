@@ -1,4 +1,4 @@
-import { PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { PersonHeaderSectionModel } from "./person-header-section";
 import { PersonSectionModel } from "./person-section";
@@ -21,25 +21,25 @@ export interface IPersonPageModel extends IPersonPage {
 
 /** Represents one person page of the TR-310. The report carries a page per driver and non-motorist involved, so the form holds as many of these as the collision had people. */
 export class PersonPageModel extends PageModel implements IPersonPageModel {
-    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
+    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(PersonPageModel);
 
-    public readonly personHeaderSection: SectionDefinition<PersonHeaderSectionModel> = this.formSchema.personHeaderSection;
-    public readonly personSection: SectionDefinition<PersonSectionModel> = this.formSchema.personSection;
-    public readonly driverLicenseSection: SectionDefinition<DriverLicenseSectionModel> = this.formSchema.driverLicenseSection;
-    public readonly driverActionsSection: SectionDefinition<DriverActionsSectionModel> = this.formSchema.driverActionsSection;
-    public readonly occupantSection: SectionDefinition<OccupantSectionModel> = this.formSchema.occupantSection;
-    public readonly nonMotoristSection: SectionDefinition<NonMotoristSectionModel> = this.formSchema.nonMotoristSection;
-    public readonly injurySection: SectionDefinition<InjurySectionModel> = this.formSchema.injurySection;
-    public readonly safetyEquipmentSection: SectionDefinition<SafetyEquipmentSectionModel> = this.formSchema.safetyEquipmentSection;
-    public readonly alcoholDrugsSection: SectionDefinition<AlcoholDrugsSectionModel> = this.formSchema.alcoholDrugsSection;
-    public readonly passengersSection: SectionDefinition<PassengersSectionModel> = this.formSchema.passengersSection;
-    public readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel> = this.formSchema.personOfficerSection;
+    public readonly personHeaderSection: SectionDefinition<PersonHeaderSectionModel> = this.schema.personHeaderSection;
+    public readonly personSection: SectionDefinition<PersonSectionModel> = this.schema.personSection;
+    public readonly driverLicenseSection: SectionDefinition<DriverLicenseSectionModel> = this.schema.driverLicenseSection;
+    public readonly driverActionsSection: SectionDefinition<DriverActionsSectionModel> = this.schema.driverActionsSection;
+    public readonly occupantSection: SectionDefinition<OccupantSectionModel> = this.schema.occupantSection;
+    public readonly nonMotoristSection: SectionDefinition<NonMotoristSectionModel> = this.schema.nonMotoristSection;
+    public readonly injurySection: SectionDefinition<InjurySectionModel> = this.schema.injurySection;
+    public readonly safetyEquipmentSection: SectionDefinition<SafetyEquipmentSectionModel> = this.schema.safetyEquipmentSection;
+    public readonly alcoholDrugsSection: SectionDefinition<AlcoholDrugsSectionModel> = this.schema.alcoholDrugsSection;
+    public readonly passengersSection: SectionDefinition<PassengersSectionModel> = this.schema.passengersSection;
+    public readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel> = this.schema.personOfficerSection;
 
     /** Initializes the page and registers its dropzone. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new PersonPagePersonDropzone(page, this.formSchema));
+        page = page.setDropzone(new PersonPagePersonDropzone(page, this.schema));
 
         return page;
     }

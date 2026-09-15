@@ -1,4 +1,4 @@
-import { PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { HeaderSectionModel } from "./header-section";
 import { CollisionSectionModel } from "./collision-section";
@@ -23,22 +23,22 @@ export interface ICollisionPageModel extends ICollisionPage {
 
 /** Represents the collision page of the TR-310, the one page describing the collision itself rather than a person or a unit. */
 export class CollisionPageModel extends PageModel implements ICollisionPageModel {
-    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
+    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(CollisionPageModel);
 
-    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.formSchema.headerSection;
-    public readonly collisionSection: SectionDefinition<CollisionSectionModel> = this.formSchema.collisionSection;
-    public readonly routeSection: SectionDefinition<RouteSectionModel> = this.formSchema.routeSection;
-    public readonly baseIntersectionSection: SectionDefinition<BaseIntersectionSectionModel> = this.formSchema.baseIntersectionSection;
-    public readonly secondIntersectionSection: SectionDefinition<SecondIntersectionSectionModel> = this.formSchema.secondIntersectionSection;
-    public readonly coordinatesSection: SectionDefinition<CoordinatesSectionModel> = this.formSchema.coordinatesSection;
-    public readonly trafficwaySection: SectionDefinition<TrafficwaySectionModel> = this.formSchema.trafficwaySection;
-    public readonly barrierSection: SectionDefinition<BarrierSectionModel> = this.formSchema.barrierSection;
-    public readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = this.formSchema.conditionsSection;
-    public readonly harmfulEventSection: SectionDefinition<HarmfulEventSectionModel> = this.formSchema.harmfulEventSection;
-    public readonly junctionSection: SectionDefinition<JunctionSectionModel> = this.formSchema.junctionSection;
-    public readonly workZoneSection: SectionDefinition<WorkZoneSectionModel> = this.formSchema.workZoneSection;
-    public readonly witnessSection: SectionDefinition<WitnessSectionModel> = this.formSchema.witnessSection;
-    public readonly collisionOfficerSection: SectionDefinition<CollisionOfficerSectionModel> = this.formSchema.collisionOfficerSection;
+    public readonly headerSection: SectionDefinition<HeaderSectionModel> = this.schema.headerSection;
+    public readonly collisionSection: SectionDefinition<CollisionSectionModel> = this.schema.collisionSection;
+    public readonly routeSection: SectionDefinition<RouteSectionModel> = this.schema.routeSection;
+    public readonly baseIntersectionSection: SectionDefinition<BaseIntersectionSectionModel> = this.schema.baseIntersectionSection;
+    public readonly secondIntersectionSection: SectionDefinition<SecondIntersectionSectionModel> = this.schema.secondIntersectionSection;
+    public readonly coordinatesSection: SectionDefinition<CoordinatesSectionModel> = this.schema.coordinatesSection;
+    public readonly trafficwaySection: SectionDefinition<TrafficwaySectionModel> = this.schema.trafficwaySection;
+    public readonly barrierSection: SectionDefinition<BarrierSectionModel> = this.schema.barrierSection;
+    public readonly conditionsSection: SectionDefinition<ConditionsSectionModel> = this.schema.conditionsSection;
+    public readonly harmfulEventSection: SectionDefinition<HarmfulEventSectionModel> = this.schema.harmfulEventSection;
+    public readonly junctionSection: SectionDefinition<JunctionSectionModel> = this.schema.junctionSection;
+    public readonly workZoneSection: SectionDefinition<WorkZoneSectionModel> = this.schema.workZoneSection;
+    public readonly witnessSection: SectionDefinition<WitnessSectionModel> = this.schema.witnessSection;
+    public readonly collisionOfficerSection: SectionDefinition<CollisionOfficerSectionModel> = this.schema.collisionOfficerSection;
 
     public getHeaderSection(): HeaderSectionModel { return this.get<HeaderSectionModel>(this.headerSection); }
     public getCollisionSection(): CollisionSectionModel { return this.get<CollisionSectionModel>(this.collisionSection); }

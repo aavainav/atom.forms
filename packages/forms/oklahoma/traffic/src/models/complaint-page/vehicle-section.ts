@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IVehicleSection extends ISection {
@@ -14,19 +14,19 @@ export interface IVehicleSectionModel extends IVehicleSection {
  * here, which is what lets a change of make clear the model in the same update.
  */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(VehicleSectionModel);
 
-    public readonly year: FieldDefinition<NumberFieldModel> = this.formSchema.vehicleFields.vehicleYear;
-    public readonly make: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleMake;
-    public readonly model: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleModel;
-    public readonly style: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleStyle;
-    public readonly color: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleColor;
-    public readonly vin: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleVin;
-    public readonly tag: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleTag;
-    public readonly tagState: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleTagState;
-    public readonly registrationExpires: FieldDefinition<StringFieldModel> = this.formSchema.vehicleFields.vehicleRegistrationExpires;
-    public readonly commercialVehicle: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleCommercialVehicle;
-    public readonly hazardousMaterials: FieldDefinition<OptionFieldModel> = this.formSchema.vehicleFields.vehicleHazardousMaterials;
+    public readonly year: FieldDefinition<NumberFieldModel> = this.schema.vehicleFields.vehicleYear;
+    public readonly make: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleMake;
+    public readonly model: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleModel;
+    public readonly style: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleStyle;
+    public readonly color: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleColor;
+    public readonly vin: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleVin;
+    public readonly tag: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleTag;
+    public readonly tagState: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleTagState;
+    public readonly registrationExpires: FieldDefinition<StringFieldModel> = this.schema.vehicleFields.vehicleRegistrationExpires;
+    public readonly commercialVehicle: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleCommercialVehicle;
+    public readonly hazardousMaterials: FieldDefinition<OptionFieldModel> = this.schema.vehicleFields.vehicleHazardousMaterials;
 
     public getColor(): StringFieldModel { return this.get<StringFieldModel>(this.color); }
     public getCommercialVehicle(): OptionFieldModel { return this.get<OptionFieldModel>(this.commercialVehicle); }

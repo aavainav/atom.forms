@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IRegisteredOwnerSection extends ISection {
@@ -15,14 +15,14 @@ export interface IRegisteredOwnerSectionModel extends IRegisteredOwnerSection {
  * empty, and the defendant on page one is the owner.
  */
 export class RegisteredOwnerSectionModel extends SectionModel implements IRegisteredOwnerSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(RegisteredOwnerSectionModel);
 
-    public readonly sameAsSuspect: FieldDefinition<OptionFieldModel> = this.formSchema.registeredOwnerFields.ownerSameAsSuspect;
-    public readonly ownerName: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerName;
-    public readonly address: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerAddress;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerCity;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.registeredOwnerFields.ownerState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.registeredOwnerFields.ownerZipCode;
+    public readonly sameAsSuspect: FieldDefinition<OptionFieldModel> = this.schema.registeredOwnerFields.ownerSameAsSuspect;
+    public readonly ownerName: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerName;
+    public readonly address: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerAddress;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerCity;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.registeredOwnerFields.ownerState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.registeredOwnerFields.ownerZipCode;
 
     public getAddress(): StringFieldModel { return this.get<StringFieldModel>(this.address); }
     public getCity(): StringFieldModel { return this.get<StringFieldModel>(this.city); }

@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface IViolatorSection extends ISection {
@@ -15,30 +15,30 @@ export interface IViolatorSectionModel extends IViolatorSection {
  * - each takes a write-in code on paper and Atlanta publishes no code set for them.
  */
 export class ViolatorSectionModel extends SectionModel implements IViolatorSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(ViolatorSectionModel);
 
-    public readonly licenseClass: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorLicenseClass;
-    public readonly licenseState: FieldDefinition<OptionFieldModel> = this.formSchema.violatorFields.violatorLicenseState;
-    public readonly licenseEndorsements: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorLicenseEndorsements;
-    public readonly licenseExpires: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorLicenseExpires;
-    public readonly operatorLicenseNumber: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorOperatorLicenseNumber;
-    public readonly lastName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorLastName;
-    public readonly suffix: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorSuffix;
-    public readonly firstName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorFirstName;
-    public readonly middleName: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorMiddleName;
-    public readonly race: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorRace;
-    public readonly sex: FieldDefinition<OptionFieldModel> = this.formSchema.violatorFields.violatorSex;
-    public readonly address: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorAddress;
-    public readonly apartment: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorApartment;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorCity;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.violatorFields.violatorState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorZipCode;
-    public readonly phone: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorPhone;
-    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorDateOfBirth;
-    public readonly hair: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorHair;
-    public readonly height: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorHeight;
-    public readonly weight: FieldDefinition<NumberFieldModel> = this.formSchema.violatorFields.violatorWeight;
-    public readonly eye: FieldDefinition<StringFieldModel> = this.formSchema.violatorFields.violatorEye;
+    public readonly licenseClass: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorLicenseClass;
+    public readonly licenseState: FieldDefinition<OptionFieldModel> = this.schema.violatorFields.violatorLicenseState;
+    public readonly licenseEndorsements: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorLicenseEndorsements;
+    public readonly licenseExpires: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorLicenseExpires;
+    public readonly operatorLicenseNumber: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorOperatorLicenseNumber;
+    public readonly lastName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorLastName;
+    public readonly suffix: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorSuffix;
+    public readonly firstName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorFirstName;
+    public readonly middleName: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorMiddleName;
+    public readonly race: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorRace;
+    public readonly sex: FieldDefinition<OptionFieldModel> = this.schema.violatorFields.violatorSex;
+    public readonly address: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorAddress;
+    public readonly apartment: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorApartment;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorCity;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.violatorFields.violatorState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorZipCode;
+    public readonly phone: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorPhone;
+    public readonly dateOfBirth: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorDateOfBirth;
+    public readonly hair: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorHair;
+    public readonly height: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorHeight;
+    public readonly weight: FieldDefinition<NumberFieldModel> = this.schema.violatorFields.violatorWeight;
+    public readonly eye: FieldDefinition<StringFieldModel> = this.schema.violatorFields.violatorEye;
 
     public getAddress(): StringFieldModel { return this.get<StringFieldModel>(this.address); }
     public getApartment(): StringFieldModel { return this.get<StringFieldModel>(this.apartment); }

@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 
 export interface INotesSection extends ISection {
@@ -14,10 +14,10 @@ export interface INotesSectionModel extends INotesSection {
  * here; a host that stores photographs against a citation carries them alongside this form's data.
  */
 export class NotesSectionModel extends SectionModel implements INotesSectionModel {
-    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
+    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(NotesSectionModel);
 
-    public readonly officerNotes: FieldDefinition<StringFieldModel> = this.formSchema.notesFields.notesOfficerNotes;
-    public readonly offenseNotes: FieldDefinition<StringFieldModel> = this.formSchema.notesFields.notesOffenseNotes;
+    public readonly officerNotes: FieldDefinition<StringFieldModel> = this.schema.notesFields.notesOfficerNotes;
+    public readonly offenseNotes: FieldDefinition<StringFieldModel> = this.schema.notesFields.notesOffenseNotes;
 
     public getOffenseNotes(): StringFieldModel { return this.get<StringFieldModel>(this.offenseNotes); }
     public getOfficerNotes(): StringFieldModel { return this.get<StringFieldModel>(this.officerNotes); }

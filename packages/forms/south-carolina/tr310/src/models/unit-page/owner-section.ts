@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IOwnerSection extends ISection {
@@ -9,16 +9,16 @@ export interface IOwnerSectionModel extends IOwnerSection {
 
 /** Represents the model for the unit's registered owner. The form prints one name box; the name is held as three fields so a person dropped onto the section lands in the right part of it. */
 export class OwnerSectionModel extends SectionModel implements IOwnerSectionModel {
-    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
+    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(OwnerSectionModel);
 
-    public readonly firstName: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerFirstName;
-    public readonly middleName: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerMiddleName;
-    public readonly lastName: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerLastName;
-    public readonly address: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerAddress;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerCity;
-    public readonly state: FieldDefinition<OptionFieldModel> = this.formSchema.ownerFields.ownerState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerZipCode;
-    public readonly driverLicenseNumber: FieldDefinition<StringFieldModel> = this.formSchema.ownerFields.ownerDriverLicenseNumber;
+    public readonly firstName: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerFirstName;
+    public readonly middleName: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerMiddleName;
+    public readonly lastName: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerLastName;
+    public readonly address: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerAddress;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerCity;
+    public readonly state: FieldDefinition<OptionFieldModel> = this.schema.ownerFields.ownerState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerZipCode;
+    public readonly driverLicenseNumber: FieldDefinition<StringFieldModel> = this.schema.ownerFields.ownerDriverLicenseNumber;
 
     public getFirstName(): StringFieldModel { return this.get<StringFieldModel>(this.firstName); }
     public getMiddleName(): StringFieldModel { return this.get<StringFieldModel>(this.middleName); }

@@ -1,6 +1,7 @@
 import { 
     ISection,
     FieldDefinition,
+    FormModel,
     SectionModel, 
     StringFieldModel } from "@forms/core";
 import { S438FormSchema } from "../s438-form-schema";
@@ -13,15 +14,15 @@ export interface ICourtSectionModel extends ICourtSection {
 
 /** Represents the model for the court section of the s438 form's front page. */
 export class CourtSectionModel extends SectionModel implements ICourtSectionModel {
-    private formSchema: S438FormSchema = this.getSchema<S438FormSchema>();
+    private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(CourtSectionModel);
 
-    public readonly courtName: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtName;
-    public readonly streetAddress: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtStreetAddress;
-    public readonly dateOfTrial: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtDateOfTrial;
-    public readonly timeOfTrial: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtTimeOfTrial;
-    public readonly city: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtCity;
-    public readonly state: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtState;
-    public readonly zipCode: FieldDefinition<StringFieldModel> = this.formSchema.courtFields.courtZipCode;
+    public readonly courtName: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtName;
+    public readonly streetAddress: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtStreetAddress;
+    public readonly dateOfTrial: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtDateOfTrial;
+    public readonly timeOfTrial: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtTimeOfTrial;
+    public readonly city: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtCity;
+    public readonly state: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtState;
+    public readonly zipCode: FieldDefinition<StringFieldModel> = this.schema.courtFields.courtZipCode;
 
     public getCourtName(): StringFieldModel { return this.get<StringFieldModel>(this.courtName); }
     public getStreetAddress(): StringFieldModel { return this.get<StringFieldModel>(this.streetAddress); }

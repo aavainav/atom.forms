@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { GAUTCFormSchema } from "../utc-form-schema";
 
 export interface ICourtActionSection extends ISection {
@@ -15,24 +15,24 @@ export interface ICourtActionSectionModel extends ICourtActionSection {
  * are string fields.
  */
 export class CourtActionSectionModel extends SectionModel implements ICourtActionSectionModel {
-    private formSchema: GAUTCFormSchema = this.getSchema<GAUTCFormSchema>();
+    private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(CourtActionSectionModel);
 
-    public readonly date: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionDate;
-    public readonly complaintFiled: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionComplaintFiled;
-    public readonly bailFixed: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionBailFixed;
-    public readonly cashDeposit: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionCashDeposit;
-    public readonly bailTakenBySignature: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionBailTakenBySignature;
-    public readonly bailGivenBySignature: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionBailGivenBySignature;
-    public readonly fineAmount: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionFineAmount;
-    public readonly clerkSignature: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionClerkSignature;
-    public readonly firstContinuance: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionFirstContinuance;
-    public readonly firstContinuanceReason: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionFirstContinuanceReason;
-    public readonly secondContinuance: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionSecondContinuance;
-    public readonly secondContinuanceReason: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionSecondContinuanceReason;
-    public readonly warrantIssued: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionWarrantIssued;
-    public readonly warrantServed: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionWarrantServed;
-    public readonly waivesTrialByJury: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionWaivesTrialByJury;
-    public readonly arraignmentPlea: FieldDefinition<StringFieldModel> = this.formSchema.courtActionFields.courtActionArraignmentPlea;
+    public readonly date: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionDate;
+    public readonly complaintFiled: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionComplaintFiled;
+    public readonly bailFixed: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionBailFixed;
+    public readonly cashDeposit: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionCashDeposit;
+    public readonly bailTakenBySignature: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionBailTakenBySignature;
+    public readonly bailGivenBySignature: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionBailGivenBySignature;
+    public readonly fineAmount: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionFineAmount;
+    public readonly clerkSignature: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionClerkSignature;
+    public readonly firstContinuance: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionFirstContinuance;
+    public readonly firstContinuanceReason: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionFirstContinuanceReason;
+    public readonly secondContinuance: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionSecondContinuance;
+    public readonly secondContinuanceReason: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionSecondContinuanceReason;
+    public readonly warrantIssued: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionWarrantIssued;
+    public readonly warrantServed: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionWarrantServed;
+    public readonly waivesTrialByJury: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionWaivesTrialByJury;
+    public readonly arraignmentPlea: FieldDefinition<StringFieldModel> = this.schema.courtActionFields.courtActionArraignmentPlea;
 
     public getArraignmentPlea(): StringFieldModel { return this.get<StringFieldModel>(this.arraignmentPlea); }
     public getBailFixed(): StringFieldModel { return this.get<StringFieldModel>(this.bailFixed); }

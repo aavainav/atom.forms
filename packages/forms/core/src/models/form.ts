@@ -214,15 +214,10 @@ export class FormModel extends Entity<PageDefinition> implements IFormModel {
         Entity.registerDefinition(ctor, definition);
     }
 
-    /** Gets the schema registered for the given form model constructor, for a caller that isn't itself an entity and so has no `schema` of its own to read. */
+    /** Gets the schema for the given entity constructor, walking up to the form definition at the root of its tree. */
     public static getSchema<TSchema extends ISchema>(ctor: Function): TSchema {
-        const formDefinition = Entity.resolveDefinition<Definition>(ctor as EntityConstructor<Definition>);
-
-        if (!formDefinition.schema) {
-            throw new Error(`No schema is registered for the form definition '${formDefinition.name}'.`);
-        }
-
-        return formDefinition.schema as TSchema;
+        const definition = Entity.resolveDefinition<Definition>(ctor as EntityConstructor<Definition>);
+        return Entity.resolveSchema(definition) as TSchema;
     }
 
     /** Returns a new form with every field on every page replaced by the result of the given mapping. */

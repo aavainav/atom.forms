@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IViolationsSection extends ISection {
@@ -9,14 +9,14 @@ export interface IViolationsSectionModel extends IViolationsSection {
 
 /** Represents the model for the two violation rows the unit page carries. The form prints a fixed two rows, so they are two numbered groups of fields rather than a collection. */
 export class ViolationsSectionModel extends SectionModel implements IViolationsSectionModel {
-    private formSchema: TR310FormSchema = this.getSchema<TR310FormSchema>();
+    private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(ViolationsSectionModel);
 
-    public readonly oneStatuteNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationOneStatuteNumber;
-    public readonly oneCharge: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationOneCharge;
-    public readonly oneTicketNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationOneTicketNumber;
-    public readonly twoStatuteNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationTwoStatuteNumber;
-    public readonly twoCharge: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationTwoCharge;
-    public readonly twoTicketNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationsFields.violationTwoTicketNumber;
+    public readonly oneStatuteNumber: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationOneStatuteNumber;
+    public readonly oneCharge: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationOneCharge;
+    public readonly oneTicketNumber: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationOneTicketNumber;
+    public readonly twoStatuteNumber: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationTwoStatuteNumber;
+    public readonly twoCharge: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationTwoCharge;
+    public readonly twoTicketNumber: FieldDefinition<StringFieldModel> = this.schema.violationsFields.violationTwoTicketNumber;
 
     public getOneStatuteNumber(): StringFieldModel { return this.get<StringFieldModel>(this.oneStatuteNumber); }
     public getOneCharge(): StringFieldModel { return this.get<StringFieldModel>(this.oneCharge); }

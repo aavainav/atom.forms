@@ -1,4 +1,4 @@
-import { PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionDefinition } from "@forms/core";
 import { OKParkingFormSchema } from "../parking-form-schema";
 import { CitationPageVehicleDropzone } from "./dropzones/citation-page-vehicle-dropzone";
 import { CitationPageViolationDropzone } from "./dropzones/citation-page-violation-dropzone";
@@ -16,20 +16,20 @@ export interface ICitationPageModel extends ICitationPage {
 
 /** Represents the citation page of the parking violation form, the copy left on the vehicle. */
 export class CitationPageModel extends PageModel implements ICitationPageModel {
-    private formSchema: OKParkingFormSchema = this.getSchema<OKParkingFormSchema>();
+    private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(CitationPageModel);
 
-    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.formSchema.violationSection;
-    public readonly paymentSection: SectionDefinition<PaymentSectionModel> = this.formSchema.paymentSection;
-    public readonly courtSection: SectionDefinition<CourtSectionModel> = this.formSchema.courtSection;
-    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.formSchema.vehicleSection;
-    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.formSchema.officerSection;
+    public readonly violationSection: SectionDefinition<ViolationSectionModel> = this.schema.violationSection;
+    public readonly paymentSection: SectionDefinition<PaymentSectionModel> = this.schema.paymentSection;
+    public readonly courtSection: SectionDefinition<CourtSectionModel> = this.schema.courtSection;
+    public readonly vehicleSection: SectionDefinition<VehicleSectionModel> = this.schema.vehicleSection;
+    public readonly officerSection: SectionDefinition<OfficerSectionModel> = this.schema.officerSection;
 
     /** Initializes the page and registers its vehicle dropzone. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
-        page = page.setDropzone(new CitationPageVehicleDropzone(page, this.formSchema));
-        page = page.setDropzone(new CitationPageViolationDropzone(page, this.formSchema));
+        page = page.setDropzone(new CitationPageVehicleDropzone(page, this.schema));
+        page = page.setDropzone(new CitationPageViolationDropzone(page, this.schema));
 
         return page;
     }

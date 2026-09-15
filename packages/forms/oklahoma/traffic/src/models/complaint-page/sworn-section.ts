@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface ISwornSection extends ISection {
@@ -15,11 +15,11 @@ export interface ISwornSectionModel extends ISwornSection {
  * section's own name and a field definition cannot shadow it.
  */
 export class SwornSectionModel extends SectionModel implements ISwornSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(SwornSectionModel);
 
-    public readonly swornName: FieldDefinition<StringFieldModel> = this.formSchema.swornFields.swornName;
-    public readonly date: FieldDefinition<StringFieldModel> = this.formSchema.swornFields.swornDate;
-    public readonly title: FieldDefinition<StringFieldModel> = this.formSchema.swornFields.swornTitle;
+    public readonly swornName: FieldDefinition<StringFieldModel> = this.schema.swornFields.swornName;
+    public readonly date: FieldDefinition<StringFieldModel> = this.schema.swornFields.swornDate;
+    public readonly title: FieldDefinition<StringFieldModel> = this.schema.swornFields.swornTitle;
 
     public getDate(): StringFieldModel { return this.get<StringFieldModel>(this.date); }
     public getSwornName(): StringFieldModel { return this.get<StringFieldModel>(this.swornName); }

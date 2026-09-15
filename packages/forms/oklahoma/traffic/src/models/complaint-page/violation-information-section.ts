@@ -1,4 +1,4 @@
-import { ISection, FieldDefinition, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, ISection, NumberFieldModel, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { OKTrafficFormSchema } from "../traffic-form-schema";
 
 export interface IViolationInformationSection extends ISection {
@@ -14,15 +14,15 @@ export interface IViolationInformationSectionModel extends IViolationInformation
  * code in each, but Oklahoma City's code sets for them are not published with the form.
  */
 export class ViolationInformationSectionModel extends SectionModel implements IViolationInformationSectionModel {
-    private formSchema: OKTrafficFormSchema = this.getSchema<OKTrafficFormSchema>();
+    private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(ViolationInformationSectionModel);
 
-    public readonly incidentNumber: FieldDefinition<StringFieldModel> = this.formSchema.violationInformationFields.violationInformationIncidentNumber;
-    public readonly offenseLevel: FieldDefinition<StringFieldModel> = this.formSchema.violationInformationFields.violationInformationOffenseLevel;
-    public readonly highFatalitySpeed: FieldDefinition<OptionFieldModel> = this.formSchema.violationInformationFields.violationInformationHighFatalitySpeed;
-    public readonly actualSpeed: FieldDefinition<NumberFieldModel> = this.formSchema.violationInformationFields.violationInformationActualSpeed;
-    public readonly speedLimit: FieldDefinition<NumberFieldModel> = this.formSchema.violationInformationFields.violationInformationSpeedLimit;
-    public readonly speedDetection: FieldDefinition<StringFieldModel> = this.formSchema.violationInformationFields.violationInformationSpeedDetection;
-    public readonly lidarDistance: FieldDefinition<StringFieldModel> = this.formSchema.violationInformationFields.violationInformationLidarDistance;
+    public readonly incidentNumber: FieldDefinition<StringFieldModel> = this.schema.violationInformationFields.violationInformationIncidentNumber;
+    public readonly offenseLevel: FieldDefinition<StringFieldModel> = this.schema.violationInformationFields.violationInformationOffenseLevel;
+    public readonly highFatalitySpeed: FieldDefinition<OptionFieldModel> = this.schema.violationInformationFields.violationInformationHighFatalitySpeed;
+    public readonly actualSpeed: FieldDefinition<NumberFieldModel> = this.schema.violationInformationFields.violationInformationActualSpeed;
+    public readonly speedLimit: FieldDefinition<NumberFieldModel> = this.schema.violationInformationFields.violationInformationSpeedLimit;
+    public readonly speedDetection: FieldDefinition<StringFieldModel> = this.schema.violationInformationFields.violationInformationSpeedDetection;
+    public readonly lidarDistance: FieldDefinition<StringFieldModel> = this.schema.violationInformationFields.violationInformationLidarDistance;
 
     public getActualSpeed(): NumberFieldModel { return this.get<NumberFieldModel>(this.actualSpeed); }
     public getHighFatalitySpeed(): OptionFieldModel { return this.get<OptionFieldModel>(this.highFatalitySpeed); }
