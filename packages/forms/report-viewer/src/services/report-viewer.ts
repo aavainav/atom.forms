@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { FormModel, IControllerManager, IFormIdentity, IModalOptions, IReportData } from "@forms/core";
+import { FormModel, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
@@ -19,12 +19,7 @@ export interface IReportViewerDataManager<TData extends object = IReportData> {
 }
 
 /** Defines what a data manager read. */
-export interface IReadDataResult<TData extends object = IReportData> {
-    /** The record, in the shape the target form's own contract publishes. */
-    readonly data: TData;
-    /** Which of `data`'s own fields come back locked rather than editable. */
-    readonly readOnlyFields?: ReadonlyArray<keyof TData & string>;
-}
+export type IReadDataResult<TData extends object = IReportData> = IPopulateData<TData>;
 
 /** Describes a form resolved from the form catalog and ready to render. */
 export interface IInitialForm {
@@ -141,7 +136,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         const result = await dataManager?.read();
 
         if (result) {
-            form = await form.populate(<IReportData>result.data, result.readOnlyFields);
+            form = await form.populate(<IPopulateData<IReportData>>result);
         }
 
         return { catalogItem, form, Component: catalogItem.component };

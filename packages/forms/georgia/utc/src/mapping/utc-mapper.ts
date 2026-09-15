@@ -1,4 +1,4 @@
-import { FormMapper, FormValues } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, ReadOnlyFields } from "@forms/core";
 
 import { CertificationSectionModel } from "../models/citation-page/certification-section";
 import { CitationPageModel } from "../models/citation-page/citation-page";
@@ -81,7 +81,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
      * from the data contract, and a field the data does not mention keeps the value it already holds - which is
      * how the date and time the form stamps on itself survive a partial record.
      */
-    public async populate(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): Promise<GAUTCFormModel> {
+    public async populate(form: GAUTCFormModel, { data, readOnlyFields }: IPopulateData<IGAUTCData>): Promise<GAUTCFormModel> {
         return this.populateCourtPage(await this.populateCitationPage(form, data, readOnlyFields), data, readOnlyFields);
     }
 
@@ -93,7 +93,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "certificationSwornYear", section.getSwornYear());
     }
 
-    private populateCertification(section: CertificationSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): CertificationSectionModel {
+    private populateCertification(section: CertificationSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): CertificationSectionModel {
         let updated = this.write(section, section.officerSignature, data, "certificationOfficerSignature", readOnlyFields);
         updated = this.write(updated, section.signatureAndTitle, data, "certificationSignatureAndTitle", readOnlyFields);
         updated = this.write(updated, section.swornDay, data, "certificationSwornDay", readOnlyFields);
@@ -126,7 +126,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "conditionsWeatherRaining", section.getWeatherRaining());
     }
 
-    private populateConditions(section: ConditionsSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): ConditionsSectionModel {
+    private populateConditions(section: ConditionsSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): ConditionsSectionModel {
         let updated = this.write(section, section.commercialVehicle, data, "conditionsCommercialVehicle", readOnlyFields);
         updated = this.write(updated, section.hazardousMaterial, data, "conditionsHazardousMaterial", readOnlyFields);
         updated = this.write(updated, section.lightingDarkness, data, "conditionsLightingDarkness", readOnlyFields);
@@ -170,7 +170,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "courtActionWarrantServed", section.getWarrantServed());
     }
 
-    private populateCourtAction(section: CourtActionSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): CourtActionSectionModel {
+    private populateCourtAction(section: CourtActionSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): CourtActionSectionModel {
         let updated = this.write(section, section.arraignmentPlea, data, "courtActionArraignmentPlea", readOnlyFields);
         updated = this.write(updated, section.bailFixed, data, "courtActionBailFixed", readOnlyFields);
         updated = this.write(updated, section.bailGivenBySignature, data, "courtActionBailGivenBySignature", readOnlyFields);
@@ -208,7 +208,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "dispositionTrialNotGuilty", section.getTrialNotGuilty());
     }
 
-    private populateDisposition(section: DispositionSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): DispositionSectionModel {
+    private populateDisposition(section: DispositionSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): DispositionSectionModel {
         let updated = this.write(section, section.alcoholDrugAssessment, data, "dispositionAlcoholDrugAssessment", readOnlyFields);
         updated = this.write(updated, section.alcoholDrugRiskReductionSchool, data, "dispositionAlcoholDrugRiskReductionSchool", readOnlyFields);
         updated = this.write(updated, section.bondForfeiture, data, "dispositionBondForfeiture", readOnlyFields);
@@ -261,7 +261,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "headerYear", section.getYear());
     }
 
-    private populateHeader(section: HeaderSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): HeaderSectionModel {
+    private populateHeader(section: HeaderSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): HeaderSectionModel {
         let updated = this.write(section, section.am, data, "headerAm", readOnlyFields);
         updated = this.write(updated, section.cicaNumber, data, "headerCicaNumber", readOnlyFields);
         updated = this.write(updated, section.citationNumber, data, "headerCitationNumber", readOnlyFields);
@@ -283,7 +283,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "judgmentJudgeSignature", section.getJudgeSignature());
     }
 
-    private populateJudgment(section: JudgmentSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): JudgmentSectionModel {
+    private populateJudgment(section: JudgmentSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): JudgmentSectionModel {
         let updated = this.write(section, section.appealBond, data, "judgmentAppealBond", readOnlyFields);
         updated = this.write(updated, section.confinementTerm, data, "judgmentConfinementTerm", readOnlyFields);
         updated = this.write(updated, section.date, data, "judgmentDate", readOnlyFields);
@@ -298,7 +298,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "locationStreet", section.getStreet());
     }
 
-    private populateLocation(section: LocationSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): LocationSectionModel {
+    private populateLocation(section: LocationSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): LocationSectionModel {
         let updated = this.write(section, section.city, data, "locationCity", readOnlyFields);
         updated = this.write(updated, section.county, data, "locationCounty", readOnlyFields);
 
@@ -343,7 +343,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "officerTime", section.getTime());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): OfficerSectionModel {
+    private populateOfficer(section: OfficerSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): OfficerSectionModel {
         let updated = this.write(section, section.apdIdNumber, data, "officerApdIdNumber", readOnlyFields);
         updated = this.write(updated, section.assignment, data, "officerAssignment", readOnlyFields);
         updated = this.write(updated, section.courtCode, data, "officerCourtCode", readOnlyFields);
@@ -374,7 +374,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "pleaYear", section.getYear());
     }
 
-    private populatePlea(section: PleaSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): PleaSectionModel {
+    private populatePlea(section: PleaSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): PleaSectionModel {
         let updated = this.write(section, section.accusedName, data, "pleaAccusedName", readOnlyFields);
         updated = this.write(updated, section.accusedSignature, data, "pleaAccusedSignature", readOnlyFields);
         updated = this.write(updated, section.chargedWith, data, "pleaChargedWith", readOnlyFields);
@@ -401,7 +401,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "statusInjuriesYes", section.getInjuriesYes());
     }
 
-    private populateStatus(section: StatusSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): StatusSectionModel {
+    private populateStatus(section: StatusSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): StatusSectionModel {
         let updated = this.write(section, section.accidentNo, data, "statusAccidentNo", readOnlyFields);
         updated = this.write(updated, section.accidentYes, data, "statusAccidentYes", readOnlyFields);
         updated = this.write(updated, section.cdlNo, data, "statusCdlNo", readOnlyFields);
@@ -431,7 +431,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "summonsSignature", section.getSignature());
     }
 
-    private populateSummons(section: SummonsSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): SummonsSectionModel {
+    private populateSummons(section: SummonsSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): SummonsSectionModel {
         let updated = this.write(section, section.am, data, "summonsAm", readOnlyFields);
         updated = this.write(updated, section.appearanceDay, data, "summonsAppearanceDay", readOnlyFields);
         updated = this.write(updated, section.appearanceMonth, data, "summonsAppearanceMonth", readOnlyFields);
@@ -460,7 +460,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): VehicleSectionModel {
+    private populateVehicle(section: VehicleSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): VehicleSectionModel {
         let updated = this.write(section, section.color, data, "vehicleColor", readOnlyFields);
         updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
         updated = this.write(updated, section.model, data, "vehicleModel", readOnlyFields);
@@ -525,7 +525,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         this.read(data, "violatorZipCode", section.getZipCode());
     }
 
-    private populateViolator(section: ViolatorSectionModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): ViolatorSectionModel {
+    private populateViolator(section: ViolatorSectionModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): ViolatorSectionModel {
         let updated = this.write(section, section.address, data, "violatorAddress", readOnlyFields);
         updated = this.write(updated, section.apartment, data, "violatorApartment", readOnlyFields);
         updated = this.write(updated, section.city, data, "violatorCity", readOnlyFields);
@@ -560,7 +560,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
      * `additionalViolations` are left alone rather than removed, so a record naming fewer charges than the form
      * holds never silently discards a page an officer added.
      */
-    private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): Promise<GAUTCFormModel> {
+    private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): Promise<GAUTCFormModel> {
         const additional = data.additionalViolations ?? [];
 
         let form2 = form;
@@ -599,7 +599,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     }
 
     /** Returns a new form with the data applied to its four court page sections. */
-    private populateCourtPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadonlySet<keyof IGAUTCData>): GAUTCFormModel {
+    private populateCourtPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): GAUTCFormModel {
         const collection = form.getCourtPageCollection();
         const page = collection.getFirstPage<CourtPageModel>();
 

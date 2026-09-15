@@ -13,7 +13,7 @@ import { RuleCollection } from "./validation/rule-collection";
 import { RuleIssueSeverity } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
 
-import type { IFormMapper } from "../mapping/form-mapper";
+import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
 import type { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
@@ -76,7 +76,7 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     /** Gets the rule collection used to validate the form. */
     getRuleCollection(): RuleCollection;
     /** Returns a new form with the given data applied through its own mapper. A form without one returns itself unchanged. */
-    populate(data: IReportData, readOnlyFields?: ReadonlyArray<string>): FormModel<TData> | Promise<FormModel<TData>>;
+    populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>>;
     /** Removes the page at the specified index from the page collection for the specified page definition. */
     removePage(index: number, pageDefinition: PageDefinition): this;
     /** Disables every field on the form, so it renders read-only. */
@@ -206,12 +206,12 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         return this.ruleCollection;
     }
 
-    public populate(data: IReportData, readOnlyFields?: ReadonlyArray<string>): FormModel<TData> | Promise<FormModel<TData>> {
+    public populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>> {
         if (!this.mapper) {
             return this;
         }
 
-        return this.mapper.populate(this, <TData>data, <ReadonlySet<keyof TData> | undefined>(readOnlyFields && new Set(readOnlyFields)));
+        return this.mapper.populate(this, <IPopulateData<TData>>input);
     }
 
     public removePage(index: number, pageDefinition: PageDefinition): this {

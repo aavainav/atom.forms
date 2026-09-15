@@ -66,7 +66,7 @@ export type { IImportableViolation } from "./models/import/importable-violation"
 
 export type { ICrash } from "./mapping/data/crash";
 export type { IReportData } from "./mapping/data/report-data";
-export type { IFormMapper, FormValues } from "./mapping/form-mapper";
+export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./mapping/form-mapper";
 
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";

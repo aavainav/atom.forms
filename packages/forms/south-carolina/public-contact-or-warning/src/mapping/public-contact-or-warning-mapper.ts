@@ -1,4 +1,4 @@
-import { FormMapper, FormValues } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, ReadOnlyFields } from "@forms/core";
 
 import { AgencySectionModel } from "../models/record-page/agency-section";
 import { NatureOfContactSectionModel } from "../models/record-page/nature-of-contact-section";
@@ -45,7 +45,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
      * `readOnlyFields` names which of `data`'s own fields should come back disabled rather than editable - today
      * only the agency section's fields are wired up to honor it (see `populateAgency`).
      */
-    public populate(form: PublicContactOrWarningFormModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PublicContactOrWarningFormModel {
+    public populate(form: PublicContactOrWarningFormModel, { data, readOnlyFields }: IPopulateData<IPublicContactOrWarningData>): PublicContactOrWarningFormModel {
         const collection = form.getRecordPageCollection();
         const page = collection.getFirstPage<RecordPageModel>();
 
@@ -68,7 +68,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "agencyName", section.getAgencyName());
     }
 
-    private populateAgency(section: AgencySectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): AgencySectionModel {
+    private populateAgency(section: AgencySectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): AgencySectionModel {
         let updated = this.write(section, section.city, data, "agencyCity", readOnlyFields);
         updated = this.write(updated, section.county, data, "agencyCounty", readOnlyFields);
 
@@ -88,7 +88,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "personRace", section.getRace());
     }
 
-    private populatePerson(section: PersonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PersonSectionModel {
+    private populatePerson(section: PersonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): PersonSectionModel {
         let updated = this.write(section, section.dateOfBirth, data, "personDateOfBirth", readOnlyFields);
         updated = this.write(updated, section.driverLicenseNumber, data, "personDriverLicenseNumber", readOnlyFields);
         updated = this.write(updated, section.firstName, data, "personFirstName", readOnlyFields);
@@ -107,7 +107,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "routeType", section.getType());
     }
 
-    private populateRoute(section: RouteSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): RouteSectionModel {
+    private populateRoute(section: RouteSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): RouteSectionModel {
         const updated = this.write(section, section.numberOrName, data, "routeNumberOrName", readOnlyFields);
 
         return this.write(updated, section.type, data, "routeType", readOnlyFields);
@@ -120,7 +120,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "stopTime", section.getTime());
     }
 
-    private populateStop(section: StopSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): StopSectionModel {
+    private populateStop(section: StopSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): StopSectionModel {
         let updated = this.write(section, section.cadCallNumber, data, "stopCadCallNumber", readOnlyFields);
         updated = this.write(updated, section.county, data, "stopCounty", readOnlyFields);
         updated = this.write(updated, section.date, data, "stopDate", readOnlyFields);
@@ -137,7 +137,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): VehicleSectionModel {
+    private populateVehicle(section: VehicleSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): VehicleSectionModel {
         let updated = this.write(section, section.cmv, data, "vehicleCmv", readOnlyFields);
         updated = this.write(updated, section.licenseNumber, data, "vehicleLicenseNumber", readOnlyFields);
         updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
@@ -153,7 +153,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "officerScCjaNumber", section.getScCjaNumber());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): OfficerSectionModel {
+    private populateOfficer(section: OfficerSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): OfficerSectionModel {
         let updated = this.write(section, section.issuedBy, data, "officerIssuedBy", readOnlyFields);
         updated = this.write(updated, section.rank, data, "officerRank", readOnlyFields);
 
@@ -185,7 +185,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "natureVehicleLicenseViolation", section.getVehicleLicenseViolation());
     }
 
-    private populateNatureOfContact(section: NatureOfContactSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): NatureOfContactSectionModel {
+    private populateNatureOfContact(section: NatureOfContactSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): NatureOfContactSectionModel {
         let updated = this.write(section, section.changingLanesUnlawfully, data, "natureChangingLanesUnlawfully", readOnlyFields);
         updated = this.write(updated, section.contactOnly, data, "natureContactOnly", readOnlyFields);
         updated = this.write(updated, section.defectiveEquipment, data, "natureDefectiveEquipment", readOnlyFields);
@@ -226,7 +226,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
      * `selectReason` so that data checking none of them stays as it arrived instead of being forced into a
      * selection. Data that checks more than one is the source's error to correct, and validation reports it.
      */
-    private populatePrimaryReason(section: PrimaryReasonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): PrimaryReasonSectionModel {
+    private populatePrimaryReason(section: PrimaryReasonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): PrimaryReasonSectionModel {
         let updated = this.write(section, section.bolo, data, "primaryReasonBolo", readOnlyFields);
         updated = this.write(updated, section.motoristAssistance, data, "primaryReasonMotoristAssistance", readOnlyFields);
         updated = this.write(updated, section.movingViolation, data, "primaryReasonMovingViolation", readOnlyFields);
@@ -258,7 +258,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
      * `selectConsentGiven`, for the same reason the primary reasons are: data that answers neither must stay
      * unanswered rather than be pushed into a "no".
      */
-    private populateSearches(section: SearchesSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadonlySet<keyof IPublicContactOrWarningData>): SearchesSectionModel {
+    private populateSearches(section: SearchesSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): SearchesSectionModel {
         let updated = this.write(section, section.basisOtherSpecify, data, "searchesBasisOtherSpecify", readOnlyFields);
         updated = this.write(updated, section.consentGivenNo, data, "searchesConsentGivenNo", readOnlyFields);
         updated = this.write(updated, section.consentGivenYes, data, "searchesConsentGivenYes", readOnlyFields);

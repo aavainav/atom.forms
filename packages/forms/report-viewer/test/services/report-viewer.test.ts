@@ -72,16 +72,16 @@ describe("ReportViewerService", () => {
             const initialForm = await service.loadForm({ name: "Stub", version: "1.0" }, { read: async () => ({ data: record("Stub") }) });
 
             expect(initialForm.catalogItem.name).toBe("Stub");
-            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ name: "Stub" }), undefined);
+            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ data: expect.objectContaining({ name: "Stub" }) }));
         });
 
-        it("hands the read's readOnlyFields to the mapper as a set", async () => {
+        it("hands the read's readOnlyFields to the mapper", async () => {
             const populate = stubMapper();
             const service = createService(catalogItem);
 
-            await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), readOnlyFields: ["name"] }) });
+            await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), readOnlyFields: { name: true } }) });
 
-            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.anything(), new Set(["name"]));
+            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ readOnlyFields: { name: true } }));
         });
 
         it("builds a form without populating it when there is no data manager", async () => {

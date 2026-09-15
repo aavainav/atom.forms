@@ -1,4 +1,4 @@
-import { FormMapper, FormValues, PageCollection, PageDefinition } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, PageCollection, PageDefinition, ReadOnlyFields } from "@forms/core";
 
 import { TR310FormModel } from "../models/tr310-form";
 import { CollisionPageModel } from "../models/collision-page/collision-page";
@@ -100,7 +100,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
      * beyond the end of either array are left alone rather than removed, so data mentioning fewer units than the
      * form holds never silently discards a page an officer added.
      */
-    public async populate(form: TR310FormModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): Promise<TR310FormModel> {
+    public async populate(form: TR310FormModel, { data, readOnlyFields }: IPopulateData<ITR310Data>): Promise<TR310FormModel> {
         let updated = this.populateCollisionPage(form, data, readOnlyFields);
         updated = this.populateNarrativePage(updated, data, readOnlyFields);
 
@@ -125,7 +125,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
     }
 
     /** Returns the collision page's values as the flat half of the data contract. */
-    private populateCollisionPage(form: TR310FormModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): TR310FormModel {
+    private populateCollisionPage(form: TR310FormModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): TR310FormModel {
         const collection = form.getCollisionPageCollection();
         const page = collection.getFirstPage<CollisionPageModel>();
 
@@ -148,7 +148,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
     }
 
     /** Returns a form with the narrative page's half of the data contract applied. */
-    private populateNarrativePage(form: TR310FormModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): TR310FormModel {
+    private populateNarrativePage(form: TR310FormModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): TR310FormModel {
         const collection = form.getNarrativePageCollection();
         const page = collection.getFirstPage<NarrativePageModel>();
 
@@ -276,7 +276,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "headerVersion", section.getVersion());
     }
 
-    private populateHeader(section: HeaderSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): HeaderSectionModel {
+    private populateHeader(section: HeaderSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): HeaderSectionModel {
         let updated = this.write(section, section.amended, data, "headerAmended", readOnlyFields);
         updated = this.write(updated, section.corrected, data, "headerCorrected", readOnlyFields);
         updated = this.write(updated, section.crashReportNumber, data, "headerCrashReportNumber", readOnlyFields);
@@ -301,7 +301,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "collisionTotalDamageOverThreshold", section.getTotalDamageOverThreshold());
     }
 
-    private populateCollision(section: CollisionSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): CollisionSectionModel {
+    private populateCollision(section: CollisionSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): CollisionSectionModel {
         let updated = this.write(section, section.cityOrTown, data, "collisionCityOrTown", readOnlyFields);
         updated = this.write(updated, section.county, data, "collisionCounty", readOnlyFields);
         updated = this.write(updated, section.date, data, "collisionDate", readOnlyFields);
@@ -326,7 +326,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "routeRailroadId", section.getRailroadId());
     }
 
-    private populateRoute(section: RouteSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): RouteSectionModel {
+    private populateRoute(section: RouteSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): RouteSectionModel {
         let updated = this.write(section, section.auxiliary, data, "routeAuxiliary", readOnlyFields);
         updated = this.write(updated, section.category, data, "routeCategory", readOnlyFields);
         updated = this.write(updated, section.direction, data, "routeDirection", readOnlyFields);
@@ -347,7 +347,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "baseIntersectionRouteNumber", section.getRouteNumber());
     }
 
-    private populateBaseIntersection(section: BaseIntersectionSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): BaseIntersectionSectionModel {
+    private populateBaseIntersection(section: BaseIntersectionSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): BaseIntersectionSectionModel {
         let updated = this.write(section, section.auxiliary, data, "baseIntersectionAuxiliary", readOnlyFields);
         updated = this.write(updated, section.category, data, "baseIntersectionCategory", readOnlyFields);
         updated = this.write(updated, section.routeName, data, "baseIntersectionRouteName", readOnlyFields);
@@ -362,7 +362,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "secondIntersectionRouteNumber", section.getRouteNumber());
     }
 
-    private populateSecondIntersection(section: SecondIntersectionSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): SecondIntersectionSectionModel {
+    private populateSecondIntersection(section: SecondIntersectionSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): SecondIntersectionSectionModel {
         let updated = this.write(section, section.auxiliary, data, "secondIntersectionAuxiliary", readOnlyFields);
         updated = this.write(updated, section.category, data, "secondIntersectionCategory", readOnlyFields);
         updated = this.write(updated, section.routeName, data, "secondIntersectionRouteName", readOnlyFields);
@@ -375,7 +375,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "coordinatesLongitude", section.getLongitude());
     }
 
-    private populateCoordinates(section: CoordinatesSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): CoordinatesSectionModel {
+    private populateCoordinates(section: CoordinatesSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): CoordinatesSectionModel {
         let updated = this.write(section, section.latitude, data, "coordinatesLatitude", readOnlyFields);
 
         return this.write(updated, section.longitude, data, "coordinatesLongitude", readOnlyFields);
@@ -386,7 +386,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "trafficwayDivided", section.getDivided());
     }
 
-    private populateTrafficway(section: TrafficwaySectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): TrafficwaySectionModel {
+    private populateTrafficway(section: TrafficwaySectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): TrafficwaySectionModel {
         let updated = this.write(section, section.direction, data, "trafficwayDirection", readOnlyFields);
 
         return this.write(updated, section.divided, data, "trafficwayDivided", readOnlyFields);
@@ -397,7 +397,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "barrierType", section.getType());
     }
 
-    private populateBarrier(section: BarrierSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): BarrierSectionModel {
+    private populateBarrier(section: BarrierSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): BarrierSectionModel {
         let updated = this.write(section, section.intersectionType, data, "barrierIntersectionType", readOnlyFields);
 
         return this.write(updated, section.type, data, "barrierType", readOnlyFields);
@@ -411,7 +411,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "conditionsWeatherSecond", section.getWeatherSecond());
     }
 
-    private populateConditions(section: ConditionsSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): ConditionsSectionModel {
+    private populateConditions(section: ConditionsSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): ConditionsSectionModel {
         let updated = this.write(section, section.light, data, "conditionsLight", readOnlyFields);
         updated = this.write(updated, section.mannerOfCollision, data, "conditionsMannerOfCollision", readOnlyFields);
         updated = this.write(updated, section.roadSurface, data, "conditionsRoadSurface", readOnlyFields);
@@ -425,7 +425,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "harmfulEventLocation", section.getLocation());
     }
 
-    private populateHarmfulEvent(section: HarmfulEventSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): HarmfulEventSectionModel {
+    private populateHarmfulEvent(section: HarmfulEventSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): HarmfulEventSectionModel {
         let updated = this.write(section, section.first, data, "harmfulEventFirst", readOnlyFields);
 
         return this.write(updated, section.location, data, "harmfulEventLocation", readOnlyFields);
@@ -438,7 +438,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "junctionSchoolBusRelated", section.getSchoolBusRelated());
     }
 
-    private populateJunction(section: JunctionSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): JunctionSectionModel {
+    private populateJunction(section: JunctionSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): JunctionSectionModel {
         let updated = this.write(section, section.contributingFactorFirst, data, "junctionContributingFactorFirst", readOnlyFields);
         updated = this.write(updated, section.contributingFactorSecond, data, "junctionContributingFactorSecond", readOnlyFields);
         updated = this.write(updated, section.relation, data, "junctionRelation", readOnlyFields);
@@ -454,7 +454,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "workZoneWorkerPresent", section.getWorkerPresent());
     }
 
-    private populateWorkZone(section: WorkZoneSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): WorkZoneSectionModel {
+    private populateWorkZone(section: WorkZoneSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): WorkZoneSectionModel {
         let updated = this.write(section, section.crashLocation, data, "workZoneCrashLocation", readOnlyFields);
         updated = this.write(updated, section.lawEnforcement, data, "workZoneLawEnforcement", readOnlyFields);
         updated = this.write(updated, section.related, data, "workZoneRelated", readOnlyFields);
@@ -499,7 +499,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "witnessTwoZipCode", section.getTwoZipCode());
     }
 
-    private populateWitness(section: WitnessSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): WitnessSectionModel {
+    private populateWitness(section: WitnessSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): WitnessSectionModel {
         let updated = this.write(section, section.oneAddress, data, "witnessOneAddress", readOnlyFields);
         updated = this.write(updated, section.oneCity, data, "witnessOneCity", readOnlyFields);
         updated = this.write(updated, section.oneFirstName, data, "witnessOneFirstName", readOnlyFields);
@@ -547,7 +547,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "collisionOfficerReviewerRank", section.getReviewerRank());
     }
 
-    private populateCollisionOfficer(section: CollisionOfficerSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): CollisionOfficerSectionModel {
+    private populateCollisionOfficer(section: CollisionOfficerSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): CollisionOfficerSectionModel {
         let updated = this.write(section, section.cjaNumber, data, "collisionOfficerCjaNumber", readOnlyFields);
         updated = this.write(updated, section.internalAgency, data, "collisionOfficerInternalAgency", readOnlyFields);
         updated = this.write(updated, section.jurisdiction, data, "collisionOfficerJurisdiction", readOnlyFields);
@@ -1080,7 +1080,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "narrativeHeaderInternalAgencyCode", section.getInternalAgencyCode());
     }
 
-    private populateNarrativeHeader(section: NarrativeHeaderSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): NarrativeHeaderSectionModel {
+    private populateNarrativeHeader(section: NarrativeHeaderSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): NarrativeHeaderSectionModel {
         let updated = this.write(section, section.crashReportNumber, data, "narrativeHeaderCrashReportNumber", readOnlyFields);
 
         return this.write(updated, section.internalAgencyCode, data, "narrativeHeaderInternalAgencyCode", readOnlyFields);
@@ -1091,7 +1091,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "narrativeText", section.getText());
     }
 
-    private populateNarrative(section: NarrativeSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): NarrativeSectionModel {
+    private populateNarrative(section: NarrativeSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): NarrativeSectionModel {
         let updated = this.write(section, section.amendedOrCorrectedNotes, data, "narrativeAmendedOrCorrectedNotes", readOnlyFields);
 
         return this.write(updated, section.text, data, "narrativeText", readOnlyFields);
@@ -1101,7 +1101,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "diagramContent", section.getContent());
     }
 
-    private populateDiagram(section: DiagramSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): DiagramSectionModel {
+    private populateDiagram(section: DiagramSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): DiagramSectionModel {
         return this.write(section, section.content, data, "diagramContent", readOnlyFields);
     }
 
@@ -1164,7 +1164,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "additionalPassengerTwoUnitNumber", section.getTwoUnitNumber());
     }
 
-    private populateAdditionalPassengers(section: AdditionalPassengersSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): AdditionalPassengersSectionModel {
+    private populateAdditionalPassengers(section: AdditionalPassengersSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): AdditionalPassengersSectionModel {
         let updated = this.write(section, section.fourAirBagDeployment, data, "additionalPassengerFourAirBagDeployment", readOnlyFields);
         updated = this.write(updated, section.fourDateOfBirth, data, "additionalPassengerFourDateOfBirth", readOnlyFields);
         updated = this.write(updated, section.fourEjection, data, "additionalPassengerFourEjection", readOnlyFields);
@@ -1231,7 +1231,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.read(data, "narrativeOfficerRank", section.getRank());
     }
 
-    private populateNarrativeOfficer(section: NarrativeOfficerSectionModel, data: ITR310Data, readOnlyFields?: ReadonlySet<keyof ITR310Data>): NarrativeOfficerSectionModel {
+    private populateNarrativeOfficer(section: NarrativeOfficerSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): NarrativeOfficerSectionModel {
         let updated = this.write(section, section.cjaNumber, data, "narrativeOfficerCjaNumber", readOnlyFields);
         updated = this.write(updated, section.internalAgency, data, "narrativeOfficerInternalAgency", readOnlyFields);
         updated = this.write(updated, section.officerName, data, "narrativeOfficerName", readOnlyFields);

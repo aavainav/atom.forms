@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { FieldModel, TValueType } from "../../src/models/field";
 import type { PageCollection } from "../../src/models/page-collection";
 import type { SectionModel } from "../../src/models/section";
-import { FormMapper } from "../../src/mapping/form-mapper";
+import { FormMapper, IPopulateData } from "../../src/mapping/form-mapper";
 import {
     chargeFields,
     chargeSection,
@@ -16,7 +16,7 @@ import {
     violatorSection
 } from "../fixtures/citation-form";
 
-/** The slice of the fixture form a mapper would publish. Every key is optional, as an unanswered field is absent. */
+/** The slice of the fixture form a mapper would publish. */
 interface ITestCitationData {
     readonly firstName?: string;
     readonly fineAmount?: number;
@@ -43,7 +43,7 @@ class TestCitationMapper extends FormMapper<TestCitationForm, ITestCitationData>
         return data;
     }
 
-    public populate(form: TestCitationForm, data: ITestCitationData, readOnlyFields?: ReadonlySet<keyof ITestCitationData>): TestCitationForm {
+    public populate(form: TestCitationForm, { data, readOnlyFields }: IPopulateData<ITestCitationData>): TestCitationForm {
         const pageCollection = form.get<PageCollection>(citationPage);
         const page = pageCollection.findPageByIndex(0);
 
@@ -68,30 +68,24 @@ describe("FormMapper", () => {
     });
 
     describe("read", () => {
-        /**
-         * A key is omitted when its field is empty, so an unanswered field reads as missing rather than as its
-         * type's default -- an untouched number field holds 0, which would otherwise be reported as a fine of 0.
-         */
-        it("omits a key whose field is empty", () => {
+        it("includes every field the mapper names, even ones that have not been answered", () => {
             const data = mapper.extract(form);
 
-            expect("firstName" in data).toBe(false);
-            expect("fineAmount" in data).toBe(false);
-            expect("offenseDescription" in data).toBe(false);
+            expect("firstName" in data).toBe(true);
+            expect("fineAmount" in data).toBe(true);
+            expect("offenseDescription" in data).toBe(true);
         });
 
-        it("omits an untouched number field rather than reporting zero", () => {
-            expect(mapper.extract(setFieldValue(form, chargeSection, chargeFields.fineAmount, 0)))
-                .not.toHaveProperty("fineAmount");
+        it("reports an untouched number field as zero rather than omitting it", () => {
+            expect(mapper.extract(form).fineAmount).toBe(0);
         });
 
         it("includes a number field once it holds a non-zero value", () => {
             expect(mapper.extract(setFieldValue(form, chargeSection, chargeFields.fineAmount, 250)).fineAmount).toBe(250);
         });
 
-        /** A boolean field is never empty when true, so a ticked checkbox always reports its state. */
-        it("includes a checkbox once it is ticked, and omits it while it is not", () => {
-            expect(mapper.extract(form)).not.toHaveProperty("isSpeedingRelated");
+        it("reports a checkbox's ticked state either way", () => {
+            expect(mapper.extract(form).isSpeedingRelated).toBe(false);
 
             expect(mapper.extract(setFieldValue(form, chargeSection, chargeFields.isSpeedingRelated, true)).isSpeedingRelated)
                 .toBe(true);
@@ -105,7 +99,7 @@ describe("FormMapper", () => {
 
     describe("write", () => {
         it("applies every value the data carries", () => {
-            const populated = mapper.populate(form, { firstName: "Dana", fineAmount: 250, offenseDescription: "Speeding" });
+            const populated = mapper.populate(form, { data: { firstName: "Dana", fineAmount: 250, offenseDescription: "Speeding" } });
 
             expect(getFieldValue(populated, violatorSection, violatorFields.firstName).getValue()).toBe("Dana");
             expect(getFieldValue(populated, chargeSection, chargeFields.fineAmount).getValue()).toBe(250);
@@ -116,13 +110,13 @@ describe("FormMapper", () => {
         it("leaves a field alone when its value is undefined", () => {
             const seeded = setFieldValue(form, violatorSection, violatorFields.firstName, "Dana");
 
-            const populated = mapper.populate(seeded, { fineAmount: 250 });
+            const populated = mapper.populate(seeded, { data: { fineAmount: 250 } });
 
             expect(getFieldValue(populated, violatorSection, violatorFields.firstName).getValue()).toBe("Dana");
         });
 
         it("returns a new form, leaving the original alone", () => {
-            const populated = mapper.populate(form, { firstName: "Dana" });
+            const populated = mapper.populate(form, { data: { firstName: "Dana" } });
 
             expect(populated).not.toBe(form);
             expect(getFieldValue(form, violatorSection, violatorFields.firstName).getValue()).toBe("");
@@ -130,30 +124,28 @@ describe("FormMapper", () => {
 
         /**
          * `write` is handed the key rather than the value, so every field written through it is lockable without
-         * the mapper opting each one in -- a host stamping a default it considers settled names the key and the
+         * the mapper opting each one in -- a host stamping a default it considers settled marks the key and the
          * field comes back disabled.
          */
-        it("disables a field whose key is named in readOnlyFields", () => {
+        it("disables a field marked true in readOnlyFields", () => {
             const populated = mapper.populate(
                 form,
-                { firstName: "Dana", fineAmount: 250 },
-                new Set<keyof ITestCitationData>(["firstName"]));
+                { data: { firstName: "Dana", fineAmount: 250 }, readOnlyFields: { firstName: true } });
 
             expect(getFieldValue(populated, violatorSection, violatorFields.firstName).getValue()).toBe("Dana");
             expect(getFieldValue(populated, violatorSection, violatorFields.firstName).isEnabled).toBe(false);
         });
 
-        it("leaves a field editable when its key is not named", () => {
+        it("leaves a field editable when its key is not marked", () => {
             const populated = mapper.populate(
                 form,
-                { firstName: "Dana", fineAmount: 250 },
-                new Set<keyof ITestCitationData>(["firstName"]));
+                { data: { firstName: "Dana", fineAmount: 250 }, readOnlyFields: { firstName: true } });
 
             expect(getFieldValue(populated, chargeSection, chargeFields.fineAmount).isEnabled).toBe(true);
         });
 
         it("locks nothing when no readOnlyFields are given", () => {
-            const populated = mapper.populate(form, { firstName: "Dana" });
+            const populated = mapper.populate(form, { data: { firstName: "Dana" } });
 
             expect(getFieldValue(populated, violatorSection, violatorFields.firstName).isEnabled).toBe(true);
         });
@@ -162,7 +154,7 @@ describe("FormMapper", () => {
     describe("a round trip", () => {
         /**
          * The pair is what a mapper exists for: everything answered on the form has to survive being written out
-         * and read back. A field missed in one direction shows up here as a key that does not come back.
+         * and read back.
          */
         it("returns everything it was given", () => {
             const data: ITestCitationData = {
@@ -172,7 +164,7 @@ describe("FormMapper", () => {
                 offenseDescription: "Speeding"
             };
 
-            expect(mapper.extract(mapper.populate(form, data))).toEqual(data);
+            expect(mapper.extract(mapper.populate(form, { data }))).toEqual(data);
         });
     });
 });

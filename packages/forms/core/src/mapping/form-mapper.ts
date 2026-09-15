@@ -6,9 +6,26 @@ import { SectionModel } from "../models/section";
 /** A form's data contract while it is being built up, before it is handed out as readonly. */
 export type FormValues<TData> = { -readonly [TKey in keyof TData]: TData[TKey] };
 
+/** Mirrors a data contract's shape, marking whichever of its fields -- at any depth -- should come back locked rather than editable. */
+export type ReadOnlyFields<TData> = {
+    readonly [TKey in keyof TData]?: TData[TKey] extends ReadonlyArray<infer TItem>
+        ? ReadonlyArray<ReadOnlyFields<TItem>>
+        : TData[TKey] extends object
+            ? ReadOnlyFields<TData[TKey]>
+            : boolean;
+};
+
+/** The data a mapper populates a form from, and which of its own fields, if any, should come back locked rather than editable. */
+export interface IPopulateData<TData extends object> {
+    /** The record, in the shape the target form's own contract publishes. */
+    readonly data: TData;
+    /** Which of `data`'s own fields come back locked rather than editable. */
+    readonly readOnlyFields?: ReadOnlyFields<TData>;
+}
+
 /** Translates between a form and the data contract it publishes. */
 export interface IFormMapper<TForm extends FormModel<any>, TData extends object> {
-    /** Returns the form's current values as its data contract, emitting only the fields the form owns. */
+    /** Returns the form's current values as its data contract, emitting every field the form owns. */
     extract(form: TForm): TData;
     /**
      * Returns a new form with the given data applied; fields the data does not mention keep the values they hold.
@@ -17,12 +34,12 @@ export interface IFormMapper<TForm extends FormModel<any>, TData extends object>
      * awaiting its `initialize`, so a mapper may answer with a promise. A mapper over a form of fixed pages has
      * nothing to await and returns the form directly.
      *
-     * `readOnlyFields`, when given, names which of the data's own fields should come back disabled rather than
+     * `readOnlyFields`, when given, marks which of the data's own fields should come back disabled rather than
      * editable -- for a host stamping a default value it considers a settled fact rather than an editable
      * suggestion. A field the mapper hasn't wired up for locking (see `FormMapper.write`) stays editable
-     * regardless of being named here.
+     * regardless of being marked here.
      */
-    populate(form: TForm, data: TData, readOnlyFields?: ReadonlySet<keyof TData>): TForm | Promise<TForm>;
+    populate(form: TForm, input: IPopulateData<TData>): TForm | Promise<TForm>;
 }
 
 /**
@@ -34,21 +51,17 @@ export interface IFormMapper<TForm extends FormModel<any>, TData extends object>
  */
 export abstract class FormMapper<TForm extends FormModel<any>, TData extends object> implements IFormMapper<TForm, TData> {
     abstract extract(form: TForm): TData;
-    abstract populate(form: TForm, data: TData, readOnlyFields?: ReadonlySet<keyof TData>): TForm | Promise<TForm>;
+    abstract populate(form: TForm, input: IPopulateData<TData>): TForm | Promise<TForm>;
 
     /**
-     * Assigns the field's value to the given key, leaving the key absent when the field is empty so that an
-     * unanswered field reads as missing rather than as its type's default - an untouched number field holds 0,
-     * which would otherwise be reported as a vehicle year of 0. A boolean field is never empty, so every checkbox
-     * reports its true/false state.
+     * Assigns the field's current value to the given key, whether or not the field has been answered, so every
+     * field the mapper names comes back with a real entry rather than a gap a reader has to account for separately.
      *
      * The target is any object rather than the mapper's own contract, so a contract that nests a record per
-     * repeated page can be filled through the same rule about empty fields as the flat part of it is.
+     * repeated page can be filled through the same primitive as the flat part of it is.
      */
     protected read<TTarget extends object, TKey extends keyof TTarget>(data: FormValues<TTarget>, key: TKey, field: FieldModel<TValueType>): void {
-        if (!field.getIsEmpty()) {
-            data[key] = <TTarget[TKey]>(<unknown>field.getValue());
-        }
+        data[key] = <TTarget[TKey]>(<unknown>field.getValue());
     }
 
     /**
@@ -57,20 +70,19 @@ export abstract class FormMapper<TForm extends FormModel<any>, TData extends obj
      *
      * This mirrors `read`: the target comes first and the key is named once, with the value derived rather than
      * passed alongside it. Because the key is always in hand, every field written through here is lockable - when
-     * `readOnlyFields` contains the key the field also comes back disabled, for a host stamping a default value it
+     * `readOnlyFields` marks the key the field also comes back disabled, for a host stamping a default value it
      * considers settled rather than editable. A section method that threads `readOnlyFields` gets that for every
      * field it writes; one that doesn't simply never locks.
      *
      * The source is any object rather than the mapper's own contract, for the same reason `read`'s target is: a
-     * contract that nests a record per repeated page is written through the same primitive. Such a sub-record has
-     * no locking of its own, since `populate` only ever names top-level keys.
+     * contract that nests a record per repeated page is written through the same primitive.
      */
     protected write<TSection extends SectionModel, TSource extends object, TKey extends keyof TSource>(
         section: TSection,
         definition: FieldDefinition<FieldModel<TValueType>>,
         data: TSource,
         key: TKey,
-        readOnlyFields?: ReadonlySet<keyof TSource>
+        readOnlyFields?: ReadOnlyFields<TSource>
     ): TSection {
         const value = <TValueType | undefined><unknown>data[key];
 
@@ -79,7 +91,7 @@ export abstract class FormMapper<TForm extends FormModel<any>, TData extends obj
         }
 
         let field = section.get<FieldModel<TValueType>>(definition).setValue(value);
-        if (readOnlyFields?.has(key)) {
+        if (readOnlyFields?.[key]) {
             field = field.setIsEnabled(false);
         }
 

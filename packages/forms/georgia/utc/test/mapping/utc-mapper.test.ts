@@ -12,9 +12,8 @@ import { createForm } from "../fixtures/form";
  * `yarn test-types`, which is what stops the round trip below quietly ceasing to cover the whole contract. This
  * form is the checkbox-heavy one, so that guard matters more here than anywhere else.
  *
- * Every value is non-empty, and every checkbox is `true`, because `FormMapper.read` omits a key whose field is
- * empty -- and `false`, `0` and `""` all read as empty. A citation with every box ticked at once is not one
- * anyone would write, but this is a test of data fidelity rather than of what the form means.
+ * A citation with every box ticked at once is not one anyone would write, but this is a test of data fidelity
+ * rather than of what the form means.
  */
 const violation: Required<IGAUTCViolationData> = {
     duiCharged: true,
@@ -215,52 +214,54 @@ describe("GAUTCMapper", () => {
          * and read back. A field wired into one direction and missed in the other shows up here.
          */
         it("returns every field it was given", async () => {
-            expect(mapper.extract(await mapper.populate(form, data))).toEqual(data);
+            expect(mapper.extract(await mapper.populate(form, { data }))).toEqual(data);
         });
 
         it("survives a second trip unchanged", async () => {
-            const once = mapper.extract(await mapper.populate(form, data));
-            const twice = mapper.extract(await mapper.populate(await createForm(), once));
+            const once = mapper.extract(await mapper.populate(form, { data }));
+            const twice = mapper.extract(await mapper.populate(await createForm(), { data: once }));
 
             expect(twice).toEqual(once);
         });
     });
 
     describe("extract", () => {
-        it("omits an unanswered number rather than reporting zero", async () => {
-            const extracted = mapper.extract(await mapper.populate(form, { violatorFirstName: "Dana" }));
+        it("reports an unanswered number as zero rather than omitting it", async () => {
+            const extracted = mapper.extract(await mapper.populate(form, { data: { violatorFirstName: "Dana" } }));
 
-            expect("vehicleYear" in extracted).toBe(false);
-            expect("violatorWeight" in extracted).toBe(false);
-            expect("violationClockedSpeed" in extracted).toBe(false);
+            expect(extracted.vehicleYear).toBe(0);
+            expect(extracted.violatorWeight).toBe(0);
+            expect(extracted.violationClockedSpeed).toBe(0);
         });
 
-        /** This form answers with rows of checkboxes rather than coded boxes, so an unticked one must stay absent. */
-        it("omits an unticked checkbox rather than reporting false", async () => {
-            const extracted = mapper.extract(await mapper.populate(form, { conditionsWeatherClear: true }));
+        /** This form answers with rows of checkboxes rather than coded boxes, so every one reports its own state. */
+        it("reports an unticked checkbox as false rather than omitting it", async () => {
+            const extracted = mapper.extract(await mapper.populate(form, { data: { conditionsWeatherClear: true } }));
 
             expect(extracted.conditionsWeatherClear).toBe(true);
-            expect("conditionsWeatherRaining" in extracted).toBe(false);
-            expect("conditionsRoadDry" in extracted).toBe(false);
+            expect(extracted.conditionsWeatherRaining).toBe(false);
+            expect(extracted.conditionsRoadDry).toBe(false);
         });
 
         it("reports no additional violations for a single-violation citation", async () => {
-            expect("additionalViolations" in mapper.extract(await mapper.populate(form, { offenseCodeSection: "40-6-181" })))
+            expect("additionalViolations" in mapper.extract(await mapper.populate(form, { data: { offenseCodeSection: "40-6-181" } })))
                 .toBe(false);
         });
     });
 
     describe("populate", () => {
         it("creates a citation page per further violation", async () => {
-            const populated = await mapper.populate(form, { additionalViolations: [violation, violation] });
+            const populated = await mapper.populate(form, { data: { additionalViolations: [violation, violation] } });
 
             expect(populated.getCitationPageCollection().pages).toHaveLength(3);
         });
 
         it("keeps the first violation in the flat fields and the rest in the array", async () => {
             const extracted = mapper.extract(await mapper.populate(form, {
-                offenseCodeSection: "40-6-20",
-                additionalViolations: [violation]
+                data: {
+                    offenseCodeSection: "40-6-20",
+                    additionalViolations: [violation]
+                }
             }));
 
             expect(extracted.offenseCodeSection).toBe("40-6-20");
@@ -269,25 +270,25 @@ describe("GAUTCMapper", () => {
 
         /** A record naming fewer violations than the form holds must not silently discard a page. */
         it("leaves a page beyond the end of the data in place", async () => {
-            const threePages = await mapper.populate(form, { additionalViolations: [violation, violation] });
+            const threePages = await mapper.populate(form, { data: { additionalViolations: [violation, violation] } });
 
-            const populated = await mapper.populate(threePages, { additionalViolations: [violation] });
+            const populated = await mapper.populate(threePages, { data: { additionalViolations: [violation] } });
 
             expect(populated.getCitationPageCollection().pages).toHaveLength(3);
         });
 
         it("leaves a field the data does not mention at the value it already held", async () => {
-            const once = await mapper.populate(form, { violatorFirstName: "Dana" });
-            const twice = await mapper.populate(once, { violatorLastName: "Whitfield" });
+            const once = await mapper.populate(form, { data: { violatorFirstName: "Dana" } });
+            const twice = await mapper.populate(once, { data: { violatorLastName: "Whitfield" } });
 
             expect(mapper.extract(twice).violatorFirstName).toBe("Dana");
         });
 
         it("returns a new form rather than changing the one it was given", async () => {
-            const populated = await mapper.populate(form, { violatorFirstName: "Dana" });
+            const populated = await mapper.populate(form, { data: { violatorFirstName: "Dana" } });
 
             expect(populated).not.toBe(form);
-            expect("violatorFirstName" in mapper.extract(form)).toBe(false);
+            expect(mapper.extract(form).violatorFirstName).toBe("");
         });
     });
 });

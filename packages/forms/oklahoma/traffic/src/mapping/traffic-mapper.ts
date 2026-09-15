@@ -1,4 +1,4 @@
-import { FormMapper, FormValues } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, ReadOnlyFields } from "@forms/core";
 
 import { OKTrafficFormModel } from "../models/traffic-form";
 import { ComplaintPageModel } from "../models/complaint-page/complaint-page";
@@ -86,7 +86,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
      * and a field the data does not mention keeps the value it already holds - which is how the date and time of
      * the offense the form stamps on itself survive a partial record.
      */
-    public async populate(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): Promise<OKTrafficFormModel> {
+    public async populate(form: OKTrafficFormModel, { data, readOnlyFields }: IPopulateData<IOKTrafficData>): Promise<OKTrafficFormModel> {
         let updated = await this.populateComplaintPage(form, data, readOnlyFields);
         updated = this.populateWarrantPage(updated, data, readOnlyFields);
 
@@ -101,7 +101,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
      * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
      * `additionalViolations` are left alone rather than removed.
      */
-    private async populateComplaintPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): Promise<OKTrafficFormModel> {
+    private async populateComplaintPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): Promise<OKTrafficFormModel> {
         const additional = data.additionalViolations ?? [];
 
         let result = form;
@@ -139,7 +139,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
     }
 
     /** Returns a form with the warrant page's half of the data contract applied. */
-    private populateWarrantPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): OKTrafficFormModel {
+    private populateWarrantPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): OKTrafficFormModel {
         const collection = form.getWarrantPageCollection();
         const page = collection.getFirstPage<WarrantPageModel>();
 
@@ -151,7 +151,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
     }
 
     /** Returns a form with the supplement page's half of the data contract applied. */
-    private populateSupplementPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): OKTrafficFormModel {
+    private populateSupplementPage(form: OKTrafficFormModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): OKTrafficFormModel {
         const collection = form.getSupplementPageCollection();
         const page = collection.getFirstPage<SupplementPageModel>();
 
@@ -167,7 +167,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "headerCitationNumber", section.getCitationNumber());
     }
 
-    private populateHeader(section: HeaderSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): HeaderSectionModel {
+    private populateHeader(section: HeaderSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): HeaderSectionModel {
         return this.write(section, section.citationNumber, data, "headerCitationNumber", readOnlyFields);
     }
 
@@ -181,7 +181,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "defendantZipCode", section.getZipCode());
     }
 
-    private populateDefendant(section: DefendantSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): DefendantSectionModel {
+    private populateDefendant(section: DefendantSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): DefendantSectionModel {
         let updated = this.write(section, section.address, data, "defendantAddress", readOnlyFields);
         updated = this.write(updated, section.city, data, "defendantCity", readOnlyFields);
         updated = this.write(updated, section.firstName, data, "defendantFirstName", readOnlyFields);
@@ -200,7 +200,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "licenseState", section.getState());
     }
 
-    private populateLicense(section: LicenseSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): LicenseSectionModel {
+    private populateLicense(section: LicenseSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): LicenseSectionModel {
         let updated = this.write(section, section.licenseClass, data, "licenseClass", readOnlyFields);
         updated = this.write(updated, section.endorsements, data, "licenseEndorsements", readOnlyFields);
         updated = this.write(updated, section.expires, data, "licenseExpires", readOnlyFields);
@@ -218,7 +218,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "descriptionWeight", section.getWeight());
     }
 
-    private populateDescription(section: DescriptionSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): DescriptionSectionModel {
+    private populateDescription(section: DescriptionSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): DescriptionSectionModel {
         let updated = this.write(section, section.dateOfBirth, data, "descriptionDateOfBirth", readOnlyFields);
         updated = this.write(updated, section.ethnicity, data, "descriptionEthnicity", readOnlyFields);
         updated = this.write(updated, section.height, data, "descriptionHeight", readOnlyFields);
@@ -242,7 +242,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): VehicleSectionModel {
+    private populateVehicle(section: VehicleSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): VehicleSectionModel {
         let updated = this.write(section, section.color, data, "vehicleColor", readOnlyFields);
         updated = this.write(updated, section.commercialVehicle, data, "vehicleCommercialVehicle", readOnlyFields);
         updated = this.write(updated, section.hazardousMaterials, data, "vehicleHazardousMaterials", readOnlyFields);
@@ -324,7 +324,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "officerSecondName", section.getSecondOfficerName());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): OfficerSectionModel {
+    private populateOfficer(section: OfficerSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): OfficerSectionModel {
         let updated = this.write(section, section.bodyWornCamera, data, "officerBodyWornCamera", readOnlyFields);
         updated = this.write(updated, section.commissionNumber, data, "officerCommissionNumber", readOnlyFields);
         updated = this.write(updated, section.complainantSignature, data, "officerComplainantSignature", readOnlyFields);
@@ -341,7 +341,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "swornTitle", section.getTitle());
     }
 
-    private populateSworn(section: SwornSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): SwornSectionModel {
+    private populateSworn(section: SwornSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): SwornSectionModel {
         let updated = this.write(section, section.date, data, "swornDate", readOnlyFields);
         updated = this.write(updated, section.swornName, data, "swornName", readOnlyFields);
 
@@ -354,7 +354,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "arraignmentDefendantSignature", section.getDefendantSignature());
     }
 
-    private populateArraignment(section: ArraignmentSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): ArraignmentSectionModel {
+    private populateArraignment(section: ArraignmentSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): ArraignmentSectionModel {
         let updated = this.write(section, section.courtDate, data, "arraignmentCourtDate", readOnlyFields);
         updated = this.write(updated, section.courtTime, data, "arraignmentCourtTime", readOnlyFields);
 
@@ -367,7 +367,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "complaintDate", section.getDate());
     }
 
-    private populateComplaint(section: ComplaintSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): ComplaintSectionModel {
+    private populateComplaint(section: ComplaintSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): ComplaintSectionModel {
         let updated = this.write(section, section.citationNumber, data, "complaintCitationNumber", readOnlyFields);
         updated = this.write(updated, section.counselor, data, "complaintCounselor", readOnlyFields);
 
@@ -379,7 +379,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "certificationDate", section.getDate());
     }
 
-    private populateCertification(section: CertificationSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): CertificationSectionModel {
+    private populateCertification(section: CertificationSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): CertificationSectionModel {
         const updated = this.write(section, section.clerkSignature, data, "certificationClerkSignature", readOnlyFields);
 
         return this.write(updated, section.date, data, "certificationDate", readOnlyFields);
@@ -390,7 +390,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "warrantCounselor", section.getCounselor());
     }
 
-    private populateWarrant(section: WarrantSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): WarrantSectionModel {
+    private populateWarrant(section: WarrantSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): WarrantSectionModel {
         const updated = this.write(section, section.approved, data, "warrantApproved", readOnlyFields);
 
         return this.write(updated, section.counselor, data, "warrantCounselor", readOnlyFields);
@@ -408,7 +408,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "witnessZipCode", section.getZipCode());
     }
 
-    private populateWitness(section: WitnessSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): WitnessSectionModel {
+    private populateWitness(section: WitnessSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): WitnessSectionModel {
         let updated = this.write(section, section.address, data, "witnessAddress", readOnlyFields);
         updated = this.write(updated, section.city, data, "witnessCity", readOnlyFields);
         updated = this.write(updated, section.email, data, "witnessEmail", readOnlyFields);
@@ -430,7 +430,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "ownerZipCode", section.getZipCode());
     }
 
-    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): RegisteredOwnerSectionModel {
+    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): RegisteredOwnerSectionModel {
         let updated = this.write(section, section.address, data, "ownerAddress", readOnlyFields);
         updated = this.write(updated, section.city, data, "ownerCity", readOnlyFields);
         updated = this.write(updated, section.ownerName, data, "ownerName", readOnlyFields);
@@ -460,7 +460,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "statusWitnessCaptured", section.getWitnessCaptured());
     }
 
-    private populateStatus(section: StatusSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): StatusSectionModel {
+    private populateStatus(section: StatusSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): StatusSectionModel {
         let updated = this.write(section, section.assignment, data, "statusAssignment", readOnlyFields);
         updated = this.write(updated, section.constructionWorkZone, data, "statusConstructionWorkZone", readOnlyFields);
         updated = this.write(updated, section.directionOfTravel, data, "statusDirectionOfTravel", readOnlyFields);
@@ -485,7 +485,7 @@ export class OKTrafficMapper extends FormMapper<OKTrafficFormModel, IOKTrafficDa
         this.read(data, "notesOfficerNotes", section.getOfficerNotes());
     }
 
-    private populateNotes(section: NotesSectionModel, data: IOKTrafficData, readOnlyFields?: ReadonlySet<keyof IOKTrafficData>): NotesSectionModel {
+    private populateNotes(section: NotesSectionModel, data: IOKTrafficData, readOnlyFields?: ReadOnlyFields<IOKTrafficData>): NotesSectionModel {
         return this.write(section, section.officerNotes, data, "notesOfficerNotes", readOnlyFields);
     }
 }

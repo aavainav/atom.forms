@@ -1,4 +1,4 @@
-import { FormMapper, FormValues } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, ReadOnlyFields } from "@forms/core";
 
 import { OKParkingFormModel } from "../models/parking-form";
 import { CitationPageModel } from "../models/citation-page/citation-page";
@@ -72,7 +72,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
      * and a field the data does not mention keeps the value it already holds - which is how the date and time of
      * violation the form stamps on itself survive a partial record.
      */
-    public async populate(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): Promise<OKParkingFormModel> {
+    public async populate(form: OKParkingFormModel, { data, readOnlyFields }: IPopulateData<IOKParkingData>): Promise<OKParkingFormModel> {
         let updated = await this.populateCitationPage(form, data, readOnlyFields);
         updated = this.populateComplaintPage(updated, data, readOnlyFields);
 
@@ -87,7 +87,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
      * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
      * `additionalViolations` are left alone rather than removed.
      */
-    private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): Promise<OKParkingFormModel> {
+    private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): Promise<OKParkingFormModel> {
         const additional = data.additionalViolations ?? [];
 
         let result = form;
@@ -119,7 +119,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     /** Returns a form with the complaint page's half of the data contract applied. */
-    private populateComplaintPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OKParkingFormModel {
+    private populateComplaintPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): OKParkingFormModel {
         const collection = form.getComplaintPageCollection();
         const page = collection.getFirstPage<ComplaintPageModel>();
 
@@ -131,7 +131,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     /** Returns a form with the detail page's half of the data contract applied. */
-    private populateDetailPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OKParkingFormModel {
+    private populateDetailPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): OKParkingFormModel {
         const collection = form.getDetailPageCollection();
         const page = collection.getFirstPage<DetailPageModel>();
 
@@ -180,7 +180,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "courtTime", section.getTime());
     }
 
-    private populateCourt(section: CourtSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): CourtSectionModel {
+    private populateCourt(section: CourtSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): CourtSectionModel {
         const updated = this.write(section, section.date, data, "courtDate", readOnlyFields);
 
         return this.write(updated, section.time, data, "courtTime", readOnlyFields);
@@ -192,7 +192,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "vehicleMeterNumber", section.getMeterNumber());
     }
 
-    private populateVehicle(section: VehicleSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): VehicleSectionModel {
+    private populateVehicle(section: VehicleSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): VehicleSectionModel {
         let updated = this.write(section, section.licenseNumber, data, "vehicleLicenseNumber", readOnlyFields);
         updated = this.write(updated, section.make, data, "vehicleMake", readOnlyFields);
 
@@ -204,7 +204,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "officerName", section.getOfficerName());
     }
 
-    private populateOfficer(section: OfficerSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): OfficerSectionModel {
+    private populateOfficer(section: OfficerSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): OfficerSectionModel {
         const updated = this.write(section, section.commissionNumber, data, "officerCommissionNumber", readOnlyFields);
 
         return this.write(updated, section.officerName, data, "officerName", readOnlyFields);
@@ -216,7 +216,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "complaintDate", section.getDate());
     }
 
-    private populateComplaint(section: ComplaintSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): ComplaintSectionModel {
+    private populateComplaint(section: ComplaintSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): ComplaintSectionModel {
         let updated = this.write(section, section.citationNumber, data, "complaintCitationNumber", readOnlyFields);
         updated = this.write(updated, section.counselor, data, "complaintCounselor", readOnlyFields);
 
@@ -228,7 +228,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "certificationDate", section.getDate());
     }
 
-    private populateCertification(section: CertificationSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): CertificationSectionModel {
+    private populateCertification(section: CertificationSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): CertificationSectionModel {
         const updated = this.write(section, section.clerkSignature, data, "certificationClerkSignature", readOnlyFields);
 
         return this.write(updated, section.date, data, "certificationDate", readOnlyFields);
@@ -239,7 +239,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "warrantCounselor", section.getCounselor());
     }
 
-    private populateWarrant(section: WarrantSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): WarrantSectionModel {
+    private populateWarrant(section: WarrantSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): WarrantSectionModel {
         const updated = this.write(section, section.approved, data, "warrantApproved", readOnlyFields);
 
         return this.write(updated, section.counselor, data, "warrantCounselor", readOnlyFields);
@@ -253,7 +253,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "recordVoidReason", section.getVoidReason());
     }
 
-    private populateRecord(section: RecordSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): RecordSectionModel {
+    private populateRecord(section: RecordSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): RecordSectionModel {
         let updated = this.write(section, section.beat, data, "recordBeat", readOnlyFields);
         updated = this.write(updated, section.citationNumber, data, "recordCitationNumber", readOnlyFields);
         updated = this.write(updated, section.county, data, "recordCounty", readOnlyFields);
@@ -273,7 +273,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "ownerZipCode", section.getZipCode());
     }
 
-    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): RegisteredOwnerSectionModel {
+    private populateRegisteredOwner(section: RegisteredOwnerSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): RegisteredOwnerSectionModel {
         let updated = this.write(section, section.address, data, "ownerAddress", readOnlyFields);
         updated = this.write(updated, section.city, data, "ownerCity", readOnlyFields);
         updated = this.write(updated, section.firstName, data, "ownerFirstName", readOnlyFields);
@@ -295,7 +295,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "vehicleYear", section.getYear());
     }
 
-    private populateVehicleDetail(section: VehicleDetailSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): VehicleDetailSectionModel {
+    private populateVehicleDetail(section: VehicleDetailSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): VehicleDetailSectionModel {
         let updated = this.write(section, section.color, data, "vehicleColor", readOnlyFields);
         updated = this.write(updated, section.model, data, "vehicleModel", readOnlyFields);
         updated = this.write(updated, section.noLicensePlate, data, "vehicleNoLicensePlate", readOnlyFields);
@@ -311,7 +311,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         this.read(data, "notesOfficerNotes", section.getOfficerNotes());
     }
 
-    private populateNotes(section: NotesSectionModel, data: IOKParkingData, readOnlyFields?: ReadonlySet<keyof IOKParkingData>): NotesSectionModel {
+    private populateNotes(section: NotesSectionModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): NotesSectionModel {
         const updated = this.write(section, section.offenseNotes, data, "notesOffenseNotes", readOnlyFields);
 
         return this.write(updated, section.officerNotes, data, "notesOfficerNotes", readOnlyFields);

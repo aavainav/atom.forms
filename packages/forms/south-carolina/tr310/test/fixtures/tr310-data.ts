@@ -10,9 +10,6 @@ import type { ITR310Data, ITR310PersonData, ITR310UnitData } from "../../src/map
  *
  * Typed as `Required<...>` deliberately: a field added to the contract and forgotten here fails
  * `yarn test-types`, which is what stops the round trip quietly ceasing to cover the whole contract.
- *
- * Every value is non-empty because `FormMapper.read` omits a key whose field is empty, and `""`, `0` and
- * `false` all read as empty.
  */
 export const person: Required<ITR310PersonData> = {
     alcoholDrugsAlcoholTestStatus: { value: "alcoholDrugsAlcoholTestStatus-v", description: "alcoholDrugsAlcoholTestStatus-d" },
