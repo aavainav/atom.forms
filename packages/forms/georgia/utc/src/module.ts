@@ -5,8 +5,6 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { IGAUTCOptions } from "./options";
 import { IGAUTCService, GAUTCService } from "./services";
-import { gaUtcValueLists } from "./value-lists";
-import { gaUtcViolationLists, GAUTCValueViolationListId } from "./violations";
 
 export const IGAUTCConfiguration = createConfig<IGAUTCConfiguration>();
 export interface IGAUTCConfiguration {
@@ -34,29 +32,8 @@ export class GAUTCModule implements IModule {
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
         const { name, description, version } = CATALOG_IDENTITY;
 
-        // the lists this form owns go into the shared registry through the same seam a host would use to replace
-        // any of them; the national lists it also draws on are already there from ValueListsModule
         const valueLists = config.get<IValueListsConfiguration>(IValueListsConfiguration);
-
-        for (const definition of gaUtcValueLists) {
-            valueLists.registerList(definition);
-        }
-
-        // the list this form draws its charges from, and how a chosen violation lands on it. the charge goes onto
-        // the offense section rather than the one this form calls "violation", which holds the speed detection gear.
         const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
-
-        for (const definition of gaUtcViolationLists) {
-            violations.registerList(definition);
-        }
-
-        violations.registerViolations({ name, version }, {
-            listId: GAUTCValueViolationListId.violation,
-            pageName: "citation-page",
-            apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen),
-            getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all)
-        });
-
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         catalog.registerCatalogItem({
@@ -67,8 +44,25 @@ export class GAUTCModule implements IModule {
             load: () => Promise.all([
                 import("./models/utc-form"),
                 import("./models/utc-form-schema"),
-                import("./components")
-            ]).then(([formModule, schemaModule, componentModule]) => {
+                import("./components"),
+                import("./value-lists"),
+                import("./violations")
+            ]).then(([formModule, schemaModule, componentModule, valueListsModule, violationsModule]) => {
+                for (const definition of valueListsModule.gaUtcValueLists) {
+                    valueLists.registerList(definition);
+                }
+
+                for (const definition of violationsModule.gaUtcViolationLists) {
+                    violations.registerList(definition);
+                }
+
+                violations.registerViolations({ name, version }, {
+                    listId: violationsModule.GAUTCValueViolationListId.violation,
+                    pageName: "citation-page",
+                    apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen),
+                    getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all)
+                });
+
                 new schemaModule.GAUTCFormSchema();
 
                 return {

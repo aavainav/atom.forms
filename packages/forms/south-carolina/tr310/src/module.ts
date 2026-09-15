@@ -4,7 +4,6 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { ITR310Options } from "./options";
 import { ITR310Service, TR310Service } from "./services";
-import { tr310ValueLists } from "./value-lists";
 
 export const ITR310Configuration = createConfig<ITR310Configuration>();
 export interface ITR310Configuration {
@@ -32,14 +31,7 @@ export class TR310Module implements IModule {
     async configure({ config }: IModuleConfigurator): Promise<void> {
         const { name, description, version } = CATALOG_IDENTITY;
 
-        // the lists this report owns go into the shared registry through the same seam a host would use to
-        // replace any of them; the national lists it also draws on are already there from ValueListsModule
         const valueLists = config.get<IValueListsConfiguration>(IValueListsConfiguration);
-
-        for (const definition of tr310ValueLists) {
-            valueLists.registerList(definition);
-        }
-
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         catalog.registerCatalogItem({
@@ -50,8 +42,13 @@ export class TR310Module implements IModule {
             load: () => Promise.all([
                 import("./models/tr310-form"),
                 import("./models/tr310-form-schema"),
-                import("./components")
-            ]).then(([formModule, schemaModule, componentModule]) => {
+                import("./components"),
+                import("./value-lists")
+            ]).then(([formModule, schemaModule, componentModule, valueListsModule]) => {
+                for (const definition of valueListsModule.tr310ValueLists) {
+                    valueLists.registerList(definition);
+                }
+
                 new schemaModule.TR310FormSchema();
 
                 return {

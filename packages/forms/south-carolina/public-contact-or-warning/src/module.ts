@@ -4,7 +4,6 @@ import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServic
 
 import { IPublicContactOrWarningOptions } from "./options";
 import { IPublicContactOrWarningService, PublicContactOrWarningService } from "./services";
-import { publicContactOrWarningValueLists } from "./value-lists";
 
 export const IPublicContactOrWarningConfiguration = createConfig<IPublicContactOrWarningConfiguration>();
 export interface IPublicContactOrWarningConfiguration {
@@ -33,11 +32,6 @@ export class PublicContactOrWarningModule implements IModule {
         const { name, description, version } = CATALOG_IDENTITY;
 
         const valueLists = config.get<IValueListsConfiguration>(IValueListsConfiguration);
-
-        for (const definition of publicContactOrWarningValueLists) {
-            valueLists.registerList(definition);
-        }
-
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         catalog.registerCatalogItem({
@@ -48,8 +42,13 @@ export class PublicContactOrWarningModule implements IModule {
             load: () => Promise.all([
                 import("./models/public-contact-or-warning-form"),
                 import("./models/public-contact-or-warning-form-schema"),
-                import("./components")
-            ]).then(([formModule, schemaModule, componentModule]) => {
+                import("./components"),
+                import("./value-lists")
+            ]).then(([formModule, schemaModule, componentModule, valueListsModule]) => {
+                for (const definition of valueListsModule.publicContactOrWarningValueLists) {
+                    valueLists.registerList(definition);
+                }
+
                 new schemaModule.PublicContactOrWarningFormSchema();
 
                 return {
