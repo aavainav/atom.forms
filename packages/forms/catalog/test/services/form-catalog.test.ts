@@ -3,20 +3,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { IFormCatalogItem } from "../../src/services/form-catalog";
 import { FormCatalogService } from "../../src/services/form-catalog";
 
-/**
- * A catalog item is only ever stored and handed back, never constructed from, so a stub carrying the identity is
- * enough. The three constructors and the component loader are what a caller uses *after* resolution.
- */
+/** A catalog item is only ever stored and handed back before `get` resolves it, so a stub `load` that's never meant to run is enough. */
 function item(name: string, version: string, description: string = name): IFormCatalogItem {
     return {
         name,
         description,
         type: "none",
         version,
-        ctor: class { } as never,
-        schema: class { } as never,
-        formFactory: class { } as never,
-        component: () => Promise.resolve(null as never)
+        load: () => Promise.resolve({ ctor: class { } as never, schema: class { } as never, component: null as never })
     };
 }
 
@@ -56,14 +50,6 @@ describe("FormCatalogService", () => {
                 .toThrowError("A form with the name of s438 and version 1.0.0 has already been registered with the form catalog.");
         });
 
-        /** The mapper is always hand-written by the same package that registers the item, so it's just a plain field rather than a separate call. */
-        it("keeps a mapper passed inline", async () => {
-            const mapper = { extract: () => ({}), populate: async (form: never) => form };
-
-            catalog.registerCatalogItem({ ...item("s438", "1.0.0"), mapper });
-
-            await expect(catalog.get({ name: "s438" })).resolves.toMatchObject({ mapper });
-        });
     });
 
     describe("get", () => {
@@ -110,6 +96,27 @@ describe("FormCatalogService", () => {
             reversed.registerCatalogItem(item("s438", "1.0.0"));
 
             await expect(reversed.get({ name: "s438" })).resolves.toMatchObject({ version: "3.0.0" });
+        });
+
+        /** `load` builds the form's schema as a side effect, which must never run twice -- a second run would mint a second, incompatible definition tree. */
+        it("calls load at most once per identity, even across repeated or concurrent resolutions", async () => {
+            let loadCount = 0;
+            const once = new FormCatalogService();
+            once.registerCatalogItem({
+                name: "s438",
+                description: "s438",
+                type: "none",
+                version: "1.0.0",
+                load: () => {
+                    loadCount++;
+                    return Promise.resolve({ ctor: class { } as never, schema: class { } as never, component: null as never });
+                }
+            });
+
+            await Promise.all([once.get({ name: "s438" }), once.get({ name: "s438" })]);
+            await once.get({ name: "s438" });
+
+            expect(loadCount).toBe(1);
         });
     });
 

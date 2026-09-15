@@ -13,7 +13,7 @@ import type { SectionModel } from "../section";
  */
 export interface IRuleContext {
     /** The form being validated. */
-    readonly form: FormModel;
+    readonly form: FormModel<any>;
     /** The page instance the rule is being validated against. */
     readonly page: PageModel;
 
@@ -23,10 +23,10 @@ export interface IRuleContext {
 
 /** Represents the form and page scope a rule is validated against. */
 export class RuleContext implements IRuleContext {
-    public readonly form: FormModel;
+    public readonly form: FormModel<any>;
     public readonly page: PageModel;
 
-    constructor(form: FormModel, page: PageModel) {
+    constructor(form: FormModel<any>, page: PageModel) {
         this.form = form;
         this.page = page;
     }

@@ -12,7 +12,7 @@ import { stubRuleContextFor } from "../../../fixtures/rule-context";
  * A checkbox group needs several boolean fields, and one of them per-page, so this file builds its own tree
  * rather than bending the shared fixture around it. Unique subclasses, built once -- see the fixture's header.
  */
-class SelectionTestForm extends FormModel { }
+class SelectionTestForm extends FormModel<any> { }
 class SelectionTestPage extends PageModel { }
 class SelectionTestSharedSection extends SectionModel { }
 class SelectionTestPageSection extends SectionModel { }

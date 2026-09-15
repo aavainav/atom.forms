@@ -1,26 +1,26 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { IFormCatalogItem } from "@forms/catalog";
+import type { IResolvedFormCatalogItem } from "@forms/catalog";
 import type { IControllerManager } from "@forms/core";
 import type { IPrintProfile } from "../../src/models/print-profile";
 import { allPagesProfileId, PrintService } from "../../src/services/print";
 
 /**
- * The service reads only `formFactory().getPageTypes()` off a catalog item, plus its name for error messages, so
- * a stub carrying those is enough to exercise profile resolution and validation.
+ * The service reads only `new ctor().getChildDefinitions()` off a catalog item, plus its name for error messages,
+ * so a stub carrying those is enough to exercise profile resolution and validation.
  */
-function catalogItem(name: string, ...pageNames: Array<string>): IFormCatalogItem {
-    const pageTypes = new Map(pageNames.map(pageName => [pageName, {} as never]));
+function catalogItem(name: string, ...pageNames: Array<string>): IResolvedFormCatalogItem {
+    const pageDefinitions = pageNames.map(pageName => ({ name: pageName } as never));
 
     return {
         name,
         description: name,
         type: "none",
         version: "1.0.0",
-        ctor: class { } as never,
+        load: () => Promise.reject(new Error("not expected to be called on an already-resolved item")),
+        ctor: class { getChildDefinitions() { return pageDefinitions; } } as never,
         schema: class { } as never,
-        formFactory: class { getPageTypes() { return pageTypes; } } as never,
-        component: () => Promise.resolve(null as never)
+        component: null as never
     };
 }
 

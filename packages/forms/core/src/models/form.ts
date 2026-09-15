@@ -2,6 +2,7 @@ import { Definition } from "./definition";
 import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
+
 import { PageModel } from "./page";
 import { PageCollection } from "./page-collection";
 import { PageDefinition } from "./page-definition";
@@ -11,9 +12,12 @@ import { ISchema } from "./schema";
 import { RuleCollection } from "./validation/rule-collection";
 import { RuleIssueSeverity } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
+
+import type { IFormMapper } from "../mapping/form-mapper";
+import { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
-export type FormModelConstructor<TForm extends FormModel> = new () => TForm;
+export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
 export type FormStatus = "canceled" | "draft" | "rejected" | "inProgress" | "issued" | "voided";
 export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
 
@@ -33,17 +37,23 @@ export interface IForm {
 }
 
 /** Defines the model of a form. */
-export interface IFormModel extends IEntity<PageDefinition> {
+export interface IFormModel<TData extends IReportData> extends IEntity<PageDefinition> {
     /** The display name of the form. */
     readonly name: string;
     /** A human-readable description of the form. */
     readonly description?: string;
+    /** Translates this form to and from the data contract it publishes. A form without one can be neither extracted nor saved. */
+    readonly mapper?: IFormMapper<any, TData>;
     /** The status of the form. This will also determine if a watermark is needed to be displayed. */
     readonly status: FormStatus;
     /** The type of the form. */
     readonly type: FormType;
+    /** The ids of the value lists this form's option fields draw on. */
+    readonly valueListIds?: ReadonlyArray<string>;
     /** The version of the form definition. */
     readonly version: string;
+    /** The violation list this citation draws its charges from, if any. */
+    readonly violationListId?: string;
 
     /** Creates and initializes a page for each child page definition, adding it to the form. */
     initialize(): Promise<this>;
@@ -78,12 +88,15 @@ export interface IFormModel extends IEntity<PageDefinition> {
 }
 
 /** Represents a form model that manages pages and their definitions within a form. */
-export class FormModel extends Entity<PageDefinition> implements IFormModel {
+export class FormModel<TData extends IReportData> extends Entity<PageDefinition> implements IFormModel<TData> {
     public readonly name: string;
     public readonly description?: string;
+    public readonly mapper?: IFormMapper<FormModel<TData>, TData>;
     public readonly status: FormStatus = "draft";
     public readonly type: FormType;
+    public readonly valueListIds?: ReadonlyArray<string>;
     public readonly version: string;
+    public readonly violationListId?: string;
 
     public readonly ruleCollection: RuleCollection = new RuleCollection([]);
 

@@ -1,6 +1,6 @@
 import { ComponentType } from "react";
 import { createService, Singleton } from "@shrub/core";
-import { IControllerManager, IFormIdentity, IFormMapper, IReportViewerData, FormFactoryConstructor, FormModel, FormModelConstructor, FormType, Schema, SchemaConstructor } from "@forms/core";
+import { IControllerManager, IFormIdentity, FormModel, FormModelConstructor, FormType, Schema, SchemaConstructor } from "@forms/core";
 
 export const IFormCatalogService = createService<IFormCatalogService>("forms-catalog-service");
 export const IFormCatalogRegistrationService = createService<IFormCatalogRegistrationService>("forms-catalog-registration-service");
@@ -14,51 +14,105 @@ export interface IFormComponentProps {
 }
 
 /**
- * Defines a form registered with the form catalog, keyed by name and version. This is a form's whole definition:
- * what builds it, what renders it, what translates it to and from the contract it publishes, and which shared
- * lists it draws on. Where its *data* comes from is not part of it - that is the host's, handed to the report
- * viewer as an `IDataManager` when it renders the form.
+ * Defines a form registered with the form catalog, keyed by name and version. This is the cheap, always-available
+ * half of a form's registration -- identity, for listing and lookup, plus how to load everything else. Nothing
+ * about a form's own code (its model, schema, or component) is imported or evaluated until `load()` is called.
  */
-export interface IFormCatalogItem<TForm extends FormModel = FormModel, TSchema extends Schema = Schema, TData extends object = IReportViewerData> {
+export interface IFormCatalogItem {
     readonly name: string;
     readonly description: string;
     readonly type: FormType;
     readonly version: string;
 
-    /** The form model constructor used to create and build the initial model. */
-    readonly ctor: FormModelConstructor<TForm>;
-    /** The form schema. Used to define the form model structure. */
-    readonly schema: SchemaConstructor<TSchema>;
-    /** The form factory. This is used to create the new form model and any additional pages. */
-    readonly formFactory: FormFactoryConstructor<TForm>;
-
-    /** The main form component to render the form in the ui. */
-    readonly component: () => Promise<ComponentType<IFormComponentProps>>;
+    /**
+     * Loads this form's own code and builds its schema, resolving to what's needed to construct and render it.
+     * Called at most once per identity -- `IFormCatalogService.get` caches the promise this returns, so a form
+     * already opened once is never re-loaded, and its schema is never built twice.
+     */
+    readonly load: () => Promise<ILoadedFormCatalogItem>;
 }
+
+/** What loading a catalog item's own code resolves to -- everything needed to construct and render one instance of the form. */
+export interface ILoadedFormCatalogItem<TForm extends FormModel<any> = FormModel<any>, TSchema extends Schema = Schema> {
+    /** The form model constructor used to create a new, uninitialized instance of the form. */
+    readonly ctor: FormModelConstructor<TForm>;
+    /** The form schema constructor. Constructing it builds the form's whole definition tree. */
+    readonly schema: SchemaConstructor<TSchema>;
+    /** The main form component to render the form in the ui. */
+    readonly component: ComponentType<IFormComponentProps>;
+}
+
+/** A registered catalog item together with what loading it resolved to. */
+export type IResolvedFormCatalogItem = IFormCatalogItem & ILoadedFormCatalogItem;
 
 /** Defines a service for resolving forms registered with the form catalog. */
 export interface IFormCatalogService {
     readonly catalogItems: ReadonlyMap<string, ReadonlyMap<string, IFormCatalogItem>>;
-    /** Gets the catalog item matching the given identity, returning its latest version if the identity does not specify one. */
-    get(identity: IFormIdentity): Promise<IFormCatalogItem>;
-    /** Gets the latest version of every registered catalog item, keyed by name. */
+    /**
+     * Gets the catalog item matching the given identity, returning its latest version if the identity does not
+     * specify one. Loads the form's own code the first time it's asked for and caches the result, so opening the
+     * same form again never re-runs `load()`.
+     */
+    get(identity: IFormIdentity): Promise<IResolvedFormCatalogItem>;
+    /** Gets the latest version of every registered catalog item, keyed by name. Never loads any form's own code -- safe to call to list what's available. */
     getLatestVersions(): Promise<Map<string, IFormCatalogItem>>;
 }
 
 /** Defines a service for registering a form with the form catalog. */
 export interface IFormCatalogRegistrationService {
-    registerCatalogItem<TForm extends FormModel, TSchema extends Schema, TData extends object = IReportViewerData>(catalogItem: IFormCatalogItem<TForm, TSchema, TData>): void;
+    registerCatalogItem(catalogItem: IFormCatalogItem): void;
 }
 
 @Singleton
 export class FormCatalogService implements IFormCatalogService, IFormCatalogRegistrationService {
     private readonly _catalogItems: Map<string, Map<string, IFormCatalogItem>> = new Map<string, Map<string, IFormCatalogItem>>();
+    private readonly _resolved: Map<string, Promise<IResolvedFormCatalogItem>> = new Map<string, Promise<IResolvedFormCatalogItem>>();
 
     get catalogItems(): ReadonlyMap<string, ReadonlyMap<string, IFormCatalogItem>> {
         return this._catalogItems;
     }
 
-    async get({ name, version }: IFormIdentity): Promise<IFormCatalogItem> {
+    async get(identity: IFormIdentity): Promise<IResolvedFormCatalogItem> {
+        const catalogItem = await this.getRegistered(identity);
+        const key = this.getCatalogItemKey(catalogItem);
+
+        let resolved = this._resolved.get(key);
+
+        if (!resolved) {
+            // the promise is cached rather than the resolved value, so a form opened twice in quick succession
+            // shares one load, and `load()`'s own schema construction never runs more than once
+            resolved = catalogItem.load().then(loaded => ({ ...catalogItem, ...loaded }));
+            this._resolved.set(key, resolved);
+        }
+
+        return resolved;
+    }
+
+    async getLatestVersions(): Promise<Map<string, IFormCatalogItem>> {
+        const latestVersions = new Map<string, IFormCatalogItem>();
+
+        this._catalogItems.forEach((versionMap, name) => {
+            latestVersions.set(name, this.getLatestVersion(name, versionMap));
+        });
+
+        return latestVersions;
+    }
+
+    registerCatalogItem(catalogItem: IFormCatalogItem): void {
+        if (!this._catalogItems.has(catalogItem.name)) {
+            this._catalogItems.set(catalogItem.name, new Map<string, IFormCatalogItem>());
+        }
+
+        const versionMap = this._catalogItems.get(catalogItem.name)!;
+
+        if (versionMap.has(catalogItem.version)) {
+            throw new Error(`A form with the name of ${catalogItem.name} and version ${catalogItem.version} has already been registered with the form catalog.`);
+        }
+
+        versionMap.set(catalogItem.version, catalogItem);
+    }
+
+    private async getRegistered({ name, version }: IFormIdentity): Promise<IFormCatalogItem> {
         const versionMap = this.getVersionMap(name);
 
         if (version) {
@@ -72,32 +126,6 @@ export class FormCatalogService implements IFormCatalogService, IFormCatalogRegi
         }
 
         return this.getLatestVersion(name, versionMap);
-    }
-
-    async getLatestVersions(): Promise<Map<string, IFormCatalogItem>> {
-        const latestVersions = new Map<string, IFormCatalogItem>();
-
-        this._catalogItems.forEach((versionMap, name) => {
-            latestVersions.set(name, this.getLatestVersion(name, versionMap));
-        });
-
-        return latestVersions;
-    }
-
-    registerCatalogItem<TForm extends FormModel, TSchema extends Schema, TData extends object = IReportViewerData>(catalogItem: IFormCatalogItem<TForm, TSchema, TData>): void {
-        if (!this._catalogItems.has(catalogItem.name)) {
-            this._catalogItems.set(catalogItem.name, new Map<string, IFormCatalogItem>());
-        }
-
-        const versionMap = this._catalogItems.get(catalogItem.name)!;
-
-        if (versionMap.has(catalogItem.version)) {
-            throw new Error(`A form with the name of ${catalogItem.name} and version ${catalogItem.version} has already been registered with the form catalog.`);
-        }
-
-        // each form publishes its own contract, so the registry can only hold its mapper erased; this is the one
-        // place the concrete pair is widened, which keeps the cast off every form module's registration.
-        versionMap.set(catalogItem.version, catalogItem as unknown as IFormCatalogItem);
     }
 
     private getLatestVersion(name: string, versionMap: Map<string, IFormCatalogItem>): IFormCatalogItem {
@@ -119,5 +147,10 @@ export class FormCatalogService implements IFormCatalogService, IFormCatalogRegi
         }
 
         return versionMap;
+    }
+
+    /** Keys a catalog item by its own name and version, for the resolved-item cache. */
+    private getCatalogItemKey({ name, version }: IFormCatalogItem): string {
+        return `${name}@${version}`;
     }
 }

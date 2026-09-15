@@ -20,7 +20,7 @@ export interface IPageDefinition extends IDefinition {
 export class PageDefinition<TPage extends PageModel = PageModel> extends Definition implements IPageDefinition {
     constructor(
         name: string,
-        formDefinition: FormDefinition<FormModel>,
+        formDefinition: FormDefinition<FormModel<any>>,
         ctor: PageModelConstructor<TPage>) {
         super(
             name,

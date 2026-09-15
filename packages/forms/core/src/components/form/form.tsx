@@ -2,7 +2,7 @@ import React from "react";
 import { FormModel } from "../../models/form";
 
 interface IFFormProps {
-    readonly form: FormModel;
+    readonly form: FormModel<any>;
 }
 
 export default function FForm({ form, children }: React.PropsWithChildren<IFFormProps>): React.JSX.Element {

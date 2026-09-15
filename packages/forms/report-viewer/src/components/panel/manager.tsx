@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { IFormCatalogItem } from "@forms/catalog";
+import { IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager } from "@forms/core";
 
 /**
@@ -9,8 +9,8 @@ import { IControllerManager } from "@forms/core";
 const ViolationsPanel = lazy(() => import("@forms/violations").then(module => ({ default: module.ViolationsPanel })));
 
 interface IPanelManagerProps {
-    /** The catalog item the form was loaded from; a panel may be offered for some forms and not others. */
-    readonly catalogItem: IFormCatalogItem;
+    /** The catalog item the form was loaded from; printing/violations resolve against it. */
+    readonly catalogItem: IResolvedFormCatalogItem;
     /** The controllers belonging to the form the panels act on. */
     readonly controllers: IControllerManager;
     /** Reports a panel's failure through the report viewer's notifications. */
@@ -28,9 +28,12 @@ interface IPanelManagerProps {
  * the option that opens it be a plain button raising an event on a service.
  */
 export default function PanelManager({ catalogItem, controllers, onError }: IPanelManagerProps): React.JSX.Element {
+    // the violation list is the form's own declaration, decided per-instance rather than off the catalog item
+    const violationListId = controllers.getFormController().form.violationListId;
+
     return (
         <>
-            {catalogItem.violationListId && (
+            {violationListId && (
                 <Suspense fallback={null}>
                     <ViolationsPanel catalogItem={catalogItem} controllers={controllers} onError={onError} />
                 </Suspense>

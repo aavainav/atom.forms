@@ -1,11 +1,10 @@
-import { FormModel, IReportViewerData, Schema } from "@forms/core";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
 import { FormCatalogService, IFormCatalogItem, IFormCatalogRegistrationService, IFormCatalogService } from "./services";
 
 export const IFormCatalogConfiguration = createConfig<IFormCatalogConfiguration>();
 export interface IFormCatalogConfiguration {
-    registerCatalogItem: <TForm extends FormModel = FormModel, TSchema extends Schema = Schema, TData extends object = IReportViewerData>(catalogItem: IFormCatalogItem<TForm, TSchema, TData>) => void;
+    registerCatalogItem: (catalogItem: IFormCatalogItem) => void;
 }
 
 /** Defines the form catalog module. This module manages the registry of forms available for data-driven rendering. */

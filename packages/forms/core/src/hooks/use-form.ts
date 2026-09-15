@@ -5,7 +5,7 @@ import { IFormController } from "../controllers/form-controller";
 import { FormModel } from "../models/form";
 
 /** Subscribes to the form controller, re-rendering with the current form whenever an edit is applied. */
-export function useForm<TForm extends FormModel>(controller: IFormController<TForm>): TForm {
+export function useForm<TForm extends FormModel<any>>(controller: IFormController<TForm>): TForm {
     // the subscribe function must be stable or react resubscribes on every render; the controller is cached by its
     // manager, so keying on it is enough. note the event hands back a listener rather than an unsubscribe function.
     const subscribe = useCallback((onStoreChange: () => void) => {
@@ -23,7 +23,7 @@ export function useForm<TForm extends FormModel>(controller: IFormController<TFo
  * Resolves the form controller for the given manager, loading the form into it the first time that form is seen.
  * Only one component should call this for a given manager; everything below it reads the controller from the manager.
  */
-export function useFormController<TForm extends FormModel>(controllers: IControllerManager, form: TForm): IFormController<TForm> {
+export function useFormController<TForm extends FormModel<any>>(controllers: IControllerManager, form: TForm): IFormController<TForm> {
     // resolved during render so the controller is available on the first pass; loading a form the manager already
     // drives is a no-op, so a repeated render is harmless
     return controllers.loadForm(form);

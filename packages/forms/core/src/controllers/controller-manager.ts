@@ -38,9 +38,9 @@ export interface IControllerManager {
      * different form is loaded. Loading a form the manager is already driving is a no-op, so this may be called during
      * render, but only one component should call it for a given manager.
      */
-    loadForm<TForm extends FormModel>(form: TForm): IFormController<TForm>;
+    loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm>;
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */
-    getFormController<TForm extends FormModel = FormModel>(): IFormController<TForm>;
+    getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm>;
 
     /** Gets the drag-and-drop controller for the form. */
     getDragAndDropController(): IDragAndDropController;
@@ -65,7 +65,7 @@ export class ControllerManager implements IControllerManager {
         return this._controllerChanged.event;
     }
 
-    public loadForm<TForm extends FormModel>(form: TForm): IFormController<TForm> {
+    public loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm> {
         const existing = this.controllers.get(ControllerKey.form)?.[0] as FormController<TForm> | undefined;
 
         // the same form is re-seeded on every render, so the comparison is on the form's id, which is stable across
@@ -78,7 +78,7 @@ export class ControllerManager implements IControllerManager {
         return this.getController<FormController<TForm>>(ControllerKey.form, () => new FormController(form));
     }
 
-    public getFormController<TForm extends FormModel = FormModel>(): IFormController<TForm> {
+    public getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm> {
         const controller = this.controllers.get(ControllerKey.form)?.[0] as FormController<TForm> | undefined;
         if (!controller) {
             throw new Error("A form must be loaded before the form controller can be used.");

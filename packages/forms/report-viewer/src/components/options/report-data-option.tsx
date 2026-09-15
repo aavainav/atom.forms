@@ -6,7 +6,7 @@ import { ReportDataDialog } from "./report-data-dialog";
 import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
 
 /** Defines the option for viewing the data the current report would be saved as. */
-export const ReportDataOption = ({ catalogItem, controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
+export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -26,7 +26,7 @@ export const ReportDataOption = ({ catalogItem, controllers, title }: IReportVie
     const showDialog = (): void => {
         // the form controller owns the current model and replaces it on every edit, so it is read at click time
         const form = controllers.getFormController().form;
-        const json = JSON.stringify(reportViewerService.extractData(form, catalogItem), null, 2);
+        const json = JSON.stringify(reportViewerService.extractData(form), null, 2);
 
         // the dialog is shown through the modal service rather than rendered here, so that it lands at the root of
         // the report viewer instead of inside the options bar. the bar is fixed positioned, which makes it a

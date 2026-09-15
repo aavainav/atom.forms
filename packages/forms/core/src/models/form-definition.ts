@@ -4,7 +4,7 @@ import { IPageDefinition } from "./page-definition";
 import type { ISchema } from "./schema";
 
 export type FormDefinitionConstructor<
-    TForm extends FormModel,
+    TForm extends FormModel<any>,
     TDefinition extends FormDefinition<TForm>
 > = new (
     name: string,
@@ -17,7 +17,7 @@ export interface IFormDefinition extends IDefinition {
     /** Registers a page definition as a child of this form. */
     registerPage(pageDefinition: IPageDefinition): void;
     /** Not supported for form definitions; use the `FormModel` constructor directly instead. */
-    createNew(): FormModel;
+    createNew(): FormModel<any>;
 }
 
 export class NotSupportedError extends Error {
@@ -28,7 +28,7 @@ export class NotSupportedError extends Error {
 }
 
 /** Represents the definition of a form, serving as a blueprint for creating form models. */
-export class FormDefinition<TForm extends FormModel = FormModel> extends Definition implements IFormDefinition {
+export class FormDefinition<TForm extends FormModel<any> = FormModel<any>> extends Definition implements IFormDefinition {
     constructor(name: string, ctor: FormModelConstructor<TForm>, schema: ISchema) {
         super(
             name,
@@ -45,7 +45,7 @@ export class FormDefinition<TForm extends FormModel = FormModel> extends Definit
     }
 
     /** Not supported; use the `FormModel` constructor directly instead. */
-    public createNew(): FormModel {
+    public createNew(): FormModel<any> {
         throw new NotSupportedError("FormDefinition.createNew is not supported. Use FormModel constructor instead.");
     }
 }

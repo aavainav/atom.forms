@@ -1,6 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { FAsyncLoader, IFormIdentity, IReportViewerData } from "@forms/core";
+import { FAsyncLoader, IFormIdentity, IReportData } from "@forms/core";
 
 import { ReportViewerForm } from "./report-viewer-form";
 import { IDataManager, IInitialForm, IReportViewerService } from "../services";
@@ -15,7 +15,7 @@ export interface IReportViewerSettings {
     readonly showOptions?: boolean;
 }
 
-export interface IReportViewerProps<TData extends object = IReportViewerData> {
+export interface IReportViewerProps<TData extends object = IReportData> {
     /** Which form to render. The catalog resolves it, and answers with its latest version when no version is named. */
     readonly identity: IFormIdentity;
     /** Where the form's data is read from and written back to. A viewer without one renders a blank, unsaveable form. */
@@ -33,7 +33,7 @@ export interface IReportViewerProps<TData extends object = IReportViewerData> {
  * a mutation of the model after it loads -- takes the longer way round instead: `IReportViewerService.loadForm`
  * and then `ReportViewerForm`, which is exactly what this does.
  */
-export function ReportViewer<TData extends object = IReportViewerData>({ identity, dataManager, settings }: IReportViewerProps<TData>): React.JSX.Element {
+export function ReportViewer<TData extends object = IReportData>({ identity, dataManager, settings }: IReportViewerProps<TData>): React.JSX.Element {
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     return (

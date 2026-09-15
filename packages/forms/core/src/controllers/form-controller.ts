@@ -22,13 +22,13 @@ export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
 
     /** Gets the section as it currently stands on the form. */
     get(): TSection;
+    /** Sets a single field's value. */
+    setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void;
     /**
      * Applies a change computed from the section's current state. Always compute from the argument rather than a
      * section captured during render; a captured section is a snapshot that another edit may already have replaced.
      */
     update(update: (section: TSection) => TSection): void;
-    /** Sets a single field's value. */
-    setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void;
 }
 
 /** Binds a single page instance, identified by its id so it survives other pages being added or removed. */
@@ -39,31 +39,30 @@ export interface IPageBinding<TPage extends PageModel = PageModel> {
 
     /** Gets the page as it currently stands on the form. */
     get(): TPage;
-    /** Applies a change computed from the page's current state. */
-    update(update: (page: TPage) => TPage): void;
     /** Gets the binding for one of the page's sections. */
     getSection<TSection extends SectionModel>(sectionDefinition: SectionDefinition<TSection>): ISectionBinding<TSection>;
+    /** Applies a change computed from the page's current state. */
+    update(update: (page: TPage) => TPage): void;
 }
 
 /** Defines the controller that owns the current form model and is the single path through which every edit is applied. */
-export interface IFormController<TForm extends FormModel = FormModel> extends IController {
+export interface IFormController<TForm extends FormModel<any> = FormModel<any>> extends IController {
     /** The form as it currently stands. A new instance replaces it on every edit, after which `onChanged` is raised. */
     readonly form: TForm;
 
-    /** Replaces the form with the result of the update; returning the form unchanged raises nothing. */
-    update(update: (form: TForm) => TForm): void;
-    /** Replaces the form outright. Prefer `update` so the change is computed from the current form rather than a captured one. */
-    setForm(form: TForm): void;
-
+    
     /** Creates, initializes and appends a page for the given definition. */
     addPage(pageDefinition: PageDefinition): Promise<void>;
-    /** Removes the identified page after asking the confirm policy, returning true if it was removed. */
+    /** Gets the binding for a single page instance. */
+    getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage>;
+     /** Removes the identified page after asking the confirm policy, returning true if it was removed. */
     removePage(pageDefinition: PageDefinition, pageId: string): Promise<boolean>;
     /** Sets the policy asked before a page is removed; when unset, pages are removed without confirmation. */
     setConfirmDeletePage(confirm: ConfirmPageDelete | undefined): void;
-
-    /** Gets the binding for a single page instance. */
-    getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage>;
+    /** Replaces the form outright. Prefer `update` so the change is computed from the current form rather than a captured one. */
+    setForm(form: TForm): void;
+    /** Replaces the form with the result of the update; returning the form unchanged raises nothing. */
+    update(update: (form: TForm) => TForm): void;
 }
 
 class SectionBinding<TSection extends SectionModel> implements ISectionBinding<TSection> {
@@ -74,24 +73,16 @@ class SectionBinding<TSection extends SectionModel> implements ISectionBinding<T
         return this.page.get().get<TSection>(this.sectionDefinition);
     }
 
-    public update(update: (section: TSection) => TSection): void {
-        this.page.update(page => page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
-    }
-
     public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
         this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
     }
+
+    public update(update: (section: TSection) => TSection): void {
+        this.page.update(page => page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
+    }
 }
 
-/**
- * Binds a section that holds the same values on every instance of its page, so a write lands on all of them.
- *
- * The update is run against each page's own copy of the section rather than one result being written into all of
- * them: every field carries a uuid used as its DOM id, and a section shared by reference would repeat those ids on
- * every page -- which collides for real during a print, where the pages render together rather than as tab panes.
- * Running the update per page converges their values while leaving each page its own field identities, because a
- * field is set to an absolute value rather than by a delta.
- */
+/** Binds a section that holds the same values on every instance of its page, so a write lands on all of them. */
 class SharedSectionBinding<TSection extends SectionModel> implements ISectionBinding<TSection> {
     constructor(
         private readonly controller: IFormController,
@@ -102,6 +93,10 @@ class SharedSectionBinding<TSection extends SectionModel> implements ISectionBin
     public get(): TSection {
         // every instance holds the same values, so this page's copy is as good as any and needs no lookup
         return this.page.get().get<TSection>(this.sectionDefinition);
+    }
+
+    public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
+        this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
     }
 
     public update(update: (section: TSection) => TSection): void {
@@ -116,10 +111,6 @@ class SharedSectionBinding<TSection extends SectionModel> implements ISectionBin
 
             return form.set(pageDefinition, pageCollection);
         });
-    }
-
-    public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
-        this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
     }
 }
 
@@ -141,20 +132,6 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
         return page;
     }
 
-    public update(update: (page: TPage) => TPage): void {
-        this.controller.update(form => {
-            const pageCollection = form.get<PageCollection>(this.pageDefinition);
-            const index = pageCollection.indexOfPage(this.pageId);
-
-            // the page can be removed while a handler is still in flight, such as an async drop; dropping the edit is correct
-            if (index < 0) {
-                return form;
-            }
-
-            return form.set(this.pageDefinition, pageCollection.replace(index, update(pageCollection.pages[index] as TPage)));
-        });
-    }
-
     public getSection<TSection extends SectionModel>(sectionDefinition: SectionDefinition<TSection>): ISectionBinding<TSection> {
         let binding = this.sections.get(sectionDefinition.id);
 
@@ -170,14 +147,29 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
 
         return binding;
     }
+
+    public update(update: (page: TPage) => TPage): void {
+        this.controller.update(form => {
+            const pageCollection = form.get<PageCollection>(this.pageDefinition);
+            const index = pageCollection.indexOfPage(this.pageId);
+
+            // the page can be removed while a handler is still in flight, such as an async drop; dropping the edit is correct
+            if (index < 0) {
+                return form;
+            }
+
+            return form.set(this.pageDefinition, pageCollection.replace(index, update(pageCollection.pages[index] as TPage)));
+        });
+    }
 }
 
-export class FormController<TForm extends FormModel = FormModel> implements IFormController<TForm> {
-    private readonly _changed = new EventEmitter<void>("form:changed");
+export class FormController<TForm extends FormModel<any> = FormModel<any>> implements IFormController<TForm> {
     private readonly bindings: Map<string, IPageBinding<any>> = new Map<string, IPageBinding<any>>();
 
-    private readonly confirmDeletePage?: ConfirmPageDelete;
+    private readonly _changed = new EventEmitter<void>("form:changed");
     private readonly _form: TForm;
+
+    private readonly confirmDeletePage?: ConfirmPageDelete;
 
     constructor(form: TForm) {
         this._form = form;
@@ -191,31 +183,22 @@ export class FormController<TForm extends FormModel = FormModel> implements IFor
         return this._changed.event;
     }
 
-    /**
-     * Subscribers read the form directly rather than through the change event, so an edit must land synchronously.
-     * Do not defer an edit through `startTransition`: a deferred render could read a newer form than the one a
-     * subscriber has rendered against, tearing the two apart.
-     */
-    public update(update: (form: TForm) => TForm): void {
-        const form = update(this._form);
-
-        // the models are immutable, so an update that changed nothing returns the same instance and need not be published
-        if (form === this._form) {
-            return;
-        }
-
-        (<Mutable<TForm>>this._form) = form;
-        this._changed.emit();
-    }
-
-    public setForm(form: TForm): void {
-        this.update(() => form);
-    }
-
     public async addPage(pageDefinition: PageDefinition): Promise<void> {
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         const page = await pageDefinition.createPage(this._form).initialize();
         this.update(form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition));
+    }
+
+    public getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage> {
+        const key = this.getBindingKey(pageDefinition, pageId);
+        let binding = this.bindings.get(key);
+
+        if (!binding) {
+            binding = new PageBinding<TPage>(this, pageDefinition, pageId);
+            this.bindings.set(key, binding);
+        }
+
+        return binding;
     }
 
     public async removePage(pageDefinition: PageDefinition, pageId: string): Promise<boolean> {
@@ -243,16 +226,20 @@ export class FormController<TForm extends FormModel = FormModel> implements IFor
         (<Mutable<ConfirmPageDelete | undefined>>this.confirmDeletePage) = confirm;
     }
 
-    public getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage> {
-        const key = this.getBindingKey(pageDefinition, pageId);
-        let binding = this.bindings.get(key);
+    public setForm(form: TForm): void {
+        this.update(() => form);
+    }
 
-        if (!binding) {
-            binding = new PageBinding<TPage>(this, pageDefinition, pageId);
-            this.bindings.set(key, binding);
+    public update(update: (form: TForm) => TForm): void {
+        const form = update(this._form);
+
+        // the models are immutable, so an update that changed nothing returns the same instance and need not be published
+        if (form === this._form) {
+            return;
         }
 
-        return binding;
+        (<Mutable<TForm>>this._form) = form;
+        this._changed.emit();
     }
 
     public dispose(): void {
@@ -276,7 +263,7 @@ export class FormController<TForm extends FormModel = FormModel> implements IFor
  * fields `initialize` gave it and with them their own uuids -- the ids the rendered inputs and their labels are
  * addressed by, which must stay distinct across pages that print together.
  */
-function copySharedSections<TPage extends PageModel>(form: FormModel, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
+function copySharedSections<TPage extends PageModel>(form: FormModel<any>, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
     const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);
     if (!shared.length) {
         return page;

@@ -1,13 +1,13 @@
 import React, { Suspense } from "react";
 import { useService } from "@common/react";
-import { IFormCatalogItem } from "@forms/catalog";
+import { IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager } from "@forms/core";
 
 import { IDataManager, IModalService, IReportViewerService } from "../services";
 
 interface IFormViewerOptionsProps {
-    /** The catalog item the form was loaded from; it decides which options are offered. */
-    readonly catalogItem: IFormCatalogItem;
+    /** The catalog item the form was loaded from; printing/violations options resolve against it. */
+    readonly catalogItem: IResolvedFormCatalogItem;
     /** The controllers belonging to the form the options act on. */
     readonly controllers: IControllerManager;
     /** Where the form's data goes when it is saved; the save option is offered only with one. */
@@ -33,7 +33,9 @@ export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onE
     const modalService = useService<IModalService>(IModalService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
-    const options = reportViewerService.getOptions(catalogItem, dataManager);
+    // canShow gates on the form's own mapper/violation list, decided per-instance rather than off the catalog item
+    const form = controllers.getFormController().form;
+    const options = reportViewerService.getOptions(form, dataManager);
 
     return (
         <div id="report-viewer-options" className="d-flex position-fixed bottom-0 end-0 m-4">

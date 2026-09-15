@@ -11,7 +11,7 @@ import { StringFieldModel } from "../../src/models/string-field";
  * `getFields` throws for one -- a difference that needs a definition from outside the tree under test to show.
  * Its model subclasses are its own, for the same registry reason as every other fixture.
  */
-class ForeignForm extends FormModel { }
+class ForeignForm extends FormModel<any> { }
 class ForeignPage extends PageModel { }
 class ForeignSection extends SectionModel { }
 

@@ -2,10 +2,6 @@ import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { PublicContactOrWarningFormFactory } from "./form-factory";
-import { PublicContactOrWarningMapper } from "./mapping";
-import { CATALOG_IDENTITY, PublicContactOrWarningFormModel } from "./models/public-contact-or-warning-form";
-import { PublicContactOrWarningFormSchema } from "./models/public-contact-or-warning-form-schema";
 import { IPublicContactOrWarningOptions } from "./options";
 import { IPublicContactOrWarningService, PublicContactOrWarningService } from "./services";
 import { publicContactOrWarningValueLists } from "./value-lists";
@@ -13,6 +9,17 @@ import { publicContactOrWarningValueLists } from "./value-lists";
 export const IPublicContactOrWarningConfiguration = createConfig<IPublicContactOrWarningConfiguration>();
 export interface IPublicContactOrWarningConfiguration {
 }
+
+/**
+ * The identity this form is registered under in the form catalog. The model stamps it on itself and this module
+ * registers the catalog item from the same constant, so the identity a saved report carries cannot drift from the
+ * one the catalog resolves it by.
+ */
+export const CATALOG_IDENTITY = {
+    name: "SC Form 432 - Public Contact / Warning",
+    description: "South Carolina Form 432 (Rev. 06/2014) - Public Contact / Warning record, completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A).",
+    version: "1.0"
+} as const;
 
 /** Defines the public contact/warning form module. */
 export class PublicContactOrWarningModule implements IModule {
@@ -38,19 +45,26 @@ export class PublicContactOrWarningModule implements IModule {
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
-        new PublicContactOrWarningFormSchema();
-
         catalog.registerCatalogItem({
             name,
             description,
             type: "warning",
             version,
-            ctor: PublicContactOrWarningFormModel,
-            schema: PublicContactOrWarningFormSchema,
-            formFactory: PublicContactOrWarningFormFactory,
-            component: () => import("./components").then(module => module.PublicContactOrWarningForm),
-            mapper: new PublicContactOrWarningMapper(),
-            valueListIds: publicContactOrWarningValueLists.map(definition => definition.id)
+            // nothing about this form's own code is imported until it's actually selected -- schema, model,
+            // mapper and component all load together here, the one time this identity is ever resolved
+            load: () => Promise.all([
+                import("./models/public-contact-or-warning-form"),
+                import("./models/public-contact-or-warning-form-schema"),
+                import("./components")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.PublicContactOrWarningFormSchema();
+
+                return {
+                    ctor: formModule.PublicContactOrWarningFormModel,
+                    schema: schemaModule.PublicContactOrWarningFormSchema,
+                    component: componentModule.PublicContactOrWarningForm
+                };
+            })
         });
     }
 }

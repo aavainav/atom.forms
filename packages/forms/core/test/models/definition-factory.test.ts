@@ -11,7 +11,7 @@ import { StringFieldModel } from "../../src/models/string-field";
  * This file declares its own model subclasses and builds its tree once, for the same reason the shared fixture
  * does: `Entity.definitionRegistry` is keyed by model constructor, so a constructor backs exactly one definition.
  */
-class FactoryTestForm extends FormModel { }
+class FactoryTestForm extends FormModel<any> { }
 class FactoryTestPage extends PageModel { }
 class FactoryTestSection extends SectionModel { }
 class FactoryTestSharedSection extends SectionModel { }

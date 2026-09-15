@@ -28,11 +28,11 @@ function camelToKebab(value: string): string {
 
 /** Centralizes construction of the Form/Page/Section definition tree. */
 export class DefinitionFactory {
-    static form<TForm extends FormModel>(name: string, ctor: FormModelConstructor<TForm>, schema: ISchema): FormDefinition<TForm> {
+    static form<TForm extends FormModel<any>>(name: string, ctor: FormModelConstructor<TForm>, schema: ISchema): FormDefinition<TForm> {
         return new FormDefinition<TForm>(name, ctor, schema);
     }
 
-    static page<TPage extends PageModel>(name: string, form: FormDefinition<FormModel>, ctor: PageModelConstructor<TPage>): PageDefinition<TPage> {
+    static page<TPage extends PageModel>(name: string, form: FormDefinition<FormModel<any>>, ctor: PageModelConstructor<TPage>): PageDefinition<TPage> {
         return new PageDefinition<TPage>(name, form, ctor);
     }
 

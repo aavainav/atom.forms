@@ -65,9 +65,9 @@ export class ReportViewerModule implements IModule {
             id: "violations",
             title: "Violations",
             Component: lazy(() => import("@forms/violations").then(m => ({ default: m.ViolationsOption }))),
-            // the catalog item's own declaration is the gate: a form that draws its charges from a violation list
-            // says so there, and nothing else has to be asked whether the selector belongs on it
-            canShow: catalogItem => !!catalogItem.violationListId
+            // the form's own declaration is the gate: a form that draws its charges from a violation list says so
+            // on itself, and nothing else has to be asked whether the selector belongs on it
+            canShow: form => !!form.violationListId
         });
         options.registerOption({
             id: "save",

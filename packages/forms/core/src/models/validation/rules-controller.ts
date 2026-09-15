@@ -10,7 +10,7 @@ type RuleConstructor<T> = new (...args: any[]) => T;
 
 export interface IRulesController extends IController {
     /** The form model that this rules controller is associated with. */
-    readonly form: FormModel;
+    readonly form: FormModel<any>;
     /** The collection of issues for the form. */
     readonly issueCollection: RuleIssueCollection;
     /** The collection of rules that help validate the form. */
@@ -51,12 +51,12 @@ export class RulesController implements IRulesController {
 
     private readonly _changed = new EventEmitter<void>("rules:changed");
 
-    form: FormModel;
+    form: FormModel<any>;
 
     issueCollection: RuleIssueCollection;
     ruleCollection: RuleCollection;
 
-    constructor(form: FormModel, ruleCollection: RuleCollection = new RuleCollection([])) {
+    constructor(form: FormModel<any>, ruleCollection: RuleCollection = new RuleCollection([])) {
         this.form = form;
         this.ruleCollection = ruleCollection;
         this.issueCollection = new RuleIssueCollection();

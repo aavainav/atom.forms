@@ -1,6 +1,11 @@
 import { IForm, FormModel, PageCollection, PageDefinition } from "@forms/core";
+
+import { CATALOG_IDENTITY } from "../module";
 import { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
 import { RecordPageModel } from "./record-page/record-page";
+
+import { PublicContactOrWarningMapper } from "../mapping";
+import { publicContactOrWarningValueLists } from "../value-lists";
 
 export interface IPublicContactOrWarningForm extends IForm {
 }
@@ -9,23 +14,14 @@ export interface IPublicContactOrWarningFormModel extends IPublicContactOrWarnin
     readonly recordPage: PageDefinition<RecordPageModel>;
 }
 
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
- * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
- * drift from the one the catalog resolves it by.
- */
-export const CATALOG_IDENTITY = {
-    name: "SC Form 432 - Public Contact / Warning",
-    description: "South Carolina Form 432 (Rev. 06/2014) - Public Contact / Warning record, completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A).",
-    version: "1.0"
-} as const;
-
 /** Represents the model for South Carolina Form 432 - Public Contact / Warning. */
-export class PublicContactOrWarningFormModel extends FormModel implements IPublicContactOrWarningFormModel {
+export class PublicContactOrWarningFormModel extends FormModel<any> implements IPublicContactOrWarningFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
-    public readonly type: "none" = "none";
+
+    public readonly mapper: PublicContactOrWarningMapper = new PublicContactOrWarningMapper();
+    public readonly valueListIds: ReadonlyArray<string> = publicContactOrWarningValueLists.map(definition => definition.id);
 
     private schema: PublicContactOrWarningFormSchema = FormModel.getSchema<PublicContactOrWarningFormSchema>(PublicContactOrWarningFormModel);
     public readonly recordPage: PageDefinition<RecordPageModel> = this.schema.recordPage;

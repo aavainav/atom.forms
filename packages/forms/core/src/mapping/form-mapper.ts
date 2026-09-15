@@ -7,7 +7,7 @@ import { SectionModel } from "../models/section";
 export type FormValues<TData> = { -readonly [TKey in keyof TData]: TData[TKey] };
 
 /** Translates between a form and the data contract it publishes. */
-export interface IFormMapper<TForm extends FormModel, TData extends object> {
+export interface IFormMapper<TForm extends FormModel<any>, TData extends object> {
     /** Returns the form's current values as its data contract, emitting only the fields the form owns. */
     extract(form: TForm): TData;
     /**
@@ -32,7 +32,7 @@ export interface IFormMapper<TForm extends FormModel, TData extends object> {
  * field added to the form and forgotten here shows up as a gap a reader can see. What the base contributes is
  * the pair of field-level primitives every mapper needs and the shape of the two directions.
  */
-export abstract class FormMapper<TForm extends FormModel, TData extends object> implements IFormMapper<TForm, TData> {
+export abstract class FormMapper<TForm extends FormModel<any>, TData extends object> implements IFormMapper<TForm, TData> {
     abstract extract(form: TForm): TData;
     abstract populate(form: TForm, data: TData, readOnlyFields?: ReadonlySet<keyof TData>): TForm | Promise<TForm>;
 

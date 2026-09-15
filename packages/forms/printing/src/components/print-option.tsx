@@ -1,6 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { IFormCatalogItem } from "@forms/catalog";
+import { IResolvedFormCatalogItem } from "@forms/catalog";
 import { FButton, FIcon, FTooltip, IControllerManager, IModalOptions } from "@forms/core";
 
 import { PrintDialog } from "./print-dialog";
@@ -13,7 +13,7 @@ import { IPrintRequest, IPrintService } from "../services";
  */
 export interface IPrintOptionProps {
     /** The catalog item the form was loaded from, which its printable copies are resolved by. */
-    readonly catalogItem: IFormCatalogItem;
+    readonly catalogItem: IResolvedFormCatalogItem;
     /** The controllers belonging to the form being printed. */
     readonly controllers: IControllerManager;
     /** The name the option is offered under, shown as its tooltip. */

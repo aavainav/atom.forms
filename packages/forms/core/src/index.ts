@@ -65,7 +65,7 @@ export type { IImportableVehicle } from "./models/import/importable-vehicle";
 export type { IImportableViolation } from "./models/import/importable-violation";
 
 export type { ICrash } from "./mapping/data/crash";
-export type { IReportViewerData } from "./mapping/data/report-data";
+export type { IReportData } from "./mapping/data/report-data";
 export type { IFormMapper, FormValues } from "./mapping/form-mapper";
 
 export type { IEntity, EntityConstructor } from "./models/entity";

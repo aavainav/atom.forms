@@ -3,7 +3,7 @@ import { PageDefinition } from "./page-definition";
 import { PageModel } from "./page";
 
 /** Defines a factory capable of creating a form and describing its available page types. */
-export interface FormFactory<TForm extends FormModel = FormModel> {
+export interface FormFactory<TForm extends FormModel<any> = FormModel<any>> {
     /** The display name of the form the factory creates. */
     readonly name: string;
     /** The version of the form the factory creates. */
@@ -14,4 +14,4 @@ export interface FormFactory<TForm extends FormModel = FormModel> {
     getPageTypes(): Map<string, PageDefinition<PageModel>>;
 }
 
-export type FormFactoryConstructor<TForm extends FormModel = FormModel> = new () => FormFactory<TForm>;
+export type FormFactoryConstructor<TForm extends FormModel<any> = FormModel<any>> = new () => FormFactory<TForm>;

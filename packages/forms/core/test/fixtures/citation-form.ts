@@ -27,7 +27,7 @@ import { StringFieldModel } from "../../src/models/string-field";
  * Imports are deep source paths rather than `src/index.ts`, whose barrel re-exports `src/utils` and with it a
  * value import of react.
  */
-export class TestCitationForm extends FormModel { }
+export class TestCitationForm extends FormModel<any> { }
 export class TestCitationPage extends PageModel { }
 export class TestChargeSection extends SectionModel { }
 export class TestViolatorSection extends SectionModel { }

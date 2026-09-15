@@ -1,5 +1,5 @@
-import { IFormCatalogItem } from "@forms/catalog";
-import { IControllerManager, IFormIdentity, PrintLayout } from "@forms/core";
+import { IResolvedFormCatalogItem } from "@forms/catalog";
+import { IControllerManager, IFormIdentity, PageDefinition, PrintLayout } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
 import { IPrintProfile, PrintOrientation, PrintPaper } from "../models/print-profile";
@@ -47,9 +47,9 @@ export interface IPrintRequest {
 /** Defines a service for printing a form as one of the copies it publishes. */
 export interface IPrintService {
     /** Gets the copies that can be printed for the given form, falling back to a single copy of every page when the form registered none. */
-    getProfiles(catalogItem: IFormCatalogItem): Array<IPrintProfile>;
+    getProfiles(catalogItem: IResolvedFormCatalogItem): Array<IPrintProfile>;
     /** Puts the form into its print layout, opens the browser's print dialog, and restores the form afterwards. */
-    print(controllers: IControllerManager, catalogItem: IFormCatalogItem, request: IPrintRequest): Promise<void>;
+    print(controllers: IControllerManager, catalogItem: IResolvedFormCatalogItem, request: IPrintRequest): Promise<void>;
 }
 
 /** Defines a service for registering the copies a form can be printed as. */
@@ -69,7 +69,7 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
         @IPrintingOptions private readonly options: IPrintingOptions) {
     }
 
-    getProfiles(catalogItem: IFormCatalogItem): Array<IPrintProfile> {
+    getProfiles(catalogItem: IResolvedFormCatalogItem): Array<IPrintProfile> {
         const profiles = this._profiles.get(getProfileKey(catalogItem));
 
         if (profiles) {
@@ -87,7 +87,7 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
         }];
     }
 
-    async print(controllers: IControllerManager, catalogItem: IFormCatalogItem, request: IPrintRequest): Promise<void> {
+    async print(controllers: IControllerManager, catalogItem: IResolvedFormCatalogItem, request: IPrintRequest): Promise<void> {
         const profile = this.getProfile(catalogItem, request.profileId);
         const layout = request.layout ?? profile.layout ?? "top-down";
 
@@ -160,12 +160,12 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
     }
 
     /** Gets the names of the page types the given form carries, in the order the form declares them. */
-    private getPageNames(catalogItem: IFormCatalogItem): Array<string> {
-        return Array.from(new catalogItem.formFactory().getPageTypes().keys());
+    private getPageNames(catalogItem: IResolvedFormCatalogItem): Array<string> {
+        return new catalogItem.ctor().getChildDefinitions().map((pageDefinition: PageDefinition) => pageDefinition.name);
     }
 
     /** Gets the copy with the given id, which the dialog offering it read from this same service. */
-    private getProfile(catalogItem: IFormCatalogItem, profileId: string): IPrintProfile {
+    private getProfile(catalogItem: IResolvedFormCatalogItem, profileId: string): IPrintProfile {
         const profile = this.getProfiles(catalogItem).find(candidate => candidate.id === profileId);
 
         if (!profile) {
@@ -218,7 +218,7 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
     }
 
     /** Fails the print rather than printing a blank sheet when a copy names a page the form does not carry. */
-    private validateProfile(catalogItem: IFormCatalogItem, profile: IPrintProfile): void {
+    private validateProfile(catalogItem: IResolvedFormCatalogItem, profile: IPrintProfile): void {
         const pageNames = this.getPageNames(catalogItem);
         const unknown = profile.pages.find(pageName => !pageNames.includes(pageName));
 
