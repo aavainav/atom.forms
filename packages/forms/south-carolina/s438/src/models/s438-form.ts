@@ -1,4 +1,7 @@
 import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { CATALOG_IDENTITY } from "../module";
+import { IS438Data, S438Mapper } from "../mapping";
+import { S438ViolationListId } from "../violations";
 import { S438FormSchema } from "./s438-form-schema";
 import { FrontPageModel } from "./front-page/front-page";
 import { NoticePageModel } from "./notice-page/notice-page";
@@ -11,17 +14,6 @@ export interface IS438FormModel extends IS438Form {
     readonly noticePage: PageDefinition<NoticePageModel>;
 }
 
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
- * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
- * drift from the one the catalog resolves it by.
- */
-export const CATALOG_IDENTITY = {
-    name: "S438 Citation Form",
-    description: "The south carolina S438 UTT citation form.",
-    version: "1.0"
-} as const;
-
 /** Formats a date as the `MM/DD/YYYY` the citation's date boxes carry. */
 function formatDate(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -31,10 +23,13 @@ function formatDate(date: Date): string {
 }
 
 /** Represents the S438 form model, providing access to its schema and its front and notice pages. */
-export class S438FormModel extends CitationForm implements IS438Form {
+export class S438FormModel extends CitationForm<IS438Data> implements IS438Form {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
+
+    public readonly mapper: S438Mapper = new S438Mapper();
+    public readonly violationListId: string = S438ViolationListId.violation;
 
     private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormModel);
     public readonly frontPage: PageDefinition<FrontPageModel> = this.schema.frontPage;

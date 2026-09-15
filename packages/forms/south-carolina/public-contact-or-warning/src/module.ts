@@ -10,11 +10,6 @@ export const IPublicContactOrWarningConfiguration = createConfig<IPublicContactO
 export interface IPublicContactOrWarningConfiguration {
 }
 
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and this module
- * registers the catalog item from the same constant, so the identity a saved report carries cannot drift from the
- * one the catalog resolves it by.
- */
 export const CATALOG_IDENTITY = {
     name: "SC Form 432 - Public Contact / Warning",
     description: "South Carolina Form 432 (Rev. 06/2014) - Public Contact / Warning record, completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A).",
@@ -50,8 +45,6 @@ export class PublicContactOrWarningModule implements IModule {
             description,
             type: "warning",
             version,
-            // nothing about this form's own code is imported until it's actually selected -- schema, model,
-            // mapper and component all load together here, the one time this identity is ever resolved
             load: () => Promise.all([
                 import("./models/public-contact-or-warning-form"),
                 import("./models/public-contact-or-warning-form-schema"),

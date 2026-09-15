@@ -14,7 +14,6 @@ import { RuleIssueSeverity } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
 
 import type { IFormMapper } from "../mapping/form-mapper";
-import { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
 export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
@@ -37,7 +36,7 @@ export interface IForm {
 }
 
 /** Defines the model of a form. */
-export interface IFormModel<TData extends IReportData> extends IEntity<PageDefinition> {
+export interface IFormModel<TData extends object> extends IEntity<PageDefinition> {
     /** The display name of the form. */
     readonly name: string;
     /** A human-readable description of the form. */
@@ -88,7 +87,7 @@ export interface IFormModel<TData extends IReportData> extends IEntity<PageDefin
 }
 
 /** Represents a form model that manages pages and their definitions within a form. */
-export class FormModel<TData extends IReportData> extends Entity<PageDefinition> implements IFormModel<TData> {
+export class FormModel<TData extends object> extends Entity<PageDefinition> implements IFormModel<TData> {
     public readonly name: string;
     public readonly description?: string;
     public readonly mapper?: IFormMapper<FormModel<TData>, TData>;

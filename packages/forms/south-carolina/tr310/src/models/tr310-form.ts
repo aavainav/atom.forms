@@ -1,4 +1,7 @@
 import { CrashForm, FieldDefinition, FormModel, ICrash, IForm, NumberFieldModel, PageCollection, PageDefinition, StringFieldModel } from "@forms/core";
+import { CATALOG_IDENTITY } from "../module";
+import { ITR310Data, TR310Mapper } from "../mapping";
+import { tr310ValueLists } from "../value-lists";
 import { TR310FormSchema } from "./tr310-form-schema";
 import { CollisionPageModel } from "./collision-page/collision-page";
 import { NarrativePageModel } from "./narrative-page/narrative-page";
@@ -14,17 +17,6 @@ export interface ITR310FormModel extends ITR310Form {
     readonly personPage: PageDefinition<PersonPageModel>;
     readonly unitPage: PageDefinition<UnitPageModel>;
 }
-
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
- * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
- * drift from the one the catalog resolves it by.
- */
-export const CATALOG_IDENTITY = {
-    name: "SC TR-310 - Traffic Collision Report",
-    description: "South Carolina TR-310 (Rev. 7/2024) - the traffic collision report, carrying the collision, a page per person and per unit involved, and the officer's narrative and diagram.",
-    version: "1.0"
-} as const;
 
 /** The code the report uses for a yes answer on its yes/no/unknown boxes. */
 const yes = "1";
@@ -52,10 +44,13 @@ function count(field: NumberFieldModel): number {
 }
 
 /** Represents the model for the South Carolina TR-310 traffic collision report. */
-export class TR310FormModel extends CrashForm implements ITR310FormModel {
+export class TR310FormModel extends CrashForm<ITR310Data> implements ITR310FormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
+
+    public readonly mapper: TR310Mapper = new TR310Mapper();
+    public readonly valueListIds: ReadonlyArray<string> = tr310ValueLists.map(definition => definition.id);
 
     private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormModel);
 

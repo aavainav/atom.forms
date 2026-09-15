@@ -1,4 +1,8 @@
 import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { CATALOG_IDENTITY } from "../module";
+import { IOKParkingData, OKParkingMapper } from "../mapping";
+import { okParkingValueLists } from "../value-lists";
+import { OKParkingViolationListId } from "../violations";
 import { OKParkingFormSchema } from "./parking-form-schema";
 import { CitationPageModel } from "./citation-page/citation-page";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
@@ -12,17 +16,6 @@ export interface IOKParkingFormModel extends IOKParkingForm {
     readonly complaintPage: PageDefinition<ComplaintPageModel>;
     readonly detailPage: PageDefinition<DetailPageModel>;
 }
-
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
- * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
- * drift from the one the catalog resolves it by.
- */
-export const CATALOG_IDENTITY = {
-    name: "OKC Parking Violation",
-    description: "Oklahoma City Municipal Court parking violation - the citation left on the vehicle, the complaint and warrant page the counselor and clerk endorse, and the registered owner and vehicle detail.",
-    version: "1.0"
-} as const;
 
 /**
  * Formats a date as the `YYYY-MM-DD` the form's date boxes carry.
@@ -44,10 +37,14 @@ function formatDate(date: Date): string {
  * The citation, complaint and detail pages each appear once, so the form never grows a page and the setters below
  * always reach the first page of a collection.
  */
-export class OKParkingFormModel extends CitationForm implements IOKParkingFormModel {
+export class OKParkingFormModel extends CitationForm<IOKParkingData> implements IOKParkingFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
+
+    public readonly mapper: OKParkingMapper = new OKParkingMapper();
+    public readonly valueListIds: ReadonlyArray<string> = okParkingValueLists.map(definition => definition.id);
+    public readonly violationListId: string = OKParkingViolationListId.violation;
 
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormModel);
 

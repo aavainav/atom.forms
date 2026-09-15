@@ -2,10 +2,6 @@ import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { TR310FormFactory } from "./form-factory";
-import { TR310Mapper } from "./mapping";
-import { CATALOG_IDENTITY, TR310FormModel } from "./models/tr310-form";
-import { TR310FormSchema } from "./models/tr310-form-schema";
 import { ITR310Options } from "./options";
 import { ITR310Service, TR310Service } from "./services";
 import { tr310ValueLists } from "./value-lists";
@@ -13,6 +9,12 @@ import { tr310ValueLists } from "./value-lists";
 export const ITR310Configuration = createConfig<ITR310Configuration>();
 export interface ITR310Configuration {
 }
+
+export const CATALOG_IDENTITY = {
+    name: "SC TR-310 - Traffic Collision Report",
+    description: "South Carolina TR-310 (Rev. 7/2024) - the traffic collision report, carrying the collision, a page per person and per unit involved, and the officer's narrative and diagram.",
+    version: "1.0"
+} as const;
 
 /** Defines the TR-310 traffic collision report module. */
 export class TR310Module implements IModule {
@@ -28,8 +30,6 @@ export class TR310Module implements IModule {
     }
 
     async configure({ config }: IModuleConfigurator): Promise<void> {
-        // the form model declares the identity and stamps it on itself, so everything registered here names the
-        // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this report owns go into the shared registry through the same seam a host would use to
@@ -42,21 +42,24 @@ export class TR310Module implements IModule {
 
         const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
-        new TR310FormSchema();
-
         catalog.registerCatalogItem({
             name,
             description,
             type: "crash",
             version,
-            ctor: TR310FormModel,
-            schema: TR310FormSchema,
-            formFactory: TR310FormFactory,
-            component: () => import("./components").then(module => module.TR310Form),
-            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
-            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
-            mapper: new TR310Mapper(),
-            valueListIds: tr310ValueLists.map(definition => definition.id)
+            load: () => Promise.all([
+                import("./models/tr310-form"),
+                import("./models/tr310-form-schema"),
+                import("./components")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.TR310FormSchema();
+
+                return {
+                    ctor: formModule.TR310FormModel,
+                    schema: schemaModule.TR310FormSchema,
+                    component: componentModule.TR310Form
+                };
+            })
         });
     }
 }

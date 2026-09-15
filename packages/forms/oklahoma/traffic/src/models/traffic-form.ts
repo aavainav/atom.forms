@@ -1,4 +1,8 @@
 import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { CATALOG_IDENTITY } from "../module";
+import { IOKTrafficData, OKTrafficMapper } from "../mapping";
+import { okTrafficValueLists } from "../value-lists";
+import { OKTrafficViolationListId } from "../violations";
 import { OKTrafficFormSchema } from "./traffic-form-schema";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
 import { SupplementPageModel } from "./supplement-page/supplement-page";
@@ -12,17 +16,6 @@ export interface IOKTrafficFormModel extends IOKTrafficForm {
     readonly supplementPage: PageDefinition<SupplementPageModel>;
     readonly warrantPage: PageDefinition<WarrantPageModel>;
 }
-
-/**
- * The identity this form is registered under in the form catalog. The model stamps it on itself and the module
- * registers the catalog item, the mapper and the route from it, so the identity a saved report carries cannot
- * drift from the one the catalog resolves it by.
- */
-export const CATALOG_IDENTITY = {
-    name: "OKC Traffic Citation",
-    description: "Oklahoma City Municipal Court traffic citation - the complaint and information sworn by the issuing officer, the warrant page the counselor and clerk endorse, and the witness, registered owner and status supplement.",
-    version: "1.0"
-} as const;
 
 /**
  * Formats a date as the `YYYY-MM-DD` the form's date boxes carry.
@@ -44,10 +37,14 @@ function formatDate(date: Date): string {
  * The complaint, warrant and supplement pages each appear once, so the form never grows a page and the setters
  * below always reach the first page of a collection.
  */
-export class OKTrafficFormModel extends CitationForm implements IOKTrafficFormModel {
+export class OKTrafficFormModel extends CitationForm<IOKTrafficData> implements IOKTrafficFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
+
+    public readonly mapper: OKTrafficMapper = new OKTrafficMapper();
+    public readonly valueListIds: ReadonlyArray<string> = okTrafficValueLists.map(definition => definition.id);
+    public readonly violationListId: string = OKTrafficViolationListId.violation;
 
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormModel);
 

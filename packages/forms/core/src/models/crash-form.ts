@@ -20,7 +20,7 @@ export interface ICrashForm extends IForm {
  * The setters answer with a form rather than changing the one they are called on, because a form model is
  * immutable and every edit replaces it; a setter returning nothing here would have its work discarded.
  */
-export abstract class CrashForm extends FormModel<any> implements ICrashForm {
+export abstract class CrashForm<TData extends object> extends FormModel<TData> implements ICrashForm {
     readonly type: FormType = "crash";
 
     abstract getCrashData(): ICrash;

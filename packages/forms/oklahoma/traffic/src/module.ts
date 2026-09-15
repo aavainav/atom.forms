@@ -4,10 +4,6 @@ import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { OKTrafficFormFactory } from "./form-factory";
-import { OKTrafficMapper } from "./mapping";
-import { CATALOG_IDENTITY, OKTrafficFormModel } from "./models/traffic-form";
-import { OKTrafficFormSchema } from "./models/traffic-form-schema";
 import { IOKTrafficOptions } from "./options";
 import { IOKTrafficService, OKTrafficService } from "./services";
 import { okTrafficValueLists } from "./value-lists";
@@ -16,6 +12,12 @@ import { OKTrafficViolationListId, okTrafficViolationLists } from "./violations"
 export const IOKTrafficConfiguration = createConfig<IOKTrafficConfiguration>();
 export interface IOKTrafficConfiguration {
 }
+
+export const CATALOG_IDENTITY = {
+    name: "OKC Traffic Citation",
+    description: "Oklahoma City Municipal Court traffic citation - the complaint and information sworn by the issuing officer, the warrant page the counselor and clerk endorse, and the witness, registered owner and status supplement.",
+    version: "1.0"
+} as const;
 
 /** Defines the Oklahoma City traffic citation module. */
 export class OKTrafficModule implements IModule {
@@ -31,8 +33,6 @@ export class OKTrafficModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        // the form model declares the identity and stamps it on itself, so everything registered here names the
-        // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
@@ -42,8 +42,6 @@ export class OKTrafficModule implements IModule {
         for (const definition of okTrafficValueLists) {
             valueLists.registerList(definition);
         }
-
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
 
         // the citation is a multi-part set on paper, and which pages a part carries depends on who receives it:
         // the violator is handed the complaint and the warrant, the court is filed the complaint and the supplement
@@ -65,8 +63,6 @@ export class OKTrafficModule implements IModule {
             }
         ]);
 
-        new OKTrafficFormSchema();
-
         // the list this form draws its charges from, and how a chosen violation lands on it; the codes go in the
         // violation block and the description and fine into the offense block beneath it
         const violations = config.get<IViolationsConfiguration>(IViolationsConfiguration);
@@ -82,20 +78,26 @@ export class OKTrafficModule implements IModule {
             getApplied: (controllers, all) => services.get<IOKTrafficService>(IOKTrafficService).getAppliedViolations(controllers, all)
         });
 
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
+
         catalog.registerCatalogItem({
             name,
             description,
             type: "citation",
             version,
-            ctor: OKTrafficFormModel,
-            schema: OKTrafficFormSchema,
-            formFactory: OKTrafficFormFactory,
-            component: () => import("./components").then(module => module.OKTrafficForm),
-            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
-            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
-            mapper: new OKTrafficMapper(),
-            valueListIds: okTrafficValueLists.map(definition => definition.id),
-            violationListId: OKTrafficViolationListId.violation
+            load: () => Promise.all([
+                import("./models/traffic-form"),
+                import("./models/traffic-form-schema"),
+                import("./components")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.OKTrafficFormSchema();
+
+                return {
+                    ctor: formModule.OKTrafficFormModel,
+                    schema: schemaModule.OKTrafficFormSchema,
+                    component: componentModule.OKTrafficForm
+                };
+            })
         });
     }
 }

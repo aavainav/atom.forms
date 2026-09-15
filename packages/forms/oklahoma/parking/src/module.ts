@@ -3,10 +3,6 @@ import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { OKParkingFormFactory } from "./form-factory";
-import { OKParkingMapper } from "./mapping";
-import { CATALOG_IDENTITY, OKParkingFormModel } from "./models/parking-form";
-import { OKParkingFormSchema } from "./models/parking-form-schema";
 import { IOKParkingOptions } from "./options";
 import { IOKParkingService, OKParkingService } from "./services";
 import { okParkingValueLists } from "./value-lists";
@@ -15,6 +11,12 @@ import { OKParkingViolationListId, okParkingViolationLists } from "./violations"
 export const IOKParkingConfiguration = createConfig<IOKParkingConfiguration>();
 export interface IOKParkingConfiguration {
 }
+
+export const CATALOG_IDENTITY = {
+    name: "OKC Parking Violation",
+    description: "Oklahoma City Municipal Court parking violation - the citation left on the vehicle, the complaint and warrant page the counselor and clerk endorse, and the registered owner and vehicle detail.",
+    version: "1.0"
+} as const;
 
 /** Defines the Oklahoma City parking violation module. */
 export class OKParkingModule implements IModule {
@@ -30,8 +32,6 @@ export class OKParkingModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        // the form model declares the identity and stamps it on itself, so everything registered here names the
-        // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
@@ -41,10 +41,6 @@ export class OKParkingModule implements IModule {
         for (const definition of okParkingValueLists) {
             valueLists.registerList(definition);
         }
-
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
-
-        new OKParkingFormSchema();
 
         // the list this form draws its violations from, and how a chosen violation lands on it; the code goes in
         // the violation block and the scheduled fine in the payment block beneath it
@@ -61,20 +57,26 @@ export class OKParkingModule implements IModule {
             getApplied: (controllers, all) => services.get<IOKParkingService>(IOKParkingService).getAppliedViolations(controllers, all)
         });
 
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
+
         catalog.registerCatalogItem({
             name,
             description,
             type: "citation",
             version,
-            ctor: OKParkingFormModel,
-            schema: OKParkingFormSchema,
-            formFactory: OKParkingFormFactory,
-            component: () => import("./components").then(module => module.OKParkingForm),
-            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
-            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
-            mapper: new OKParkingMapper(),
-            valueListIds: okParkingValueLists.map(definition => definition.id),
-            violationListId: OKParkingViolationListId.violation
+            load: () => Promise.all([
+                import("./models/parking-form"),
+                import("./models/parking-form-schema"),
+                import("./components")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.OKParkingFormSchema();
+
+                return {
+                    ctor: formModule.OKParkingFormModel,
+                    schema: schemaModule.OKParkingFormSchema,
+                    component: componentModule.OKParkingForm
+                };
+            })
         });
     }
 }

@@ -4,7 +4,7 @@ import { CATALOG_IDENTITY } from "../module";
 import { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
 import { RecordPageModel } from "./record-page/record-page";
 
-import { PublicContactOrWarningMapper } from "../mapping";
+import { IPublicContactOrWarningData, PublicContactOrWarningMapper } from "../mapping";
 import { publicContactOrWarningValueLists } from "../value-lists";
 
 export interface IPublicContactOrWarningForm extends IForm {
@@ -15,7 +15,7 @@ export interface IPublicContactOrWarningFormModel extends IPublicContactOrWarnin
 }
 
 /** Represents the model for South Carolina Form 432 - Public Contact / Warning. */
-export class PublicContactOrWarningFormModel extends FormModel<any> implements IPublicContactOrWarningFormModel {
+export class PublicContactOrWarningFormModel extends FormModel<IPublicContactOrWarningData> implements IPublicContactOrWarningFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;

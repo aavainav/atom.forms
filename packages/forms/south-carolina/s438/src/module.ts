@@ -2,10 +2,6 @@ import { FormCatalogModule, IFormCatalogConfiguration } from "@forms/catalog";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { S438FormFactory } from "./form-factory";
-import { S438Mapper } from "./mapping";
-import { CATALOG_IDENTITY, S438FormModel } from "./models/s438-form";
-import { S438FormSchema } from "./models/s438-form-schema";
 import { IS438CitationOptions } from "./options";
 import { IS438CitationService, S438CitationService } from "./services";
 import { S438ViolationListId, s438ViolationLists } from "./violations";
@@ -13,6 +9,12 @@ import { S438ViolationListId, s438ViolationLists } from "./violations";
 export const IS438CitationConfiguration = createConfig<IS438CitationConfiguration>();
 export interface IS438CitationConfiguration {
 }
+
+export const CATALOG_IDENTITY = {
+    name: "S438 Citation Form",
+    description: "The south carolina S438 UTT citation form.",
+    version: "1.0"
+} as const;
 
 /** Defines the s438 citation module. */
 export class S438CitationModule implements IModule {
@@ -28,13 +30,7 @@ export class S438CitationModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        // the form model declares the identity and stamps it on itself, so everything registered here names the
-        // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
-
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
-
-        new S438FormSchema();
 
         // the list this form draws its charges from, and how a chosen violation lands on it. the selector never
         // writes a field itself: the citation names its charge in its own section under its own field names, and a
@@ -52,19 +48,26 @@ export class S438CitationModule implements IModule {
             getApplied: (controllers, all) => services.get<IS438CitationService>(IS438CitationService).getAppliedViolations(controllers, all)
         });
 
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
+
         catalog.registerCatalogItem({
             name,
             description,
             type: "citation",
             version,
-            ctor: S438FormModel,
-            schema: S438FormSchema,
-            formFactory: S438FormFactory,
-            component: () => import("./components/").then(module => module.S438CitationForm),
-            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
-            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
-            mapper: new S438Mapper(),
-            violationListId: S438ViolationListId.violation
+            load: () => Promise.all([
+                import("./models/s438-form"),
+                import("./models/s438-form-schema"),
+                import("./components/")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.S438FormSchema();
+
+                return {
+                    ctor: formModule.S438FormModel,
+                    schema: schemaModule.S438FormSchema,
+                    component: componentModule.S438CitationForm
+                };
+            })
         });
     }
 }

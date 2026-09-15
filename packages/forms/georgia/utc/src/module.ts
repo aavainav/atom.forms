@@ -3,10 +3,6 @@ import { IValueListsConfiguration, ValueListsModule } from "@forms/value-lists";
 import { IViolationsConfiguration, ViolationsModule } from "@forms/violations";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer, IServiceRegistration } from "@shrub/core";
 
-import { GAUTCFormFactory } from "./form-factory";
-import { GAUTCMapper } from "./mapping";
-import { CATALOG_IDENTITY, GAUTCFormModel } from "./models/utc-form";
-import { GAUTCFormSchema } from "./models/utc-form-schema";
 import { IGAUTCOptions } from "./options";
 import { IGAUTCService, GAUTCService } from "./services";
 import { gaUtcValueLists } from "./value-lists";
@@ -15,6 +11,12 @@ import { gaUtcViolationLists, GAUTCValueViolationListId } from "./violations";
 export const IGAUTCConfiguration = createConfig<IGAUTCConfiguration>();
 export interface IGAUTCConfiguration {
 }
+
+export const CATALOG_IDENTITY = {
+    name: "GA Uniform Traffic Citation",
+    description: "Georgia uniform traffic citation, summons, and accusation as issued by the City of Atlanta Department of Police - the face of the citation the officer serves, and the reverse of the court's copy the clerk and judge complete.",
+    version: "1.0"
+} as const;
 
 /** Defines the Georgia uniform traffic citation module. */
 export class GAUTCModule implements IModule {
@@ -30,8 +32,6 @@ export class GAUTCModule implements IModule {
     }
 
     async configure({ config, services }: IModuleConfigurator): Promise<void> {
-        // the form model declares the identity and stamps it on itself, so everything registered here names the
-        // same form the extracted data is stamped with
         const { name, description, version } = CATALOG_IDENTITY;
 
         // the lists this form owns go into the shared registry through the same seam a host would use to replace
@@ -41,10 +41,6 @@ export class GAUTCModule implements IModule {
         for (const definition of gaUtcValueLists) {
             valueLists.registerList(definition);
         }
-
-        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
-
-        new GAUTCFormSchema();
 
         // the list this form draws its charges from, and how a chosen violation lands on it. the charge goes onto
         // the offense section rather than the one this form calls "violation", which holds the speed detection gear.
@@ -61,20 +57,26 @@ export class GAUTCModule implements IModule {
             getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all)
         });
 
+        const catalog = config.get<IFormCatalogConfiguration>(IFormCatalogConfiguration);
+
         catalog.registerCatalogItem({
             name,
             description,
             type: "citation",
             version,
-            ctor: GAUTCFormModel,
-            schema: GAUTCFormSchema,
-            formFactory: GAUTCFormFactory,
-            component: () => import("./components").then(module => module.GAUTCForm),
-            // the mapper is hand-written by this same package, so it is supplied inline rather than through a
-            // separate call - unlike the record itself, which the host hands to the report viewer as an IDataManager.
-            mapper: new GAUTCMapper(),
-            valueListIds: gaUtcValueLists.map(definition => definition.id),
-            violationListId: GAUTCValueViolationListId.violation
+            load: () => Promise.all([
+                import("./models/utc-form"),
+                import("./models/utc-form-schema"),
+                import("./components")
+            ]).then(([formModule, schemaModule, componentModule]) => {
+                new schemaModule.GAUTCFormSchema();
+
+                return {
+                    ctor: formModule.GAUTCFormModel,
+                    schema: schemaModule.GAUTCFormSchema,
+                    component: componentModule.GAUTCForm
+                };
+            })
         });
     }
 }

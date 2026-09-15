@@ -20,7 +20,7 @@ export interface ICitationForm extends IForm {
  * The setters answer with a form rather than changing the one they are called on, because a form model is
  * immutable and every edit replaces it; a setter returning nothing here would have its work discarded.
  */
-export abstract class CitationForm extends FormModel<any> implements ICitationForm {
+export abstract class CitationForm<TData extends object> extends FormModel<TData> implements ICitationForm {
     readonly type: FormType = "citation";
 
     public async initialize(): Promise<this> {
