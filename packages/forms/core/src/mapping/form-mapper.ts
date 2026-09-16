@@ -1,7 +1,19 @@
-import { FieldModel, TValueType } from "../models/field";
+import { BooleanFieldModel } from "../models/boolean-field";
+import { FieldModel, IOptionValue, TValueType } from "../models/field";
 import { FieldDefinition } from "../models/field-definition";
 import { FormModel } from "../models/form";
+import { NumberFieldModel } from "../models/number-field";
+import { OptionFieldModel } from "../models/option-field";
 import { SectionModel } from "../models/section";
+import { StringFieldModel } from "../models/string-field";
+
+/** Maps a contract field's own value type to the one concrete `FieldModel` capable of holding it. */
+export type FieldModelFor<T> =
+    T extends IOptionValue ? OptionFieldModel :
+    T extends boolean | boolean[] ? BooleanFieldModel :
+    T extends number | number[] ? NumberFieldModel :
+    T extends string | string[] ? StringFieldModel :
+    never;
 
 /** A form's data contract while it is being built up, before it is handed out as readonly. */
 export type FormValues<TData> = { -readonly [TKey in keyof TData]: TData[TKey] };
@@ -57,11 +69,18 @@ export abstract class FormMapper<TForm extends FormModel<any>, TData extends obj
      * Assigns the field's current value to the given key, whether or not the field has been answered, so every
      * field the mapper names comes back with a real entry rather than a gap a reader has to account for separately.
      *
+     * `field` must be the one concrete `FieldModel` shaped for `key`'s own value type -- a `string` key refuses a
+     * `BooleanFieldModel` at compile time, which is what catches a field wired to the wrong key.
+     *
      * The target is any object rather than the mapper's own contract, so a contract that nests a record per
      * repeated page can be filled through the same primitive as the flat part of it is.
      */
-    protected read<TTarget extends object, TKey extends keyof TTarget>(data: FormValues<TTarget>, key: TKey, field: FieldModel<TValueType>): void {
-        data[key] = <TTarget[TKey]>(<unknown>field.getValue());
+    protected read<TTarget extends object, TKey extends keyof TTarget>(
+        data: FormValues<TTarget>,
+        key: TKey,
+        field: FieldModelFor<NonNullable<TTarget[TKey]>>
+    ): void {
+        data[key] = <TTarget[TKey]>(field.getValue());
     }
 
     /**
@@ -76,15 +95,18 @@ export abstract class FormMapper<TForm extends FormModel<any>, TData extends obj
      *
      * The source is any object rather than the mapper's own contract, for the same reason `read`'s target is: a
      * contract that nests a record per repeated page is written through the same primitive.
+     *
+     * `definition` must be a `FieldDefinition` of the one concrete `FieldModel` shaped for `key`'s own value type,
+     * the same guard `read` applies in the other direction.
      */
     protected write<TSection extends SectionModel, TSource extends object, TKey extends keyof TSource>(
         section: TSection,
-        definition: FieldDefinition<FieldModel<TValueType>>,
+        definition: FieldDefinition<FieldModelFor<NonNullable<TSource[TKey]>>>,
         data: TSource,
         key: TKey,
         readOnlyFields?: ReadOnlyFields<TSource>
     ): TSection {
-        const value = <TValueType | undefined><unknown>data[key];
+        const value = <TValueType | undefined>data[key];
 
         if (value === undefined) {
             return section;

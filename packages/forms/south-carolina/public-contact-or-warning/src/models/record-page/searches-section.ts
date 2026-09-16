@@ -52,7 +52,6 @@ export class SearchesSectionModel extends SectionModel implements ISearchesSecti
     public getBasisOther(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.basisOther); }
     public getBasisOtherSpecify(): StringFieldModel { return this.get<StringFieldModel>(this.basisOtherSpecify); }
 
-    /** Selects Yes/No for "Consent Search Requested", unchecking the other option - true radio behavior. */
     public selectConsentRequested(selected: FieldDefinition<BooleanFieldModel>): this {
         return this.consentRequestedFields.reduce(
             (section, fieldDefinition) => section.set(fieldDefinition, section.get<BooleanFieldModel>(fieldDefinition).setValue(fieldDefinition === selected)),
@@ -60,11 +59,31 @@ export class SearchesSectionModel extends SectionModel implements ISearchesSecti
         );
     }
 
-    /** Selects Yes/No for "Consent Given", unchecking the other option - true radio behavior. */
     public selectConsentGiven(selected: FieldDefinition<BooleanFieldModel>): this {
         return this.consentGivenFields.reduce(
             (section, fieldDefinition) => section.set(fieldDefinition, section.get<BooleanFieldModel>(fieldDefinition).setValue(fieldDefinition === selected)),
             this as this
+        );
+    }
+
+    public setConsentSearchRequested(checked: boolean): this {
+        return this.setGate(this.consentSearchRequested, this.consentRequestedFields, checked);
+    }
+
+    public setConsentGiven(checked: boolean): this {
+        return this.setGate(this.consentGiven, this.consentGivenFields, checked);
+    }
+
+    /** Sets a checkbox and disables+clears the dependents that only mean something while it is checked. */
+    private setGate(gate: FieldDefinition<BooleanFieldModel>, dependents: ReadonlyArray<FieldDefinition<BooleanFieldModel>>, checked: boolean): this {
+        const updated = this.set(gate, this.get<BooleanFieldModel>(gate).setValue(checked));
+
+        return dependents.reduce(
+            (section, fieldDefinition) => section.set(fieldDefinition,
+                checked
+                    ? section.get<BooleanFieldModel>(fieldDefinition).setIsEnabled(true)
+                    : section.get<BooleanFieldModel>(fieldDefinition).setValue(false).setIsEnabled(false)),
+            updated as this
         );
     }
 }

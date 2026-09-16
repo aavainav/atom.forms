@@ -48,9 +48,9 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                             </div>
                         </FFormStackPanel>
                         <FFieldCheckbox id={consentSearchRequested.id} checked={consentSearchRequested.getValue() as boolean} disabled={!consentSearchRequested.getIsEnabled()} invalid={consentSearchRequested.getHasError()} label={consentSearchRequested.label}
-                            onChange={(checked) => binding.setValue(section.consentSearchRequested, checked)} />
+                            onChange={(checked) => binding.update((current) => current.setConsentSearchRequested(checked))} />
                         <FFieldCheckbox checked={consentGiven.getValue() as boolean} disabled={!consentGiven.getIsEnabled()} id={consentGiven.id} invalid={consentGiven.getHasError()} label={consentGiven.label}
-                            onChange={(checked) => binding.setValue(section.consentGiven, checked)} />
+                            onChange={(checked) => binding.update((current) => current.setConsentGiven(checked))} />
                         <FFieldCheckbox checked={madeByConsent.getValue() as boolean} disabled={!madeByConsent.getIsEnabled()} id={madeByConsent.id} invalid={madeByConsent.getHasError()} label={madeByConsent.label}
                             onChange={(checked) => binding.setValue(section.madeByConsent, checked)} />
                         <FFieldCheckbox checked={incidentToArrest.getValue() as boolean} disabled={!incidentToArrest.getIsEnabled()} id={incidentToArrest.id} invalid={incidentToArrest.getHasError()} label={incidentToArrest.label}

@@ -2,6 +2,7 @@ import { createPopper, Instance, Options, Placement } from "@popperjs/core";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { FButton } from "../button";
+import FFieldControl from "../field-control/field-control";
 import FFieldInput, { IFieldInputComponent } from "../field-input/field-input";
 import { IOptionValue } from "../../models/field";
 
@@ -274,15 +275,17 @@ export default function FFieldSelect({
                 onClick={(event) => event.stopPropagation()}
             >
                 {searchable && (
-                    <div className="f-field-select__search px-1 pb-1">
-                        <FFieldInput
-                            ref={searchInputRef}
-                            id={id ? `${id}-search` : undefined}
-                            autocomplete="off"
-                            placeholder="Search..."
-                            value={searchTerm}
-                            onChange={setSearchTerm}
-                        />
+                    <div className="f-field-select__search">
+                        <FFieldControl margin={10}>
+                            <FFieldInput
+                                ref={searchInputRef}
+                                id={id ? `${id}-search` : undefined}
+                                autocomplete="off"
+                                placeholder="Search..."
+                                value={searchTerm}
+                                onChange={setSearchTerm}
+                            />
+                        </FFieldControl>
                     </div>
                 )}
                 <div className="f-field-select__options">

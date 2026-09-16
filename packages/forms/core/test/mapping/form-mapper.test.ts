@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { FieldModel, TValueType } from "../../src/models/field";
 import type { PageCollection } from "../../src/models/page-collection";
 import type { SectionModel } from "../../src/models/section";
+import { BooleanFieldModel } from "../../src/models/boolean-field";
 import { FormMapper, IPopulateData } from "../../src/mapping/form-mapper";
+import { NumberFieldModel } from "../../src/models/number-field";
+import { StringFieldModel } from "../../src/models/string-field";
 import {
     chargeFields,
     chargeSection,
@@ -35,10 +37,10 @@ class TestCitationMapper extends FormMapper<TestCitationForm, ITestCitationData>
         const violator = form.getPages()[0].get<SectionModel>(violatorSection);
         const charge = form.getPages()[0].get<SectionModel>(chargeSection);
 
-        this.read(data, "firstName", violator.get<FieldModel<TValueType>>(violatorFields.firstName));
-        this.read(data, "fineAmount", charge.get<FieldModel<TValueType>>(chargeFields.fineAmount));
-        this.read(data, "isSpeedingRelated", charge.get<FieldModel<TValueType>>(chargeFields.isSpeedingRelated));
-        this.read(data, "offenseDescription", charge.get<FieldModel<TValueType>>(chargeFields.offenseDescription));
+        this.read(data, "firstName", violator.get<StringFieldModel>(violatorFields.firstName));
+        this.read(data, "fineAmount", charge.get<NumberFieldModel>(chargeFields.fineAmount));
+        this.read(data, "isSpeedingRelated", charge.get<BooleanFieldModel>(chargeFields.isSpeedingRelated));
+        this.read(data, "offenseDescription", charge.get<StringFieldModel>(chargeFields.offenseDescription));
 
         return data;
     }
