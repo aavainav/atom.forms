@@ -124,8 +124,10 @@ export interface IPublicContactOrWarningFormSchema extends ISchema {
         readonly searchesOfPedestrian: FieldDefinition<BooleanFieldModel>;
         readonly searchesOfVehicle: FieldDefinition<BooleanFieldModel>;
         readonly searchesOfPassenger: FieldDefinition<BooleanFieldModel>;
-        readonly searchesConsentRequestedYes: FieldDefinition<BooleanFieldModel>;
-        readonly searchesConsentRequestedNo: FieldDefinition<BooleanFieldModel>;
+        readonly searchesConsentSearchRequested: FieldDefinition<BooleanFieldModel>;
+        readonly searchesConsentSearchRequestedYes: FieldDefinition<BooleanFieldModel>;
+        readonly searchesConsentSearchRequestedNo: FieldDefinition<BooleanFieldModel>;
+        readonly searchesConsentGiven: FieldDefinition<BooleanFieldModel>;
         readonly searchesConsentGivenYes: FieldDefinition<BooleanFieldModel>;
         readonly searchesConsentGivenNo: FieldDefinition<BooleanFieldModel>;
         readonly searchesMadeByConsent: FieldDefinition<BooleanFieldModel>;
@@ -241,8 +243,10 @@ export class PublicContactOrWarningFormSchema extends Schema implements IPublicC
         searchesOfPedestrian: { label: "Of Pedestrian", ctor: BooleanFieldModel },
         searchesOfVehicle: { label: "Of Vehicle", ctor: BooleanFieldModel },
         searchesOfPassenger: { label: "Of Passenger", ctor: BooleanFieldModel },
-        searchesConsentRequestedYes: { label: "Yes", ctor: BooleanFieldModel },
-        searchesConsentRequestedNo: { label: "No", ctor: BooleanFieldModel },
+        searchesConsentSearchRequested: { label: "CONSENT SEARCH REQUESTED:", ctor: BooleanFieldModel },
+        searchesConsentSearchRequestedYes: { label: "Yes", ctor: BooleanFieldModel },
+        searchesConsentSearchRequestedNo: { label: "No", ctor: BooleanFieldModel },
+        searchesConsentGiven: { label: "CONSENT GIVEN:", ctor: BooleanFieldModel },
         searchesConsentGivenYes: { label: "Yes", ctor: BooleanFieldModel },
         searchesConsentGivenNo: { label: "No", ctor: BooleanFieldModel },
         searchesMadeByConsent: { label: "Search Made By Consent", ctor: BooleanFieldModel },

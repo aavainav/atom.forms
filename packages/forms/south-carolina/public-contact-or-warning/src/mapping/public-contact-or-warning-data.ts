@@ -105,10 +105,14 @@ export interface IPublicContactOrWarningData {
     readonly searchesConsentGivenNo?: boolean;
     /** Checked when consent to search was given; paired with `searchesConsentGivenNo`, and a record answering neither leaves both false. */
     readonly searchesConsentGivenYes?: boolean;
+    /** Checked if there was consent to search. */
+    readonly searchesConsentGiven?: boolean;
     /** Checked when consent to search was not requested. */
-    readonly searchesConsentRequestedNo?: boolean;
+    readonly searchesConsentSearchRequestedNo?: boolean;
     /** Checked when consent to search was requested; paired with `searchesConsentRequestedNo`, and a record answering neither leaves both false. */
-    readonly searchesConsentRequestedYes?: boolean;
+    readonly searchesConsentSearchRequestedYes?: boolean;
+    /** Checked when consent to search was requested. */
+    readonly searchesConsentSearchRequested?: boolean;
     /** Checked when the search was made incident to an arrest. */
     readonly searchesIncidentToArrest?: boolean;
     /** Checked when the search was an inventory of a towed vehicle. */

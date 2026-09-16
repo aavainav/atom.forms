@@ -48,21 +48,25 @@ export const PrimaryReasonSection = ({ binding }: IPrimaryReasonSectionProps): R
                     </div>
                 </div>
             </FFormStackPanel>
-            <FFormStackPanel direction="horizontal" height={22}>
-                <FFieldCheckbox checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} id={other.id} invalid={other.getHasError()} label={other.label} type="radio"
-                    onChange={() => binding.update((current) => current.selectReason(current.other))} />
+            <div className="ps-2">
+                <FFormStackPanel direction="horizontal" height={22}>
+                    <FFieldCheckbox checked={other.getValue() as boolean} disabled={!other.getIsEnabled()} id={other.id} invalid={other.getHasError()} label={other.label} type="radio"
+                        onChange={() => binding.update((current) => current.selectReason(current.other))} />
 
-                 <FFieldControl borderEdges={["bottom"]} label={otherSpecify.label} labelFor={otherSpecify.id}>
-                    <FFieldInput
-                        disabled={!otherSpecify.getIsEnabled() || other.getIsEmpty()}
-                        id={otherSpecify.id}
-                        invalid={otherSpecify.getHasError()}
-                        padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
-                        value={otherSpecify.getValue()}
-                        onChange={(value) => binding.setValue(section.otherSpecify, value)}
-                    />
-                </FFieldControl>
-            </FFormStackPanel>
+                    <div className="ps-2">
+                        <FFieldControl borderEdges={["bottom"]} label={otherSpecify.label} labelFor={otherSpecify.id}>
+                            <FFieldInput
+                                disabled={!otherSpecify.getIsEnabled() || other.getIsEmpty()}
+                                id={otherSpecify.id}
+                                invalid={otherSpecify.getHasError()}
+                                padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
+                                value={otherSpecify.getValue()}
+                                onChange={(value) => binding.setValue(section.otherSpecify, value)}
+                            />
+                        </FFieldControl>
+                    </div>
+                </FFormStackPanel>
+            </div>
         </FSection>
     );
 };

@@ -16,8 +16,10 @@ export class SearchesSectionModel extends SectionModel implements ISearchesSecti
     public readonly ofVehicle: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfVehicle;
     public readonly ofPassenger: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesOfPassenger;
 
-    public readonly consentRequestedYes: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentRequestedYes;
-    public readonly consentRequestedNo: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentRequestedNo;
+    public readonly consentSearchRequested: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentSearchRequested;
+    public readonly consentSearchRequestedYes: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentSearchRequestedYes;
+    public readonly consentSearchRequestedNo: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentSearchRequestedNo;
+    public readonly consentGiven: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentGiven;
     public readonly consentGivenYes: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentGivenYes;
     public readonly consentGivenNo: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesConsentGivenNo;
 
@@ -28,7 +30,7 @@ export class SearchesSectionModel extends SectionModel implements ISearchesSecti
     public readonly basisOther: FieldDefinition<BooleanFieldModel> = this.schema.searchesFields.searchesBasisOther;
     public readonly basisOtherSpecify: FieldDefinition<StringFieldModel> = this.schema.searchesFields.searchesBasisOtherSpecify;
 
-    private readonly consentRequestedFields: FieldDefinition<BooleanFieldModel>[] = [this.consentRequestedYes, this.consentRequestedNo];
+    private readonly consentRequestedFields: FieldDefinition<BooleanFieldModel>[] = [this.consentSearchRequestedYes, this.consentSearchRequestedNo];
     private readonly consentGivenFields: FieldDefinition<BooleanFieldModel>[] = [this.consentGivenYes, this.consentGivenNo];
 
     public getOfDriver(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.ofDriver); }
@@ -36,8 +38,10 @@ export class SearchesSectionModel extends SectionModel implements ISearchesSecti
     public getOfVehicle(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.ofVehicle); }
     public getOfPassenger(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.ofPassenger); }
 
-    public getConsentRequestedYes(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentRequestedYes); }
-    public getConsentRequestedNo(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentRequestedNo); }
+    public getConsentSearchRequested(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentSearchRequested); }
+    public getConsentSearchRequestedYes(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentSearchRequestedYes); }
+    public getConsentSearchRequestedNo(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentSearchRequestedNo); }
+    public getConsentGiven(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentGiven); }
     public getConsentGivenYes(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentGivenYes); }
     public getConsentGivenNo(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.consentGivenNo); }
 

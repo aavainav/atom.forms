@@ -241,8 +241,9 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "searchesBasisOtherSpecify", section.getBasisOtherSpecify());
         this.read(data, "searchesConsentGivenNo", section.getConsentGivenNo());
         this.read(data, "searchesConsentGivenYes", section.getConsentGivenYes());
-        this.read(data, "searchesConsentRequestedNo", section.getConsentRequestedNo());
-        this.read(data, "searchesConsentRequestedYes", section.getConsentRequestedYes());
+        this.read(data, "searchesConsentGiven", section.getConsentGiven());
+        this.read(data, "searchesConsentSearchRequestedNo", section.getConsentSearchRequestedNo());
+        this.read(data, "searchesConsentSearchRequestedYes", section.getConsentSearchRequestedYes());
         this.read(data, "searchesIncidentToArrest", section.getIncidentToArrest());
         this.read(data, "searchesInventoryVehicleTowed", section.getInventoryVehicleTowed());
         this.read(data, "searchesMadeByConsent", section.getMadeByConsent());
@@ -262,8 +263,10 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         let updated = this.write(section, section.basisOtherSpecify, data, "searchesBasisOtherSpecify", readOnlyFields);
         updated = this.write(updated, section.consentGivenNo, data, "searchesConsentGivenNo", readOnlyFields);
         updated = this.write(updated, section.consentGivenYes, data, "searchesConsentGivenYes", readOnlyFields);
-        updated = this.write(updated, section.consentRequestedNo, data, "searchesConsentRequestedNo", readOnlyFields);
-        updated = this.write(updated, section.consentRequestedYes, data, "searchesConsentRequestedYes", readOnlyFields);
+        updated = this.write(updated, section.consentGiven, data, "searchesConsentGiven", readOnlyFields);
+        updated = this.write(updated, section.consentSearchRequestedNo, data, "searchesConsentSearchRequestedNo", readOnlyFields);
+        updated = this.write(updated, section.consentSearchRequestedYes, data, "searchesConsentSearchRequestedYes", readOnlyFields);
+        updated = this.write(updated, section.consentSearchRequested, data, "searchesConsentSearchRequested", readOnlyFields);
         updated = this.write(updated, section.incidentToArrest, data, "searchesIncidentToArrest", readOnlyFields);
         updated = this.write(updated, section.inventoryVehicleTowed, data, "searchesInventoryVehicleTowed", readOnlyFields);
         updated = this.write(updated, section.madeByConsent, data, "searchesMadeByConsent", readOnlyFields);

@@ -113,8 +113,6 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return !!form.mapper;
     }
 
-    // saving needs both halves: a mapper to extract the data and somewhere to hand it to. with a mapper and no
-    // writer the data would be extracted, dropped, and the report still reported as saved.
     /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
     canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
         return !!form.mapper && !!dataManager?.write;

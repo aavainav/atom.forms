@@ -16,8 +16,10 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
     const ofVehicle = section.getOfVehicle();
     const ofPassenger = section.getOfPassenger();
 
-    const consentRequestedYes = section.getConsentRequestedYes();
-    const consentRequestedNo = section.getConsentRequestedNo();
+    const consentSearchRequested = section.getConsentSearchRequested();
+    const consentSearchRequestedYes = section.getConsentSearchRequestedYes();
+    const consentSearchRequestedNo = section.getConsentSearchRequestedNo();
+    const consentGiven = section.getConsentGiven();
     const consentGivenYes = section.getConsentGivenYes();
     const consentGivenNo = section.getConsentGivenNo();
 
@@ -33,11 +35,15 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
             <div className="text-center">
                 <h6 className="fw-bold mb-0">SEARCHES (CHECK ALL THAT APPLY)</h6>
             </div>
+            <FFormStackPanel>
+                <FFormStackPanel direction="horizontal">
+                    <FFieldCheckbox id={ofDriver.id} checked={ofDriver.getValue() as boolean} disabled={!ofDriver.getIsEnabled()} invalid={ofDriver.getHasError()} label={ofDriver.label}
+                        onChange={(checked) => binding.setValue(section.ofDriver, checked)} />
+                    <FFieldCheckbox checked={ofPedestrian.getValue() as boolean} disabled={!ofPedestrian.getIsEnabled()} id={ofPedestrian.id} invalid={ofPedestrian.getHasError()} label={ofPedestrian.label}
+                        onChange={(checked) => binding.setValue(section.ofPedestrian, checked)} />
+                </FFormStackPanel>
+            </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <FFieldCheckbox id={ofDriver.id} checked={ofDriver.getValue() as boolean} disabled={!ofDriver.getIsEnabled()} invalid={ofDriver.getHasError()} label={ofDriver.label}
-                    onChange={(checked) => binding.setValue(section.ofDriver, checked)} />
-                <FFieldCheckbox checked={ofPedestrian.getValue() as boolean} disabled={!ofPedestrian.getIsEnabled()} id={ofPedestrian.id} invalid={ofPedestrian.getHasError()} label={ofPedestrian.label}
-                    onChange={(checked) => binding.setValue(section.ofPedestrian, checked)} />
                 <FFieldCheckbox checked={ofVehicle.getValue() as boolean} disabled={!ofVehicle.getIsEnabled()} id={ofVehicle.id} invalid={ofVehicle.getHasError()} label={ofVehicle.label}
                     onChange={(checked) => binding.setValue(section.ofVehicle, checked)} />
                 <FFieldCheckbox checked={ofPassenger.getValue() as boolean} disabled={!ofPassenger.getIsEnabled()} id={ofPassenger.id} invalid={ofPassenger.getHasError()} label={ofPassenger.label}
@@ -47,16 +53,20 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                 <div className="w-100">
                     <div className="p-2">
                         <div className="d-flex justify-content-evenly">
-                            <FFieldCheckbox id={consentRequestedYes.id} checked={consentRequestedYes.getValue() as boolean} disabled={!consentRequestedYes.getIsEnabled()} invalid={consentRequestedYes.getHasError()} label={consentRequestedYes.label} type="radio"
-                                onChange={() => binding.update((current) => current.selectConsentRequested(current.consentRequestedYes))} />
-                            <FFieldCheckbox checked={consentRequestedNo.getValue() as boolean} disabled={!consentRequestedNo.getIsEnabled()} id={consentRequestedNo.id} invalid={consentRequestedNo.getHasError()} label={consentRequestedNo.label} type="radio"
-                                onChange={() => binding.update((current) => current.selectConsentRequested(current.consentRequestedNo))} />
+                            <FFieldCheckbox id={consentSearchRequested.id} checked={consentSearchRequested.getValue() as boolean} disabled={!consentSearchRequested.getIsEnabled()} invalid={consentSearchRequested.getHasError()} label={consentSearchRequested.label}
+                                onChange={(checked) => binding.setValue(section.consentSearchRequested, checked)} />
+                            <FFieldCheckbox id={consentSearchRequestedYes.id} checked={consentSearchRequestedYes.getValue() as boolean} disabled={!consentSearchRequestedYes.getIsEnabled()} invalid={consentSearchRequestedYes.getHasError()} label={consentSearchRequestedYes.label} type="radio"
+                                onChange={() => binding.update((current) => current.selectConsentRequested(current.consentSearchRequestedYes))} />
+                            <FFieldCheckbox checked={consentSearchRequestedNo.getValue() as boolean} disabled={!consentSearchRequestedNo.getIsEnabled()} id={consentSearchRequestedNo.id} invalid={consentSearchRequestedNo.getHasError()} label={consentSearchRequestedNo.label} type="radio"
+                                onChange={() => binding.update((current) => current.selectConsentRequested(current.consentSearchRequestedNo))} />
                         </div>
                     </div>
                 </div>
                 <div className="w-100">
                     <div className="p-2">
                         <div className="d-flex justify-content-evenly">
+                            <FFieldCheckbox checked={consentGiven.getValue() as boolean} disabled={!consentGiven.getIsEnabled()} id={consentGiven.id} invalid={consentGiven.getHasError()} label={consentGiven.label}
+                                onChange={(checked) => binding.setValue(section.consentGiven, checked)} />
                             <FFieldCheckbox checked={consentGivenYes.getValue() as boolean} disabled={!consentGivenYes.getIsEnabled()} id={consentGivenYes.id} invalid={consentGivenYes.getHasError()} label={consentGivenYes.label} type="radio"
                                 onChange={() => binding.update((current) => current.selectConsentGiven(current.consentGivenYes))} />
                             <FFieldCheckbox checked={consentGivenNo.getValue() as boolean} disabled={!consentGivenNo.getIsEnabled()} id={consentGivenNo.id} invalid={consentGivenNo.getHasError()} label={consentGivenNo.label} type="radio"
