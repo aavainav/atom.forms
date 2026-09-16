@@ -244,6 +244,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "searchesConsentGiven", section.getConsentGiven());
         this.read(data, "searchesConsentSearchRequestedNo", section.getConsentSearchRequestedNo());
         this.read(data, "searchesConsentSearchRequestedYes", section.getConsentSearchRequestedYes());
+        this.read(data, "searchesConsentSearchRequested", section.getConsentSearchRequested());
         this.read(data, "searchesIncidentToArrest", section.getIncidentToArrest());
         this.read(data, "searchesInventoryVehicleTowed", section.getInventoryVehicleTowed());
         this.read(data, "searchesMadeByConsent", section.getMadeByConsent());
