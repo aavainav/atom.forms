@@ -52,7 +52,6 @@ export type {
     FInputType
 } from "./components/field-input";
 export type { IFModal, IModalAction, IModalCloseAction, IModalOptions, IModalResult, FModalSize } from "./components/modal";
-export type { IndicatorType } from "./components/loading-indicator";
 export type { StackPanelDirection } from "./components/form-stackpanel";
 
 export type { IDraggableItem, DraggableItemType } from "./models/import/draggable-item";

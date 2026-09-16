@@ -18,13 +18,24 @@ interface IFPageProps {
     onDeletePage?: () => void;
 }
 
+function getPageClassNames(formType: FormType): Array<string> {
+    /** The page class for each form type. A type with no entry, renders as an "f-none" page. */
+    const pageTypesByFormType: Partial<Record<FormType, string>> = {
+        citation: "f-citation",
+        crash: "f-crash",
+        warning: "f-warning"
+    };
+
+    return [pageTypesByFormType[formType] ?? "f-none", "f-page", "bg-white", "border", "border-dark", "mb-3"];
+}
+
 /** Defines the page component. This component wraps the actual page of a form, allowing for functionality to modify pages. */
 export const FPage = ({ formType, watermark, children, onAddPage, onDeletePage }: React.PropsWithChildren<IFPageProps>): React.JSX.Element => {
     return (
         // the page is a printed document rather than app chrome: it is white paper with a dark border whichever
         // theme the app is rendered in, so the color mode is pinned here and every control on the page stays
         // legible against it while the chrome around it follows the day/night toggle
-        <div data-bs-theme="light" className={buildClasses(formType === "citation" ? "f-citation" : formType === "none" ? "f-none" : "f-crash", "f-page", "bg-white", "border", "border-dark", "mb-3")}>
+        <div data-bs-theme="light" className={buildClasses(...getPageClassNames(formType))}>
             {onDeletePage && (
                 <div className="d-flex justify-content-end mb-2">
                     <FButton type="button" className="btn btn-danger" onClick={onDeletePage}>

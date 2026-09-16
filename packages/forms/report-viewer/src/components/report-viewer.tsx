@@ -1,6 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { FAsyncLoader, IFormIdentity, IReportData } from "@forms/core";
+import { FAsyncLoader, FLoadingIndicator, IFormIdentity, IReportData } from "@forms/core";
 
 import { ReportViewerForm } from "./report-viewer-form";
 import { IInitialForm, IReportViewerDataManager, IReportViewerService } from "../services";
@@ -45,7 +45,8 @@ export function ReportViewer<TData extends object = IReportData>({ identity, dat
               */}
             <FAsyncLoader<IInitialForm>
                 key={`${identity.name}@${identity.version ?? ""}`}
-                op={() => reportViewerService.loadForm(identity, dataManager)}>
+                op={() => reportViewerService.loadForm(identity, dataManager)}
+                loading={<FLoadingIndicator message={`Loading ${identity.name} form...`} />}>
                 {initialForm => (
                     <ReportViewerForm
                         initialForm={initialForm}
