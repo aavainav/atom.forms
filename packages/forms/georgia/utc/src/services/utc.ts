@@ -1,9 +1,10 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { CitationPageModel } from "../models/citation-page/citation-page";
+import type { GAUTCFormModel } from "../models/utc-form";
 import type { GAUTCFormSchema } from "../models/utc-form-schema";
 import { GAUTCValueListId } from "../value-lists";
 
@@ -23,9 +24,9 @@ export interface IGAUTCService {
     /** Returns a new citation page with the dropped violation data applied to the offense boxes of Section II. */
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<GAUTCFormModel>): Promise<void>;
     /** Narrows the given violations to those the citation pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<GAUTCFormModel>): ReadonlyArray<IViolation>;
     /** Returns a new citation page with the dropped person data applied to Section I. */
     applyViolatorDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Loads the options for the citation's county box - the three counties the form prints beside it. */
@@ -91,8 +92,8 @@ export class GAUTCService implements IGAUTCService {
         return page.set(page.offenseSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): ReadonlyArray<IViolation> {
-        const formSchema = FormModel.getSchema<GAUTCFormSchema>(schema);
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<GAUTCFormModel>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<GAUTCFormSchema>(formCtor);
         const pages = controllers.getFormController().form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the citation prints the statute as its offense code section, so that is what identifies a charge once it
@@ -102,13 +103,13 @@ export class GAUTCService implements IGAUTCService {
         return violations.filter(violation => carried.has(violation.statute ?? violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<GAUTCFormModel>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const formSchema = FormModel.getSchema<GAUTCFormSchema>(schema);
+        const formSchema = FormModel.getSchema<GAUTCFormSchema>(formCtor);
 
         const pages = controller.form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 

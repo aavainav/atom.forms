@@ -59,8 +59,8 @@ export class GAUTCModule implements IModule {
                 violations.registerViolations({ name, version }, {
                     listId: violationsModule.GAUTCValueViolationListId.violation,
                     pageName: "citation-page",
-                    apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen, schemaModule.GAUTCFormSchema),
-                    getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all, schemaModule.GAUTCFormSchema)
+                    apply: (controllers, chosen) => services.get<IGAUTCService>(IGAUTCService).applyViolations(controllers, chosen, formModule.GAUTCFormModel),
+                    getApplied: (controllers, all) => services.get<IGAUTCService>(IGAUTCService).getAppliedViolations(controllers, all, formModule.GAUTCFormModel)
                 });
 
                 new schemaModule.GAUTCFormSchema();

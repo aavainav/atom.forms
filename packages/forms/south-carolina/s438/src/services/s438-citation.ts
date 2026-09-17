@@ -1,8 +1,9 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, PageCollection, SchemaConstructor, TValueType } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, PageCollection, TValueType } from "@forms/core";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { FrontPageModel } from "../models/front-page/front-page";
+import type { S438FormModel } from "../models/s438-form";
 import type { S438FormSchema } from "../models/s438-form-schema";
 
 export const IS438CitationService = createService<IS438CitationService>("forms-s438-citation-service");
@@ -15,9 +16,9 @@ export interface IS438CitationService {
     /** Returns a new page with the dropped violation data applied to the citation's violation section. */
     applyViolationDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
     /** Writes the chosen violations onto the form, one front page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<S438FormSchema>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): Promise<void>;
     /** Narrows the given violations to those the citation's front pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<S438FormSchema>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation>;
     /** Returns a new page with the dropped person data applied to the citation's violator section. */
     applyViolatorDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
 }
@@ -67,13 +68,13 @@ export class S438CitationService implements IS438CitationService {
         return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<S438FormSchema>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const formSchema = FormModel.getSchema<S438FormSchema>(schema);
+        const formSchema = FormModel.getSchema<S438FormSchema>(formCtor);
 
         const pages = controller.form.get<PageCollection>(formSchema.frontPage).getPages<FrontPageModel>();
 
@@ -124,8 +125,8 @@ export class S438CitationService implements IS438CitationService {
         });
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<S438FormSchema>): ReadonlyArray<IViolation> {
-        const formSchema = FormModel.getSchema<S438FormSchema>(schema);
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<S438FormSchema>(formCtor);
         const pages = controllers.getFormController().form.get<PageCollection>(formSchema.frontPage).getPages<FrontPageModel>();
 
         // the citation prints the statute as its violation section number, so that is what identifies a charge

@@ -1,10 +1,11 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { CitationPageModel } from "../models/citation-page/citation-page";
 import { DetailPageModel } from "../models/detail-page/detail-page";
+import type { OKParkingFormModel } from "../models/parking-form";
 import type { OKParkingFormSchema } from "../models/parking-form-schema";
 import { OKParkingValueListId } from "../value-lists";
 
@@ -26,9 +27,9 @@ export interface IOKParkingService {
     /** Returns a new citation page with the dropped violation data applied to the violation boxes. */
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKParkingFormModel>): Promise<void>;
     /** Narrows the given violations to those the citation pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKParkingFormModel>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the registered owner's state field. */
@@ -86,8 +87,8 @@ export class OKParkingService implements IOKParkingService {
         return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): ReadonlyArray<IViolation> {
-        const formSchema = FormModel.getSchema<OKParkingFormSchema>(schema);
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKParkingFormModel>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<OKParkingFormSchema>(formCtor);
         const pages = controllers.getFormController().form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the citation prints the agency's own code in its violation block, so that is what identifies a charge
@@ -96,13 +97,13 @@ export class OKParkingService implements IOKParkingService {
         return violations.filter(violation => carried.has(violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKParkingFormModel>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const formSchema = FormModel.getSchema<OKParkingFormSchema>(schema);
+        const formSchema = FormModel.getSchema<OKParkingFormSchema>(formCtor);
 
         const pages = controller.form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 

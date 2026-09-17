@@ -52,8 +52,8 @@ export class S438CitationModule implements IModule {
                 violations.registerViolations({ name, version }, {
                     listId: violationsModule.S438ViolationListId.violation,
                     pageName: "front-page",
-                    apply: (controllers, chosen) => services.get<IS438CitationService>(IS438CitationService).applyViolations(controllers, chosen, schemaModule.S438FormSchema),
-                    getApplied: (controllers, all) => services.get<IS438CitationService>(IS438CitationService).getAppliedViolations(controllers, all, schemaModule.S438FormSchema)
+                    apply: (controllers, chosen) => services.get<IS438CitationService>(IS438CitationService).applyViolations(controllers, chosen, formModule.S438FormModel),
+                    getApplied: (controllers, all) => services.get<IS438CitationService>(IS438CitationService).getAppliedViolations(controllers, all, formModule.S438FormModel)
                 });
 
                 new schemaModule.S438FormSchema();

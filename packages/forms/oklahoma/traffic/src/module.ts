@@ -78,8 +78,8 @@ export class OKTrafficModule implements IModule {
                 violations.registerViolations({ name, version }, {
                     listId: violationsModule.OKTrafficViolationListId.violation,
                     pageName: "complaint-page",
-                    apply: (controllers, chosen) => services.get<IOKTrafficService>(IOKTrafficService).applyViolations(controllers, chosen, schemaModule.OKTrafficFormSchema),
-                    getApplied: (controllers, all) => services.get<IOKTrafficService>(IOKTrafficService).getAppliedViolations(controllers, all, schemaModule.OKTrafficFormSchema)
+                    apply: (controllers, chosen) => services.get<IOKTrafficService>(IOKTrafficService).applyViolations(controllers, chosen, formModule.OKTrafficFormModel),
+                    getApplied: (controllers, all) => services.get<IOKTrafficService>(IOKTrafficService).getAppliedViolations(controllers, all, formModule.OKTrafficFormModel)
                 });
 
                 new schemaModule.OKTrafficFormSchema();

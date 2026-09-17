@@ -1,9 +1,10 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { ComplaintPageModel } from "../models/complaint-page/complaint-page";
+import type { OKTrafficFormModel } from "../models/traffic-form";
 import type { OKTrafficFormSchema } from "../models/traffic-form-schema";
 import { OKTrafficValueListId } from "../value-lists";
 
@@ -25,9 +26,9 @@ export interface IOKTrafficService {
     /** Returns a new complaint page with the dropped violation data applied to the violation boxes. */
     applyViolationDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
     /** Writes the chosen violations onto the form, one complaint page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKTrafficFormModel>): Promise<void>;
     /** Narrows the given violations to those the complaint pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKTrafficFormModel>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the defendant's sex field. */
@@ -93,8 +94,8 @@ export class OKTrafficService implements IOKTrafficService {
         return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): ReadonlyArray<IViolation> {
-        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(schema);
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKTrafficFormModel>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(formCtor);
         const pages = controllers.getFormController().form.get<PageCollection>(formSchema.complaintPage).getPages<ComplaintPageModel>();
 
         // the citation prints the agency's own code in its Muni Code box, so that is what identifies a charge
@@ -103,13 +104,13 @@ export class OKTrafficService implements IOKTrafficService {
         return violations.filter(violation => carried.has(violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<OKTrafficFormModel>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(schema);
+        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(formCtor);
 
         const pages = controller.form.get<PageCollection>(formSchema.complaintPage).getPages<ComplaintPageModel>();
 
