@@ -33,6 +33,11 @@ export interface IModalService {
 
 /** Defines options for showing a save changes confirmation modal. */
 export interface ISaveChangesOptions {
+    /** Defaults to "Are you sure you want to leave?". */
+    readonly title?: string;
+    /** Defaults to the standard "you have unsaved changes" copy. */
+    readonly message?: string;
+
     /** Invoked when the user cancels and chooses to continue editing. */
     readonly onCancel: () => Promise<void>;
     /** Invoked when the user chooses to discard their changes. */
@@ -121,8 +126,8 @@ export class ModalService implements IModalService {
 
     showSaveChangesModal(options: ISaveChangesOptions): IModal {
         return this.showModal({
-            title: "Are you sure you want to leave?",
-            content: "You have unsaved changes. You can either save your changes, discard your changes, or cancel to continue editing.",
+            title: options.title ?? "Are you sure you want to leave?",
+            content: options.message ?? "You have unsaved changes. You can either save your changes, discard your changes, or cancel to continue editing.",
             contentProps: {},
             actions: [
                 {

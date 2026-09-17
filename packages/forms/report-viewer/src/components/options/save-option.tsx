@@ -15,6 +15,7 @@ export const SaveOption = ({ controllers, dataManager, title }: IReportViewerOpt
 
         try {
             await reportViewerService.saveForm(form, dataManager);
+            controllers.getFormController().update(current => current.clean());
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {

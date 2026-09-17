@@ -3,6 +3,8 @@ import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } fr
 import { IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
+export type ReadReason = "open" | "new";
+
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
 export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
 
@@ -12,8 +14,12 @@ export const IReportViewerOptionRegistrationService = createService<IReportViewe
  * anywhere, so a host holds one per record it is showing rather than one per form.
  */
 export interface IReportViewerDataManager<TData extends object = IReportData> {
-    /** Reads the host's record and transforms it into the contract the form publishes. */
-    read(): Promise<IReadDataResult<TData> | undefined>;
+    /**
+     * Reads the host's record and transforms it into the contract the form publishes. Called with `"open"` when a
+     * form is first loaded, and with `"new"` when the viewer resets to a blank instance of the same form -- a
+     * manager whose data does not depend on a specific record can ignore which one it was asked for.
+     */
+    read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;
     /** Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable. */
     write?(data: IReportData): Promise<void>;
 }
@@ -46,10 +52,12 @@ export interface IReportViewerService {
     getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
      * Resolves the identified form from the catalog, builds it, and populates it with whatever the data manager
-     * reads, through the form's own mapper. A manager that reads nothing, or a form with no mapper, simply leaves
-     * the form as its constructor built it.
+     * reads, through the form's own mapper. `reason` is passed straight to the data manager: `"open"` (the
+     * default) for the form's first load, `"new"` when resetting an already-open form to a blank instance of
+     * itself. A manager that reads nothing, or a form with no mapper, simply leaves the form as its constructor
+     * built it.
      */
-    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>) => Promise<IInitialForm>;
+    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason) => Promise<IInitialForm>;
     /**
      * Extracts report data from the given form and hands it to the data manager, if it can write. The data is
      * returned whether or not it was consumed, so a host that persists the data itself can use this too.
@@ -127,17 +135,17 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(form, dataManager));
     }
 
-    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>): Promise<IInitialForm> {
+    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open"): Promise<IInitialForm> {
         const catalogItem = await this.formCatalogService.get(identity);
         let form = await new catalogItem.ctor().initialize();
 
-        const result = await dataManager?.read();
+        const result = await dataManager?.read(reason);
 
         if (result) {
             form = await form.populate(<IPopulateData<IReportData>>result);
         }
 
-        return { catalogItem, form, Component: catalogItem.component };
+        return { catalogItem, form: form.clean(), Component: catalogItem.component };
     }
 
     registerOption(option: IReportViewerOption): void {

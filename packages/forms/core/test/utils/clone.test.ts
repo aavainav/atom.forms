@@ -22,13 +22,13 @@ describe("withChanges", () => {
     });
 
     it("carries across every property the change does not name", () => {
-        const field = new StringFieldModel(spec).setIsDirty(true);
+        const field = new StringFieldModel(spec).setHasError(true);
 
         const changed = withChanges(field, { value: "Dana" });
 
         expect(changed.label).toBe("First name");
         expect(changed.name).toBe("first-name");
-        expect(changed.getIsDirty()).toBe(true);
+        expect(changed.getHasError()).toBe(true);
     });
 
     /**

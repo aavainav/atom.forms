@@ -61,6 +61,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     addPage(page: PageModel, pageDefinition: PageDefinition): this;
     /** Adds a rule collection used to validate the form. */
     addRuleCollection(ruleCollection: RuleCollection): this;
+    /** Returns a new form whose current data becomes the reference `getIsDirty()` compares against, going forward. */
+    clean(): this;
     /** Extracts this form's data through its own mapper, stamped with the identity it carries. A form without a mapper returns just the identity. */
     extractData(): IReportData;
     /** Gets the child entity registered for the specified page definition. */
@@ -69,6 +71,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     getFirstField<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): TField;
     /** Gets every field matching the specified field definition, grouped by the page it belongs to. */
     getFields<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): Map<PageModel, Array<TField>>;
+    /** Gets whether the form's data differs from what it held the last time `clean()` ran. A form without a mapper, or one that has never been cleaned, is never dirty. */
+    getIsDirty(): boolean;
     /** Gets every page on the form, across all page definitions. */
     getPages(): Array<PageModel>;
     /** Gets the pages belonging to the specified page definition, or an empty array when the form has none. */
@@ -85,8 +89,6 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     setStatus(status: FormStatus): this;
     /** Applies the given issue collection, setting the has error state for every field on the form. */
     validate(issueCollection: RuleIssueCollection): this;
-    /** Marks every field on the form as not dirty. */
-    clean(): this;
     /** Releases resources held by the form model, such as registered schemas and definitions. */
     dispose(): void;
 }
@@ -103,6 +105,8 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     public readonly violationListId?: string;
 
     public readonly ruleCollection: RuleCollection = new RuleCollection([]);
+
+    private readonly snapshot?: TData;
 
     public async initialize(): Promise<this> {
         let form = this;
@@ -126,6 +130,10 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public addRuleCollection(ruleCollection: RuleCollection): this {
         return withChanges(this, { ruleCollection: this.ruleCollection.addRuleCollection(ruleCollection) });
+    }
+
+    public clean(): this {
+        return withChanges(this, { snapshot: this.mapper?.extract(this) });
     }
 
     public extractData(): IReportData {
@@ -174,6 +182,10 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         });
 
         return fields;
+    }
+
+    public getIsDirty(): boolean {
+        return !!this.mapper && !!this.snapshot && JSON.stringify(this.mapper.extract(this)) !== JSON.stringify(this.snapshot);
     }
 
     public getPages(): Array<PageModel> {
@@ -229,10 +241,6 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public setStatus(status: FormStatus): this {
         return withChanges(this, { status });
-    }
-
-    public clean(): this {
-        return this.mapFields(field => field.setIsDirty(false));
     }
 
     public validate(issueCollection: RuleIssueCollection): this {

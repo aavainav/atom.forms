@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { FieldModel, TValueType } from "../../src/models/field";
 import type { PageCollection } from "../../src/models/page-collection";
-import type { PageModel } from "../../src/models/page";
 import type { SectionModel } from "../../src/models/section";
 import type { StringFieldModel } from "../../src/models/string-field";
 import { RequiredFieldRule } from "../../src/models/validation/rules/required-field-rule";
@@ -35,21 +34,6 @@ describe("FormModel", () => {
         return form
             .getPages()
             .map(page => page.get<SectionModel>(chargeSection).get<StringFieldModel>(fieldDefinition));
-    }
-
-    function readFirstName(page: PageModel): StringFieldModel {
-        return page.get<SectionModel>(violatorSection).get<StringFieldModel>(violatorFields.firstName);
-    }
-
-    /** Marks the violator's first name dirty on one page, which no public setter on the form does for us. */
-    function markDirty(target: TestCitationForm, pageIndex: number): TestCitationForm {
-        const pageCollection = target.get<PageCollection>(citationPage);
-        const page = pageCollection.findPageByIndex(pageIndex);
-        const section = page.get<SectionModel>(violatorSection);
-
-        const updated = section.set(violatorFields.firstName, readFirstName(page).setIsDirty(true));
-
-        return target.set(citationPage, pageCollection.replace(pageIndex, page.set(violatorSection, updated)));
     }
 
     describe("initialize", () => {
@@ -168,7 +152,7 @@ describe("FormModel", () => {
         });
     });
 
-    describe("setReadOnly and clean", () => {
+    describe("setReadOnly", () => {
         it("disables every field on every page", async () => {
             const withTwo = await addCitationPage(form);
 
@@ -183,20 +167,6 @@ describe("FormModel", () => {
 
             expect(enabled).not.toHaveLength(0);
             expect(enabled.every(value => value === false)).toBe(true);
-        });
-
-        it("clears the dirty state across every page", async () => {
-            let withTwo = await addCitationPage(form);
-
-            // `setValue` does not mark a field dirty, so the state has to be set for `clean` to have work to do
-            withTwo = markDirty(withTwo, 0);
-            withTwo = markDirty(withTwo, 1);
-
-            expect(withTwo.getPages().map(page => readFirstName(page).getIsDirty())).toEqual([true, true]);
-
-            const cleaned = withTwo.clean();
-
-            expect(cleaned.getPages().map(page => readFirstName(page).getIsDirty())).toEqual([false, false]);
         });
     });
 

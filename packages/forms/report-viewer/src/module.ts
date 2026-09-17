@@ -60,28 +60,34 @@ export class ReportViewerModule implements IModule {
         const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
 
         options.registerOption({ id: "validate", title: "Validate", Component: lazy(() => import("./components/options").then(m => ({ default: m.ValidateOption }))) });
+        
         options.registerOption({
             id: "violations",
             title: "Violations",
-            Component: lazy(() => import("@forms/violations").then(m => ({ default: m.ViolationsOption }))),
-            // the form's own declaration is the gate: a form that draws its charges from a violation list says so
-            // on itself, and nothing else has to be asked whether the selector belongs on it
+            Component: lazy(() => import("@forms/violations").then(module => ({ default: module.ViolationsOption }))),
             canShow: form => !!form.violationListId
         });
+
         options.registerOption({
             id: "save",
             title: "Save",
-            Component: lazy(() => import("./components/options").then(m => ({ default: m.SaveOption }))),
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.SaveOption }))),
             canShow: (form, dataManager) => reportViewerService.canSaveForm(form, dataManager)
         });
+
+        options.registerOption({
+            id: "new-form",
+            title: "Start a new form",
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.NewFormOption })))
+        });
+
         options.registerOption({
             id: "report-data",
             title: "View report data",
-            Component: lazy(() => import("./components/options").then(m => ({ default: m.ReportDataOption }))),
-            // the data is only worth showing once a mapper can produce it; without one the payload is the stamped
-            // identity and nothing the user filled in
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.ReportDataOption }))),
             canShow: form => reportViewerService.canExtractData(form)
         });
+
         options.registerOption({ id: "print", title: "Print", Component: lazy(() => import("@forms/printing").then(m => ({ default: m.PrintOption }))) });
         options.registerOption({ id: "day-night-mode", title: "Toggle day/night mode", Component: lazy(() => import("./components/options").then(m => ({ default: m.DayNightModeOption }))) });
 

@@ -76,11 +76,10 @@ describe("OptionFieldModel", () => {
 });
 
 describe("field state", () => {
-    it("defaults to enabled, not dirty and without an error", () => {
+    it("defaults to enabled and without an error", () => {
         const field = new StringFieldModel(spec);
 
         expect(field.getIsEnabled()).toBe(true);
-        expect(field.getIsDirty()).toBe(false);
         expect(field.getHasError()).toBe(false);
     });
 
@@ -88,12 +87,10 @@ describe("field state", () => {
         const field = new StringFieldModel(spec);
 
         expect(field.setHasError(true)).not.toBe(field);
-        expect(field.setIsDirty(true)).not.toBe(field);
         expect(field.setIsEnabled(false)).not.toBe(field);
         expect(field.setValue("Dana")).not.toBe(field);
 
         expect(field.getHasError()).toBe(false);
-        expect(field.getIsDirty()).toBe(false);
         expect(field.getIsEnabled()).toBe(true);
         expect(field.getValue()).toBe("");
     });

@@ -1,4 +1,4 @@
-import { IFormIdentity, IReportData, FormType, ReadOnlyFields } from "@forms/core";
+import { IFormIdentity, IPopulateData, IReportData, FormType, ReadOnlyFields } from "@forms/core";
 import { IGAUTCData } from "@forms/ga-utc";
 import { IPublicContactOrWarningData } from "@forms/public-contact-or-warning";
 import { IReportViewerDataManager } from "@forms/report-viewer";
@@ -83,6 +83,10 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
  * The write stores to sessionStorage and the read prefers a stored record over the fixture, so the whole round trip
  * can be seen without a server: load, edit, save, reload.
  *
+ * With no `?record=` given at all, and nothing saved yet, `read` returns nothing and the form opens blank -- the
+ * "Load test data" option (`forms/load-test-data-option.tsx`) is the interactive equivalent of `?record=full`, for
+ * a form worth demoing without hand-editing every field first.
+ *
  * Switch scenarios with `?record=full` or `?record=minimal`. Clear a saved record with `?record=full&reset=1`.
  * `?record=new` starts from the values a host would give a record that does not exist yet -- and locks whichever of
  * them it considers settled -- e.g. `/sc/432?record=new&reset=1` or `/sc/s438?record=new&reset=1`.
@@ -108,7 +112,7 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
                 return { data: saved };
             }
 
-            const scenario = searchParams.get("record") ?? searchParams.get("citation") ?? "full";
+            const scenario = searchParams.get("record") ?? searchParams.get("citation");
 
             if (scenario === "new") {
                 // there is no separate notion of defaults any more: a record that does not exist yet is just a
@@ -116,10 +120,25 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
                 return form.defaults && { data: stamp(form, form.defaults.data), readOnlyFields: form.defaults.readOnlyFields };
             }
 
+            if (!scenario) {
+                return undefined;
+            }
+
             return { data: stamp(form, form.records[scenario] ?? form.records.full) };
         },
         write: async data => sessionStorage.setItem(getStorageKey(form.identity), JSON.stringify(data))
     };
+}
+
+/**
+ * Returns this form's "full" fixture, for the "Load test data" option to fill an already-open form with on demand
+ * rather than the app doing it automatically. A form this host holds no fixtures for returns nothing, which is how
+ * the option knows not to offer itself.
+ */
+export function getExampleTestData(identity: IFormIdentity): IPopulateData<IReportData> | undefined {
+    const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);
+
+    return form && { data: stamp(form, form.records.full) };
 }
 
 /** Returns the record last saved for the given form, or undefined when nothing has been saved for it. */
