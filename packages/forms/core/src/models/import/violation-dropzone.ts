@@ -24,11 +24,9 @@ export interface IViolationDropzone extends IDropzone<IImportableViolation> {
 }
 
 /**
- * Represents a dropzone for handling importable violation data.
- *
- * A citation names the charge in a different place on every form -- and on the Oklahoma forms across two sections,
- * one of which carries the money -- so a form registers this with only the fields it actually prints, and the rest
- * are left off. A dropzone ignores a key it holds no field for.
+ * Dropzone for importable violation data. A citation names the charge differently on every form -- on the
+ * Oklahoma forms, across two sections, one carrying the money -- so a form registers this with only the fields
+ * it prints; a dropzone ignores a key it holds no field for.
  */
 export class ViolationDropzone extends Dropzone<IImportableViolation> implements IViolationDropzone {
     readonly type: DraggableItemType = "violation";

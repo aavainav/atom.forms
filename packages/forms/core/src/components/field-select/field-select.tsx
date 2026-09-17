@@ -70,9 +70,8 @@ interface IFFieldSelectProps {
     /**
      * The value of the parent option this select's list hangs off, for a list that depends on another field.
      *
-     * It is folded into the cache key and handed to the loader, and those two things are the whole of a parent/child
-     * dependency: a different parent is a different key, which is what makes this select reload, and the loader is
-     * told which parent to load for without having to be rebuilt when it changes.
+     * Passed straight to the loader, and included in the load effect's own dependencies -- a changed parent value
+     * is what makes this select reload, without the loader itself needing to be rebuilt.
      */
     readonly parentValue?: string;
     /** Text shown when nothing is selected; default "Select...". */
@@ -119,11 +118,10 @@ export default function FFieldSelect({
     const popperRef = useRef<Instance | undefined>(undefined);
     const searchInputRef = useRef<IFieldInputComponent>(null);
 
-    // the options are not loaded until the menu has been opened once, so a select backed by a large lazily
-    // imported value list costs nothing on a form nobody opens it on. The toggle's text is read off `value`
-    // rather than looked up here, so a field that already holds a selection still reads correctly beforehand.
-    // The flag is sticky rather than tied to `isOpen` because a later parent value change - a model list whose
-    // make has changed - must still reload while the menu is closed.
+    // options load only once the menu has opened, so a select backed by a large lazy value list costs nothing on
+    // a form nobody opens it on. The toggle's text reads off `value` directly, so an existing selection still
+    // shows before that first load. The flag stays sticky rather than tracking `isOpen`, since a parent value
+    // change must still reload while the menu is closed.
     useEffect(() => {
         if (!hasOpened) {
             return;
@@ -224,9 +222,8 @@ export default function FFieldSelect({
     // menu is meant to be narrowed by searching rather than scrolled end to end
     const visibleOptions = useMemo(() => filteredOptions.slice(0, maxVisibleItems), [filteredOptions, maxVisibleItems]);
 
-    // the selection is a value/description pair in its own right, so it is read straight off `value` rather than
-    // looked up in the loaded list: the toggle then reads correctly before the list has been loaded, and a code
-    // the list no longer carries still shows what the record holds instead of quietly reading as unset
+    // the selection is read straight off `value` rather than looked up in the loaded list, so the toggle reads
+    // correctly before the list loads, and a code the list no longer carries still shows instead of reading as unset
     const selectedOptions = useMemo(
         () => (value ? (Array.isArray(value) ? value : [value]) : []).filter(hasSelection),
         [value]);
@@ -294,9 +291,9 @@ export default function FFieldSelect({
                     ) : visibleOptions.length > 0 ? (
                         visibleOptions.map((option, index) => (
                             <a
-                                // the key carries the index because a caller's list may repeat a code; the items
-                                // hold no state of their own and the list is replaced wholesale whenever the
-                                // filter changes, so there is nothing for an index key to tear
+                                // the key carries the index since a caller's list may repeat a code; the items hold
+                                // no state of their own and the list is replaced wholesale on every filter change,
+                                // so there's nothing for an index key to tear
                                 key={`${index}-${option.value}`}
                                 href="#"
                                 className="f-field-select__dropdown-item dropdown-item d-flex align-items-center justify-content-between"

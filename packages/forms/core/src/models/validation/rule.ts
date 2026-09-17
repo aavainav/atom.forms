@@ -25,12 +25,7 @@ export interface IRule {
     when(condition: Condition): this;
 }
 
-/**
- * Represents an abstract validation rule that can be used to validate a form.
- *
- * A rule resolves the fields it needs from the context it is handed, so a rule is free to read a single field,
- * several fields, or to combine other rules.
- */
+/** Abstract validation rule. A rule resolves the fields it needs from the context it's handed, so it's free to read one field, several, or combine other rules. */
 export abstract class Rule implements IRule {
     static readonly defaultMessage: string;
 
@@ -55,11 +50,11 @@ export abstract class Rule implements IRule {
     }
 
     /**
-     * Whether the rule reads only shared sections, whose values are the same on every instance of their page.
+     * Whether the rule reads only shared sections, whose values are the same on every page instance.
      *
-     * A rule that does is evaluated against the first page alone, since evaluating it per page would report the
-     * same issue once for each -- three copies of "First name is required" on a citation carrying three violations.
-     * A rule that cannot say returns false and is evaluated per page, which is the existing behaviour.
+     * A rule that does is evaluated against the first page alone -- otherwise the same issue reports once per
+     * page, e.g. three copies of "First name is required" on a citation with three violations. A rule that can't
+     * say returns false and is evaluated per page.
      */
     public isShared(): boolean {
         return false;

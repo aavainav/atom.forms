@@ -40,40 +40,34 @@ export interface IFormMapper<TForm extends FormModel<any>, TData extends object>
     /** Returns the form's current values as its data contract, emitting every field the form owns. */
     extract(form: TForm): TData;
     /**
-     * Returns a new form with the given data applied; fields the data does not mention keep the values they hold.
+     * Returns a new form with the given data applied; a key the data omits leaves that field as it was.
      *
-     * A form whose pages repeat has to create a page per record the data carries, and creating a page means
-     * awaiting its `initialize`, so a mapper may answer with a promise. A mapper over a form of fixed pages has
-     * nothing to await and returns the form directly.
+     * A form whose pages repeat creates a page per record, which needs awaiting `initialize` -- hence the promise;
+     * a form of fixed pages has nothing to await and returns directly.
      *
-     * `readOnlyFields`, when given, marks which of the data's own fields should come back disabled rather than
-     * editable -- for a host stamping a default value it considers a settled fact rather than an editable
-     * suggestion. A field the mapper hasn't wired up for locking (see `FormMapper.write`) stays editable
-     * regardless of being marked here.
+     * `readOnlyFields` marks which fields come back disabled rather than editable, for a host-stamped default it
+     * considers settled. Only fields the mapper wires through `write` (see below) can actually lock.
      */
     populate(form: TForm, input: IPopulateData<TData>): TForm | Promise<TForm>;
 }
 
 /**
- * Represents an abstract base class for a form's data mapper.
- *
- * A mapper is hand-written per form: every field it carries is listed by name, in a method per section, so a
- * field added to the form and forgotten here shows up as a gap a reader can see. What the base contributes is
- * the pair of field-level primitives every mapper needs and the shape of the two directions.
+ * Abstract base for a form's data mapper. A mapper is hand-written per form -- every field listed by name, in a
+ * method per section -- so a forgotten field shows up as a visible gap. This base supplies the two field-level
+ * primitives (`read`/`write`) every mapper needs.
  */
 export abstract class FormMapper<TForm extends FormModel<any>, TData extends object> implements IFormMapper<TForm, TData> {
     abstract extract(form: TForm): TData;
     abstract populate(form: TForm, input: IPopulateData<TData>): TForm | Promise<TForm>;
 
     /**
-     * Assigns the field's current value to the given key, whether or not the field has been answered, so every
-     * field the mapper names comes back with a real entry rather than a gap a reader has to account for separately.
+     * Assigns the field's value to `key`, answered or not, so every named field comes back as a real entry.
      *
-     * `field` must be the one concrete `FieldModel` shaped for `key`'s own value type -- a `string` key refuses a
-     * `BooleanFieldModel` at compile time, which is what catches a field wired to the wrong key.
+     * `field` must be the concrete `FieldModel` matching `key`'s value type -- a `string` key refuses a
+     * `BooleanFieldModel` at compile time, catching a field wired to the wrong key.
      *
-     * The target is any object rather than the mapper's own contract, so a contract that nests a record per
-     * repeated page can be filled through the same primitive as the flat part of it is.
+     * The target is any object, not the mapper's own contract, so a nested per-page record fills through the same
+     * primitive as the flat part does.
      */
     protected read<TTarget extends object, TKey extends keyof TTarget>(
         data: FormValues<TTarget>,
@@ -84,20 +78,16 @@ export abstract class FormMapper<TForm extends FormModel<any>, TData extends obj
     }
 
     /**
-     * Returns a new section with the field set from `data[key]`, or the section unchanged when that value is
-     * undefined, so a key the data does not mention leaves the field holding whatever it already had.
+     * Returns a new section with the field set from `data[key]`, unchanged if that value is undefined -- a key the
+     * data omits leaves the field as it was. Mirrors `read`: the target comes first, the key named once.
      *
-     * This mirrors `read`: the target comes first and the key is named once, with the value derived rather than
-     * passed alongside it. Because the key is always in hand, every field written through here is lockable - when
-     * `readOnlyFields` marks the key the field also comes back disabled, for a host stamping a default value it
-     * considers settled rather than editable. A section method that threads `readOnlyFields` gets that for every
-     * field it writes; one that doesn't simply never locks.
+     * Every field written here is lockable: when `readOnlyFields` marks the key, the field also comes back
+     * disabled, for a host-stamped default it considers settled. A section method that threads `readOnlyFields`
+     * gets that for every field it writes; one that doesn't simply never locks.
      *
-     * The source is any object rather than the mapper's own contract, for the same reason `read`'s target is: a
-     * contract that nests a record per repeated page is written through the same primitive.
-     *
-     * `definition` must be a `FieldDefinition` of the one concrete `FieldModel` shaped for `key`'s own value type,
-     * the same guard `read` applies in the other direction.
+     * The source is any object, not the mapper's own contract, for the same nesting reason as `read`. `definition`
+     * must be a `FieldDefinition` of the concrete `FieldModel` matching `key`'s value type -- the same guard `read`
+     * applies in reverse.
      */
     protected write<TSection extends SectionModel, TSource extends object, TKey extends keyof TSource>(
         section: TSection,

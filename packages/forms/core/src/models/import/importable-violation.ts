@@ -14,11 +14,9 @@ export const schema = z.object({
 export type ImportableViolation = z.infer<typeof schema>;
 
 /**
- * Describes a violation's data as it arrives from an import source.
- *
- * Everything but the code and the description is optional because no jurisdiction publishes all of it, and a form
- * takes only what it has a box for; the shape mirrors `IViolation` in `@forms/violations`, which is where the
- * violations a selector offers come from.
+ * A violation's data as it arrives from an import source. Everything but code and description is optional, since
+ * no jurisdiction publishes all of it and a form takes only what it has a box for. Mirrors `IViolation` in
+ * `@forms/violations`, where a selector's violations come from.
  */
 export interface IImportableViolation {
     /** The agency's own code for the violation. */

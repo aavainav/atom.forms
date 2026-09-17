@@ -1,8 +1,8 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { useService } from "@common/react";
 import { FAsyncLoader, FLoadingIndicator, IFormIdentity, IReportData } from "@forms/core";
 
-import { ReportViewerForm } from "./report-viewer-form";
+import { IReportViewerComponent, ReportViewerForm } from "./report-viewer-form";
 import { IInitialForm, IReportViewerDataManager, IReportViewerService } from "../services";
 
 import "@forms/core/theme/_main.scss";
@@ -33,7 +33,10 @@ export interface IReportViewerProps<TData extends object = IReportData> {
  * a mutation of the model after it loads -- takes the longer way round instead: `IReportViewerService.loadForm`
  * and then `ReportViewerForm`, which is exactly what this does.
  */
-export function ReportViewer<TData extends object = IReportData>({ identity, dataManager, settings }: IReportViewerProps<TData>): React.JSX.Element {
+function ReportViewerInner<TData extends object = IReportData>(
+    { identity, dataManager, settings }: IReportViewerProps<TData>,
+    ref: React.ForwardedRef<IReportViewerComponent>
+): React.JSX.Element {
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     return (
@@ -49,6 +52,7 @@ export function ReportViewer<TData extends object = IReportData>({ identity, dat
                 loading={<FLoadingIndicator message={`Loading ${identity.name} form...`} />}>
                 {initialForm => (
                     <ReportViewerForm
+                        ref={ref}
                         initialForm={initialForm}
                         dataManager={dataManager}
                         isReadOnly={!!settings?.isReadOnly}
@@ -59,3 +63,9 @@ export function ReportViewer<TData extends object = IReportData>({ identity, dat
         </div>
     );
 }
+
+// forwardRef erases a component's own generic type parameter, so the result is cast back to one here -- the
+// standard shape for a generic component that also forwards a ref.
+export const ReportViewer = forwardRef(ReportViewerInner) as <TData extends object = IReportData>(
+    props: IReportViewerProps<TData> & { ref?: React.Ref<IReportViewerComponent> }
+) => React.JSX.Element;

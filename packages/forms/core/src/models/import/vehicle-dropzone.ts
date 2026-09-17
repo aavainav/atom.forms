@@ -22,10 +22,9 @@ export class VehicleDropzone extends Dropzone<IImportableVehicle> implements IVe
     readonly type: DraggableItemType = "vehicle";
 
     /**
-     * The make and model are taken as fields of any type rather than string fields, because a form may hold
-     * them as a code chosen from a value list instead of as free text. A form that does must override
-     * {@link onDrop}, since the dropped data carries a name with no code and what that name resolves to is the
-     * form's own business.
+     * Make and model take fields of any type, not string fields, since a form may hold them as a value-list code
+     * rather than free text. A form that does must override {@link onDrop} -- the dropped data carries a name
+     * with no code, and resolving that name is the form's own business.
      */
     constructor(
         page: PageModel,

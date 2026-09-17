@@ -1,13 +1,29 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
 import { useService } from "@common/react";
-import { useFormController, IControllerManager, ControllerManager } from "@forms/core";
+import { useFormController, IControllerManager, ControllerManager, IReportData, IRuleIssue } from "@forms/core";
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
 import { PanelManager } from "./panel";
 import { ReportViewerOptions } from "./report-viewer-options";
 import { ValidationManager } from "./validation";
-import { IInitialForm, IModalService, INotificationService, IReportViewerDataManager } from "../services";
+import { IInitialForm, IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../services";
+
+/**
+ * The imperative surface a host can reach through a ref on `ReportViewer`/`ReportViewerForm`, for the handful of
+ * things that don't fit as a prop. Every member here is a pure read -- none of them change what the user sees --
+ * so a host can call any of them just to ask a question, with no risk of a surprising side effect.
+ */
+export interface IReportViewerComponent {
+    /** Gets whether the form can currently be saved, which it can once it carries a mapper and the data manager can write. */
+    canSave(): boolean;
+    /** Extracts the form's current data through its own mapper, without persisting any of it. */
+    extractData(): IReportData;
+    /** Whether the form's data differs from what it held the last time it was loaded or saved. */
+    getIsDirty(): boolean;
+    /** Runs the form's validation rules and returns the issues found, without changing anything the user sees. */
+    validate(): ReadonlyArray<IRuleIssue>;
+}
 
 interface IReportViewerFormProps {
     /** The controllers to use for the form; when omitted a set is created and owned here. Supply this when something rendered outside the form, such as a panel of draggable items, needs the same controllers. */
@@ -25,9 +41,10 @@ interface IReportViewerFormProps {
  * loading the form itself; a host needing shared controllers or a mutation of the loaded model calls
  * `IReportViewerService.loadForm` and renders this directly, so both paths wire a form up identically.
  */
-export function ReportViewerForm({ controllers, initialForm, dataManager, isReadOnly, showOptions }: IReportViewerFormProps): React.JSX.Element {
+export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, isReadOnly, showOptions }, ref) {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
+    const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     const ownedControllers = useMemo(() => controllers ? undefined : new ControllerManager(), [controllers, initialForm]);
     const formControllers = controllers ?? ownedControllers!;
@@ -35,6 +52,18 @@ export function ReportViewerForm({ controllers, initialForm, dataManager, isRead
     const initialState = useMemo(() => isReadOnly ? initialForm.form.setReadOnly() : initialForm.form, [initialForm, isReadOnly]);
 
     const controller = useFormController(formControllers, initialState);
+
+    useImperativeHandle(ref, () => ({
+        canSave: () => reportViewerService.canSaveForm(controller.form, dataManager),
+        extractData: () => reportViewerService.extractData(controller.form),
+        getIsDirty: () => controller.form.getIsDirty(),
+        validate: () => {
+            const rulesController = formControllers.getRulesController();
+            rulesController.validate();
+
+            return rulesController.getIssueCollection().getIssues();
+        }
+    }), [controller, dataManager, formControllers, reportViewerService]);
 
     const confirmDeletePage = useCallback(() => new Promise<boolean>(resolve =>
         modalService.showConfirmModal({
@@ -69,4 +98,4 @@ export function ReportViewerForm({ controllers, initialForm, dataManager, isRead
             )}
         </>
     );
-}
+});

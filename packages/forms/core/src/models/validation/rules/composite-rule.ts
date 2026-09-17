@@ -19,14 +19,13 @@ export interface ICompositeRule extends IRule {
 }
 
 /**
- * Represents a validation rule that groups other rules under a logical operator.
+ * A validation rule that groups other rules under a logical operator.
  *
- * An `and` group reports every issue its rules produce, so the user sees everything wrong at once, and each
- * issue keeps the message of the rule that raised it. An `or` group reports nothing as soon as one of its rules
- * passes; when they all fail it reports their issues, replaced by the group's own message if it was given one.
+ * `and` reports every issue its rules produce, each keeping its own rule's message. `or` reports nothing once one
+ * rule passes; if all fail, it reports their issues, replaced by the group's own message if it was given one.
  *
- * The rules in a group do not have to share a field, which is what allows a group to express a requirement spanning
- * several fields, such as one of two fields having to be filled in.
+ * The rules needn't share a field, so a group can express a requirement spanning several -- e.g. one of two
+ * fields being filled in.
  */
 @RegisterRule(CompositeRule.name)
 export class CompositeRule extends Rule implements ICompositeRule {

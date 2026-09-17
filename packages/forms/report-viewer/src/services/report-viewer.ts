@@ -9,22 +9,20 @@ export const IReportViewerService = createService<IReportViewerService>("forms-r
 export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
 
 /**
- * Defines the host's side of a form's data: where the record the form is populated from comes from, and where the
- * data the form publishes goes back to. It is handed to the report viewer as a prop rather than registered
- * anywhere, so a host holds one per record it is showing rather than one per form.
+ * The host's side of a form's data: where a record comes from, and where the form's published data goes back to.
+ * Handed to the report viewer as a prop rather than registered, so a host holds one per record, not one per form.
  */
 export interface IReportViewerDataManager<TData extends object = IReportData> {
     /**
-     * Reads the host's record and transforms it into the contract the form publishes. Called with `"open"` when a
-     * form is first loaded, and with `"new"` when the viewer resets to a blank instance of the same form -- a
-     * manager whose data does not depend on a specific record can ignore which one it was asked for.
+     * Reads the host's record into the form's own contract. Called with `"open"` on a first load and `"new"` when
+     * resetting to a blank form -- a manager whose data isn't tied to a specific record can ignore which one it gets.
      */
     read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;
     /** Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable. */
     write?(data: IReportData): Promise<void>;
 }
 
-/** Defines what a data manager read. */
+/** What a data manager's `read` returns. */
 export type IReadDataResult<TData extends object = IReportData> = IPopulateData<TData>;
 
 /** Describes a form resolved from the form catalog and ready to render. */
@@ -38,30 +36,20 @@ export interface IInitialForm {
 }
 
 export interface IReportViewerService {
-    /** Gets whether the given form's report data can be extracted, which it can once it carries a mapper. */
+    /** Whether the form's data can be extracted -- true once it carries a mapper. */
     canExtractData: (form: FormModel<any>) => boolean;
-    /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
+    /** Whether the form can be saved -- true once it carries a mapper and the data manager can write. */
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
-    /**
-     * Extracts the report data the given form publishes, stamped with the identity the form model carries. The
-     * form's own mapper is what does the extracting. This is the data `saveForm` hands to the data manager,
-     * without persisting any of it.
-     */
+    /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
-    /** Gets the options the given form offers, in the order they are rendered in the options bar. */
+    /** The form's options, in the order the bar renders them. */
     getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
-     * Resolves the identified form from the catalog, builds it, and populates it with whatever the data manager
-     * reads, through the form's own mapper. `reason` is passed straight to the data manager: `"open"` (the
-     * default) for the form's first load, `"new"` when resetting an already-open form to a blank instance of
-     * itself. A manager that reads nothing, or a form with no mapper, simply leaves the form as its constructor
-     * built it.
+     * Resolves, builds and populates the identified form. `reason` passes through to the data manager -- `"open"`
+     * for a first load, `"new"` for a reset. Nothing to populate leaves the form as its constructor built it.
      */
     loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason) => Promise<IInitialForm>;
-    /**
-     * Extracts report data from the given form and hands it to the data manager, if it can write. The data is
-     * returned whether or not it was consumed, so a host that persists the data itself can use this too.
-     */
+    /** Extracts the form's data and hands it to the data manager, if it can write. Returned either way, so a host that persists it itself can reuse this. */
     saveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Promise<IReportData>;
 }
 
@@ -78,11 +66,9 @@ export interface IReportViewerOption {
 }
 
 /**
- * Defines a service for registering an option to render in the report viewer's options bar. `ReportViewerModule`
- * is the only thing that calls this today, registering its own six built-ins from its own `configure()` -- the
- * report viewer stays the sole importer of `@forms/violations`/`@forms/printing` rather than having them register
- * up into it, which is what keeps the dependency direction one-way. The seam is public rather than private to that
- * module because it is the natural extension point for a host that wants to add its own option.
+ * Registers an option to render in the report viewer's options bar. `ReportViewerModule` registers its own
+ * built-ins here, keeping `@forms/violations`/`@forms/printing` from registering up into this package. Public
+ * since it's also how a host adds its own option.
  */
 export interface IReportViewerOptionRegistrationService {
     /** Registers an option to render in the report viewer's options bar. Registering the same id twice throws. */
@@ -116,12 +102,10 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
     constructor(@IFormCatalogService private readonly formCatalogService: IFormCatalogService) {
     }
 
-    /** Gets whether the given form's report data can be extracted, which it can once it carries a mapper. */
     canExtractData(form: FormModel<any>): boolean {
         return !!form.mapper;
     }
 
-    /** Gets whether the given form can be saved, which it can once it carries a mapper and the data manager can write. */
     canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
         return !!form.mapper && !!dataManager?.write;
     }
@@ -130,7 +114,6 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return form.extractData();
     }
 
-    /** Gets the registered options offered for the given form, in the order they were registered. */
     getOptions(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): Array<IReportViewerOption> {
         return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(form, dataManager));
     }

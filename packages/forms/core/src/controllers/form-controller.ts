@@ -24,10 +24,7 @@ export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
     get(): TSection;
     /** Sets a single field's value. */
     setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void;
-    /**
-     * Applies a change computed from the section's current state. Always compute from the argument rather than a
-     * section captured during render; a captured section is a snapshot that another edit may already have replaced.
-     */
+    /** Applies a change computed from the section's current state. Compute from the argument, not a section captured during render -- that snapshot may already be stale. */
     update(update: (section: TSection) => TSection): void;
 }
 
@@ -253,15 +250,12 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> imple
 }
 
 /**
- * Copies the values of the page definition's shared sections from the first page in the collection onto a page
- * about to be added.
+ * Copies the shared sections' values from the collection's first page onto a page about to be added -- a page
+ * arrives from `createPage` empty, so without this its shared sections would stay blank until an edit converged them.
  *
- * A page arrives from `createPage` empty, so without this a new page would show blank shared sections until an
- * edit to one of them happened to converge every instance.
- *
- * The values are copied field by field rather than by carrying the whole section across, so the new page keeps the
- * fields `initialize` gave it and with them their own uuids -- the ids the rendered inputs and their labels are
- * addressed by, which must stay distinct across pages that print together.
+ * Copied field by field rather than by carrying the whole section, so the new page keeps the field uuids
+ * `initialize` gave it -- the ids inputs and labels are addressed by, which must stay distinct across pages that
+ * print together.
  */
 function copySharedSections<TPage extends PageModel>(form: FormModel<any>, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
     const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);

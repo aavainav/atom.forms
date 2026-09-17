@@ -10,9 +10,8 @@ export interface ISectionDefinitionOptions {
     /**
      * Whether the section holds the same values on every instance of its page.
      *
-     * A shared section is written through to every page instance rather than to the one being edited, so a page
-     * that repeats for one reason -- a citation carrying a page per violation -- still reads as one record for
-     * everything the repetition is not about.
+     * A shared section writes through to every instance, not just the one being edited, so a page repeating for
+     * one reason -- a citation with a page per violation -- still reads as one record for everything else.
      */
     readonly isShared?: boolean;
 }

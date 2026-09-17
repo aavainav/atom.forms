@@ -65,9 +65,8 @@ const displacedSides: Partial<Record<SpacingSide, Array<SpacingSide>>> = {
 };
 
 /**
- * Resolves a component's own spacing defaults against the spacing a caller asked for and builds inline styles
- * for the result. A side the caller supplies removes any default it covers, so an explicit value clears a default
- * it would normally overlay.
+ * Resolves a component's spacing defaults against what a caller asked for, building inline styles for the result.
+ * A side the caller supplies clears any default it covers, rather than layering on top of it.
  */
 function buildSpacingStyle(prefix: "margin" | "padding", defaults: SpacingValues | undefined, spacing: FMarginSize | SpacingValues | undefined): CSSProperties {
     if (!defaults && !spacing) {

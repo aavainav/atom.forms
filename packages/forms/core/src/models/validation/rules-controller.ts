@@ -28,10 +28,7 @@ export interface IRulesController extends IController {
     validate(): void;
 }
 
-/**
- * A decorator function used to register a validation rule by associating a name with a rule constructor.
- * This allows the rule to be stored in the `RulesController` type registry for later retrieval.
- */
+/** Registers a rule constructor under `name`, for lookup via `RulesController.getTypeByName`. */
 export function RegisterRule(name: string) {
     return function <T extends RuleConstructor<Rule>>(target: T) {
         RulesController.typeRegistry.set(name, target);
@@ -39,12 +36,8 @@ export function RegisterRule(name: string) {
 }
 
 /**
- * The `RulesController` class is responsible for managing validation rules and their associated issues
- * for a given form. It provides methods to validate fields, manage rule issues, and interact with
- * the form's structure.
- *
- * The form and rule collection are reassigned by the controller manager each time the controller is requested,
- * since the form model is immutable and is replaced by a new instance whenever the form is edited.
+ * Manages a form's validation rules and issues. The controller manager reassigns `form`/`ruleCollection` each
+ * time this is requested, since the form model is immutable and replaced by a new instance on every edit.
  */
 export class RulesController implements IRulesController {
     public static readonly typeRegistry: Map<string, RuleConstructor<Rule>> = new Map<string, RuleConstructor<Rule>>();
