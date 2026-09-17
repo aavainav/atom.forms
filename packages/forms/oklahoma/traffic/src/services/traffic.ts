@@ -1,10 +1,10 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { ComplaintPageModel } from "../models/complaint-page/complaint-page";
-import { OKTrafficFormSchema } from "../models/traffic-form-schema";
+import type { OKTrafficFormSchema } from "../models/traffic-form-schema";
 import { OKTrafficValueListId } from "../value-lists";
 
 export const IOKTrafficService = createService<IOKTrafficService>("forms-ok-traffic-service");
@@ -25,9 +25,9 @@ export interface IOKTrafficService {
     /** Returns a new complaint page with the dropped violation data applied to the violation boxes. */
     applyViolationDropzone(page: ComplaintPageModel, dropzone: Dropzone): ComplaintPageModel;
     /** Writes the chosen violations onto the form, one complaint page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): Promise<void>;
     /** Narrows the given violations to those the complaint pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the defendant's sex field. */
@@ -93,9 +93,9 @@ export class OKTrafficService implements IOKTrafficService {
         return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
-        const schema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
-        const pages = controllers.getFormController().form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(schema);
+        const pages = controllers.getFormController().form.get<PageCollection>(formSchema.complaintPage).getPages<ComplaintPageModel>();
 
         // the citation prints the agency's own code in its Muni Code box, so that is what identifies a charge
         const carried = new Set(pages.map(page => page.getViolationSection().getMunicipalCode().getValue()).filter(Boolean));
@@ -103,15 +103,15 @@ export class OKTrafficService implements IOKTrafficService {
         return violations.filter(violation => carried.has(violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKTrafficFormSchema>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const schema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormSchema);
+        const formSchema = FormModel.getSchema<OKTrafficFormSchema>(schema);
 
-        const pages = controller.form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+        const pages = controller.form.get<PageCollection>(formSchema.complaintPage).getPages<ComplaintPageModel>();
 
         // the chosen violations go into the first page with no code on it, and then onto pages after that, so
         // picking again adds to the citation rather than rewriting it
@@ -120,13 +120,13 @@ export class OKTrafficService implements IOKTrafficService {
 
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         for (let index = pages.length; index < start + violations.length; index++) {
-            await controller.addPage(schema.complaintPage);
+            await controller.addPage(formSchema.complaintPage);
         }
 
         // the date, time, county and location sit in the violation section alongside the codes, so they are not
         // carried across by the shared-section copy; one stop produces one of each however many charges come out
         // of it, so they are taken from the first page
-        const first = controller.form.get<PageCollection>(schema.complaintPage).pages[0] as ComplaintPageModel;
+        const first = controller.form.get<PageCollection>(formSchema.complaintPage).pages[0] as ComplaintPageModel;
         const source = first.getViolationSection();
         const date = source.getDate().getValue();
         const time = source.getTime().getValue();
@@ -134,7 +134,7 @@ export class OKTrafficService implements IOKTrafficService {
         const location = source.getLocation().getValue();
 
         controller.update(form => {
-            let collection = form.get<PageCollection>(schema.complaintPage);
+            let collection = form.get<PageCollection>(formSchema.complaintPage);
 
             violations.forEach((violation, offset) => {
                 const index = start + offset;
@@ -163,7 +163,7 @@ export class OKTrafficService implements IOKTrafficService {
                 collection = collection.replace(index, result.set(result.offenseSection, offenseUpdated));
             });
 
-            return form.set(schema.complaintPage, collection);
+            return form.set(formSchema.complaintPage, collection);
         });
     }
 

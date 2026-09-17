@@ -3,7 +3,7 @@ import { CATALOG_IDENTITY } from "../module";
 import { IGAUTCData, GAUTCMapper } from "../mapping";
 import { gaUtcValueLists } from "../value-lists";
 import { GAUTCValueViolationListId } from "../violations";
-import { GAUTCFormSchema } from "./utc-form-schema";
+import type { GAUTCFormSchema } from "./utc-form-schema";
 import { CitationPageModel } from "./citation-page/citation-page";
 import { CourtPageModel } from "./court-page/court-page";
 

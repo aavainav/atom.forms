@@ -53,7 +53,9 @@ export const mockPublicContactOrWarningRecords: Record<string, IPublicContactOrW
 
         primaryReasonMovingViolation: true,
 
+        searchesConsentSearchRequested: true,
         searchesConsentSearchRequestedYes: true,
+        searchesConsentGiven: true,
         searchesConsentGivenYes: true,
         searchesMadeByConsent: true,
         searchesOfDriver: true

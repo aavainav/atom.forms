@@ -2,7 +2,7 @@ import { CrashForm, FieldDefinition, FormModel, ICrash, IForm, NumberFieldModel,
 import { CATALOG_IDENTITY } from "../module";
 import { ITR310Data, TR310Mapper } from "../mapping";
 import { tr310ValueLists } from "../value-lists";
-import { TR310FormSchema } from "./tr310-form-schema";
+import type { TR310FormSchema } from "./tr310-form-schema";
 import { CollisionPageModel } from "./collision-page/collision-page";
 import { NarrativePageModel } from "./narrative-page/narrative-page";
 import { PersonPageModel } from "./person-page/person-page";

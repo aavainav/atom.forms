@@ -3,7 +3,7 @@ import { CATALOG_IDENTITY } from "../module";
 import { IOKTrafficData, OKTrafficMapper } from "../mapping";
 import { okTrafficValueLists } from "../value-lists";
 import { OKTrafficViolationListId } from "../violations";
-import { OKTrafficFormSchema } from "./traffic-form-schema";
+import type { OKTrafficFormSchema } from "./traffic-form-schema";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
 import { SupplementPageModel } from "./supplement-page/supplement-page";
 import { WarrantPageModel } from "./warrant-page/warrant-page";

@@ -36,12 +36,18 @@ interface IHomeLinkProps {
 function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Array<IHomeLinkProps> {
     return Array.from(catalogItems.values())
         .sort((a, b) => a.name.localeCompare(b.name))
-        .map(catalogItem => ({
-            description: catalogItem.description,
-            path: getFormRoutePath(catalogItem.name),
-            title: catalogItem.name,
-            version: catalogItem.version
-        }));
+        .map(catalogItem => {
+            const path = getFormRoutePath(catalogItem.name);
+
+            return {
+                description: catalogItem.description,
+                // starts every form new/blank rather than mid-way through whatever was last saved for it; the
+                // "Load test data" option is how to fill one in once it's open
+                path: path && `${path}?record=new`,
+                title: catalogItem.name,
+                version: catalogItem.version
+            };
+        });
 }
 
 /**
@@ -82,7 +88,7 @@ export default function HomePage(): React.JSX.Element {
     return (
         <div className="container py-4" style={{ maxWidth: 900 }}>
             <h4 className="mb-1">Forms Sandbox</h4>
-            <p className="text-muted">Pick a form to load it with its mock data, or a demo to exercise a piece of the report viewer.</p>
+            <p className="text-muted">Pick a form to start a new one, or a demo to exercise a piece of the report viewer.</p>
 
             <h6 className="text-uppercase text-muted mt-4 mb-2">Forms</h6>
             <FAsyncLoader<Map<string, IFormCatalogItem>> op={() => formCatalogService.getLatestVersions()}>

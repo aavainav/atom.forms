@@ -3,7 +3,7 @@ import { CATALOG_IDENTITY } from "../module";
 import { IOKParkingData, OKParkingMapper } from "../mapping";
 import { okParkingValueLists } from "../value-lists";
 import { OKParkingViolationListId } from "../violations";
-import { OKParkingFormSchema } from "./parking-form-schema";
+import type { OKParkingFormSchema } from "./parking-form-schema";
 import { CitationPageModel } from "./citation-page/citation-page";
 import { ComplaintPageModel } from "./complaint-page/complaint-page";
 import { DetailPageModel } from "./detail-page/detail-page";

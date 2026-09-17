@@ -2,7 +2,7 @@ import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDe
 import { CATALOG_IDENTITY } from "../module";
 import { IS438Data, S438Mapper } from "../mapping";
 import { S438ViolationListId } from "../violations";
-import { S438FormSchema } from "./s438-form-schema";
+import type { S438FormSchema } from "./s438-form-schema";
 import { FrontPageModel } from "./front-page/front-page";
 import { NoticePageModel } from "./notice-page/notice-page";
 

@@ -1,11 +1,11 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { CitationPageModel } from "../models/citation-page/citation-page";
 import { DetailPageModel } from "../models/detail-page/detail-page";
-import { OKParkingFormSchema } from "../models/parking-form-schema";
+import type { OKParkingFormSchema } from "../models/parking-form-schema";
 import { OKParkingValueListId } from "../value-lists";
 
 export const IOKParkingService = createService<IOKParkingService>("forms-ok-parking-service");
@@ -26,9 +26,9 @@ export interface IOKParkingService {
     /** Returns a new citation page with the dropped violation data applied to the violation boxes. */
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): Promise<void>;
     /** Narrows the given violations to those the citation pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): ReadonlyArray<IViolation>;
     /** Loads the options for the form's county field. */
     getCountyOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the registered owner's state field. */
@@ -86,9 +86,9 @@ export class OKParkingService implements IOKParkingService {
         return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
-        const schema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
-        const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<OKParkingFormSchema>(schema);
+        const pages = controllers.getFormController().form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the citation prints the agency's own code in its violation block, so that is what identifies a charge
         const carried = new Set(pages.map(page => page.getViolationSection().getCode().getValue()).filter(Boolean));
@@ -96,15 +96,15 @@ export class OKParkingService implements IOKParkingService {
         return violations.filter(violation => carried.has(violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<OKParkingFormSchema>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const schema = FormModel.getSchema<OKParkingFormSchema>(OKParkingFormSchema);
+        const formSchema = FormModel.getSchema<OKParkingFormSchema>(schema);
 
-        const pages = controller.form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+        const pages = controller.form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the chosen violations go into the first page with no violation on it, and then onto pages after that, so
         // picking again adds to the citation rather than rewriting it
@@ -113,19 +113,19 @@ export class OKParkingService implements IOKParkingService {
 
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         for (let index = pages.length; index < start + violations.length; index++) {
-            await controller.addPage(schema.citationPage);
+            await controller.addPage(formSchema.citationPage);
         }
 
         // the date, time and location of the violation sit in the violation section alongside the code, so they are
         // not carried across by the shared-section copy; one ticket run produces one date, time and place however
         // many violations come out of it, so they are taken from the first page
-        const first = controller.form.get<PageCollection>(schema.citationPage).pages[0] as CitationPageModel;
+        const first = controller.form.get<PageCollection>(formSchema.citationPage).pages[0] as CitationPageModel;
         const date = first.getViolationSection().getDate().getValue();
         const time = first.getViolationSection().getTime().getValue();
         const location = first.getViolationSection().getLocation().getValue();
 
         controller.update(form => {
-            let collection = form.get<PageCollection>(schema.citationPage);
+            let collection = form.get<PageCollection>(formSchema.citationPage);
 
             violations.forEach((violation, offset) => {
                 const index = start + offset;
@@ -151,7 +151,7 @@ export class OKParkingService implements IOKParkingService {
                 collection = collection.replace(index, result);
             });
 
-            return form.set(schema.citationPage, collection);
+            return form.set(formSchema.citationPage, collection);
         });
     }
 

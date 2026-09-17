@@ -1,7 +1,7 @@
 import { IForm, FormModel, PageCollection, PageDefinition } from "@forms/core";
 
 import { CATALOG_IDENTITY } from "../module";
-import { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
+import type { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
 import { RecordPageModel } from "./record-page/record-page";
 
 import { IPublicContactOrWarningData, PublicContactOrWarningMapper } from "../mapping";

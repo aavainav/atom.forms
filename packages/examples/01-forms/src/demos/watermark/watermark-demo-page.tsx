@@ -53,12 +53,12 @@ function WatermarkDemoForm({ controllers, initialForm, isReadOnly, status }: IWa
 export default function WatermarkDemoPage(): React.JSX.Element {
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // the controls are rendered outside the form, so the page owns the controllers and hands them to the form
     const controllers = useMemo(() => new ControllerManager(), []);
 
-    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams), [searchParams]);
+    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams, setSearchParams), [searchParams]);
 
     const [status, setStatus] = useState<FormStatus>("voided");
     const [isReadOnly, setIsReadOnly] = useState(true);

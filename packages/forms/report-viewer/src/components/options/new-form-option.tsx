@@ -36,6 +36,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
                 onCancel: async () => {},
                 onConfirm: startNew
             });
+            
             return;
         }
 

@@ -59,8 +59,8 @@ export class OKParkingModule implements IModule {
                 violations.registerViolations({ name, version }, {
                     listId: violationsModule.OKParkingViolationListId.violation,
                     pageName: "citation-page",
-                    apply: (controllers, chosen) => services.get<IOKParkingService>(IOKParkingService).applyViolations(controllers, chosen),
-                    getApplied: (controllers, all) => services.get<IOKParkingService>(IOKParkingService).getAppliedViolations(controllers, all)
+                    apply: (controllers, chosen) => services.get<IOKParkingService>(IOKParkingService).applyViolations(controllers, chosen, schemaModule.OKParkingFormSchema),
+                    getApplied: (controllers, all) => services.get<IOKParkingService>(IOKParkingService).getAppliedViolations(controllers, all, schemaModule.OKParkingFormSchema)
                 });
 
                 new schemaModule.OKParkingFormSchema();

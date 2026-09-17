@@ -1,10 +1,10 @@
-import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, IControllerManager, IOptionValue, PageCollection, PersonDropzoneFields, SchemaConstructor, TValueType, VehicleDropzoneFields, ViolationDropzoneFields } from "@forms/core";
 import { IValueListService, ValueListId } from "@forms/value-lists";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
 import { CitationPageModel } from "../models/citation-page/citation-page";
-import { GAUTCFormSchema } from "../models/utc-form-schema";
+import type { GAUTCFormSchema } from "../models/utc-form-schema";
 import { GAUTCValueListId } from "../value-lists";
 
 export const IGAUTCService = createService<IGAUTCService>("forms-ga-utc-service");
@@ -23,9 +23,9 @@ export interface IGAUTCService {
     /** Returns a new citation page with the dropped violation data applied to the offense boxes of Section II. */
     applyViolationDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Writes the chosen violations onto the form, one citation page each, and adds the pages the extra ones need. */
-    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void>;
+    applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): Promise<void>;
     /** Narrows the given violations to those the citation pages already carry. */
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation>;
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): ReadonlyArray<IViolation>;
     /** Returns a new citation page with the dropped person data applied to Section I. */
     applyViolatorDropzone(page: CitationPageModel, dropzone: Dropzone): CitationPageModel;
     /** Loads the options for the citation's county box - the three counties the form prints beside it. */
@@ -91,9 +91,9 @@ export class GAUTCService implements IGAUTCService {
         return page.set(page.offenseSection, locked).setDropzone(dropzone);
     }
 
-    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): ReadonlyArray<IViolation> {
-        const schema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
-        const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+    getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): ReadonlyArray<IViolation> {
+        const formSchema = FormModel.getSchema<GAUTCFormSchema>(schema);
+        const pages = controllers.getFormController().form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the citation prints the statute as its offense code section, so that is what identifies a charge once it
         // is on the form; a violation with no statute of its own was written under its code
@@ -102,15 +102,15 @@ export class GAUTCService implements IGAUTCService {
         return violations.filter(violation => carried.has(violation.statute ?? violation.code));
     }
 
-    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>): Promise<void> {
+    async applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, schema: SchemaConstructor<GAUTCFormSchema>): Promise<void> {
         if (!violations.length) {
             return;
         }
 
         const controller = controllers.getFormController();
-        const schema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormSchema);
+        const formSchema = FormModel.getSchema<GAUTCFormSchema>(schema);
 
-        const pages = controller.form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+        const pages = controller.form.get<PageCollection>(formSchema.citationPage).getPages<CitationPageModel>();
 
         // the chosen violations go into the first page with no offence on it, and then onto pages after that, so
         // picking again adds to the citation rather than rewriting it
@@ -119,26 +119,21 @@ export class GAUTCService implements IGAUTCService {
 
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         for (let index = pages.length; index < start + violations.length; index++) {
-            await controller.addPage(schema.citationPage);
+            await controller.addPage(formSchema.citationPage);
         }
 
         controller.update(form => {
-            let collection = form.get<PageCollection>(schema.citationPage);
+            let collection = form.get<PageCollection>(formSchema.citationPage);
 
             violations.forEach((violation, offset) => {
                 const index = start + offset;
                 const page = collection.pages[index] as CitationPageModel;
                 const section = page.getOffenseSection();
 
-                // the boxes the violation fills are disabled with it: the charge came from the code list and is
-                // taken off by deleting its page, not by typing over it
                 let updated = section
                     .set(section.codeSection, lock(section.getCodeSection().setValue(violation.statute ?? violation.code)))
                     .set(section.description, lock(section.getDescription().setValue(violation.description)));
 
-                // state law and local ordinance are an exclusive pair, so the answer goes through the section's own
-                // select method rather than being written as two independent boxes; a violation saying neither
-                // leaves both clear, which is how the citation records an unanswered question
                 if (violation.isLocalOrdinance !== undefined) {
                     updated = updated.selectAuthority(violation.isLocalOrdinance ? updated.localOrdinance : updated.stateLaw);
                     updated = updated
@@ -149,7 +144,7 @@ export class GAUTCService implements IGAUTCService {
                 collection = collection.replace(index, page.set(page.offenseSection, updated));
             });
 
-            return form.set(schema.citationPage, collection);
+            return form.set(formSchema.citationPage, collection);
         });
     }
 

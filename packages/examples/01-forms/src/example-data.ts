@@ -1,3 +1,4 @@
+import { SetURLSearchParams } from "react-router";
 import { IFormIdentity, IPopulateData, IReportData, FormType, ReadOnlyFields } from "@forms/core";
 import { IGAUTCData } from "@forms/ga-utc";
 import { IPublicContactOrWarningData } from "@forms/public-contact-or-warning";
@@ -89,12 +90,15 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
  *
  * Switch scenarios with `?record=full` or `?record=minimal`. Clear a saved record with `?record=full&reset=1`.
  * `?record=new` starts from the values a host would give a record that does not exist yet -- and locks whichever of
- * them it considers settled -- e.g. `/sc/432?record=new&reset=1` or `/sc/s438?record=new&reset=1`.
+ * them it considers settled -- e.g. `/sc/432?record=new&reset=1` or `/sc/s438?record=new&reset=1`. The report
+ * viewer's own "New Form" option reaches this the same way, passing `reason: "new"` instead of the query param --
+ * `read` stamps `?record=new` onto the url itself when that happens, so a refresh afterward doesn't silently read
+ * back whatever was last saved.
  *
  * A form this host holds no fixtures for gets **no manager at all**, which is what a blank, unsaveable form looks
  * like from the report viewer's side.
  */
-export function createExampleDataManager(identity: IFormIdentity, searchParams: URLSearchParams): IReportViewerDataManager | undefined {
+export function createExampleDataManager(identity: IFormIdentity, searchParams: URLSearchParams, setSearchParams: SetURLSearchParams): IReportViewerDataManager | undefined {
     const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);
 
     if (!form) {
@@ -102,22 +106,32 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
     }
 
     return {
-        read: async () => {
+        read: async reason => {
             if (searchParams.has("reset")) {
                 sessionStorage.removeItem(getStorageKey(form.identity));
+            }
+
+            const scenario = searchParams.get("record") ?? searchParams.get("citation");
+
+            if (reason === "new" || scenario === "new") {
+                if (reason === "new" && scenario !== "new") {
+                    // stamp the url with the state actually on screen, so a refresh sees the same new/blank form
+                    // instead of silently reading back whatever was last saved or the "full" fixture
+                    setSearchParams(prev => {
+                        const next = new URLSearchParams(prev);
+                        next.set("record", "new");
+                        return next;
+                    }, { replace: true });
+                }
+
+                // a new record starts from the host's own defaults, ignoring whatever is saved for the record
+                // being replaced -- a stale record surviving into a "new" one is exactly what `reason` prevents
+                return form.defaults && { data: stamp(form, form.defaults.data), readOnlyFields: form.defaults.readOnlyFields };
             }
 
             const saved = getSavedData(form.identity);
             if (saved) {
                 return { data: saved };
-            }
-
-            const scenario = searchParams.get("record") ?? searchParams.get("citation");
-
-            if (scenario === "new") {
-                // there is no separate notion of defaults any more: a record that does not exist yet is just a
-                // record whose values the host chooses, read the same way as any other
-                return form.defaults && { data: stamp(form, form.defaults.data), readOnlyFields: form.defaults.readOnlyFields };
             }
 
             if (!scenario) {

@@ -16,12 +16,14 @@ import { NotFound } from "@forms/workbench";
  */
 export default function FormRoutePage(): React.JSX.Element {
     const { pathname } = useLocation();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const route = findFormRouteByPath(pathname);
 
-    // the manager closes over the query string the form was opened with, which is what picks the fixture scenario
-    const dataManager = useMemo(() => route && createExampleDataManager(route.identity, searchParams), [route, searchParams]);
+    // the manager closes over the query string the form was opened with, which is what picks the fixture scenario,
+    // and can update it back -- e.g. stamping ?record=new on the url once a "new form" reset actually happens, so
+    // a refresh sees the same state instead of silently reading back whatever was last saved
+    const dataManager = useMemo(() => route && createExampleDataManager(route.identity, searchParams, setSearchParams), [route, searchParams]);
 
     if (!route) {
         return <NotFound />;

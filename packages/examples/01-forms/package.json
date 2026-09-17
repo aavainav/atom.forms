@@ -1,9 +1,10 @@
 {
-    "name": "01-forms",
+    "name": "@examples/01-forms",
     "private": true,
     "version": "1.0.0",
     "type": "module",
     "scripts": {
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
         "dev": "vite",
         "build-forms": "tsc -b && vite build",
         "preview": "vite preview"

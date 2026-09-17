@@ -29,13 +29,13 @@ function describeItem(item: IDraggableItem<IImportablePerson | IImportableVehicl
  */
 export default function DropzoneDemoPage(): React.JSX.Element {
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // the draggable items are rendered outside the form, so the page owns the controllers and hands the same set to both
     const controllers = useMemo(() => new ControllerManager(), []);
     const dragAndDropController = controllers.getDragAndDropController();
 
-    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams), [searchParams]);
+    const dataManager = useMemo(() => createExampleDataManager(catalogIdentity, searchParams, setSearchParams), [searchParams]);
 
     return (
         <div className="d-flex" style={{ gap: "1rem" }}>
