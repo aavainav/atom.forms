@@ -46,6 +46,35 @@ describe("OKParkingService", () => {
         it("does nothing when there are no violations to apply", async () => {
             await expect(service.applyViolations(controllers, [], OKParkingFormModel)).resolves.toBeUndefined();
         });
+
+        it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
+            const first: IViolation = { code: "18-100", description: "No parking zone" };
+            const second: IViolation = { code: "18-101", description: "Expired meter" };
+            const third: IViolation = { code: "18-102", description: "Blocking a fire lane" };
+
+            await service.applyViolations(controllers, [first, second, third], OKParkingFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+            expect(pages).toHaveLength(3);
+            expect(pages[0].getViolationSection().getCode().getValue()).toBe("18-100");
+            expect(pages[1].getViolationSection().getCode().getValue()).toBe("18-101");
+            expect(pages[2].getViolationSection().getCode().getValue()).toBe("18-102");
+        });
+
+        it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
+            const first: IViolation = { code: "18-100", description: "No parking zone" };
+            const second: IViolation = { code: "18-101", description: "Expired meter" };
+
+            await service.applyViolations(controllers, [first], OKParkingFormModel);
+            await service.applyViolations(controllers, [second], OKParkingFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+            expect(pages).toHaveLength(2);
+            expect(pages[0].getViolationSection().getCode().getValue()).toBe("18-100");
+            expect(pages[1].getViolationSection().getCode().getValue()).toBe("18-101");
+        });
     });
 
     describe("getAppliedViolations", () => {

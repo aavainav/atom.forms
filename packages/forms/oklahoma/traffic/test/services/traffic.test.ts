@@ -46,6 +46,35 @@ describe("OKTrafficService", () => {
         it("does nothing when there are no violations to apply", async () => {
             await expect(service.applyViolations(controllers, [], OKTrafficFormModel)).resolves.toBeUndefined();
         });
+
+        it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
+            const first: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const second: IViolation = { code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
+            const third: IViolation = { code: "11-11-103", description: "Following too closely", statute: "11-11-103" };
+
+            await service.applyViolations(controllers, [first, second, third], OKTrafficFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+
+            expect(pages).toHaveLength(3);
+            expect(pages[0].getViolationSection().getMunicipalCode().getValue()).toBe("11-11-101");
+            expect(pages[1].getViolationSection().getMunicipalCode().getValue()).toBe("11-11-102");
+            expect(pages[2].getViolationSection().getMunicipalCode().getValue()).toBe("11-11-103");
+        });
+
+        it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
+            const first: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const second: IViolation = { code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
+
+            await service.applyViolations(controllers, [first], OKTrafficFormModel);
+            await service.applyViolations(controllers, [second], OKTrafficFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.complaintPage).getPages<ComplaintPageModel>();
+
+            expect(pages).toHaveLength(2);
+            expect(pages[0].getViolationSection().getMunicipalCode().getValue()).toBe("11-11-101");
+            expect(pages[1].getViolationSection().getMunicipalCode().getValue()).toBe("11-11-102");
+        });
     });
 
     describe("getAppliedViolations", () => {

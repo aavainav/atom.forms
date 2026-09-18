@@ -46,6 +46,35 @@ describe("GAUTCService", () => {
         it("does nothing when there are no violations to apply", async () => {
             await expect(service.applyViolations(controllers, [], GAUTCFormModel)).resolves.toBeUndefined();
         });
+
+        it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
+            const first: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const second: IViolation = { code: "40-6-391", description: "DUI", statute: "40-6-391" };
+            const third: IViolation = { code: "40-6-48", description: "Following too closely", statute: "40-6-48" };
+
+            await service.applyViolations(controllers, [first, second, third], GAUTCFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+            expect(pages).toHaveLength(3);
+            expect(pages[0].getOffenseSection().getCodeSection().getValue()).toBe("40-6-181");
+            expect(pages[1].getOffenseSection().getCodeSection().getValue()).toBe("40-6-391");
+            expect(pages[2].getOffenseSection().getCodeSection().getValue()).toBe("40-6-48");
+        });
+
+        it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
+            const first: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const second: IViolation = { code: "40-6-391", description: "DUI", statute: "40-6-391" };
+
+            await service.applyViolations(controllers, [first], GAUTCFormModel);
+            await service.applyViolations(controllers, [second], GAUTCFormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.citationPage).getPages<CitationPageModel>();
+
+            expect(pages).toHaveLength(2);
+            expect(pages[0].getOffenseSection().getCodeSection().getValue()).toBe("40-6-181");
+            expect(pages[1].getOffenseSection().getCodeSection().getValue()).toBe("40-6-391");
+        });
     });
 
     describe("getAppliedViolations", () => {

@@ -44,6 +44,35 @@ describe("S438CitationService", () => {
         it("does nothing when there are no violations to apply", async () => {
             await expect(service.applyViolations(controllers, [], S438FormModel)).resolves.toBeUndefined();
         });
+
+        it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
+            const first: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
+            const second: IViolation = { code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750", points: 6 };
+            const third: IViolation = { code: "56-5-1520", description: "Speeding", statute: "56-5-1520", points: 2 };
+
+            await service.applyViolations(controllers, [first, second, third], S438FormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.frontPage).getPages<FrontPageModel>();
+
+            expect(pages).toHaveLength(3);
+            expect(pages[0].getViolationSection().getSectionNumber().getValue()).toBe("56-5-2930");
+            expect(pages[1].getViolationSection().getSectionNumber().getValue()).toBe("56-5-750");
+            expect(pages[2].getViolationSection().getSectionNumber().getValue()).toBe("56-5-1520");
+        });
+
+        it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
+            const first: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930" };
+            const second: IViolation = { code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750" };
+
+            await service.applyViolations(controllers, [first], S438FormModel);
+            await service.applyViolations(controllers, [second], S438FormModel);
+
+            const pages = controllers.getFormController().form.get<PageCollection>(schema.frontPage).getPages<FrontPageModel>();
+
+            expect(pages).toHaveLength(2);
+            expect(pages[0].getViolationSection().getSectionNumber().getValue()).toBe("56-5-2930");
+            expect(pages[1].getViolationSection().getSectionNumber().getValue()).toBe("56-5-750");
+        });
     });
 
     describe("getAppliedViolations", () => {
