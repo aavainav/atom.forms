@@ -118,10 +118,6 @@ export default function FFieldSelect({
     const popperRef = useRef<Instance | undefined>(undefined);
     const searchInputRef = useRef<IFieldInputComponent>(null);
 
-    // options load only once the menu has opened, so a select backed by a large lazy value list costs nothing on
-    // a form nobody opens it on. The toggle's text reads off `value` directly, so an existing selection still
-    // shows before that first load. The flag stays sticky rather than tracking `isOpen`, since a parent value
-    // change must still reload while the menu is closed.
     useEffect(() => {
         if (!hasOpened) {
             return;

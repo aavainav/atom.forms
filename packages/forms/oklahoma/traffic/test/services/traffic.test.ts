@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ControllerManager, FormModel, PageCollection } from "@forms/core";
 import type { IValueListService } from "@forms/value-lists";
 import type { IViolation } from "@forms/violations";
 
 import type { ComplaintPageModel } from "../../src/models/complaint-page/complaint-page";
+import { ComplaintPageVehicleDropzone } from "../../src/models/complaint-page/dropzones/complaint-page-vehicle-dropzone";
 import { OKTrafficFormModel } from "../../src/models/traffic-form";
 import { OKTrafficFormSchema } from "../../src/models/traffic-form-schema";
 import { OKTrafficService } from "../../src/services/traffic";
@@ -59,6 +60,42 @@ describe("OKTrafficService", () => {
             await service.applyViolations(controllers, [applied], OKTrafficFormModel);
 
             expect(service.getAppliedViolations(controllers, [applied, notApplied], OKTrafficFormModel)).toEqual([applied]);
+        });
+    });
+
+    describe("resolveVehicleDropzone", () => {
+        /**
+         * The dropzone's own onDrop stores the dropped name as an option value (`{ value: "", description }`),
+         * since make/model are value-list codes and a drop carries only a name. Reading a plain string instead --
+         * what the base `VehicleDropzone.onDrop` stores -- is exactly the regression that once cleared every
+         * dropped vehicle's make and model back to blank regardless of what was dropped.
+         */
+        it("resolves the dropped make and model to their stored codes", async () => {
+            const valueListService: IValueListService = {
+                findByDescription: vi.fn(async (_listId: string, description: string) =>
+                    description === "TOYOTA" ? { value: "TOYT", description: "TOYOTA" } :
+                    description === "CAMRY" ? { value: "CAM", description: "CAMRY" } : undefined)
+            } as unknown as IValueListService;
+
+            const dropzone = getComplaintPage().getDropzone(ComplaintPageVehicleDropzone)
+                .onDrop({ make: "TOYOTA", model: "CAMRY", year: 2021 });
+
+            const resolved = await new OKTrafficService(valueListService).resolveVehicleDropzone(dropzone);
+
+            expect(resolved.getFields().make?.getValue()).toEqual({ value: "TOYT", description: "TOYOTA" });
+            expect(resolved.getFields().model?.getValue()).toEqual({ value: "CAM", description: "CAMRY" });
+        });
+
+        it("clears make and model when the dropped name isn't found in either list", async () => {
+            const valueListService: IValueListService = { findByDescription: vi.fn(async () => undefined) } as unknown as IValueListService;
+
+            const dropzone = getComplaintPage().getDropzone(ComplaintPageVehicleDropzone)
+                .onDrop({ make: "NOT A REAL MAKE", model: "NOT A REAL MODEL", year: 2021 });
+
+            const resolved = await new OKTrafficService(valueListService).resolveVehicleDropzone(dropzone);
+
+            expect(resolved.getFields().make?.getValue()).toEqual({ value: "", description: "" });
+            expect(resolved.getFields().model?.getValue()).toEqual({ value: "", description: "" });
         });
     });
 });

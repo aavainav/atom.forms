@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ControllerManager, FormModel, PageCollection } from "@forms/core";
 import type { IValueListService } from "@forms/value-lists";
 import type { IViolation } from "@forms/violations";
 
 import type { CitationPageModel } from "../../src/models/citation-page/citation-page";
+import { CitationPageVehicleDropzone } from "../../src/models/citation-page/dropzones/citation-page-vehicle-dropzone";
 import { OKParkingFormModel } from "../../src/models/parking-form";
 import { OKParkingFormSchema } from "../../src/models/parking-form-schema";
 import { OKParkingService } from "../../src/services/parking";
@@ -59,6 +60,39 @@ describe("OKParkingService", () => {
             await service.applyViolations(controllers, [applied], OKParkingFormModel);
 
             expect(service.getAppliedViolations(controllers, [applied, notApplied], OKParkingFormModel)).toEqual([applied]);
+        });
+    });
+
+    describe("resolveVehicleDropzone", () => {
+        /**
+         * The dropzone's own onDrop stores the dropped name as an option value (`{ value: "", description }`),
+         * since make is a value-list code and a drop carries only a name. Reading a plain string instead -- what
+         * the base `VehicleDropzone.onDrop` stores -- is exactly the regression that once cleared every dropped
+         * vehicle's make back to blank regardless of what was dropped.
+         */
+        it("resolves the dropped make to its stored code", async () => {
+            const valueListService: IValueListService = {
+                findByDescription: vi.fn(async (_listId: string, description: string) =>
+                    description === "TOYOTA" ? { value: "TOYT", description: "TOYOTA" } : undefined)
+            } as unknown as IValueListService;
+
+            const dropzone = getCitationPage().getDropzone(CitationPageVehicleDropzone)
+                .onDrop({ make: "TOYOTA", model: "CAMRY", year: 2021 });
+
+            const resolved = await new OKParkingService(valueListService).resolveVehicleDropzone(dropzone);
+
+            expect(resolved.getFields().make?.getValue()).toEqual({ value: "TOYT", description: "TOYOTA" });
+        });
+
+        it("clears make when the dropped name isn't found in the list", async () => {
+            const valueListService: IValueListService = { findByDescription: vi.fn(async () => undefined) } as unknown as IValueListService;
+
+            const dropzone = getCitationPage().getDropzone(CitationPageVehicleDropzone)
+                .onDrop({ make: "NOT A REAL MAKE", model: "CAMRY", year: 2021 });
+
+            const resolved = await new OKParkingService(valueListService).resolveVehicleDropzone(dropzone);
+
+            expect(resolved.getFields().make?.getValue()).toEqual({ value: "", description: "" });
         });
     });
 });
