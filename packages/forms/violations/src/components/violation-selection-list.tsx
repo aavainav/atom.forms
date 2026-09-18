@@ -94,7 +94,7 @@ export function ViolationSelectionList({ controller, violations, applied, select
                         placeholder="Search violations..."
                         symbols={[".", "-", "(", ")", "/", " "]}
                         value={searchTerm}
-                        onChange={(value) => setSearchTerm(value ?? "")}
+                        onChange={(value) => setSearchTerm((value as string | undefined) ?? "")}
                     />
                 </FFieldControl>
             </div>

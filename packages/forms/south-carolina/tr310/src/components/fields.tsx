@@ -134,7 +134,7 @@ interface ITextFieldProps {
     /** Exact width in pixels. */
     readonly width?: number;
 
-    onChange: (value: string) => void;
+    onChange: (value: TValueType) => void;
 }
 
 /** One of the report's write-in boxes, labelled the way the form labels it. */

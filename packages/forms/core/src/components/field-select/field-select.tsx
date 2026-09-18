@@ -280,7 +280,7 @@ export default function FFieldSelect({
                                 autocomplete="off"
                                 placeholder="Search..."
                                 value={searchTerm}
-                                onChange={setSearchTerm}
+                                onChange={value => setSearchTerm(value as string)}
                             />
                         </FFieldControl>
                     </div>

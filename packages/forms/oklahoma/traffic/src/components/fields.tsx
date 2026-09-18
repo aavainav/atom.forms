@@ -32,7 +32,7 @@ interface ITextBoxProps {
     /** Exact width in pixels; the box fills the space it is given by default. */
     readonly width?: number;
 
-    onChange: (value: string) => void;
+    onChange: (value: TValueType) => void;
 }
 
 /** One of the form's write-in boxes, labelled the way the form labels it. */

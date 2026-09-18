@@ -1,6 +1,8 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { FTooltip } from "../tooltip";
+
+import { TValueType } from "../../models/field";
 import { buildClasses } from "../../utils/class-names";
 import { IFilterable, IFilterRef, Filter } from "../../utils/filterable";
 import { getMarginStyle, getPaddingStyle, FMarginSize, FPaddingSize, IFMargin, IFPadding } from "../../utils/spacing";
@@ -15,7 +17,7 @@ export interface IAsyncCallback<TResult = any> {
     readonly minChars?: number;
     /** An optional callback that will be invoked on a successful callback operation. */
     readonly result?: (value: TResult) => void;
-    input(input: string, value: any): Promise<TResult>;
+    input(input: string, value: TValueType): Promise<TResult>;
 }
 
 export interface IFieldInputFilterTarget<TData> {
@@ -24,7 +26,7 @@ export interface IFieldInputFilterTarget<TData> {
     /** Allows preparing the input value before the filter is applied; the value returned is the input that will be passed to the current filter. */
     readonly prepare?: (input: string) => string;
     readonly target: IFilterable<TData>;
-    readonly filter: (input: string, value: any, data: TData) => boolean;
+    readonly filter: (input: string, value: TValueType, data: TData) => boolean;
 }
 
 export interface IFieldInputComponent {
@@ -40,8 +42,8 @@ export interface IInputFormatter {
 }
 
 export interface IValueConverter {
-    readonly toPropertyValue?: (value: string) => any;
-    readonly fromPropertyValue?: (value: any) => string;
+    readonly toPropertyValue?: (value: string) => TValueType;
+    readonly fromPropertyValue?: (value: TValueType) => string;
 }
 
 const defaultMinChars = 3;
@@ -83,7 +85,7 @@ function formatValue(value: string, partial: boolean, formatter: IInputFormatter
     return formatter ? formatter(value, { partial }) || value : value;
 }
 
-function getInputValue(value: any, converter: IValueConverter | undefined, formatter: IInputFormatter | undefined): string {
+function getInputValue(value: TValueType | undefined, converter: IValueConverter | undefined, formatter: IInputFormatter | undefined): string {
     let input = "";
 
     if (value !== undefined && value !== null) {
@@ -157,10 +159,10 @@ interface IFFieldInputProps {
     /** Whether the input is marked as valid. */
     readonly valid?: boolean;
     /** The bound property value displayed in the input. */
-    readonly value?: any;
+    readonly value?: TValueType;
 
     /** Invoked with the converted property value whenever the input value changes. */
-    onChange?: (value: any) => void;
+    onChange?: (value: TValueType) => void;
     /** Invoked when the input value is cleared. */
     onClear?: () => void;
     /** Invoked with the raw input string whenever the input value changes. */
@@ -239,7 +241,7 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
         };
     }, [filterFor]);
 
-    const applyFilter = useCallback((input: string, propertyValue: any): void => {
+    const applyFilter = useCallback((input: string, propertyValue: TValueType): void => {
         if (!filterFor) {
             return;
         }
