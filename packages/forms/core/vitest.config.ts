@@ -6,4 +6,4 @@ import { defineFormsConfig } from "../vitest.config.base.mts";
  * accidental import of a component -- or of the `src/index.ts` barrel, which loads popper -- fail rather than
  * quietly pass. Its tests import deep source paths for the same reason.
  */
-export default defineFormsConfig({ environment: "node" });
+export default defineFormsConfig({ name: "@forms/core", environment: "node" });

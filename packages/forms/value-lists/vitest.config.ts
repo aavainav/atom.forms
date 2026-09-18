@@ -5,4 +5,4 @@ import { defineFormsConfig } from "../vitest.config.base.mts";
  * nothing from `@forms/core`, so its tests never load the barrel that pulls popper in. Its tests import deep
  * source paths to keep it that way.
  */
-export default defineFormsConfig({ environment: "node" });
+export default defineFormsConfig({ name: "@forms/value-lists", environment: "node" });

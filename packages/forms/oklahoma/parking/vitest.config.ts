@@ -1,3 +1,3 @@
 import { defineFormsConfig } from "../../vitest.config.base.mts";
 
-export default defineFormsConfig();
+export default defineFormsConfig({ name: "@forms/ok-parking" });

@@ -1,16 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
-/**
- * Every workspace package a form package can reach, mapped to its source.
- *
- * Paths are resolved against this file rather than against the package importing it, so a package at any depth --
- * `core/` and `south-carolina/s438/` alike -- gets the same answer without passing its own location in.
- *
- * They resolve to source rather than to the built `dist/` a workspace symlink would otherwise reach, so a test run
- * does not depend on the dependency having been built. `dist/` is gitignored, so on a fresh clone the alternative
- * is a suite that cannot run until `yarn build` has.
- */
+/** Every workspace package a form package can reach, mapped to its source. */
 const packageSources: Readonly<Record<string, string>> = {
     "@common/event-emitter": "../common/event-emitter/src/index.ts",
     "@common/react": "../common/react/src/index.ts",
@@ -31,13 +22,7 @@ const packageSources: Readonly<Record<string, string>> = {
     "@forms/workbench": "workbench/src/index.ts"
 };
 
-/**
- * Specifiers a test never wants the real thing for, matched ahead of the package aliases below.
- *
- * The theme stylesheet is the only one: `@forms/report-viewer` imports it, and because `@forms/core` resolves to
- * a file rather than a directory the subpath would otherwise resolve against that file and fail. Tests assert
- * behaviour rather than appearance, so an empty stylesheet is the honest stand-in and skips compiling sass.
- */
+/** Specifiers a test never wants the real thing for, matched ahead of the package aliases below. */
 const stubs: Readonly<Record<string, string>> = {
     "@forms/core/theme/_main.scss": "vitest-stubs/empty.css"
 };
@@ -46,13 +31,9 @@ const formsRoot = new URL("./", import.meta.url);
 
 /** Options a package can vary; everything else is the same everywhere and lives here. */
 export interface IFormsTestOptions {
-    /**
-     * The environment the package's tests run in.
-     *
-     * `jsdom` is the default because anything importing the `@forms/core` barrel loads `@popperjs/core`, which
-     * reads `document` as it is imported -- and a form package reaches core through the barrel in every file.
-     * Only a package whose tests import deep source paths and never pull the barrel in can use `node`.
-     */
+    /** The package's own name, used to label its job summary in CI -- otherwise every package's report shares the same generic "Vitest Test Report" title. */
+    readonly name?: string;
+    /** The environment the package's tests run in. */
     readonly environment?: "node" | "jsdom";
 }
 
@@ -75,6 +56,7 @@ export function defineFormsConfig(options: IFormsTestOptions = {}) {
                     .map(([name, source]) => [name, fileURLToPath(new URL(source, formsRoot))]))
         },
         test: {
+            name: options.name,
             environment: options.environment ?? "jsdom",
             // pinned, since the default glob would also scan `dist`
             include: ["test/**/*.test.ts"]
