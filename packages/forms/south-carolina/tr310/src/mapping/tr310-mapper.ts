@@ -49,13 +49,10 @@ import { NarrativeOfficerSectionModel } from "../models/narrative-page/narrative
 import { ITR310Data, ITR310PersonData, ITR310UnitData } from "./tr310-data";
 
 /**
- * Maps the SC TR-310 traffic collision report to and from the data contract it publishes.
- *
- * Each section's read sits directly above its write below, so a field added to one direction and forgotten in
- * the other shows up in the same diff. Keeping the two directions in step is what makes the round trip hold.
- *
- * The collision and narrative pages appear once and map straight across. The person and unit pages repeat, so
- * populating has to create a page per record before it can write one, which is why it answers with a promise.
+ * Maps the SC TR-310 traffic collision report to and from the data contract it publishes. Each section's read
+ * sits directly above its write below, so a forgotten field shows up in the same diff. Collision and narrative
+ * pages appear once and map straight across; person and unit pages repeat, so populating creates a page per
+ * record before writing one, hence the promise.
  */
 export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
     /** Returns the form's current values as its data contract, emitting only the fields this report owns. */
@@ -92,13 +89,10 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
     }
 
     /**
-     * Returns a new form with the given data applied. Every field of the report is reachable from the data
-     * contract, and a field the data does not mention keeps the value it already holds - which is how the date
-     * the form stamps on itself survives a partial record.
-     *
-     * A page is added for every person and unit the data carries beyond the pages the form already holds. Pages
-     * beyond the end of either array are left alone rather than removed, so data mentioning fewer units than the
-     * form holds never silently discards a page an officer added.
+     * Returns a new form with the data applied. A field the data omits keeps its current value -- how the date
+     * the form stamps on itself survives a partial record. A page is added for every person and unit beyond the
+     * pages the form already holds; pages beyond either array are left alone rather than removed, so data
+     * mentioning fewer units never silently discards a page an officer added.
      */
     public async populate(form: TR310FormModel, { data, readOnlyFields }: IPopulateData<ITR310Data>): Promise<TR310FormModel> {
         let updated = this.populateCollisionPage(form, data, readOnlyFields);

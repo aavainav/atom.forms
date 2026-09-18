@@ -1,12 +1,9 @@
 import { IValueListDefinition, toOptions } from "@forms/value-lists";
 
 /**
- * The ids of the value lists this report owns.
- *
- * They carry the form as a prefix because the value list registry is a single global namespace and registering a
- * list replaces whatever already held its id. An unqualified `county` would be claimed by whichever form loaded
- * last, and the loser would quietly show the wrong counties rather than fail. `sc-tr310` is the form's route and
- * catalog name, and stays short in a cache key.
+ * The ids of the value lists this report owns, prefixed with the form since the registry is a single global
+ * namespace and registering replaces whatever already held an id. An unqualified `county` would be claimed by
+ * whichever form loaded last, silently showing the wrong counties.
  */
 export const TR310ValueListId = {
     actionPriorToImpact: "sc-tr310:action-prior-to-impact",
@@ -69,18 +66,15 @@ export const TR310ValueListId = {
 /**
  * The value lists this report registers with the value list service.
  *
- * These are the lists that belong to this form rather than to every form: the code sets the TR-310 prints beside
- * its own boxes, plus South Carolina's counties. The states and vehicle makes and models it also draws on are
- * national code sets and come from `@forms/value-lists` instead.
+ * These belong to this form rather than every form: the code sets the TR-310 prints beside its own boxes, plus
+ * South Carolina's counties. States, vehicle makes and models come from `@forms/value-lists` instead.
  *
- * Every generated module is reached through a `load` callback that imports it dynamically, and must stay that way.
- * A static import of anything under ./generated - including a type-only import that a later edit turns into a
- * value import - folds that list's data straight back into whichever chunk this module lands in, and the split
- * silently stops working. A report carrying fifty-odd code sets has a great deal to keep out of its entry chunk.
+ * Every generated module must stay reached only through a dynamic `load()` -- a static import under ./generated,
+ * even a type-only one a later edit turns into a value import, folds that data back into this module's own chunk
+ * and silently breaks the split. A report with fifty-odd code sets has a lot to keep out of its entry chunk.
  *
- * Several boxes share a list where the form prints them the same legend twice: the worker present and law
- * enforcement boxes both take `workZonePresence`, and the alcohol and drug test status boxes both take
- * `testStatus`.
+ * Several boxes share a list where the form prints the same legend twice: worker-present and law-enforcement
+ * both take `workZonePresence`; alcohol and drug test status both take `testStatus`.
  */
 export const tr310ValueLists: ReadonlyArray<IValueListDefinition> = [
     {

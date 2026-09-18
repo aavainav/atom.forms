@@ -13,9 +13,9 @@ export interface IPrintingConfiguration {
 }
 
 /**
- * Defines the printing module. It holds the copies each form publishes; a form that registers none still prints,
- * as every page of itself. The print option is not registered anywhere: whoever renders a form mounts
- * `PrintOption` itself, which keeps this package below the one doing the rendering rather than reaching up into it.
+ * Holds the copies each form publishes; a form registering none still prints, as every page of itself.
+ * `PrintOption` isn't registered anywhere -- whoever renders a form mounts it directly, keeping this package
+ * below the renderer rather than reaching up into it.
  */
 export class PrintingModule implements IModule {
     readonly name = "printing";

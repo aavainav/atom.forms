@@ -6,12 +6,10 @@ export const GAUTCValueViolationListId = {
 } as const;
 
 /**
- * The violations a Georgia UTC can be written for.
- *
- * Written inline rather than generated, as this form's value lists are: Atlanta publishes no machine-readable
- * offence code list with the citation, so this is the handful of Title 40 sections the ticket is most often
- * written under and needs checking against the current Code. An agency serving its own list registers over
- * `ga-utc:violation`, which replaces this outright.
+ * The violations a Georgia UTC can be written for. Written inline, like this form's value lists, since Atlanta
+ * publishes no machine-readable offence code list -- this is the handful of Title 40 sections most often written
+ * under, worth checking against the current Code. An agency serving its own list registers over
+ * `ga-utc:violation`, replacing this outright.
  */
 export const gaUtcViolationLists: ReadonlyArray<IViolationListDefinition> = [
     {

@@ -3,12 +3,7 @@ import { FFieldControl, FDraggableItem, FFieldInput, FListGroup, FListGroupCheck
 
 import { IViolation } from "../models";
 
-/**
- * How many rows are rendered before the list stops and asks for a narrower search.
- *
- * A jurisdiction's code list runs to thousands of charges, and rendering all of them costs far more than anyone
- * scrolls through; `FFieldSelect` caps its own menu the same way and for the same reason.
- */
+/** How many rows render before the list asks for a narrower search -- a code list runs to thousands of charges, far more than anyone scrolls through; `FFieldSelect` caps its own menu the same way. */
 const maxVisibleItems = 50;
 
 interface IViolationListProps {

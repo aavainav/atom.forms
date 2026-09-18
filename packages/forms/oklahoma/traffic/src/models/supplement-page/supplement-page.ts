@@ -11,13 +11,7 @@ export interface ISupplementPage {
 export interface ISupplementPageModel extends ISupplementPage {
 }
 
-/**
- * Represents the supplement page of the traffic citation form.
- *
- * The registered owner is a single name box here rather than the first/middle/last the complaint page carries, so
- * the page registers no person dropzone: a dropped person's name has nowhere to land that would not lose the
- * distinction between its parts.
- */
+/** The supplement page. The registered owner is a single name box here, not the first/middle/last the complaint page carries, so this page registers no person dropzone -- a dropped name would lose the distinction between its parts. */
 export class SupplementPageModel extends PageModel implements ISupplementPageModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(SupplementPageModel);
 

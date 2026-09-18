@@ -24,13 +24,9 @@ import { IGAUTCData, IGAUTCViolationData } from "./utc-data";
 /**
  * Maps the Georgia uniform traffic citation to and from the data contract it publishes.
  *
- * Each section's read sits directly above its write below, so a field added to one direction and forgotten in the
- * other shows up in the same diff. Keeping the two directions in step is what makes the round trip hold.
- *
- * `populate` is synchronous: neither page repeats, so nothing here has to create a page.
- *
- * The two halves of a YES/NO pair are written independently rather than as one answer, so a record answering
- * neither stays unanswered rather than being pushed into a no.
+ * Each section's read sits directly above its write below, so a forgotten field shows up in the same diff.
+ * `populate` is synchronous, since neither page repeats and nothing here has to create one. Each half of a
+ * YES/NO pair is written independently, so a record answering neither stays unanswered rather than reading as no.
  */
 export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
@@ -76,11 +72,7 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
         return violation;
     }
 
-    /**
-     * Returns a new form with the given data applied to both of its pages. Every field of the form is reachable
-     * from the data contract, and a field the data does not mention keeps the value it already holds - which is
-     * how the date and time the form stamps on itself survive a partial record.
-     */
+    /** Returns a new form with the data applied to both pages. A field the data omits keeps its current value -- how the date/time the form stamps on itself survive a partial record. */
     public async populate(form: GAUTCFormModel, { data, readOnlyFields }: IPopulateData<IGAUTCData>): Promise<GAUTCFormModel> {
         return this.populateCourtPage(await this.populateCitationPage(form, data, readOnlyFields), data, readOnlyFields);
     }
@@ -555,10 +547,9 @@ export class GAUTCMapper extends FormMapper<GAUTCFormModel, IGAUTCData> {
     /**
      * Returns a form with the data applied to its citation pages, creating a page per further violation.
      *
-     * The shared sections are written onto every page rather than only the first: a page created here does not go
-     * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
-     * `additionalViolations` are left alone rather than removed, so a record naming fewer charges than the form
-     * holds never silently discards a page an officer added.
+     * Shared sections are written onto every page, not just the first, since a page created here bypasses the
+     * form controller that would otherwise copy them across. Pages beyond `additionalViolations` are left alone
+     * rather than removed, so a record naming fewer charges never silently discards a page an officer added.
      */
     private async populateCitationPage(form: GAUTCFormModel, data: IGAUTCData, readOnlyFields?: ReadOnlyFields<IGAUTCData>): Promise<GAUTCFormModel> {
         const additional = data.additionalViolations ?? [];

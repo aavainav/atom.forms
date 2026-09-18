@@ -54,10 +54,7 @@ export interface IPrintService {
 
 /** Defines a service for registering the copies a form can be printed as. */
 export interface IPrintRegistrationService {
-    /**
-     * Registers the copies that can be printed for the identified form. Only one set may be registered per identity,
-     * and a form that registers none is offered a copy of every page instead.
-     */
+    /** Registers the copies printable for the identified form. Only one set may be registered per identity; a form registering none is offered a copy of every page instead. */
     registerProfiles(identity: IFormIdentity, profiles: ReadonlyArray<IPrintProfile>): void;
 }
 

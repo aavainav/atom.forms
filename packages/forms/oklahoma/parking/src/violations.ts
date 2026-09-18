@@ -6,12 +6,10 @@ export const OKParkingViolationListId = {
 } as const;
 
 /**
- * The parking violations an OKC citation can be written for.
- *
- * Written inline rather than generated: Oklahoma City publishes no machine-readable parking code list, so these
- * are the chapter 32 sections the citation is most often written under and both the codes and the scheduled fines
- * need checking against the current municipal code. An agency serving its own list registers over
- * `ok-parking:violation`, which replaces this outright.
+ * The parking violations an OKC citation can be written for. Written inline, since Oklahoma City publishes no
+ * machine-readable parking code list -- these are the chapter 32 sections most often written under, worth
+ * checking against the current municipal code. An agency serving its own list registers over
+ * `ok-parking:violation`, replacing this outright.
  */
 export const okParkingViolationLists: ReadonlyArray<IViolationListDefinition> = [
     {

@@ -8,13 +8,7 @@ export interface IStatusSection extends ISection {
 export interface IStatusSectionModel extends IStatusSection {
 }
 
-/**
- * Represents the model for the CDL, accident, injuries and fatalities row of Section I.
- *
- * Each of the four is a printed YES/NO pair, so each is held as two boolean fields and moved through its own
- * `select*` method - a pair answering one question can never hold both boxes, and leaving both clear is how the
- * form records a question the officer did not answer.
- */
+/** Model for the CDL, accident, injuries and fatalities row of Section I. Each is a printed YES/NO pair, held as two boolean fields moved through its own `select*` method; leaving both clear records an unanswered question. */
 export class StatusSectionModel extends SectionModel implements IStatusSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(StatusSectionModel);
 

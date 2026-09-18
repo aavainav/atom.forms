@@ -8,13 +8,7 @@ export interface IViolationSection extends ISection {
 export interface IViolationSectionModel extends IViolationSection {
 }
 
-/**
- * Represents the model for the speeding boxes of Section II of the Georgia uniform traffic citation.
- *
- * VASCAR, laser and radar are one exclusive group and the patrol vehicle / other pair is another: a speed is
- * clocked one way, by one thing. The 2-lane road and driver-requested accuracy check boxes are separate flags and
- * are left independent, since the paper asks them as their own questions rather than as one row of answers.
- */
+/** Model for the speeding boxes of Section II. VASCAR/laser/radar are one exclusive group and patrol-vehicle/other is another -- a speed is clocked one way. 2-lane-road and accuracy-check stay independent flags, asked as their own questions. */
 export class ViolationSectionModel extends SectionModel implements IViolationSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(ViolationSectionModel);
 

@@ -11,12 +11,7 @@ interface IDamageSectionProps {
     readonly binding: ISectionBinding<DamageSectionModel>;
 }
 
-/**
- * Defines the location of damaged areas section of the TR-310 unit page.
- *
- * The initial point of contact and all twelve other areas draw on the same list, whose codes 01 through 12 are the
- * clock positions on the vehicle diagram the paper form prints beside these boxes.
- */
+/** The location of damaged areas section of the unit page. The initial point of contact and twelve other areas draw on the same list, whose codes 01-12 are the clock positions on the vehicle diagram printed beside these boxes. */
 export const DamageSection = ({ binding }: IDamageSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);

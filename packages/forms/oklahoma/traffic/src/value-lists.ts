@@ -1,12 +1,9 @@
 import { IValueListDefinition, toOptions } from "@forms/value-lists";
 
 /**
- * The ids of the value lists this form owns.
- *
- * They carry the form as a prefix because the value list registry is a single global namespace and registering a
- * list replaces whatever already held its id. An unqualified `county` would be claimed by whichever form loaded
- * last, and the loser would quietly show the wrong counties rather than fail. `ok-traffic` is the form's route and
- * package name, and stays short in a cache key.
+ * The ids of the value lists this form owns, prefixed with the form since the registry is a single global
+ * namespace and registering replaces whatever already held an id. An unqualified `county` would be claimed by
+ * whichever form loaded last, silently showing the wrong counties.
  */
 export const OKTrafficValueListId = {
     county: "ok-traffic:county",
@@ -17,19 +14,16 @@ export const OKTrafficValueListId = {
 /**
  * The value lists this form registers with the value list service.
  *
- * These are the lists that belong to this form rather than to every form: Oklahoma's counties, and the two small
- * answer sets its coded boxes take. The states and vehicle makes and models it also draws on are national code
- * sets and come from `@forms/value-lists` instead.
+ * These belong to this form rather than every form: Oklahoma's counties, and its two small coded-box answer sets.
+ * States, vehicle makes and models come from `@forms/value-lists` instead, as national code sets.
  *
- * The printed form takes a code in several other boxes - race, ethnicity, vehicle style and colour, offense level,
- * release type, direction of travel and speed detection among them - and each is a text field until Oklahoma City's
- * code set for it is supplied. Turning one into a coded box is an entry here, a `get*Options` method on the
- * service, and a change of constructor in the schema; nothing else moves.
+ * Several other printed boxes -- race, ethnicity, vehicle style/colour, offense level, release type, direction of
+ * travel, speed detection -- stay text fields until Oklahoma City's code set for each is supplied. Turning one
+ * coded is an entry here, a `get*Options` method on the service, and a schema constructor change; nothing else moves.
  *
- * Every generated module is reached through a `load` callback that imports it dynamically, and must stay that way.
- * A static import of anything under ./generated - including a type-only import that a later edit turns into a
- * value import - folds that list's data straight back into whichever chunk this module lands in, and the split
- * silently stops working.
+ * Every generated module must stay reached only through a dynamic `load()` -- a static import under ./generated,
+ * even a type-only one a later edit turns into a value import, folds that data back into this module's own chunk
+ * and silently breaks the split.
  */
 export const okTrafficValueLists: ReadonlyArray<IValueListDefinition> = [
     {

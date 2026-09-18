@@ -7,12 +7,7 @@ export interface IWitnessSection extends ISection {
 export interface IWitnessSectionModel extends IWitnessSection {
 }
 
-/**
- * Represents the model for the witness/complainant section of the traffic citation form's supplement page.
- *
- * The witness's name field is `witnessName` rather than `name`, because `SectionModel` already declares a `name`
- * holding the section's own name and a field definition cannot shadow it.
- */
+/** Model for the witness/complainant section of the supplement page. The witness's name field is `witnessName`, not `name`, since `SectionModel` already declares `name` for the section's own name. */
 export class WitnessSectionModel extends SectionModel implements IWitnessSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(WitnessSectionModel);
 

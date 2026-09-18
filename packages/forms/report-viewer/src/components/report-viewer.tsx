@@ -25,13 +25,11 @@ export interface IReportViewerProps<TData extends object = IReportData> {
 }
 
 /**
- * Renders a report: the host names a form and hands over its data, and everything else -- resolving the catalog
- * item, building the model, populating it, and mounting the options and panels the form offers -- happens here.
- * This is the whole of what a host app needs; nothing below it has to be reached for.
+ * Renders a report: the host names a form and hands over its data; resolving the catalog item, building and
+ * populating the model, and mounting options/panels all happen here. Nothing below this has to be reached for.
  *
- * A host that needs more than these three props -- controllers shared with something rendered outside the form, or
- * a mutation of the model after it loads -- takes the longer way round instead: `IReportViewerService.loadForm`
- * and then `ReportViewerForm`, which is exactly what this does.
+ * A host needing more -- shared controllers, or mutating the model after load -- takes the longer way round:
+ * `IReportViewerService.loadForm` then `ReportViewerForm` directly, which is exactly what this does.
  */
 function ReportViewerInner<TData extends object = IReportData>(
     { identity, dataManager, settings }: IReportViewerProps<TData>,
@@ -41,11 +39,8 @@ function ReportViewerInner<TData extends object = IReportData>(
 
     return (
         <div id="report-viewer" className="d-flex flex-column">
-            {/*
-              * FAsyncLoader runs its op once, on mount, so a changed identity would otherwise leave the previously
-              * loaded form on screen. The key remounts it instead, which is also what drops the old form's
-              * controllers rather than re-seeding them with a form from a different definition tree.
-              */}
+            {/* FAsyncLoader's op runs once on mount, so a changed identity would leave the old form on screen without
+                this key remounting it -- which also drops the old controllers rather than re-seeding a new tree. */}
             <FAsyncLoader<IInitialForm>
                 key={`${identity.name}@${identity.version ?? ""}`}
                 op={() => reportViewerService.loadForm(identity, dataManager)}

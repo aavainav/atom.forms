@@ -2,25 +2,24 @@ import { IGAUTCData } from "@forms/ga-utc";
 
 /**
  * Mock records for exercising `GAUTCMapper.populate()` and `extract()` through the report viewer's data reader.
- * Keyed by the `?record=` query param recognized by `ExampleDataModule`.
+ * Keyed by the `?record=` query param `createExampleDataManager` reads.
  *
- * The `full` record populates every one of the sixteen sections, including the court page the clerk and judge
- * complete, so both pages of the citation can be seen filled. It is deliberately a synthetic record rather than a
- * realistic single stop - a speeding citation would not normally also carry a DUI test or a completed disposition -
- * because the point of it is coverage.
+ * `full` populates all sixteen sections, including the court page the clerk and judge complete, so both pages
+ * show filled in. It's deliberately synthetic rather than a realistic single stop -- a speeding citation wouldn't
+ * normally also carry a DUI test or a completed disposition -- since the point is coverage.
  *
- * The `minimal` record covers only what the citation requires before it can be served, and stops at the citation
- * page. It leaves the offense month, day, year, hour, minute and PM boxes alone, so it shows the date and time the
- * form stamps on itself in `initialize()` surviving a partial record, and leaves `vehicleYear` and `violatorWeight`
- * unanswered, so it shows an empty number being omitted from a save rather than reported as 0.
+ * `minimal` covers only what the citation requires before serving, stopping at the citation page. It leaves the
+ * offense month/day/year/hour/minute/PM boxes alone, showing the date/time `initialize()` stamps surviving a
+ * partial record, and leaves `vehicleYear`/`violatorWeight` unanswered, showing an untouched number reporting as
+ * zero rather than being omitted.
  *
- * Note the dates: `violatorDateOfBirth` and `violatorLicenseExpires` are the citation's only two full date boxes and
- * are written `YYYY-MM-DD`, the one order `DateRangeFieldRule` parses. The date boxes in the header, summons,
- * certification and plea blocks are the separate day / month / year boxes the paper prints, and carry exactly what
- * an officer writes in them - an abbreviated month in the header, a full month name elsewhere, and a two digit year.
+ * Dates: `violatorDateOfBirth`/`violatorLicenseExpires` are the citation's only full date boxes, written
+ * `YYYY-MM-DD`, the order `DateRangeFieldRule` parses. Header/summons/certification/plea date boxes are the
+ * separate day/month/year boxes the paper prints, carrying exactly what an officer writes -- an abbreviated
+ * month in the header, a full name elsewhere, a two-digit year.
  *
- * Option boxes carry the code and description together, matching the registered value lists: `ga-utc:county` and
- * `ga-utc:sex` from the form itself, and the national state, vehicle make and vehicle model lists.
+ * Option boxes carry code and description together, matching the registered value lists: `ga-utc:county` and
+ * `ga-utc:sex` from the form itself, plus the national state, vehicle make and model lists.
  */
 export const mockGAUTCRecords: Record<string, IGAUTCData> = {
     full: {

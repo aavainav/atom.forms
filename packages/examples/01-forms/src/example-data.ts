@@ -22,11 +22,7 @@ interface IExampleForm<TData extends object> {
     /** The values a record that does not exist yet starts with. */
     readonly defaults?: {
         readonly data: Partial<TData>;
-        /**
-         * Which of those values the host considers settled rather than an editable suggestion. It is typed against
-         * this form's own contract, so a misspelled key here is a compile error rather than a lock that silently
-         * does nothing.
-         */
+        /** Which of those values the host considers settled rather than an editable suggestion. Typed against the form's own contract, so a misspelled key here is a compile error, not a silent no-op lock. */
         readonly readOnlyFields?: ReadOnlyFields<TData>;
     };
 }
@@ -78,25 +74,21 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
 
 /**
  * Builds the data manager for one form, demonstrating what a host hands the report viewer: a `read` that turns
- * whatever the host holds into the contract the target form publishes, and a `write` that takes back what the form
- * gives. Neither the form packages nor the report viewer know anything about sessionStorage or this fixture table.
+ * whatever the host holds into the target form's contract, and a `write` that takes back what the form gives.
+ * Neither the form packages nor the report viewer know anything about sessionStorage or this fixture table.
  *
- * The write stores to sessionStorage and the read prefers a stored record over the fixture, so the whole round trip
- * can be seen without a server: load, edit, save, reload.
+ * `write` stores to sessionStorage and `read` prefers a stored record over the fixture, so the whole round trip
+ * shows without a server: load, edit, save, reload. With no `?record=` and nothing saved, `read` returns nothing
+ * and the form opens blank -- "Load test data" (`forms/load-test-data-option.tsx`) is the interactive equivalent
+ * of `?record=full`.
  *
- * With no `?record=` given at all, and nothing saved yet, `read` returns nothing and the form opens blank -- the
- * "Load test data" option (`forms/load-test-data-option.tsx`) is the interactive equivalent of `?record=full`, for
- * a form worth demoing without hand-editing every field first.
+ * Switch scenarios with `?record=full`/`?record=minimal`; clear a saved record with `&reset=1`. `?record=new`
+ * starts from a not-yet-existing record's defaults, locking whichever fields are settled -- e.g.
+ * `/sc/432?record=new&reset=1`. The report viewer's own "New Form" option reaches this the same way via
+ * `reason: "new"`, and `read` stamps `?record=new` onto the url then, so a refresh doesn't silently read back
+ * whatever was last saved.
  *
- * Switch scenarios with `?record=full` or `?record=minimal`. Clear a saved record with `?record=full&reset=1`.
- * `?record=new` starts from the values a host would give a record that does not exist yet -- and locks whichever of
- * them it considers settled -- e.g. `/sc/432?record=new&reset=1` or `/sc/s438?record=new&reset=1`. The report
- * viewer's own "New Form" option reaches this the same way, passing `reason: "new"` instead of the query param --
- * `read` stamps `?record=new` onto the url itself when that happens, so a refresh afterward doesn't silently read
- * back whatever was last saved.
- *
- * A form this host holds no fixtures for gets **no manager at all**, which is what a blank, unsaveable form looks
- * like from the report viewer's side.
+ * A form this host holds no fixtures for gets **no manager at all** -- a blank, unsaveable form.
  */
 export function createExampleDataManager(identity: IFormIdentity, searchParams: URLSearchParams, setSearchParams: SetURLSearchParams): IReportViewerDataManager | undefined {
     const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);
@@ -144,11 +136,7 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
     };
 }
 
-/**
- * Returns this form's "full" fixture, for the "Load test data" option to fill an already-open form with on demand
- * rather than the app doing it automatically. A form this host holds no fixtures for returns nothing, which is how
- * the option knows not to offer itself.
- */
+/** Returns this form's "full" fixture, for "Load test data" to fill an already-open form with on demand. A form this host holds no fixtures for returns nothing, which is how the option knows not to offer itself. */
 export function getExampleTestData(identity: IFormIdentity): IPopulateData<IReportData> | undefined {
     const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);
 

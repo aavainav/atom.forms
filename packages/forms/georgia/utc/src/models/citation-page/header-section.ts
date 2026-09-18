@@ -8,13 +8,7 @@ export interface IHeaderSection extends ISection {
 export interface IHeaderSectionModel extends IHeaderSection {
 }
 
-/**
- * Represents the model for the header of the Georgia uniform traffic citation.
- *
- * The date and time the citation is issued are held as the separate month, day, year, hour and minute boxes the
- * paper prints rather than as one date and one time, because that is what an officer fills in and what the printed
- * citation has room for.
- */
+/** Model for the citation's header. Date/time are held as the separate month/day/year/hour/minute boxes the paper prints, rather than one date and one time, matching what an officer fills in and what the paper has room for. */
 export class HeaderSectionModel extends SectionModel implements IHeaderSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(HeaderSectionModel);
 

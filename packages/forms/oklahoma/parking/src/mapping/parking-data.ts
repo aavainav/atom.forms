@@ -1,12 +1,6 @@
 import { IOptionValue } from "@forms/core";
 
-/**
- * Represents the violation and payment boxes that belong to one violation, and so differ from one citation
- * page to the next.
- *
- * The date, time and location are held here alongside the code because the citation prints them in the same
- * block; a ticket run writes the same three onto every page it produces.
- */
+/** The violation and payment boxes belonging to one violation, differing page to page. Date, time and location are held here alongside the code since the citation prints them in the same block; a ticket run writes the same three onto every page. */
 export interface IOKParkingViolationData {
     /** "Amount Due" if paid on or before the court date, from the payment section of the citation page. */
     readonly paymentAmountDue?: number;
@@ -30,12 +24,7 @@ export interface IOKParkingViolationData {
 
 /** Represents the data contract for the Oklahoma City parking violation record. */
 export interface IOKParkingData extends IOKParkingViolationData {
-    /**
-     * The violations beyond the first, one per further citation page.
-     *
-     * The first violation stays in the flat fields rather than moving into this array, so a record written
-     * before a citation could carry more than one violation round trips through here unchanged.
-     */
+    /** The violations beyond the first, one per further citation page. The first stays in the flat fields, so a record written before a citation could carry more than one round-trips unchanged. */
     readonly additionalViolations?: ReadonlyArray<IOKParkingViolationData>;
     /** "Signature of Clerk", from the certification section of the complaint page. */
     readonly certificationClerkSignature?: string;

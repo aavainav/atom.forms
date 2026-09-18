@@ -1,12 +1,6 @@
 import { IOptionValue } from "@forms/core";
 
-/**
- * Represents the violation, offense and violation-information boxes that belong to one charge, and so differ
- * from one complaint page to the next.
- *
- * The date, time, county and location are held here alongside the codes because the citation prints them in
- * the same block; a stop writes the same four onto every page it produces.
- */
+/** The violation, offense and violation-information boxes belonging to one charge, differing page to page. Date, time, county and location are held here alongside the codes since the citation prints them in the same block. */
 export interface IOKTrafficViolationData {
     /** "Amount Due", from the offense section of the complaint page. */
     readonly offenseAmountDue?: number;
@@ -48,12 +42,7 @@ export interface IOKTrafficViolationData {
 
 /** Represents the data contract for the Oklahoma City traffic citation record. */
 export interface IOKTrafficData extends IOKTrafficViolationData {
-    /**
-     * The violations beyond the first, one per further complaint page.
-     *
-     * The first violation stays in the flat fields rather than moving into this array, so a record written
-     * before a citation could carry more than one charge round trips through here unchanged.
-     */
+    /** The violations beyond the first, one per further complaint page. The first stays in the flat fields, so a record written before a citation could carry more than one charge round-trips unchanged. */
     readonly additionalViolations?: ReadonlyArray<IOKTrafficViolationData>;
     /** "Arraignment Court Date", from the arraignment section of the complaint page. Held as `YYYY-MM-DD`. */
     readonly arraignmentCourtDate?: string;

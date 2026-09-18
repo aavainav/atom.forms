@@ -9,14 +9,10 @@ export interface IDispositionSectionModel extends IDispositionSection {
 }
 
 /**
- * Represents the model for the "Disposition and Sentence" block of the court's copy.
- *
- * Three exclusive groups: what the defendant pleaded, how the case was tried and what it was adjudged, and the
- * other action the court took instead. The three schools and the assessment beneath them are separate flags - a
- * sentence may carry more than one - and so are left independent.
- *
- * The numbers printed beside the plea and trial options - (3) Guilty, (1) Guilty, (2) Bond Forfeiture - are part of
- * the labels the paper prints and are kept in them.
+ * Model for the "Disposition and Sentence" block. Three exclusive groups: the plea, how the case was tried and
+ * adjudged, and the other action taken instead. The three schools and the assessment are separate, independent
+ * flags, since a sentence may carry more than one. Numbers printed beside options -- (3) Guilty, (1) Guilty, (2)
+ * Bond Forfeiture -- are part of the paper's own labels.
  */
 export class DispositionSectionModel extends SectionModel implements IDispositionSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(DispositionSectionModel);

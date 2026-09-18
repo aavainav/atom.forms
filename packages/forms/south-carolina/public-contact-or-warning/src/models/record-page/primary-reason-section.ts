@@ -40,10 +40,7 @@ export class PrimaryReasonSectionModel extends SectionModel implements IPrimaryR
     public getOther(): BooleanFieldModel { return this.get<BooleanFieldModel>(this.other); }
     public getOtherSpecify(): StringFieldModel { return this.get<StringFieldModel>(this.otherSpecify); }
 
-    /**
-     * Selects the given reason, unchecking every other reason in the group in the same update so exactly one
-     * (or none) is ever checked - true radio behavior, since the underlying framework has no radio/enum field type.
-     */
+    /** Selects the given reason, unchecking every other reason in the group in the same update -- true radio behavior, since the framework has no radio/enum field type. */
     public selectReason(selected: FieldDefinition<BooleanFieldModel>): this {
         return this.exclusiveFields.reduce(
             (section, fieldDefinition) => section.set(fieldDefinition, section.get<BooleanFieldModel>(fieldDefinition).setValue(fieldDefinition === selected)),

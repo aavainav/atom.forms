@@ -8,9 +8,9 @@ export interface IViolation {
     /**
      * The group the code list files the violation under, e.g. "Speed" or "Licence & registration".
      *
-     * Optional, and free text rather than an enum: the grouping belongs to the agency publishing the list, and
-     * two jurisdictions do not divide their codes the same way. A list carrying none is simply not filterable by
-     * category, which is why the selector offers the control only once a list turns out to have them.
+     * Free text, not an enum: the grouping belongs to the publishing agency, and jurisdictions divide codes
+     * differently. A list with none simply isn't filterable by category, which is why the selector only offers
+     * the control once a list turns out to have them.
      */
     readonly category?: string;
 
@@ -29,10 +29,9 @@ export interface IViolation {
 /**
  * The compact row a generated violation list is emitted as.
  *
- * The order is by how often a field is filled in rather than how important it is, because a row is trimmed to its
- * last present field and a gap before that has to be held open with an `undefined`. Category sits third for that
- * reason: nearly every row in a categorised list carries one, so putting it after the fields that are usually
- * absent would cost two placeholders a row to say it.
+ * Fields are ordered by how often they're filled in, not by importance -- a row trims to its last present field,
+ * and a gap before that needs an `undefined` placeholder. Category sits third since nearly every categorised row
+ * carries one; placing it later would cost extra placeholders on most rows.
  */
 export type ViolationRow = readonly [
     code: string,

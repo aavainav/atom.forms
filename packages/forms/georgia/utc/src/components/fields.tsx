@@ -90,10 +90,7 @@ interface ISelectBoxProps {
     readonly format?: FSelectFormat;
     /** The label printed above the box; the field's own label by default. */
     readonly label?: string;
-    /**
-     * The value of the option this box's list hangs off, for a list with a parent. It reaches the loader as its
-     * argument, which is the whole of the dependency between two boxes.
-     */
+    /** The value of the option this box's list hangs off, for a list with a parent -- reaches the loader as its argument, the whole of the dependency between two boxes. */
     readonly parentValue?: string;
     /** Exact width in pixels. */
     readonly width?: number;
@@ -153,11 +150,10 @@ interface IOptionBoxProps {
 }
 
 /**
- * One box of a group answering a single question - a YES/NO pair, the weather column, the plea options.
- *
- * It renders as a radio so the group reads on screen the way the printed row reads on paper, and its `onSelect`
- * must go through the section's `select*` method, which is what clears the rest of the group in the same update.
- * Being a radio, it cannot be cleared by clicking it again; a group is left unanswered by never ticking it.
+ * One box of a group answering a single question -- a YES/NO pair, the weather column, the plea options. Renders
+ * as a radio so the group reads on screen as the printed row reads on paper; `onSelect` must go through the
+ * section's `select*` method, which clears the rest of the group in the same update. Being a radio, it can't be
+ * cleared by clicking again -- a group is left unanswered by never ticking it.
  */
 export const OptionBox = ({ field, label, onSelect }: IOptionBoxProps): React.JSX.Element => (
     <FFieldCheckbox

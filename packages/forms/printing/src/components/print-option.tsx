@@ -6,11 +6,7 @@ import { FButton, FIcon, FTooltip, IControllerManager, IModalOptions } from "@fo
 import { PrintDialog } from "./print-dialog";
 import { IPrintRequest, IPrintService } from "../services";
 
-/**
- * Defines the props the print option is rendered with. Declared here rather than imported so that nothing in this
- * package depends on whoever renders it: the dialog is opened through a `showModal` handed in, and a failure goes
- * out through `onError`, both of which belong to the host of the option rather than to the option.
- */
+/** The print option's props, declared here rather than imported so nothing in this package depends on whoever renders it -- the dialog opens via a `showModal` handed in, and `onError` reports failures, both belonging to the host. */
 export interface IPrintOptionProps {
     /** The catalog item the form was loaded from, which its printable copies are resolved by. */
     readonly catalogItem: IResolvedFormCatalogItem;

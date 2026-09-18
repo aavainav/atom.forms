@@ -136,14 +136,10 @@ export interface IOKParkingFormSchema extends ISchema {
 }
 
 /**
- * Represents the schema definition for the Oklahoma City parking violation form.
- *
- * The three pages follow the printed form: the citation the officer leaves on the vehicle, the complaint and
- * warrant page the municipal counselor and clerk endorse, and the detail page carrying the registered owner and
- * the rest of the vehicle's description. Every page appears once.
- *
- * Dates are held as `YYYY-MM-DD` rather than the `MM/DD/YYYY` the form prints, because that is the one order
- * `DateRangeFieldRule` parses and a value it cannot parse silently skips date validation.
+ * Schema for the Oklahoma City parking violation form. Three pages follow the printed form: the citation left on
+ * the vehicle, the complaint/warrant page the municipal counselor and clerk endorse, and the detail page with the
+ * registered owner and rest of the vehicle's description -- each appearing once. Dates are `YYYY-MM-DD`, not the
+ * printed `MM/DD/YYYY`, since that's the one order `DateRangeFieldRule` parses.
  */
 export class OKParkingFormSchema extends Schema implements IOKParkingFormSchema {
     readonly formDefinition: FormDefinition<OKParkingFormModel> = DefinitionFactory.form<OKParkingFormModel>("ok-parking-form", OKParkingFormModel, this);

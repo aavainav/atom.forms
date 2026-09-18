@@ -7,11 +7,9 @@ export interface IFrontPageViolationDropzone extends IViolationDropzone {
 }
 
 /**
- * Represents the dropzone for importing a violation onto the s438 form's front page.
- *
- * The S438 prints the statute as its violation section number and carries no fine, so the code and the fine are
- * left out; a dropzone ignores what it holds no field for. The court-appearance answer is a Yes/No pair rather
- * than a single box, so it is applied by the service rather than mapped here.
+ * Dropzone for a violation onto the S438's front page. The S438 prints the statute as its violation section
+ * number and carries no fine, so both are left out -- a dropzone ignores what it holds no field for. The
+ * court-appearance answer is a Yes/No pair, not a single box, so the service applies it rather than this dropzone.
  */
 export class FrontPageViolationDropzone extends ViolationDropzone implements IFrontPageViolationDropzone {
     constructor(page: FrontPageModel, schema: S438FormSchema) {

@@ -7,12 +7,7 @@ export interface ILocationSection extends ISection {
 export interface ILocationSectionModel extends ILocationSection {
 }
 
-/**
- * Represents the model for Section III (Location) of the Georgia uniform traffic citation.
- *
- * The county is an option field drawn from `ga-utc:county`, which holds the three counties the citation prints
- * beside the box rather than every county in Georgia.
- */
+/** Model for Section III (Location). County is an option field drawn from `ga-utc:county`, holding the three counties the citation prints beside the box, not every county in Georgia. */
 export class LocationSectionModel extends SectionModel implements ILocationSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(LocationSectionModel);
 

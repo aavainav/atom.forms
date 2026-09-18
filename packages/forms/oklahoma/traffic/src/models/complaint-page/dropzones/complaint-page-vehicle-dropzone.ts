@@ -6,12 +6,7 @@ import { VehicleSectionModel } from "../vehicle-section";
 export interface IComplaintPageVehicleDropzone extends IVehicleDropzone {
 }
 
-/**
- * Represents the dropzone for importing vehicle data onto the traffic citation form's complaint page.
- *
- * The make and model are option fields rather than free text, so a drop has to be resolved from the names it
- * arrived with to the codes the form stores before it is applied - see `IOKTrafficService.resolveVehicleDropzone`.
- */
+/** Dropzone for vehicle data onto the complaint page. Make/model are option fields, not free text, so a drop must resolve from arrival names to stored codes before applying -- see `IOKTrafficService.resolveVehicleDropzone`. */
 export class ComplaintPageVehicleDropzone extends VehicleDropzone implements IComplaintPageVehicleDropzone {
     constructor(page: ComplaintPageModel, schema: OKTrafficFormSchema) {
         super(

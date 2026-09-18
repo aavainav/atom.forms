@@ -7,13 +7,7 @@ export interface ISwornSection extends ISection {
 export interface ISwornSectionModel extends ISwornSection {
 }
 
-/**
- * Represents the model for the jurat of the traffic citation form's complaint page - who the complaint was
- * subscribed and sworn before, and when.
- *
- * The name field is `swornName` rather than `name`, because `SectionModel` already declares a `name` holding the
- * section's own name and a field definition cannot shadow it.
- */
+/** Model for the complaint page's jurat -- who the complaint was subscribed and sworn before, and when. The name field is `swornName`, not `name`, since `SectionModel` already declares `name` for the section's own name. */
 export class SwornSectionModel extends SectionModel implements ISwornSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(SwornSectionModel);
 

@@ -8,12 +8,7 @@ interface ICourtSectionProps {
     readonly binding: ISectionBinding<CourtSectionModel>;
 }
 
-/**
- * Defines the court section of the Oklahoma City parking violation form's citation page.
- *
- * The court's name and address are preprinted on the form rather than filled in, so they are rendered as text
- * here and the section carries no field for them.
- */
+/** The court section of the citation page. Court name and address are preprinted, not filled in, so they're rendered as text here and the section carries no field for them. */
 export const CourtSection = ({ binding }: ICourtSectionProps): React.JSX.Element => {
     const section = binding.get();
     const date = section.getDate();

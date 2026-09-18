@@ -1,12 +1,9 @@
 import { IValueListDefinition, toOptions } from "@forms/value-lists";
 
 /**
- * The ids of the value lists this record owns.
- *
- * They carry the form as a prefix because the value list registry is a single global namespace and registering a
- * list replaces whatever already held its id. An unqualified `county` would be claimed by whichever form loaded
- * last, and the loser would quietly show the wrong counties rather than fail. `sc-432` is the form's route and
- * catalog name, and stays short in a cache key.
+ * The ids of the value lists this record owns, prefixed with the form since the registry is a single global
+ * namespace and registering replaces whatever already held an id. An unqualified `county` would be claimed by
+ * whichever form loaded last, silently showing the wrong counties.
  */
 export const PublicContactOrWarningValueListId = {
     county: "sc-432:county",
@@ -17,14 +14,12 @@ export const PublicContactOrWarningValueListId = {
 /**
  * The value lists this record registers with the value list service.
  *
- * These are the lists that belong to this form rather than to every form: South Carolina's counties, the legacy
- * race/ethnicity codes this record was built against, and its genders. The states and vehicle makes and models it
- * also draws on are national code sets and come from `@forms/value-lists` instead.
+ * These belong to this form rather than every form: South Carolina's counties, its legacy race/ethnicity codes,
+ * and its genders. States, vehicle makes and models come from `@forms/value-lists` instead.
  *
- * Every generated module is reached through a `load` callback that imports it dynamically, and must stay that way.
- * A static import of anything under ./generated - including a type-only import that a later edit turns into a
- * value import - folds that list's data straight back into whichever chunk this module lands in, and the split
- * silently stops working.
+ * Every generated module must stay reached only through a dynamic `load()` -- a static import under ./generated,
+ * even a type-only one a later edit turns into a value import, folds that data back into this module's own chunk
+ * and silently breaks the split.
  */
 export const publicContactOrWarningValueLists: ReadonlyArray<IValueListDefinition> = [
     {

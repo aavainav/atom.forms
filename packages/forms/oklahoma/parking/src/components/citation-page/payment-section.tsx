@@ -8,12 +8,7 @@ interface IPaymentSectionProps {
     readonly binding: ISectionBinding<PaymentSectionModel>;
 }
 
-/**
- * Defines the payment section of the Oklahoma City parking violation form's citation page.
- *
- * The two amounts are number fields, so the converter below is what puts them on the page as the currency the
- * form prints while the model keeps holding a number.
- */
+/** The payment section of the citation page. The two amounts are number fields; the converter below puts them on the page as the currency the form prints while the model keeps holding a number. */
 export const PaymentSection = ({ binding }: IPaymentSectionProps): React.JSX.Element => {
     const section = binding.get();
     const dueDate = section.getDueDate();

@@ -3,9 +3,8 @@ import { IValueListDefinition, toOptions } from "./models";
 /**
  * The ids of the value lists this package registers.
  *
- * These are the lists with no jurisdiction and no form in them - a national code set every traffic form reaches
- * for - which is why they are unqualified. A list belonging to one state or one form is owned by the package that
- * needs it and carries that owner as a prefix, so two forms can never register different data under one id.
+ * Unqualified because these lists have no jurisdiction or form -- a national code set every traffic form reaches
+ * for. A list owned by one state or form carries that owner as a prefix, so two forms can never collide on one id.
  */
 export const ValueListId = {
     state: "state",
@@ -16,11 +15,10 @@ export const ValueListId = {
 /**
  * The value lists this package registers with the value list service.
  *
- * Every generated module is reached through a `load` callback that imports it dynamically, and must stay that
- * way. A static import of anything under ./generated - including a type-only import that a later edit turns into
- * a value import - folds that list's data straight back into whichever chunk this module lands in, and the split
- * silently stops working. The vehicle make and model data alone is larger than everything else put together, and
- * the model list is not fetched at all until a make has been chosen.
+ * Every generated module must stay reached only through a dynamic `load()` -- a static import under ./generated,
+ * even a type-only one a later edit turns into a value import, folds that data back into this module's own chunk
+ * and silently breaks the split. Vehicle make/model data alone outweighs everything else combined, and models
+ * aren't fetched at all until a make is chosen.
  */
 export const standardValueLists: ReadonlyArray<IValueListDefinition> = [
     {

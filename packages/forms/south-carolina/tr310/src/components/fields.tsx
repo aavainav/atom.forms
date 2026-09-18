@@ -16,13 +16,7 @@ import {
 /** The width of a code box, sized for the two-digit codes the report's legends are numbered with. */
 const codeBoxWidth = 44;
 
-/**
- * Loads a value list, answering with an empty list until it resolves.
- *
- * The legend a box is printed beside is the list itself, so it is rendered from the same options the box chooses
- * from rather than restated as text - one place for the codes, and a legend that cannot drift from what the box
- * will accept.
- */
+/** Loads a value list, answering with an empty list until it resolves. A box's printed legend is the list itself, rendered from the same options the box chooses from rather than restated as text -- one place for the codes. */
 export function useOptions(load: () => Promise<Array<IOptionValue>>): Array<IOptionValue> {
     const [options, setOptions] = useState<Array<IOptionValue>>([]);
 
@@ -57,10 +51,8 @@ interface ICodeBoxProps {
 }
 
 /**
- * One of the report's code boxes.
- *
- * The box shows the code alone, as the printed form does, while the menu it opens shows each code with its
- * description so the officer need not read the legend to choose.
+ * One of the report's code boxes. The box shows the code alone, as the printed form does, while the menu it
+ * opens shows each code with its description so the officer need not read the legend to choose.
  */
 export const CodeBox = ({ disabled, field, load, label, borderEdges, width = codeBoxWidth, onChange }: ICodeBoxProps): React.JSX.Element => (
     <FFieldControl width={width} label={label} labelFor={field.id} borderEdges={borderEdges}>
@@ -85,10 +77,9 @@ interface ICodeLegendProps {
 }
 
 /**
- * The list of codes the form prints beside a code box, laid out in columns the way the paper form lays them out.
- *
- * A long description wraps rather than pushing the block wider: the page is a fixed 1024px, and the longest of
- * these lists is fifty-seven codes, so a legend that refused to wrap would run off the page it is printed on.
+ * The list of codes printed beside a code box, laid out in columns the way the paper form lays them out. A long
+ * description wraps rather than widening the block: the page is a fixed 1024px, and the longest list runs to
+ * fifty-seven codes, so a legend that refused to wrap would run off the page.
  */
 export const CodeLegend = ({ options, columns = 2 }: ICodeLegendProps): React.JSX.Element => (
     <div className="f-code-legend flex-fill px-2 py-1" style={{ columnCount: columns, columnGap: "1rem", minWidth: 0 }}>

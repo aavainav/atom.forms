@@ -14,9 +14,8 @@ export interface IFormComponentProps {
 }
 
 /**
- * Defines a form registered with the form catalog, keyed by name and version. This is the cheap, always-available
- * half of a form's registration -- identity, for listing and lookup, plus how to load everything else. Nothing
- * about a form's own code (its model, schema, or component) is imported or evaluated until `load()` is called.
+ * A form registered with the catalog, keyed by name and version -- the cheap, always-available half of a form's
+ * registration. Nothing about the form's own code (model, schema, component) is imported until `load()` is called.
  */
 export interface IFormCatalogItem {
     readonly name: string;
@@ -25,9 +24,8 @@ export interface IFormCatalogItem {
     readonly version: string;
 
     /**
-     * Loads this form's own code and builds its schema, resolving to what's needed to construct and render it.
-     * Called at most once per identity -- `IFormCatalogService.get` caches the promise this returns, so a form
-     * already opened once is never re-loaded, and its schema is never built twice.
+     * Loads this form's own code and builds its schema. Called at most once per identity -- `get` caches the
+     * returned promise, so a form already opened is never re-loaded or rebuilt.
      */
     readonly load: () => Promise<ILoadedFormCatalogItem>;
 }
@@ -49,9 +47,8 @@ export type IResolvedFormCatalogItem = IFormCatalogItem & ILoadedFormCatalogItem
 export interface IFormCatalogService {
     readonly catalogItems: ReadonlyMap<string, ReadonlyMap<string, IFormCatalogItem>>;
     /**
-     * Gets the catalog item matching the given identity, returning its latest version if the identity does not
-     * specify one. Loads the form's own code the first time it's asked for and caches the result, so opening the
-     * same form again never re-runs `load()`.
+     * Gets the catalog item matching the identity, defaulting to its latest version. Loads and caches the form's
+     * code on first request, so opening it again never re-runs `load()`.
      */
     get(identity: IFormIdentity): Promise<IResolvedFormCatalogItem>;
     /** Gets the latest version of every registered catalog item, keyed by name. Never loads any form's own code -- safe to call to list what's available. */

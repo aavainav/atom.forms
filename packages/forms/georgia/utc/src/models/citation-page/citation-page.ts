@@ -22,12 +22,7 @@ export interface ICitationPage {
 export interface ICitationPageModel extends ICitationPage {
 }
 
-/**
- * Represents the citation page of the Georgia uniform traffic citation, the face of the printed form.
- *
- * Its twelve sections are the five the paper numbers I through V, split where a printed section holds more than
- * one block of boxes.
- */
+/** The citation page, the face of the printed form. Its twelve sections are the five the paper numbers I through V, split where a printed section holds more than one block of boxes. */
 export class CitationPageModel extends PageModel implements ICitationPageModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(CitationPageModel);
 

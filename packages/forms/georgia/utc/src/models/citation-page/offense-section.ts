@@ -8,13 +8,7 @@ export interface IOffenseSection extends ISection {
 export interface IOffenseSectionModel extends IOffenseSection {
 }
 
-/**
- * Represents the model for the offense, companion case and remarks boxes of Section II.
- *
- * The citation holds one offense, so a record carrying several supplies the one it is issued for. The state law /
- * local ordinance pair says which body of law the code section belongs to and so holds at most one box, as does
- * the companion case YES/NO pair.
- */
+/** Model for the offense, companion case and remarks boxes of Section II. The citation holds one offense, so a record with several supplies the one it's issued for. The state law/local ordinance pair and the companion case YES/NO pair each hold at most one box. */
 export class OffenseSectionModel extends SectionModel implements IOffenseSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(OffenseSectionModel);
 

@@ -18,11 +18,9 @@ export interface IOKTrafficFormModel extends IOKTrafficForm {
 }
 
 /**
- * Formats a date as the `YYYY-MM-DD` the form's date boxes carry.
- *
- * This is the one order `DateRangeFieldRule` parses, and a value it cannot parse silently skips date validation.
- * Stamping any other order would leave the date the form writes for itself unchecked by the form's own rules, so
- * a host mapping a source that uses another order has to convert before its data reaches the contract.
+ * Formats a date as the `YYYY-MM-DD` the form's date boxes carry -- the one order `DateRangeFieldRule` parses,
+ * and a value it can't parse silently skips validation. A host mapping another order must convert before its
+ * data reaches the contract.
  */
 function formatDate(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -31,12 +29,7 @@ function formatDate(date: Date): string {
     return `${date.getFullYear()}-${month}-${day}`;
 }
 
-/**
- * Represents the model for the Oklahoma City traffic citation and complaint form.
- *
- * The complaint, warrant and supplement pages each appear once, so the form never grows a page and the setters
- * below always reach the first page of a collection.
- */
+/** Model for the Oklahoma City traffic citation and complaint form. Complaint, warrant and supplement pages each appear once, so the form never grows a page and the setters below always reach the first page. */
 export class OKTrafficFormModel extends CitationForm<IOKTrafficData> implements IOKTrafficFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
@@ -110,12 +103,7 @@ export class OKTrafficFormModel extends CitationForm<IOKTrafficData> implements 
         return this;
     }
 
-    /**
-     * Returns the form unchanged.
-     *
-     * The citation number is assigned by the municipal court rather than by the form, so it arrives with the data
-     * a host loads and there is nothing for the form to stamp on itself.
-     */
+    /** Returns the form unchanged -- the citation number is assigned by the municipal court, so it arrives with the data a host loads rather than being stamped here. */
     public setTicketNumber(): this {
         return this;
     }

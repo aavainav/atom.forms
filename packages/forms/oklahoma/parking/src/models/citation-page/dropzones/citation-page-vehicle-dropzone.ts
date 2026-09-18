@@ -7,12 +7,9 @@ export interface ICitationPageVehicleDropzone extends IVehicleDropzone {
 }
 
 /**
- * Represents the dropzone for importing vehicle data onto the parking citation page.
- *
- * Only the make is mapped. The printed form carries the model and year on the detail page instead, and a dropzone
- * writes onto the one section it was built from, so the rest of a dropped vehicle has nowhere to land here. The
- * make is an option field rather than free text, so a drop has to be resolved from the name it arrived with to
- * the code the form stores before it is applied - see `IOKParkingService.resolveVehicleDropzone`.
+ * Dropzone for vehicle data onto the parking citation page. Only make is mapped -- model and year live on the
+ * detail page, and a dropzone writes only the section it's built from. Make is an option field, so a drop must
+ * resolve from its arrival name to the stored code before applying -- see `IOKParkingService.resolveVehicleDropzone`.
  */
 export class CitationPageVehicleDropzone extends VehicleDropzone implements ICitationPageVehicleDropzone {
     constructor(page: CitationPageModel, schema: OKParkingFormSchema) {

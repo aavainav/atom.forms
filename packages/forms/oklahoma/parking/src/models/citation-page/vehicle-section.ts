@@ -7,13 +7,7 @@ export interface IVehicleSection extends ISection {
 export interface IVehicleSectionModel extends IVehicleSection {
 }
 
-/**
- * Represents the model for the vehicle section of the parking citation page.
- *
- * The printed form splits the vehicle across two pages: the plate, make and meter here, and the rest of its
- * description on the detail page. This is the section a dropped vehicle lands on, since the make is the only part
- * of it the citation page carries.
- */
+/** Model for the vehicle section of the citation page. The form splits the vehicle across two pages: plate, make and meter here, the rest of the description on the detail page. A dropped vehicle lands here, since make is the only part the citation page carries. */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(VehicleSectionModel);
 

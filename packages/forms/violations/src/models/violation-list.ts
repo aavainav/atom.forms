@@ -15,11 +15,9 @@ export class ViolationList {
     }
 
     /**
-     * Gets the distinct categories the list files its violations under, in alphabetical order.
-     *
-     * Empty for a list that carries none, which is how a caller tells a list it can offer a category filter for
-     * from one it cannot. Violations with no category of their own contribute nothing here; they are reachable
-     * only without a category filter, which is the honest answer for a row the list never grouped.
+     * The distinct categories the list files its violations under, alphabetically -- empty for a list with none,
+     * which is how a caller tells whether to offer a category filter. A violation with no category contributes
+     * nothing here; it's reachable only without a filter applied.
      */
     public getCategories(): ReadonlyArray<string> {
         if (!this.categories) {
@@ -60,16 +58,13 @@ export class ViolationList {
     }
 
     /**
-     * Finds the violations matching the given term across their code, statute and description, within the given
-     * category when one is named.
+     * Finds violations matching `term` across code, statute and description, narrowed to `category` when named.
      *
-     * Matches whose code or statute starts with the term are ordered ahead of the rest, because an officer typing
-     * a section number knows exactly which charge they are after and should not have to scroll past every
-     * description that happens to mention it. An empty term and no category matches the whole list, which is what
-     * the selector shows before anything has been typed.
+     * A code/statute match starting with the term ranks first -- an officer typing a section number knows exactly
+     * which charge they want and shouldn't scroll past every description that happens to mention it. An empty
+     * term with no category returns everything, the selector's initial state.
      *
-     * The category narrows before the term rather than after, so the ordering the term produces is the ordering of
-     * what actually comes back.
+     * Category narrows before term matching, so the term's ordering applies to what's actually returned.
      */
     public search(term: string, category?: string): ReadonlyArray<IViolation> {
         const within = category

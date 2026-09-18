@@ -7,12 +7,7 @@ export interface ILicenseSection extends ISection {
 export interface ILicenseSectionModel extends ILicenseSection {
 }
 
-/**
- * Represents the model for the driver license section of the traffic citation form's complaint page.
- *
- * The license number is `identifier` rather than `id`, because `Entity` already declares an `id` holding the
- * section's own identity and a field definition cannot shadow it.
- */
+/** Model for the driver license section of the complaint page. The license number is `identifier`, not `id`, since `Entity` already declares `id` for the section's own identity. */
 export class LicenseSectionModel extends SectionModel implements ILicenseSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(LicenseSectionModel);
 

@@ -7,11 +7,10 @@ export interface ICitationPageViolatorDropzone extends IPersonDropzone {
 }
 
 /**
- * Represents the dropzone for importing violator data onto the citation page.
- *
- * The state is left out of the mapping even though the section carries one: a dropped person's state arrives as a
- * name with no code, and the section holds it as an option field drawn from the state value list. The violator's
- * state is picked rather than dropped until there is a reason to resolve it, as the vehicle's make is.
+ * Dropzone for violator data onto the citation page. State is left out of the mapping despite the section
+ * carrying one: a dropped person's state arrives as a name with no code, while the section holds an option field
+ * from the state value list. It stays picked rather than dropped until there's reason to resolve it, like the
+ * vehicle's make.
  */
 export class CitationPageViolatorDropzone extends PersonDropzone implements ICitationPageViolatorDropzone {
     constructor(page: CitationPageModel, schema: GAUTCFormSchema) {

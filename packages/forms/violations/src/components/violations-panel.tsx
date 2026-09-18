@@ -10,11 +10,7 @@ import { IViolationSelectorService, IViolationService } from "../services";
 /** How many violations may be ticked before the rest of the list stops accepting picks. */
 const maxSelectedViolations = 5;
 
-/**
- * Defines the props the violations panel is rendered with. Declared here rather than imported so that nothing in
- * this package depends on whoever renders it; reporting a failure goes out through `onError` for the same reason,
- * since the notification service belongs to the host of the panel rather than to the panel.
- */
+/** The panel's props, declared here rather than imported so nothing in this package depends on whoever renders it -- `onError` reports a failure for the same reason, since notifications belong to the host, not the panel. */
 export interface IViolationsPanelProps {
     /** The catalog item the form was loaded from, which the binding is resolved by. */
     readonly catalogItem: IFormCatalogItem;

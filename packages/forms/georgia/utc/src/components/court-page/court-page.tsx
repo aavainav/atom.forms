@@ -13,12 +13,7 @@ interface ICourtPageProps {
     readonly binding: IPageBinding<CourtPageModel>;
 }
 
-/**
- * Defines the court page of the Georgia uniform traffic citation - the reverse of the court's copy.
- *
- * It takes no controllers: nothing here is imported from a person or vehicle record, and none of its boxes is
- * backed by a value list.
- */
+/** The court page -- the reverse of the citation's copy. Takes no controllers, since nothing here is imported from a person or vehicle record, and none of its boxes is backed by a value list. */
 export default function CourtPage({ binding }: ICourtPageProps): React.JSX.Element {
     const courtPage = binding.get();
 

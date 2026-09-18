@@ -7,12 +7,7 @@ export interface ICertificationSection extends ISection {
 export interface ICertificationSectionModel extends ICertificationSection {
 }
 
-/**
- * Represents the model for Section V (Arresting Officer's Certification) of the Georgia uniform traffic citation.
- *
- * The sworn date is held as the day, month and year boxes the paper prints, where the year box follows a printed
- * "20" and so carries only its last two digits.
- */
+/** Model for Section V (Arresting Officer's Certification). The sworn date is the day/month/year boxes the paper prints; the year box follows a printed "20" and so carries only its last two digits. */
 export class CertificationSectionModel extends SectionModel implements ICertificationSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(CertificationSectionModel);
 

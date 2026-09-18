@@ -7,13 +7,7 @@ export interface ICourtActionSection extends ISection {
 export interface ICourtActionSectionModel extends ICourtActionSection {
 }
 
-/**
- * Represents the model for the "Court Action and Other Orders" block at the head of the court's copy.
- *
- * Every box in this block is a write-in line on paper, including the ones that read as yes/no questions - the
- * clerk writes a date or a note on the warrant issued and served lines rather than ticking them - so all of them
- * are string fields.
- */
+/** Model for the "Court Action and Other Orders" block. Every box, even the ones reading as yes/no questions, is a write-in line -- the clerk writes a date or note on the warrant lines rather than ticking them -- so all are string fields. */
 export class CourtActionSectionModel extends SectionModel implements ICourtActionSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(CourtActionSectionModel);
 

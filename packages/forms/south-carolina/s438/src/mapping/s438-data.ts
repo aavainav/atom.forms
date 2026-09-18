@@ -1,9 +1,7 @@
 /**
- * Represents one further violation the citation was written for, beyond the one the flat fields carry.
- *
- * The S438 prints one charge per ticket, so a stop producing three charges produces three front pages. The
- * violator, vehicle, owner, court, location and officer details are the same on all of them and stay flat on the
- * record; only these fields differ page to page.
+ * One further violation the citation was written for, beyond the one the flat fields carry. The S438 prints one
+ * charge per ticket, so three charges produce three front pages; violator, vehicle, owner, court, location and
+ * officer details stay flat and identical across all of them, and only these fields differ page to page.
  */
 export interface IS438ViolationData {
     /** The blood alcohol level recorded for the violation. */
@@ -26,12 +24,7 @@ export interface IS438ViolationData {
 
 /** Represents the data contract for the SC S438 (Uniform Traffic Ticket) citation record. */
 export interface IS438Data {
-    /**
-     * The violations beyond the first, one per further front page the citation carries.
-     *
-     * The first violation stays in the flat `violation*` fields rather than being moved into this array, so a
-     * record written before a citation could carry more than one charge round trips through here unchanged.
-     */
+    /** The violations beyond the first, one per further front page. The first stays in the flat `violation*` fields, so a record written before a citation could carry more than one charge round-trips unchanged. */
     readonly additionalViolations?: ReadonlyArray<IS438ViolationData>;
     /** The bail deposited with the arresting officer. */
     readonly arrestingOfficerBailDeposited?: string;

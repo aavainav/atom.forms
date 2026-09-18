@@ -21,10 +21,8 @@ import { IOKParkingData, IOKParkingViolationData } from "./parking-data";
 /**
  * Maps the Oklahoma City parking violation form to and from the data contract it publishes.
  *
- * Each section's read sits directly above its write below, so a field added to one direction and forgotten in
- * the other shows up in the same diff. Keeping the two directions in step is what makes the round trip hold.
- *
- * Every page appears once, so populating creates no pages and answers with the form rather than a promise.
+ * Each section's read sits directly above its write below, so a forgotten field shows up in the same diff. The
+ * citation page repeats one instance per further violation, so `populate` is async and may create pages.
  */
 export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
@@ -67,11 +65,7 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
         return violation;
     }
 
-    /**
-     * Returns a new form with the given data applied. Every field of the form is reachable from the data contract,
-     * and a field the data does not mention keeps the value it already holds - which is how the date and time of
-     * violation the form stamps on itself survive a partial record.
-     */
+    /** Returns a new form with the data applied. A field the data omits keeps its current value -- how the date/time of violation the form stamps on itself survive a partial record. */
     public async populate(form: OKParkingFormModel, { data, readOnlyFields }: IPopulateData<IOKParkingData>): Promise<OKParkingFormModel> {
         let updated = await this.populateCitationPage(form, data, readOnlyFields);
         updated = this.populateComplaintPage(updated, data, readOnlyFields);
@@ -80,12 +74,10 @@ export class OKParkingMapper extends FormMapper<OKParkingFormModel, IOKParkingDa
     }
 
     /**
-     * Returns a form with the citation page's half of the data contract applied, creating a page per further
-     * violation.
-     *
-     * The shared sections are written onto every page rather than only the first: a page created here does not go
-     * through the form controller, which is what would otherwise have copied them across. Pages beyond the end of
-     * `additionalViolations` are left alone rather than removed.
+     * Returns a form with the citation page's half of the data applied, creating a page per further violation.
+     * Shared sections are written onto every page, not just the first, since a page created here bypasses the
+     * form controller that would otherwise copy them across. Pages beyond `additionalViolations` are left alone
+     * rather than removed.
      */
     private async populateCitationPage(form: OKParkingFormModel, data: IOKParkingData, readOnlyFields?: ReadOnlyFields<IOKParkingData>): Promise<OKParkingFormModel> {
         const additional = data.additionalViolations ?? [];

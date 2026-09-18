@@ -2,15 +2,15 @@ import { ITR310Data } from "@forms/tr310";
 
 /**
  * Mock records for exercising `TR310Mapper.populate()` and `extract()` through the report viewer's data reader.
- * Keyed by the `?record=` query param recognized by `ExampleDataModule`.
+ * Keyed by the `?record=` query param `createExampleDataManager` reads.
  *
- * The `full` record is a two-unit collision with three people on it - two drivers and a pedestrian - so it shows
- * the mapper adding a person page and a unit page beyond the one of each a new form opens with, and shows a rule
- * bound once being reported against every page it applies to. The `minimal` record carries one person and one
- * unit and only what the report requires, so it shows a partial record leaving the rest of the fields alone.
+ * `full` is a two-unit collision with three people -- two drivers and a pedestrian -- showing the mapper add a
+ * person page and a unit page beyond the one of each a new form opens with, and a rule bound once reporting
+ * against every page it applies to. `minimal` carries one person and one unit with only what's required, showing
+ * a partial record leaving the rest alone.
  *
- * Note the dates: the form parses `YYYY-MM-DD` only, and a value it cannot parse silently skips date validation,
- * so a host mapping a source that uses another order must convert before it gets here.
+ * Dates: the form parses `YYYY-MM-DD` only, and a value it can't parse silently skips validation, so a host
+ * mapping another order must convert before it gets here.
  */
 export const mockTR310Records: Record<string, ITR310Data> = {
     full: {

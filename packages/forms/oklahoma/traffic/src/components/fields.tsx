@@ -88,10 +88,7 @@ interface ISelectBoxProps {
     readonly format?: FSelectFormat;
     /** The label printed above the box; the field's own label by default. */
     readonly label?: string;
-    /**
-     * The value of the option this box's list hangs off, for a list with a parent. It reaches the loader as its
-     * argument, which is the whole of the dependency between two boxes.
-     */
+    /** The value of the option this box's list hangs off, for a list with a parent -- reaches the loader as its argument, the whole of the dependency between two boxes. */
     readonly parentValue?: string;
     /** Exact width in pixels. */
     readonly width?: number;
@@ -131,11 +128,7 @@ interface IYesNoBoxProps {
     onChange: (value: IOptionValue) => void;
 }
 
-/**
- * One of the form's Y/N boxes.
- *
- * The box shows the letter the form prints, while the menu it opens spells out YES and NO.
- */
+/** One of the form's Y/N boxes. The box shows the letter the form prints, while the menu it opens spells out YES and NO. */
 export const YesNoBox = ({ field, load, borderEdges, label, width = yesNoBoxWidth, onChange }: IYesNoBoxProps): React.JSX.Element => (
     <SelectBox
         field={field}

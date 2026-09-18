@@ -1,12 +1,9 @@
 import { IValueListDefinition } from "@forms/value-lists";
 
 /**
- * The ids of the value lists this form owns.
- *
- * They carry the form as a prefix because the value list registry is a single global namespace and registering a
- * list replaces whatever already held its id. An unqualified `county` would be claimed by whichever form loaded
- * last, and the loser would quietly show the wrong counties rather than fail. `ga-utc` is the form's route and
- * package name, and stays short in a cache key.
+ * The ids of the value lists this form owns, prefixed with the form since the registry is a single global
+ * namespace and registering replaces whatever already held an id. An unqualified `county` would be claimed by
+ * whichever form loaded last, silently showing the wrong counties.
  */
 export const GAUTCValueListId = {
     county: "ga-utc:county",
@@ -16,15 +13,13 @@ export const GAUTCValueListId = {
 /**
  * The value lists this form registers with the value list service.
  *
- * Both are written out rather than generated: neither has a published code set to generate from, and the counties
- * are the three the citation prints beside the box rather than Georgia's 159. They still go through the registry so
- * that there is one way a list is reached and not two, and so a host serving Atlanta's jurisdiction from its own
- * source can register over either id.
+ * Both are written out rather than generated, since neither has a published code set, and the counties are the
+ * three the citation prints rather than Georgia's 159. They still go through the registry so there's one way a
+ * list is reached, letting a host serving Atlanta's jurisdiction register over either id.
  *
- * Almost every other answer the citation takes is a printed checkbox rather than a coded box, and is modelled as a
- * boolean field. Race, hair and eye colour take a write-in code on paper, but Atlanta publishes no code set for
- * them, so each is a text field until one is supplied; turning one into a coded box is an entry here, a
- * `get*Options` method on the service, and a change of constructor in the schema.
+ * Race, hair and eye colour take a write-in code on paper with no published code set, so each stays a text field
+ * until one is supplied -- turning one into a coded box is an entry here, a `get*Options` method on the service,
+ * and a constructor change in the schema.
  */
 export const gaUtcValueLists: ReadonlyArray<IValueListDefinition> = [
     {

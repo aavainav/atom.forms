@@ -7,12 +7,7 @@ export interface IViolationInformationSection extends ISection {
 export interface IViolationInformationSectionModel extends IViolationInformationSection {
 }
 
-/**
- * Represents the model for the violation information section of the traffic citation form's complaint page.
- *
- * The offense level and speed detection method are free text rather than option fields: the printed form takes a
- * code in each, but Oklahoma City's code sets for them are not published with the form.
- */
+/** Model for the violation information section of the complaint page. Offense level and speed detection method are free text, not option fields, since Oklahoma City's code sets for them aren't published. */
 export class ViolationInformationSectionModel extends SectionModel implements IViolationInformationSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(ViolationInformationSectionModel);
 

@@ -7,12 +7,7 @@ export interface ICourtSection extends ISection {
 export interface ICourtSectionModel extends ICourtSection {
 }
 
-/**
- * Represents the model for the court section of the parking citation page.
- *
- * The court's name and address are preprinted on the form rather than filled in, so they are rendered as text by
- * the section's component and are not fields.
- */
+/** Model for the court section of the citation page. Court name and address are preprinted, not filled in, so the section's component renders them as text rather than as fields. */
 export class CourtSectionModel extends SectionModel implements ICourtSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(CourtSectionModel);
 

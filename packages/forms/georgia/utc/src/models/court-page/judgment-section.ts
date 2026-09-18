@@ -7,12 +7,7 @@ export interface IJudgmentSection extends ISection {
 export interface IJudgmentSectionModel extends IJudgmentSection {
 }
 
-/**
- * Represents the model for the "Upon Trial, the Defendant is Adjudged" block at the foot of the court's copy.
- *
- * The confinement term is one box on paper, printed as "for a term of ____ (days) (months)" with the unit circled
- * rather than entered, so it is held as the single string the court writes.
- */
+/** Model for the "Upon Trial, the Defendant is Adjudged" block. The confinement term is one box, printed "for a term of ____ (days) (months)" with the unit circled rather than entered, so it's held as the single string the court writes. */
 export class JudgmentSectionModel extends SectionModel implements IJudgmentSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(JudgmentSectionModel);
 

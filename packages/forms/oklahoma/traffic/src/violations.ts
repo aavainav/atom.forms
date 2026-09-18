@@ -6,12 +6,10 @@ export const OKTrafficViolationListId = {
 } as const;
 
 /**
- * The violations an OKC traffic citation can be written for.
- *
- * Written inline rather than generated: Oklahoma City publishes no machine-readable offence code list with the
- * citation, so these are the traffic code sections the ticket is most often written under and both the codes and
- * the scheduled fines need checking against the current municipal code. An agency serving its own list registers
- * over `ok-traffic:violation`, which replaces this outright.
+ * The violations an OKC traffic citation can be written for. Written inline, since Oklahoma City publishes no
+ * machine-readable offence code list -- these are the traffic code sections most often written under, worth
+ * checking against the current municipal code. An agency serving its own list registers over
+ * `ok-traffic:violation`, replacing this outright.
  */
 export const okTrafficViolationLists: ReadonlyArray<IViolationListDefinition> = [
     {

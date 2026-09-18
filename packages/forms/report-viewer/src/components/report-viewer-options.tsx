@@ -17,17 +17,15 @@ interface IFormViewerOptionsProps {
 }
 
 /**
- * Defines a collection of functionality options rendered at the bottom of the report viewer.
+ * The functionality options rendered at the bottom of the report viewer.
  *
- * The bar renders whatever `getOptions` answers with and nothing else -- the list is already filtered to what this
- * form offers and already in order, so there is no rule here that treats one option differently from another. Each
- * option is loaded lazily, hence the suspense boundary; the fallback is nothing rather than a spinner, because an
- * option appearing a beat late reads better than a row of placeholders.
+ * The bar renders whatever `getOptions` returns, already filtered and ordered, with no special-casing here. Each
+ * option loads lazily behind a suspense boundary with no fallback -- a late-appearing option reads better than a
+ * row of placeholders.
  *
- * `showModal` and `onError` are handed down rather than reached for, because two of the options are rendered from
- * packages that sit below the report viewer and so cannot resolve its services. The modal in particular has to be
- * opened at the viewer's root: this bar is `position-fixed` and therefore a stacking context, and a modal opened
- * inside one is painted under the backdrop appended to the body.
+ * `showModal`/`onError` are handed down rather than reached for, since some options render from packages below the
+ * report viewer that can't resolve its services. The modal specifically must open at the viewer's root: this bar
+ * is `position-fixed`, a stacking context that would paint a modal under the body's own backdrop.
  */
 export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onError }: IFormViewerOptionsProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);

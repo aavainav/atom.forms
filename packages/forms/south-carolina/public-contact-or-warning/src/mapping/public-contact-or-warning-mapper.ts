@@ -13,12 +13,7 @@ import { StopSectionModel } from "../models/record-page/stop-section";
 import { VehicleSectionModel } from "../models/record-page/vehicle-section";
 import { IPublicContactOrWarningData } from "./public-contact-or-warning-data";
 
-/**
- * Maps the SC Form 432 (Public Contact / Warning) form to and from the data contract it publishes.
- *
- * Each section's read sits directly above its write below, so a field added to one direction and forgotten in
- * the other shows up in the same diff. Keeping the two directions in step is what makes the round trip hold.
- */
+/** Maps the SC Form 432 (Public Contact / Warning) form to and from the data contract it publishes. Each section's read sits directly above its write below, so a forgotten field shows up in the same diff. */
 export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarningFormModel, IPublicContactOrWarningData> {
     /** Returns the form's current values as its data contract, emitting only the fields this form owns. */
     public extract(form: PublicContactOrWarningFormModel): IPublicContactOrWarningData {
@@ -39,10 +34,8 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
     }
 
     /**
-     * Returns a new form with the given data applied to its record page. Every field of the form is reachable
-     * from the data contract, and a field the data does not mention keeps the value it already holds.
-     *
-     * `readOnlyFields` names which of `data`'s own fields should come back disabled rather than editable - today
+     * Returns a new form with the data applied to its record page. A field the data omits keeps its current
+     * value. `readOnlyFields` names which of `data`'s fields come back disabled rather than editable -- today
      * only the agency section's fields are wired up to honor it (see `populateAgency`).
      */
     public populate(form: PublicContactOrWarningFormModel, { data, readOnlyFields }: IPopulateData<IPublicContactOrWarningData>): PublicContactOrWarningFormModel {
@@ -222,9 +215,9 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
     }
 
     /**
-     * The reasons are a "check only one" group, but each is written independently here rather than through
-     * `selectReason` so that data checking none of them stays as it arrived instead of being forced into a
-     * selection. Data that checks more than one is the source's error to correct, and validation reports it.
+     * The reasons are a "check only one" group, but each is written independently here, not through
+     * `selectReason`, so data checking none of them stays as it arrived instead of being forced into a
+     * selection. Data checking more than one is the source's error to correct, reported by validation.
      */
     private populatePrimaryReason(section: PrimaryReasonSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): PrimaryReasonSectionModel {
         let updated = this.write(section, section.bolo, data, "primaryReasonBolo", readOnlyFields);
@@ -255,11 +248,7 @@ export class PublicContactOrWarningMapper extends FormMapper<PublicContactOrWarn
         this.read(data, "searchesProbableCause", section.getProbableCause());
     }
 
-    /**
-     * The consent yes/no pairs are written independently rather than through `selectConsentRequested` and
-     * `selectConsentGiven`, for the same reason the primary reasons are: data that answers neither must stay
-     * unanswered rather than be pushed into a "no".
-     */
+    /** The consent yes/no pairs are written independently, not through `selectConsentRequested`/`selectConsentGiven`, for the same reason as the primary reasons: data answering neither must stay unanswered rather than reading as "no". */
     private populateSearches(section: SearchesSectionModel, data: IPublicContactOrWarningData, readOnlyFields?: ReadOnlyFields<IPublicContactOrWarningData>): SearchesSectionModel {
         let updated = this.write(section, section.basisOtherSpecify, data, "searchesBasisOtherSpecify", readOnlyFields);
         updated = this.write(updated, section.consentGivenNo, data, "searchesConsentGivenNo", readOnlyFields);

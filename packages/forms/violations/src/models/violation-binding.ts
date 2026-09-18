@@ -12,11 +12,6 @@ export interface IViolationBinding {
     /** Applies the chosen violations to the form, adding a page per violation beyond the first. */
     apply: (controllers: IControllerManager, violations: ReadonlyArray<IViolation>) => Promise<void>;
 
-    /**
-     * Narrows the given violations to those the form is already carrying.
-     *
-     * It takes the loaded list and answers with a subset of it rather than returning bare codes, so the selector
-     * never has to match a stored string back to a row itself.
-     */
+    /** Narrows the violations to those the form already carries, as a subset of the loaded list rather than bare codes, so the selector never has to match a stored string back to a row. */
     getApplied: (controllers: IControllerManager, violations: ReadonlyArray<IViolation>) => ReadonlyArray<IViolation>;
 }

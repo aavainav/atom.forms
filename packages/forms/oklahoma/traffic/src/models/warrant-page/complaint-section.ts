@@ -7,12 +7,7 @@ export interface IComplaintSection extends ISection {
 export interface IComplaintSectionModel extends IComplaintSection {
 }
 
-/**
- * Represents the model for the complaint section of the traffic citation form's warrant page.
- *
- * The complaint's text is preprinted and incorporates page one by reference, so what is filled in here is only
- * the citation it belongs to and the counselor who found probable cause for filing it.
- */
+/** Model for the complaint section of the warrant page. The complaint's text is preprinted and incorporates page one by reference, so only the citation it belongs to and the filing counselor are filled in here. */
 export class ComplaintSectionModel extends SectionModel implements IComplaintSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(ComplaintSectionModel);
 

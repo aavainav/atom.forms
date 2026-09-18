@@ -7,13 +7,7 @@ export interface IRecordSection extends ISection {
 export interface IRecordSectionModel extends IRecordSection {
 }
 
-/**
- * Represents the model for the record section of the parking violation form's detail page.
- *
- * The beat, tribe and void reason are free text rather than option fields: the printed form takes a code in each,
- * but Oklahoma City's code sets for them are not published with the form. Each becomes an option field the day
- * that list arrives, by registering it in `value-lists.ts` and changing the field's constructor in the schema.
- */
+/** Model for the record section of the detail page. Beat, tribe and void reason are free text, not option fields, since Oklahoma City's code sets for them aren't published -- each becomes coded once a list arrives, via `value-lists.ts` and a schema constructor change. */
 export class RecordSectionModel extends SectionModel implements IRecordSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(RecordSectionModel);
 

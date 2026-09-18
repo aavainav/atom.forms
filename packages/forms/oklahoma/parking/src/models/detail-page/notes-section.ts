@@ -7,12 +7,7 @@ export interface INotesSection extends ISection {
 export interface INotesSectionModel extends INotesSection {
 }
 
-/**
- * Represents the model for the notes section of the parking violation form's detail page.
- *
- * The printed page also carries a "Pictures" area. It holds attachments rather than values, so it is not modeled
- * here; a host that stores photographs against a citation carries them alongside this form's data.
- */
+/** Model for the notes section of the detail page. The printed page also carries a "Pictures" area, holding attachments rather than values, so it's not modeled here -- a host storing photographs carries them alongside this form's data. */
 export class NotesSectionModel extends SectionModel implements INotesSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(NotesSectionModel);
 

@@ -7,13 +7,7 @@ export interface IVehicleDetailSection extends ISection {
 export interface IVehicleDetailSectionModel extends IVehicleDetailSection {
 }
 
-/**
- * Represents the model for the vehicle detail section of the parking violation form's detail page.
- *
- * The make lives on the citation page, so this section carries the rest of the vehicle's description. The model
- * is free text rather than an option field for that reason: the vehicle model list hangs off the make, and a
- * dependent select needs both fields on one section to clear the child when the parent changes.
- */
+/** Model for the vehicle detail section of the detail page. Make lives on the citation page, so this carries the rest of the description; model is free text since the model list hangs off make, and a dependent select needs both fields on one section. */
 export class VehicleDetailSectionModel extends SectionModel implements IVehicleDetailSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(VehicleDetailSectionModel);
 

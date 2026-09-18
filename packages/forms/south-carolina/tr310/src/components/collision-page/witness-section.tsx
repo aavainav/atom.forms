@@ -26,12 +26,7 @@ interface IWitnessRow {
     readonly zipCode: FieldDefinition<StringFieldModel>;
 }
 
-/**
- * Defines the witness and property owner section of the TR-310.
- *
- * The form prints a fixed three rows, so they are three numbered groups of fields rather than a collection; the
- * rows are gathered into a shape the row renderer takes so the eleven columns are laid out once.
- */
+/** The witness and property owner section of the TR-310. The form prints a fixed three rows, so they're three numbered field groups, not a collection, gathered into a shape the row renderer takes to lay out the eleven columns once. */
 export const WitnessSection = ({ binding }: IWitnessSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);

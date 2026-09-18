@@ -3,14 +3,12 @@ import { BooleanFieldModel, FieldDefinition, SectionModel } from "@forms/core";
 /**
  * Returns a new section with `selected` checked and every other member of `group` cleared, in one update.
  *
- * The citation prints most of its answers as a row of boxes rather than as a coded field, and the framework has no
- * radio or enum field type to hold one - so a group of boolean fields plus this is what makes a printed row behave
- * the way the paper means it: exactly one box, or none. It is used only for groups whose options answer a single
- * question and so cannot both be true (YES/NO, AM/PM, the weather and road rows). Boxes that are separate flags -
- * 2-LANE ROAD, the commercial violation trio, the sentencing schools - are left independent and toggled directly.
+ * The citation prints most answers as a row of boxes, and the framework has no radio/enum field type -- a group
+ * of boolean fields plus this makes a printed row behave as the paper means it: exactly one box, or none. Used
+ * only for groups whose options answer a single question (YES/NO, AM/PM, weather, road). Separate flags like
+ * 2-LANE ROAD or the sentencing schools stay independent and are toggled directly.
  *
- * The section is immutable, so the reduce threads each cleared field through a new section and the caller must use
- * the result.
+ * The section is immutable, so the caller must use the result.
  */
 export function selectExclusive<TSection extends SectionModel>(
     section: TSection,

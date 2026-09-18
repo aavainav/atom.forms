@@ -7,12 +7,7 @@ export interface IVehicleSection extends ISection {
 export interface IVehicleSectionModel extends IVehicleSection {
 }
 
-/**
- * Represents the model for the vehicle section of the traffic citation form's complaint page.
- *
- * This is the one section on the form carrying a dependent pair: the model list hangs off the make, and both sit
- * here, which is what lets a change of make clear the model in the same update.
- */
+/** Model for the vehicle section of the complaint page. The one section carrying a dependent pair: the model list hangs off the make, both sitting here, letting a make change clear the model in the same update. */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(VehicleSectionModel);
 

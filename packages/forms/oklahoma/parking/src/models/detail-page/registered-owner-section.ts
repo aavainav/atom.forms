@@ -7,12 +7,7 @@ export interface IRegisteredOwnerSection extends ISection {
 export interface IRegisteredOwnerSectionModel extends IRegisteredOwnerSection {
 }
 
-/**
- * Represents the model for the registered owner section of the parking violation form's detail page.
- *
- * A parking citation is written against a vehicle rather than a person, so the owner is looked up after the fact
- * and none of these fields is required for the citation to be valid.
- */
+/** Model for the registered owner section of the detail page. A parking citation is written against a vehicle, not a person, so the owner is looked up after the fact and none of these fields is required for validity. */
 export class RegisteredOwnerSectionModel extends SectionModel implements IRegisteredOwnerSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(RegisteredOwnerSectionModel);
 

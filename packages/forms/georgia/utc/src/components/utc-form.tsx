@@ -12,13 +12,7 @@ interface IGAUTCFormProps {
     readonly isReadOnly: boolean;
 }
 
-/**
- * Defines the Georgia uniform traffic citation, summons, and accusation.
- *
- * The two page groups are rendered as one continuous tab strip in the order the paper is printed - the face of the
- * citation, then the reverse of the court's copy. Each group holds a single page, so the collection's add and
- * delete affordances never come into play.
- */
+/** The Georgia uniform traffic citation, summons, and accusation. Both page groups render as one continuous tab strip in print order -- citation face, then the court copy's reverse -- each holding a single page, so add/delete affordances never come into play. */
 export default function GAUTCForm({ controllers, isReadOnly }: IGAUTCFormProps): React.JSX.Element {
     const controller = controllers.getFormController<GAUTCFormModel>();
     const form = useForm(controller);

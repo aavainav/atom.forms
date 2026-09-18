@@ -10,12 +10,7 @@ export interface IWarrantPage {
 export interface IWarrantPageModel extends IWarrantPage {
 }
 
-/**
- * Represents the warrant page of the traffic citation form.
- *
- * The page carries no officer data of its own; it is what the municipal counselor and the court clerk endorse
- * once the complaint on page one has been filed.
- */
+/** The warrant page. Carries no officer data of its own -- it's what the municipal counselor and court clerk endorse once the complaint on page one has been filed. */
 export class WarrantPageModel extends PageModel implements IWarrantPageModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(WarrantPageModel);
 

@@ -14,13 +14,7 @@ interface ITR310FormProps {
     readonly isReadOnly: boolean;
 }
 
-/**
- * Defines the TR-310 traffic collision report.
- *
- * The four page groups are rendered as one continuous tab strip in the order the paper form is printed. The person
- * and unit groups carry the collection's add and delete affordances, which is how a report grows a page per person
- * and per unit involved; the collision and narrative pages are one each.
- */
+/** The TR-310 traffic collision report. Four page groups render as one continuous tab strip in print order. Person and unit groups carry the collection's add/delete affordances, growing a page per person or unit involved; collision and narrative are one each. */
 export default function TR310Form({ controllers, isReadOnly }: ITR310FormProps): React.JSX.Element {
     const controller = controllers.getFormController<TR310FormModel>();
     const form = useForm(controller);

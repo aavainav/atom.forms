@@ -24,14 +24,12 @@ function twoDigits(value: number): string {
 }
 
 /**
- * Represents the model for the Georgia uniform traffic citation, summons, and accusation.
+ * Model for the Georgia uniform traffic citation, summons, and accusation.
  *
- * The citation and court pages each appear once, so the form never grows a page and the setters below always reach
- * the first page of a collection.
- *
- * Unlike the other citation forms, this one has no single date box to stamp: the paper prints the date of the
- * offense as separate month, day and year boxes and its time as separate hour, minute and AM/PM boxes, so
- * `setDateOfViolation` and `setTimeOfViolation` each write several fields in one update.
+ * Citation and court pages each appear once, so the form never grows a page and the setters below always reach
+ * the first page. Unlike other citation forms, there's no single date box: the paper prints the offense date as
+ * separate month/day/year boxes and its time as separate hour/minute/AM-PM boxes, so `setDateOfViolation` and
+ * `setTimeOfViolation` each write several fields at once.
  */
 export class GAUTCFormModel extends CitationForm<IGAUTCData> implements IGAUTCFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
@@ -77,11 +75,8 @@ export class GAUTCFormModel extends CitationForm<IGAUTCData> implements IGAUTCFo
     }
 
     /**
-     * Returns a form with today's date stamped across the header's month, day and year boxes, and those boxes
-     * closed to editing.
-     *
-     * The month is the three letter abbreviation the paper prints and the year its last two digits, matching what
-     * is written on a printed citation rather than any machine-readable order.
+     * Stamps today's date across the header's month/day/year boxes and closes them to editing. The month is the
+     * three-letter abbreviation the paper prints, the year its last two digits -- matching the printed citation.
      */
     public setDateOfViolation(): this {
         const now = new Date();
@@ -105,22 +100,12 @@ export class GAUTCFormModel extends CitationForm<IGAUTCData> implements IGAUTCFo
         return this;
     }
 
-    /**
-     * Returns the form unchanged.
-     *
-     * The citation number is preprinted on the ticket book and assigned by the agency rather than by the form, so
-     * it arrives with the data a host loads and there is nothing for the form to stamp on itself.
-     */
+    /** Returns the form unchanged -- the citation number is preprinted on the ticket book and assigned by the agency, so it arrives with the data a host loads rather than being stamped here. */
     public setTicketNumber(): this {
         return this;
     }
 
-    /**
-     * Returns a form with the current time stamped across the header's hour, minute and AM/PM boxes.
-     *
-     * Unlike the date, these are left editable so the officer may correct them, and the hour is written on the
-     * twelve hour clock the AM/PM pair beside it implies.
-     */
+    /** Stamps the current time across the header's hour/minute/AM-PM boxes, left editable so the officer can correct them; the hour is written on the twelve-hour clock the AM/PM pair implies. */
     public setTimeOfViolation(): this {
         const now = new Date();
         const header = this.schema.headerFields;

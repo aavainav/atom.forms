@@ -157,12 +157,7 @@ function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
     return field.setIsEnabled(false);
 }
 
-/**
- * Whether the page carries no charge yet.
- *
- * The section number and the description are what identify the charge; the date and time are stamped onto a new
- * citation by the form itself, so a page holding only those is still a page nobody has written a violation on.
- */
+/** Whether the page carries no charge yet. Section number and description identify the charge; date and time are stamped by the form itself, so a page holding only those is still unwritten. */
 function isChargeEmpty(page: FrontPageModel): boolean {
     const section = page.getViolationSection();
 

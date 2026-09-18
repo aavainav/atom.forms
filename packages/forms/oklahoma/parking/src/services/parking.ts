@@ -12,12 +12,9 @@ import { OKParkingValueListId } from "../value-lists";
 export const IOKParkingService = createService<IOKParkingService>("forms-ok-parking-service");
 
 /**
- * Defines the service backing the Oklahoma City parking violation form.
- *
- * Every value list the form's option fields draw on is reached through here rather than imported by the component
- * that renders it, so the components speak the form's language - counties, states, makes - while the lists
- * themselves come from the value list registry, where a host can serve any of them from somewhere else by
- * registering over its id.
+ * Backs the Oklahoma City parking violation form. Every value list its option fields draw on is reached through
+ * here rather than imported by the component that renders it, so components speak the form's language -- counties,
+ * states, makes -- while a host can serve any list from elsewhere by registering over its id.
  */
 export interface IOKParkingService {
     /** Returns a new detail page with the dropped person data applied to the registered owner section. */
@@ -36,11 +33,7 @@ export interface IOKParkingService {
     getStateOptions(): Promise<Array<IOptionValue>>;
     /** Loads the options for the vehicle make field. */
     getVehicleMakeOptions(): Promise<Array<IOptionValue>>;
-    /**
-     * Returns the dropped vehicle with its make turned from the name it arrived as into the code the form stores,
-     * dropping it if the value list does not recognize it. Await this before applying the dropzone to the page, so
-     * a name with no code never reaches the form.
-     */
+    /** Returns the dropped vehicle with its make turned from the arrival name into the stored code, dropped if unrecognized. Await this before applying the dropzone, so a name with no code never reaches the form. */
     resolveVehicleDropzone(dropzone: Dropzone): Promise<Dropzone>;
 }
 
@@ -185,10 +178,7 @@ export class OKParkingService implements IOKParkingService {
         });
     }
 
-    /**
-     * Copies the registry's options before handing them out, so the list a select ends up holding is not the one
-     * the value list service is caching and cannot be mutated out from under the next form that asks for it.
-     */
+    /** Copies the registry's options before handing them out, so a select's list isn't the value list service's own cached one, and can't be mutated out from under the next form that asks for it. */
     private async getOptions(listId: string, parentValue?: string): Promise<Array<IOptionValue>> {
         return [...await this.valueListService.getOptions(listId, parentValue)];
     }

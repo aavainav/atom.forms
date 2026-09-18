@@ -11,12 +11,7 @@ interface IStatusSectionProps {
     readonly binding: ISectionBinding<StatusSectionModel>;
 }
 
-/**
- * Defines the status flags of the Oklahoma City traffic citation form's supplement page.
- *
- * Every Y/N box here draws on the one registered yes-no list, so the whole section costs a single load however
- * many of them are rendered.
- */
+/** The status flags of the supplement page. Every Y/N box here draws on the one registered yes-no list, so the whole section costs a single load however many are rendered. */
 export const StatusSection = ({ binding }: IStatusSectionProps): React.JSX.Element => {
     const section = binding.get();
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);

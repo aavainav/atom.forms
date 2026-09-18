@@ -2,12 +2,11 @@ import { IS438Data } from "@forms/s438";
 
 /**
  * Mock records for exercising `S438Mapper.populate()` and `extract()` through the report viewer's data reader.
- * Keyed by the `?citation=` query param recognized by `ExampleDataModule`.
+ * Keyed by the `?citation=` query param `createExampleDataManager` reads.
  *
- * The `full` record covers every section of the front page, so it shows the court, violation location and
- * arresting officer populating - the parts of the form the old cross-form citation shape had no way to reach.
- * The `minimal` record covers only the violator and the violation, so it shows a partial record leaving the
- * rest of the form alone, including the date of violation and ticket number the form stamps on itself.
+ * `full` covers every section of the front page, showing the court, violation location and arresting officer
+ * populating. `minimal` covers only the violator and the violation, showing a partial record leaving the rest of
+ * the form alone, including the date of violation and ticket number the form stamps on itself.
  */
 export const mockCitations: Record<string, IS438Data> = {
     full: {

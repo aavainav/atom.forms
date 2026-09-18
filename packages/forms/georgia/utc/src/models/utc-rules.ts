@@ -37,11 +37,9 @@ const zipCodePattern = /^\d{5}(-\d{4})?$/;
 const maximumSpeed = 300;
 
 /**
- * Builds the validation rules for the Georgia uniform traffic citation.
- *
- * Only the boxes an officer must complete before the citation can be served are required. The court page carries
- * no required rules at all: it is completed by the clerk and the judge days after the citation is issued, and an
- * officer saving a citation has no business being told the disposition is missing.
+ * Builds the validation rules. Only the boxes an officer must complete before serving are required -- the court
+ * page has no required rules at all, since it's completed by the clerk and judge days later, and an officer
+ * saving a citation shouldn't be told the disposition is missing.
  */
 export function createRuleCollection(schema: GAUTCFormSchema): RuleCollection {
     const certification = schema.certificationFields;

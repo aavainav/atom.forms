@@ -11,12 +11,7 @@ export interface ICourtPage {
 export interface ICourtPageModel extends ICourtPage {
 }
 
-/**
- * Represents the court page of the Georgia uniform traffic citation - the reverse of the court's copy, which the
- * clerk and the judge complete rather than the issuing officer.
- *
- * It registers no dropzones: nothing on this side of the citation is imported from a person or vehicle record.
- */
+/** The court page -- the reverse of the citation, completed by the clerk and judge rather than the issuing officer. Registers no dropzones, since nothing here is imported from a person or vehicle record. */
 export class CourtPageModel extends PageModel implements ICourtPageModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(CourtPageModel);
 

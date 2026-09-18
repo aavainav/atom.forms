@@ -1,11 +1,9 @@
 import { IOptionValue } from "@forms/core";
 
 /**
- * Represents the Section II boxes that belong to one charge, and so differ from one citation page to the next.
- *
- * The offense is the charge itself; the speed detection boxes and the DUI test sit alongside it because they are
- * the evidence for that particular charge - the radar reading belongs to the speeding ticket and the breath test
- * to the DUI one, not to every ticket written at the stop.
+ * The Section II boxes belonging to one charge, differing page to page. The offense is the charge itself; the
+ * speed detection and DUI test boxes are its evidence -- the radar reading belongs to the speeding ticket, the
+ * breath test to the DUI one, not to every ticket written at the stop.
  */
 export interface IGAUTCViolationData {
     /** Section II - the "DUI" box, ticked when the citation charges driving under the influence. */
@@ -63,24 +61,22 @@ export interface IGAUTCViolationData {
 }
 
 /**
- * Represents the data contract for a Georgia uniform traffic citation, summons, and accusation record.
+ * The data contract for a Georgia uniform traffic citation, summons, and accusation record.
  *
- * Flat and entirely optional, in the shape a host maps its own record into. Every field is named for the box it
- * fills, prefixed by the section that box sits in, and the doc comment names the label the citation prints.
+ * Flat and entirely optional, in the shape a host maps its own record into. Each field is named for the box it
+ * fills, prefixed by its section, with the doc comment naming the printed label.
  *
- * A checkbox that is not ticked is **absent** rather than `false`: an unticked box reads as empty, so a record
- * carrying neither half of a YES/NO pair is a question the officer did not answer, which is not the same as a no.
- * Option boxes carry an `IOptionValue`, the code and description together, since that is what the field holds.
+ * An unticked checkbox is **absent**, not `false` -- a record with neither half of a YES/NO pair answered is an
+ * unasked question, not a "no". Option boxes carry an `IOptionValue`, the code and description together.
  */
 export interface IGAUTCData extends IGAUTCViolationData {
     /**
      * The violations beyond the first, one per further citation page.
      *
-     * The citation prints one offense, so a stop producing three charges produces three citation pages. Everything
-     * about the violator, vehicle, conditions, location and officer is the same on all of them and stays flat on
-     * the record; only the Section II boxes - the offense, the speed detection and the DUI test - differ page to
-     * page. The first violation stays in the flat fields rather than moving into this array, so a record written
-     * before a citation could carry more than one charge round trips through here unchanged.
+     * A citation prints one offense per page, so three charges produce three pages. Violator, vehicle, conditions,
+     * location and officer stay flat and identical across all of them; only the Section II boxes (offense, speed
+     * detection, DUI test) differ per page. The first violation stays in the flat fields, so a record written
+     * before a citation could carry multiple charges round-trips unchanged.
      */
     readonly additionalViolations?: ReadonlyArray<IGAUTCViolationData>;
     /** Section V - the arresting officer's signature on the certification. */

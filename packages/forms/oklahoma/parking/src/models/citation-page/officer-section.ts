@@ -7,12 +7,7 @@ export interface IOfficerSection extends ISection {
 export interface IOfficerSectionModel extends IOfficerSection {
 }
 
-/**
- * Represents the model for the officer section of the parking citation page.
- *
- * The officer's name field is `officerName` rather than `name`, because `SectionModel` already declares a `name`
- * holding the section's own name and a field definition cannot shadow it.
- */
+/** Model for the officer section of the citation page. The officer's name field is `officerName`, not `name`, since `SectionModel` already declares `name` for the section's own name. */
 export class OfficerSectionModel extends SectionModel implements IOfficerSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(OfficerSectionModel);
 

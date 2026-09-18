@@ -7,13 +7,7 @@ export interface IViolatorSection extends ISection {
 export interface IViolatorSectionModel extends IViolatorSection {
 }
 
-/**
- * Represents the model for Section I (Violator) of the Georgia uniform traffic citation.
- *
- * The paper prints the violator's race and sex as one slashed box; they are held as two fields here, because a
- * record carrying one and not the other has nowhere to go in a single box. Race, hair and eye colour are free text
- * - each takes a write-in code on paper and Atlanta publishes no code set for them.
- */
+/** Model for Section I (Violator). The paper prints race/sex as one slashed box; held as two fields here, since a record with only one has nowhere to go in a single box. Race, hair and eye colour are free text -- write-in on paper, with no code set published. */
 export class ViolatorSectionModel extends SectionModel implements IViolatorSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(ViolatorSectionModel);
 

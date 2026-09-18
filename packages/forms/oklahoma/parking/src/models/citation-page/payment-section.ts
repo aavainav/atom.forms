@@ -7,12 +7,7 @@ export interface IPaymentSection extends ISection {
 export interface IPaymentSectionModel extends IPaymentSection {
 }
 
-/**
- * Represents the model for the payment section of the parking citation page.
- *
- * The form prints two amounts: the fine due on or before the court date, and the larger one due once the court
- * date has passed. Paying either in full means no appearance is required.
- */
+/** Model for the payment section of the citation page. The form prints two amounts: the fine due by the court date, and a larger one due after it passes. Paying either in full means no appearance is required. */
 export class PaymentSectionModel extends SectionModel implements IPaymentSectionModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(PaymentSectionModel);
 

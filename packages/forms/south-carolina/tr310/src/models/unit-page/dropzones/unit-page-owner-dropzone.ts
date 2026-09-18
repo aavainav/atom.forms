@@ -6,12 +6,7 @@ import { OwnerSectionModel } from "../owner-section";
 export interface IUnitPageOwnerDropzone extends IPersonDropzone {
 }
 
-/**
- * Represents the dropzone for importing person data onto a TR-310 unit page's registered owner.
- *
- * The state is left off for the same reason the person page's dropzone leaves it off: the report holds it as a
- * code from a value list, which a dropped name cannot supply.
- */
+/** Dropzone for person data onto a TR-310 unit page's registered owner. State is left off for the same reason the person page's dropzone leaves it off: the report holds it as a value-list code a dropped name can't supply. */
 export class UnitPageOwnerDropzone extends PersonDropzone implements IUnitPageOwnerDropzone {
     constructor(page: UnitPageModel, schema: TR310FormSchema) {
         const section = page.get<OwnerSectionModel>(schema.ownerSection);

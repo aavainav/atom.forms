@@ -8,14 +8,10 @@ export interface IStatusSectionModel extends IStatusSection {
 }
 
 /**
- * Represents the model for the status flags of the traffic citation form's supplement page.
- *
- * The page repeats an ethnicity box of its own alongside the one the complaint page carries in the defendant's
- * description; both are kept, since the printed form asks for both and nothing here can tell which the officer
- * means to be authoritative.
- *
- * The jailed status, release type, direction of travel and assignment are free text rather than option fields:
- * the printed form takes a code in each, but Oklahoma City's code sets for them are not published with the form.
+ * Model for the status flags of the supplement page. It repeats an ethnicity box alongside the complaint page's
+ * defendant-description one; both are kept, since the form asks for both and neither is authoritative. Jailed
+ * status, release type, direction of travel and assignment are free text, since Oklahoma City publishes no code
+ * sets for them.
  */
 export class StatusSectionModel extends SectionModel implements IStatusSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(StatusSectionModel);

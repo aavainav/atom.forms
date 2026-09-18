@@ -6,9 +6,8 @@ const emptyOptions: ReadonlyArray<IValueListOption> = [];
 /**
  * Separates the parent's value from the key it scopes on a child list's indexes.
  *
- * The codes and descriptions either side of it carry spaces, commas, quotes and slashes, so the separator has to
- * be something the data cannot contain: no value or description in any generated list carries a pipe, and the
- * generator refuses to emit a row that does.
+ * Codes and descriptions carry spaces, commas, quotes and slashes, so the separator must be something the data
+ * can't contain -- no generated list carries a pipe, and the generator refuses to emit a row that does.
  */
 const keySeparator = "|";
 
@@ -28,9 +27,8 @@ export class ValueList {
 
     /**
      * Finds the option whose description matches, ignoring case and surrounding whitespace. A child list needs
-     * the parent's value: descriptions are only unique underneath a single parent - there are 7,761 vehicle
-     * models but only 4,818 distinct names - so a lookup without one on a child list finds nothing rather than
-     * guessing which make's model was meant.
+     * the parent's value -- descriptions are only unique under one parent (7,761 vehicle models, 4,818 distinct
+     * names) -- so a lookup without one finds nothing rather than guessing which make's model was meant.
      */
     public findByDescription(description: string, parentValue?: string): IValueListOption | undefined {
         if (!this.byDescription) {

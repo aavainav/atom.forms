@@ -18,11 +18,10 @@ export interface IViolationsConfiguration {
 }
 
 /**
- * Defines the violations module. It owns the registry of violations a citation can be written for, and the
- * selector -- an option and the panel it opens -- that puts a chosen one onto a form. Which forms are offered the
- * selector is not decided here: a catalog item declares its `violationListId`, and whoever renders the form reads
- * that and mounts `ViolationsOption`/`ViolationsPanel` accordingly. That keeps this package below the one doing
- * the rendering rather than reaching up into it.
+ * Owns the registry of violations a citation can be written for, and the selector (an option plus the panel it
+ * opens) that puts a chosen one onto a form. Which forms get the selector isn't decided here -- a catalog item
+ * declares its `violationListId`, and whoever renders the form mounts `ViolationsOption`/`ViolationsPanel`
+ * accordingly, keeping this package below the renderer rather than reaching up into it.
  */
 export class ViolationsModule implements IModule {
     readonly name = "forms-violations";

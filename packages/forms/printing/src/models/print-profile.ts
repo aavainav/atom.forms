@@ -21,9 +21,8 @@ export interface IPrintProfile {
     /** The way round the sheet is printed. Defaults to landscape for a side-by-side copy and portrait otherwise. */
     readonly orientation?: PrintOrientation;
     /**
-     * The names of the page definitions in this copy, in print order — the same names the form's factory keys
-     * `getPageTypes()` by, e.g. "complaint-page". A name belonging to a page type that repeats contributes every
-     * instance of it.
+     * The page definition names in this copy, in print order -- the same names the form's factory keys
+     * `getPageTypes()` by, e.g. "complaint-page". A repeating page type contributes every instance.
      */
     readonly pages: ReadonlyArray<string>;
     /** The size of sheet the copy is printed on. Defaults to letter. */

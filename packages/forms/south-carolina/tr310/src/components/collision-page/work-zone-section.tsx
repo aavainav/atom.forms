@@ -14,12 +14,7 @@ interface IWorkZoneSectionProps {
 /** The code the report uses for a yes answer on its yes/no/unknown boxes. */
 const yes = "1";
 
-/**
- * Defines the work zone section of the TR-310.
- *
- * The detail boxes stay shut until the collision is recorded as work zone related, so a collision that happened
- * nowhere near one never offers four boxes it has no answer for; the rules ask for them on the same condition.
- */
+/** The work zone section of the TR-310. Detail boxes stay shut until the collision is recorded as work-zone related, so one that happened nowhere near a work zone never offers boxes it has no answer for; the rules ask for them on the same condition. */
 export const WorkZoneSection = ({ binding }: IWorkZoneSectionProps): React.JSX.Element => {
     const section = binding.get();
     const tr310Service = useService<ITR310Service>(ITR310Service);

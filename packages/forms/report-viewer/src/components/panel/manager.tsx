@@ -18,14 +18,12 @@ interface IPanelManagerProps {
 }
 
 /**
- * Defines a manager component for mounting the panels the form offers.
+ * Mounts the panels a form offers, at the report viewer's root rather than inside the options bar: the bar is
+ * `position-fixed`, its own stacking context, which ranks anything fixed inside it only against its own contents
+ * regardless of z-index -- `ModalManager` sits here for the same reason.
  *
- * The panels are mounted here, at the report viewer's root, rather than inside the options bar: the bar is
- * `position-fixed` and so a stacking context of its own, which ranks anything fixed within it only against the
- * bar's own contents however high its z-index. The modals are under `ModalManager` here for the same reason.
- *
- * A panel is mounted for as long as the form is and decides for itself whether it is showing, which is what lets
- * the option that opens it be a plain button raising an event on a service.
+ * A panel mounts for the form's whole lifetime and decides for itself whether it's showing, which lets the option
+ * that opens it be a plain button raising an event on a service.
  */
 export default function PanelManager({ catalogItem, controllers, onError }: IPanelManagerProps): React.JSX.Element {
     // the violation list is the form's own declaration, decided per-instance rather than off the catalog item

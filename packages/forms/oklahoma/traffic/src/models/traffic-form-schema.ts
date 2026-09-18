@@ -222,14 +222,10 @@ export interface IOKTrafficFormSchema extends ISchema {
 }
 
 /**
- * Represents the schema definition for the Oklahoma City traffic citation form.
- *
- * The three pages follow the printed form: the complaint and information sworn by the issuing officer, the warrant
- * page the municipal counselor and clerk endorse, and the supplement carrying the witness, the registered owner
- * and the record's status flags. Every page appears once.
- *
- * Dates are held as `YYYY-MM-DD` rather than the `MM/DD/YYYY` the form prints, because that is the one order
- * `DateRangeFieldRule` parses and a value it cannot parse silently skips date validation.
+ * Schema for the Oklahoma City traffic citation form. Three pages follow the printed form: the complaint and
+ * information sworn by the issuing officer, the warrant page the municipal counselor and clerk endorse, and the
+ * supplement carrying witness, registered owner and status flags -- each appearing once. Dates are `YYYY-MM-DD`,
+ * not the printed `MM/DD/YYYY`, since that's the one order `DateRangeFieldRule` parses.
  */
 export class OKTrafficFormSchema extends Schema implements IOKTrafficFormSchema {
     readonly formDefinition: FormDefinition<OKTrafficFormModel> = DefinitionFactory.form<OKTrafficFormModel>("ok-traffic-form", OKTrafficFormModel, this);

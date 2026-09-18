@@ -15,13 +15,12 @@ export interface IWorkbenchConfiguration {
 }
 
 /**
- * Hosts a forms app as a standalone application, owning the react root, the router, and the two routes every app
- * has: the root layout everything else hangs off, and the catch-all for a path nothing matched.
+ * Hosts a forms app as a standalone application, owning the React root, the router, and the two routes every app
+ * has: the root layout and the catch-all for an unmatched path.
  *
- * The routes live here rather than with the report viewer because routing is the host's concern -- the viewer is a
- * component a route renders, and says nothing about where it is mounted. `@common/react-router` refuses to create a
- * router from an empty route map, so somebody has to register the root, and the package that creates the router is
- * the honest place for it.
+ * Routes live here rather than with the report viewer since routing is the host's concern -- the viewer is just a
+ * component a route renders. `@common/react-router` refuses an empty route map, so somewhere has to register the
+ * root, and the package creating the router is the honest place for it.
  */
 export class WorkbenchModule implements IModule {
     readonly name = "forms-workbench";

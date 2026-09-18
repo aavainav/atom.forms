@@ -6,10 +6,7 @@ import { standardValueLists } from "./value-lists";
 
 export const IValueListsConfiguration = createConfig<IValueListsConfiguration>();
 export interface IValueListsConfiguration {
-    /**
-     * Registers a value list. A list registered under an id already in use replaces it, which is how a host serves
-     * one of the built-in lists from its own source without this package knowing where it went.
-     */
+    /** Registers a value list. Registering under an id already in use replaces it, which is how a host serves a built-in list from its own source without this package knowing where it went. */
     registerList: (definition: IValueListDefinition) => void;
 }
 

@@ -21,13 +21,10 @@ export class UnitPageVehicleDropzone extends VehicleDropzone implements IUnitPag
     }
 
     /**
-     * Records the dropped vehicle, holding the make and model as the names they arrived as and no code.
-     *
-     * The report's make and model are codes chosen from a value list, and dropped data carries only a name, so a
-     * name is all this can put on the dropzone. Turning it into a code means looking it up in a list that has to
-     * be loaded, which cannot happen here; `ITR310Service.resolveVehicleDropzone` does it before the dropzone is
-     * applied to the page, and drops whatever it cannot resolve. Nothing carrying a name with no code reaches the
-     * form.
+     * Records the dropped vehicle, holding make and model as the names they arrived as, with no code. The
+     * report's make/model are value-list codes, and dropped data carries only a name, so a name is all this can
+     * hold. `ITR310Service.resolveVehicleDropzone` turns it into a code before applying the dropzone, dropping
+     * whatever it can't resolve -- nothing with a name and no code reaches the form.
      */
     public onDrop(data: IImportableVehicle): this {
         if (!data) {

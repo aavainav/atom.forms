@@ -9,12 +9,7 @@ interface IDiagramSectionProps {
     readonly binding: ISectionBinding<DiagramSectionModel>;
 }
 
-/**
- * Defines the diagram section of the TR-310.
- *
- * The diagram is held as its serialized content rather than as a drawing surface, so the report carries whatever a
- * host's diagram editor produced and this section is where that content lands.
- */
+/** The diagram section of the TR-310. Held as serialized content rather than a drawing surface, so the report carries whatever a host's diagram editor produced, and this section is where it lands. */
 export const DiagramSection = ({ binding }: IDiagramSectionProps): React.JSX.Element => {
     const section = binding.get();
 

@@ -7,11 +7,9 @@ export interface IComplaintPageDefendantDropzone extends IPersonDropzone {
 }
 
 /**
- * Represents the dropzone for importing defendant data onto the traffic citation form's complaint page.
- *
- * The state is left out of the mapping even though the section carries one: a dropped person's state arrives as a
- * name with no code, and the section holds it as an option field drawn from the state value list. The defendant's
- * state is picked rather than dropped until there is a reason to resolve it, as the vehicle's make is.
+ * Dropzone for defendant data onto the complaint page. State is left out despite the section carrying one: a
+ * dropped person's state arrives as a name with no code, while the section holds an option field from the state
+ * value list. It stays picked rather than dropped until there's reason to resolve it, like the vehicle's make.
  */
 export class ComplaintPageDefendantDropzone extends PersonDropzone implements IComplaintPageDefendantDropzone {
     constructor(page: ComplaintPageModel, schema: OKTrafficFormSchema) {

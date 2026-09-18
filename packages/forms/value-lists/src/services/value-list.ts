@@ -8,28 +8,24 @@ export const IValueListRegistrationService = createService<IValueListRegistratio
 const emptyOptions: ReadonlyArray<IValueListOption> = [];
 
 /**
- * Defines the service that resolves the value lists backing a form's option fields.
+ * Resolves the value lists backing a form's option fields.
  *
- * Lists are addressed by id rather than through a method apiece, which is what lets one list hang off another
- * without either of them being special: a child list is one whose definition names a parent, and every caller
- * reaches it the same way it reaches a list that hangs off nothing.
+ * Lists are addressed by id rather than a method apiece, so one list can hang off another without either being
+ * special -- a child list just names a parent in its definition, and callers reach it the same way either way.
  */
 export interface IValueListService {
     /** The ids of every registered list. */
     readonly listIds: ReadonlyArray<string>;
 
     /**
-     * Finds the option in a list whose description matches, ignoring case and surrounding whitespace, which is
-     * how a name that arrived from a drop is turned into the code the form stores. A child list needs the
-     * parent's value, since its descriptions are only unique underneath a single parent.
+     * Finds the option whose description matches, ignoring case and surrounding whitespace -- how a dropped name
+     * turns into the code the form stores. A child list needs the parent's value, since descriptions are only
+     * unique under a single parent.
      */
     findByDescription(listId: string, description: string, parentValue?: string): Promise<IValueListOption | undefined>;
     /** Finds the option in a list carrying the given code, within the parent's options on a child list. */
     findByValue(listId: string, value: string, parentValue?: string): Promise<IValueListOption | undefined>;
-    /**
-     * Loads a list's options, or only those hanging off `parentValue` when the list has a parent. A child list
-     * with no parent value has none, and is answered without the list being loaded at all.
-     */
+    /** Loads a list's options, or only those under `parentValue` when it has a parent -- a child list with no parent value has none, answered without loading the list at all. */
     getOptions(listId: string, parentValue?: string): Promise<ReadonlyArray<IValueListOption>>;
     /** Gets the id of the list the given list hangs off, or undefined when it hangs off nothing. */
     getParentId(listId: string): string | undefined;

@@ -9,14 +9,10 @@ export interface IConditionsSectionModel extends IConditionsSection {
 }
 
 /**
- * Represents the model for the conditions bar printed across the foot of Section II.
- *
- * The bar prints five columns - weather, road, surface, traffic and lighting - each a row of boxes answering one
- * question, so each is an exclusive group. The commercial violation column beside them is three separate flags
- * rather than a group: a load can be both hazardous and carried by a commercial vehicle.
- *
- * The paper heads two adjacent columns "(A) ROAD (B)", the first the road's condition and the second its surface;
- * they are held here as the separate `road` and `surface` groups.
+ * Model for the conditions bar at the foot of Section II. Five columns -- weather, road, surface, traffic,
+ * lighting -- are each an exclusive group answering one question. The commercial violation column beside them is
+ * three separate flags, since a load can be both hazardous and commercially carried. The paper's adjacent
+ * "(A) ROAD (B)" heading is held here as separate `road` and `surface` groups.
  */
 export class ConditionsSectionModel extends SectionModel implements IConditionsSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(ConditionsSectionModel);

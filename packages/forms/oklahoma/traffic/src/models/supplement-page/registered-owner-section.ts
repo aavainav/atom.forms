@@ -7,13 +7,7 @@ export interface IRegisteredOwnerSection extends ISection {
 export interface IRegisteredOwnerSectionModel extends IRegisteredOwnerSection {
 }
 
-/**
- * Represents the model for the registered owner section of the traffic citation form's supplement page.
- *
- * The owner is a single name box here rather than the first/middle/last the complaint page carries, which is why
- * the supplement page registers no person dropzone. When `sameAsSuspect` is answered yes the boxes are left
- * empty, and the defendant on page one is the owner.
- */
+/** Model for the registered owner section of the supplement page. The owner is a single name box, not the first/middle/last the complaint page carries, which is why this page registers no person dropzone. `sameAsSuspect` yes leaves the boxes empty, with the page-one defendant as owner. */
 export class RegisteredOwnerSectionModel extends SectionModel implements IRegisteredOwnerSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(RegisteredOwnerSectionModel);
 

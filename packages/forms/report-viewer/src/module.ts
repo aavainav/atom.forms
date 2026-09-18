@@ -20,15 +20,13 @@ import {
 } from "./services";
 
 /**
- * Defines the report viewer module -- the top of this stack and the only part of it a host app renders.
+ * The report viewer module -- the top of this stack, and the only part a host app renders.
  *
- * It depends on every package whose capability it offers rather than letting them register into it: the catalog it
- * resolves a form from, the value lists a form's option fields draw on, and the violations and printing whose
- * option and panel it mounts itself. That direction is the point: a form package, a violation list and a print
- * copy are all things that exist without a viewer, while a viewer is not much without them.
+ * It depends on every package whose capability it offers, rather than letting them register into it: the catalog,
+ * value lists, violations and printing all exist without a viewer, while a viewer is not much without them.
  *
  * The options bar is the one thing left to configure, and even that is this module registering into its own
- * service -- `@forms/violations`/`@forms/printing` stay unaware that a report viewer exists at all.
+ * service -- `@forms/violations`/`@forms/printing` stay unaware a report viewer exists at all.
  */
 export class ReportViewerModule implements IModule {
     readonly name = "report-viewer";
@@ -50,12 +48,11 @@ export class ReportViewerModule implements IModule {
 
     async configure({ services, next }: IModuleConfigurator): Promise<void> {
         // registered here, in order, rather than as a bare array: this is the seam a host's own option would go
-        // through too, so the report viewer's own six are registered through it rather than special-cased.
+        // through too, so the report viewer's own built-ins go through it rather than being special-cased.
         //
-        // violations and printing sit *below* this module, so their option is imported directly rather than
-        // handed up through this registration -- registering them here is what keeps that direction one-way. each
-        // is loaded through `lazy` so a host still only downloads the selector or the print dialog once a form
-        // that offers one is opened; the four built here go through the same door for one rule rather than two.
+        // violations/printing sit *below* this module, so their option is imported directly rather than handed up
+        // -- registering them here keeps that direction one-way. Each loads via `lazy`, so a host only downloads
+        // the selector or print dialog once a form that offers one is opened.
         const options = services.get<IReportViewerOptionRegistrationService>(IReportViewerOptionRegistrationService);
         const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
 

@@ -8,13 +8,7 @@ export interface ISummonsSection extends ISection {
 export interface ISummonsSectionModel extends ISummonsSection {
 }
 
-/**
- * Represents the model for Section IV (Summons) of the Georgia uniform traffic citation.
- *
- * As in the header, the court date is held as the separate day, month and year boxes the paper prints rather than
- * as one date. Three exclusive pairs sit in this section: the AM/PM of the appearance time, the copy / jail pair,
- * and the YES/NO of whether a licence was displayed in lieu of bail.
- */
+/** Model for Section IV (Summons). As in the header, the court date is separate day/month/year boxes, not one date. Three exclusive pairs sit here: appearance time AM/PM, the copy/jail pair, and the licence-displayed YES/NO. */
 export class SummonsSectionModel extends SectionModel implements ISummonsSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(SummonsSectionModel);
 

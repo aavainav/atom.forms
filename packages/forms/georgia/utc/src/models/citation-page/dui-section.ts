@@ -8,12 +8,7 @@ export interface IDuiSection extends ISection {
 export interface IDuiSectionModel extends IDuiSection {
 }
 
-/**
- * Represents the model for the DUI boxes of Section II of the Georgia uniform traffic citation.
- *
- * The DUI box itself is an independent flag; the blood / breath / urine / other boxes beside it are one exclusive
- * group naming the single test that was administered.
- */
+/** Model for the DUI boxes of Section II. The DUI box is an independent flag; the blood/breath/urine/other boxes beside it are one exclusive group naming the single test administered. */
 export class DuiSectionModel extends SectionModel implements IDuiSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(DuiSectionModel);
 

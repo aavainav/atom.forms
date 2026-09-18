@@ -7,12 +7,7 @@ export interface IVehicleSection extends ISection {
 export interface IVehicleSectionModel extends IVehicleSection {
 }
 
-/**
- * Represents the model for the vehicle boxes of Section I of the Georgia uniform traffic citation.
- *
- * The make and model are option fields drawn from the national code sets, so a dropped vehicle has to be resolved
- * from the names it arrives with to the codes stored here - see `IGAUTCService.resolveVehicleDropzone`.
- */
+/** Model for the vehicle boxes of Section I. Make/model are option fields from the national code sets, so a dropped vehicle must resolve from the names it arrives with to the codes stored here -- see `IGAUTCService.resolveVehicleDropzone`. */
 export class VehicleSectionModel extends SectionModel implements IVehicleSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(VehicleSectionModel);
 

@@ -8,13 +8,9 @@ export interface IPleaSectionModel extends IPleaSection {
 }
 
 /**
- * Represents the model for the "Appearance, Plea of Guilty and Waiver" block of the court's copy.
- *
- * The minimum and maximum punishments are held as strings rather than numbers: the paper prints each as a blank
- * inside a sentence, and a court that leaves one unfilled means unstated rather than zero.
- *
- * The accused and the judge are `accusedName` and `judgeName` rather than `name`, which `SectionModel` already
- * declares for the section's own name.
+ * Model for the "Appearance, Plea of Guilty and Waiver" block. Min/max punishments are strings, not numbers -- the
+ * paper prints each as a blank inside a sentence, and an unfilled one means unstated, not zero. The accused and
+ * judge are `accusedName`/`judgeName`, not `name`, which `SectionModel` already declares.
  */
 export class PleaSectionModel extends SectionModel implements IPleaSectionModel {
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(PleaSectionModel);

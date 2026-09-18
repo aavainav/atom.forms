@@ -7,13 +7,7 @@ export interface IDescriptionSection extends ISection {
 export interface IDescriptionSectionModel extends IDescriptionSection {
 }
 
-/**
- * Represents the model for the defendant's physical description on the traffic citation form's complaint page.
- *
- * Race and ethnicity are free text rather than option fields: the printed form takes a code in each, but Oklahoma
- * City's code sets for them are not published with the form. Each becomes an option field the day that list
- * arrives, by registering it in `value-lists.ts` and changing the field's constructor in the schema.
- */
+/** Model for the defendant's physical description on the complaint page. Race and ethnicity are free text, not option fields, since Oklahoma City's code sets for them aren't published -- each becomes coded once a list arrives, via `value-lists.ts` and a schema constructor change. */
 export class DescriptionSectionModel extends SectionModel implements IDescriptionSectionModel {
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(DescriptionSectionModel);
 

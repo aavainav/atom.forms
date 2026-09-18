@@ -10,12 +10,7 @@ export interface IComplaintPage {
 export interface IComplaintPageModel extends IComplaintPage {
 }
 
-/**
- * Represents the complaint page of the parking violation form.
- *
- * The page carries no officer data of its own; it is what the municipal counselor and the court clerk endorse
- * once the citation on page one has been filed.
- */
+/** The complaint page. Carries no officer data of its own -- it's what the municipal counselor and court clerk endorse once the citation on page one has been filed. */
 export class ComplaintPageModel extends PageModel implements IComplaintPageModel {
     private schema: OKParkingFormSchema = FormModel.getSchema<OKParkingFormSchema>(ComplaintPageModel);
 

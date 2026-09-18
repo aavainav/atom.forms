@@ -2,16 +2,14 @@ import { IPublicContactOrWarningData } from "@forms/public-contact-or-warning";
 
 /**
  * Mock records for exercising `PublicContactOrWarningFormModel.populate()` and `extract()` through the report
- * viewer's data reader. Keyed by the `?record=` query param recognized by `ExampleDataModule`.
+ * viewer's data reader. Keyed by the `?record=` query param `createExampleDataManager` reads.
  *
- * The `full` record covers every section, so it shows the nature-of-contact, primary-reason and searches
- * checkboxes populating - the parts of the form the old cross-form citation shape had no way to reach. The
- * `minimal` record covers only what the form requires a value for, so it shows a partial record leaving the
- * rest of the fields alone, and shows an unanswered `vehicleYear` being omitted from a save rather than
- * reported as 0.
+ * `full` covers every section, showing the nature-of-contact, primary-reason and searches checkboxes populating.
+ * `minimal` covers only what the form requires a value for, showing a partial record leaving the rest alone, and
+ * an unanswered `vehicleYear` reporting as zero rather than being omitted.
  *
- * Note the dates: the form parses `YYYY-MM-DD` only, and a value it cannot parse silently skips date
- * validation, so a host mapping a source that uses another order must convert before it gets here.
+ * Dates: the form parses `YYYY-MM-DD` only, and a value it can't parse silently skips validation, so a host
+ * mapping another order must convert before it gets here.
  */
 export const mockPublicContactOrWarningRecords: Record<string, IPublicContactOrWarningData> = {
     full: {

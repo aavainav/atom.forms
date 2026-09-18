@@ -13,12 +13,7 @@ interface IOKParkingFormProps {
     readonly isReadOnly: boolean;
 }
 
-/**
- * Defines the Oklahoma City parking violation form.
- *
- * The three page groups are rendered as one continuous tab strip in the order the paper form is printed. Each
- * group holds a single page, so the collection's add and delete affordances never come into play.
- */
+/** The Oklahoma City parking violation form. Three page groups render as one continuous tab strip in print order, each holding a single page, so add/delete affordances never come into play. */
 export default function OKParkingForm({ controllers, isReadOnly }: IOKParkingFormProps): React.JSX.Element {
     const controller = controllers.getFormController<OKParkingFormModel>();
     const form = useForm(controller);

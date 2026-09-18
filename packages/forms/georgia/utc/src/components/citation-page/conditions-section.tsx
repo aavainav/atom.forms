@@ -9,12 +9,7 @@ interface IConditionsSectionProps {
     readonly binding: ISectionBinding<ConditionsSectionModel>;
 }
 
-/**
- * Defines the conditions bar printed across the foot of Section II.
- *
- * The five condition columns are laid out as the paper lays them out, each heading its own column of boxes; the
- * commercial violation column beside them holds three independent flags rather than a group.
- */
+/** The conditions bar at the foot of Section II, laid out as the paper lays it out -- five columns, each heading its own boxes, plus a commercial violation column of three independent flags. */
 export const ConditionsSection = ({ binding }: IConditionsSectionProps): React.JSX.Element => {
     const section = binding.get();
 

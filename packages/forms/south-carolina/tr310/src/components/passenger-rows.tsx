@@ -5,13 +5,7 @@ import { FieldDefinition, FieldModel, IOptionValue, OptionFieldModel, SectionMod
 import { ITR310Service } from "../services";
 import { CodeBox, TextField } from "./fields";
 
-/**
- * The fourteen columns one passenger row carries.
- *
- * The person page and the narrative page print the same row under different names - passengers and additional
- * passengers - and their section models expose the same accessors, so a row is described here once and both
- * sections hand their own field definitions to the same renderer.
- */
+/** The fourteen columns one passenger row carries. The person and narrative pages print the same row under different names -- passengers and additional passengers -- with matching accessors, so both hand their own field definitions to this one renderer. */
 export interface IPassengerRow {
     readonly airBagDeployment: FieldDefinition<OptionFieldModel>;
     readonly dateOfBirth: FieldDefinition<StringFieldModel>;

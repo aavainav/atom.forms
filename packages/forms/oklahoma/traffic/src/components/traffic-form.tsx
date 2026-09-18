@@ -13,12 +13,7 @@ interface IOKTrafficFormProps {
     readonly isReadOnly: boolean;
 }
 
-/**
- * Defines the Oklahoma City traffic citation form.
- *
- * The three page groups are rendered as one continuous tab strip in the order the paper form is printed. Each
- * group holds a single page, so the collection's add and delete affordances never come into play.
- */
+/** The Oklahoma City traffic citation form. Three page groups render as one continuous tab strip in print order, each holding a single page, so add/delete affordances never come into play. */
 export default function OKTrafficForm({ controllers, isReadOnly }: IOKTrafficFormProps): React.JSX.Element {
     const controller = controllers.getFormController<OKTrafficFormModel>();
     const form = useForm(controller);

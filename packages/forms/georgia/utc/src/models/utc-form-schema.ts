@@ -285,11 +285,10 @@ export interface IGAUTCFormSchema extends ISchema {
 }
 
 /**
- * Represents the schema definition for the Georgia uniform traffic citation, summons, and accusation.
- *
- * The citation page carries the five sections the paper numbers I through V, split further where a printed section
- * holds more than one block of boxes: Section I becomes the violator, vehicle and status sections, and Section II
- * becomes the violation, DUI, offense and conditions sections. The court page is the reverse of the court's copy.
+ * Schema for the Georgia uniform traffic citation, summons, and accusation. The citation page carries the five
+ * sections the paper numbers I through V, split further where a printed section holds more than one block of
+ * boxes: Section I becomes violator/vehicle/status, Section II becomes violation/DUI/offense/conditions. The
+ * court page is the reverse of the court's copy.
  */
 export class GAUTCFormSchema extends Schema implements IGAUTCFormSchema {
     readonly formDefinition: FormDefinition<GAUTCFormModel> = DefinitionFactory.form<GAUTCFormModel>("ga-utc-form", GAUTCFormModel, this);

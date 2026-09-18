@@ -8,12 +8,9 @@ import { PublicContactOrWarningValueListId } from "../value-lists";
 export const IPublicContactOrWarningService = createService<IPublicContactOrWarningService>("forms-public-contact-or-warning-service");
 
 /**
- * Defines the service backing the public contact/warning record.
- *
- * Every value list the record's option fields draw on is reached through here rather than imported by the
- * component that renders it, so the components speak the record's language - counties, makes, models - while the
- * lists themselves come from the value list registry, where a host can serve any of them from somewhere else by
- * registering over its id.
+ * Backs the public contact/warning record. Every value list its option fields draw on is reached through here
+ * rather than imported by the component that renders it, so components speak the record's language -- counties,
+ * makes, models -- while a host can serve any list from elsewhere by registering over its id.
  */
 export interface IPublicContactOrWarningService {
     /** Returns a new page with the dropped person data applied to the record's person section. */
@@ -32,11 +29,7 @@ export interface IPublicContactOrWarningService {
     getVehicleMakeOptions(): Promise<Array<IOptionValue>>;
     /** Loads the models belonging to the given make code; a blank or unrecognized code has none. */
     getVehicleModelOptions(makeCode: string): Promise<Array<IOptionValue>>;
-    /**
-     * Returns the dropped vehicle with its make and model turned from the names they arrived as into the codes
-     * the record stores, dropping either if the value lists do not recognize it. Await this before applying the
-     * dropzone to the page, so a name with no code never reaches the form.
-     */
+    /** Returns the dropped vehicle with make/model turned from arrival names into stored codes, dropping either the value lists don't recognize. Await this before applying the dropzone, so a name with no code never reaches the form. */
     resolveVehicleDropzone(dropzone: Dropzone): Promise<Dropzone>;
 }
 
@@ -116,10 +109,7 @@ export class PublicContactOrWarningService implements IPublicContactOrWarningSer
         });
     }
 
-    /**
-     * Copies the registry's options before handing them out, so the list a select ends up holding is not the one
-     * the value list service is caching and cannot be mutated out from under the next form that asks for it.
-     */
+    /** Copies the registry's options before handing them out, so a select's list isn't the value list service's own cached one, and can't be mutated out from under the next form that asks for it. */
     private async getOptions(listId: string, parentValue?: string): Promise<Array<IOptionValue>> {
         return [...await this.valueListService.getOptions(listId, parentValue)];
     }
