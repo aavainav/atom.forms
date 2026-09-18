@@ -67,7 +67,7 @@ describe("ValidationService", () => {
     });
 
     it("raises the issues it was given", () => {
-        const issues = [{ field: { name: "first-name" }, message: "This field is required.", severity: 0 }] as unknown as Array<IRuleIssue>;
+        const issues = [{ field: { name: "first-name" }, section: { name: "violator-section" }, message: "This field is required.", severity: 0 }] as unknown as Array<IRuleIssue>;
 
         service.showIssues(issues);
 

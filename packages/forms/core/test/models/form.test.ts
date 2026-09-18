@@ -124,7 +124,7 @@ describe("FormModel", () => {
                 .get<StringFieldModel>(chargeFields.offenseDescription);
 
             form = withTwo.validate(new RuleIssueCollection([
-                { field: emptyOnSecondPage, message: "This field is required.", severity: RuleIssueSeverity.error }
+                { field: emptyOnSecondPage, section: chargeSection, message: "This field is required.", severity: RuleIssueSeverity.error }
             ]));
 
             expect(readAll(chargeFields.offenseDescription).map(field => field.getHasError())).toEqual([false, true]);
@@ -134,7 +134,7 @@ describe("FormModel", () => {
             const field = getFieldValue(form, violatorSection, violatorFields.firstName);
 
             const validated = form.validate(new RuleIssueCollection([
-                { field, message: "Check this.", severity: RuleIssueSeverity.warning }
+                { field, section: violatorSection, message: "Check this.", severity: RuleIssueSeverity.warning }
             ]));
 
             expect(getFieldValue(validated, violatorSection, violatorFields.firstName).getHasError()).toBe(false);
@@ -143,7 +143,7 @@ describe("FormModel", () => {
         it("clears an error once the issue is gone", () => {
             const field = getFieldValue(form, violatorSection, violatorFields.firstName);
             const errored = form.validate(new RuleIssueCollection([
-                { field, message: "This field is required.", severity: RuleIssueSeverity.error }
+                { field, section: violatorSection, message: "This field is required.", severity: RuleIssueSeverity.error }
             ]));
 
             const cleared = errored.validate(new RuleIssueCollection());

@@ -17,7 +17,7 @@ export class RequiredFieldRule extends FieldRule implements IRequiredFieldRule  
         super(RequiredFieldRule.name, fieldDefinition, message ?? RequiredFieldRule.defaultMessage, severity);
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
+    protected validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">> {
         if (field.getIsEmpty()) {
             return [{ field: field, message: this.message, severity: this.severity }];
         }

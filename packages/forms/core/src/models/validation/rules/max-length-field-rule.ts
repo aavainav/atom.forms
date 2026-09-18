@@ -26,7 +26,7 @@ export class MaxLengthFieldRule extends FieldRule implements IMaxLengthFieldRule
         this.maximumLength = maximumLength;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
+    protected validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">> {
         // an empty value is the required rule's concern
         if (field.getIsEmpty()) {
             return [];

@@ -31,10 +31,14 @@ export abstract class FieldRule extends Rule implements IFieldRule {
 
     protected evaluate(context: IRuleContext): Array<IRuleIssue> {
         const field = context.getField(this.fieldDefinition);
+        if (!field) {
+            return [];
+        }
 
-        return field ? this.validateField(field) : [];
+        const section = this.fieldDefinition.getSectionDefinition();
+        return this.validateField(field).map(issue => ({ ...issue, section }));
     }
 
-    /** Validates the field this rule is bound to, returning any resulting issues. */
-    protected abstract validateField(field: FieldModel<TValueType>): Array<IRuleIssue>;
+    /** Validates the field this rule is bound to, returning any resulting issues; `evaluate` attaches `section` once this returns. */
+    protected abstract validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">>;
 }

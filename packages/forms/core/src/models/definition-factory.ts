@@ -2,7 +2,7 @@ import { FieldModel, FieldModelConstructor, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
 import { FormDefinition } from "./form-definition";
 import { FormModel, FormModelConstructor } from "./form";
-import { PageDefinition } from "./page-definition";
+import { IPageDefinitionOptions, PageDefinition } from "./page-definition";
 import { PageModel, PageModelConstructor } from "./page";
 import type { ISchema } from "./schema";
 import { ISectionDefinitionOptions, SectionDefinition } from "./section-definition";
@@ -32,8 +32,8 @@ export class DefinitionFactory {
         return new FormDefinition<TForm>(name, ctor, schema);
     }
 
-    static page<TPage extends PageModel>(name: string, form: FormDefinition<FormModel<any>>, ctor: PageModelConstructor<TPage>): PageDefinition<TPage> {
-        return new PageDefinition<TPage>(name, form, ctor);
+    static page<TPage extends PageModel>(name: string, form: FormDefinition<FormModel<any>>, ctor: PageModelConstructor<TPage>, options?: IPageDefinitionOptions): PageDefinition<TPage> {
+        return new PageDefinition<TPage>(name, form, ctor, options);
     }
 
     static section<TSection extends SectionModel>(name: string, page: PageDefinition<PageModel>, ctor: SectionModelConstructor<TSection>, options?: ISectionDefinitionOptions): SectionDefinition<TSection> {

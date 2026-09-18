@@ -59,6 +59,8 @@ export class RequiredSelectionRule extends Rule implements IRequiredSelectionRul
 
         const anchor = context.getField(this.anchorFieldDefinition);
 
-        return anchor ? [{ field: anchor, message: this.message, severity: this.severity }] : [];
+        return anchor
+            ? [{ field: anchor, section: this.anchorFieldDefinition.getSectionDefinition(), message: this.message, severity: this.severity }]
+            : [];
     }
 }

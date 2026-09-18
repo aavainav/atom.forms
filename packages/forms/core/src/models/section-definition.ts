@@ -5,21 +5,17 @@ import { PageModel } from "./page";
 import { PageDefinition } from "./page-definition";
 import { SectionModel, SectionModelConstructor } from "./section";
 
-/** Options a section definition can be declared with. */
-export interface ISectionDefinitionOptions {
+/** Defines the definition of a section within a form. */
+export interface ISectionDefinition extends IDefinition {
     /**
      * Whether the section holds the same values on every instance of its page.
      *
      * A shared section writes through to every instance, not just the one being edited, so a page repeating for
      * one reason -- a citation with a page per violation -- still reads as one record for everything else.
      */
-    readonly isShared?: boolean;
-}
-
-/** Defines the definition of a section within a form. */
-export interface ISectionDefinition extends IDefinition {
-    /** Whether the section holds the same values on every instance of its page. */
     readonly isShared: boolean;
+    /** The section's display title, shown wherever a human-readable name is needed. Falls back to a title-cased version of `name` when not given. */
+    readonly title: string;
 
     /** Creates a new section model instance from this definition. */
     createNew(parent: Entity<Definition>): SectionModel;
@@ -29,9 +25,13 @@ export interface ISectionDefinition extends IDefinition {
     registerField(fieldDefinition: IFieldDefinition): void;
 }
 
+/** The section properties a caller may set when declaring a section; everything else is resolved from `name` or defaulted. */
+export type ISectionDefinitionOptions = Partial<Pick<ISectionDefinition, "isShared" | "title">>;
+
 /** Represents the definition of a section within a form. */
 export class SectionDefinition<TSection extends SectionModel = SectionModel> extends Definition implements ISectionDefinition {
     readonly isShared: boolean;
+    readonly title: string;
 
     constructor(
         name: string,
@@ -46,6 +46,7 @@ export class SectionDefinition<TSection extends SectionModel = SectionModel> ext
         );
 
         this.isShared = options?.isShared ?? false;
+        this.title = options?.title ?? this.getDisplayName();
 
         pageDefinition.registerSection(this);
 

@@ -43,7 +43,7 @@ export class DateRangeFieldRule extends FieldRule implements IDateRangeFieldRule
         return new DateRangeFieldRule(fieldDefinition, { minimum }, message, severity);
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
+    protected validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">> {
         // an empty value is the required rule's concern, and an unparseable one the format rule's.
         if (field.getIsEmpty()) {
             return [];

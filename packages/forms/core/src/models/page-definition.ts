@@ -8,6 +8,9 @@ import { ISectionDefinition } from "./section-definition";
 
 /** Defines the definition of a page within a form. */
 export interface IPageDefinition extends IDefinition {
+    /** The page's display title, shown wherever a human-readable name is needed. Falls back to a title-cased version of `name` when not given. */
+    readonly title: string;
+
     /** Registers a section definition as a child of this page. */
     registerSection(sectionDefinition: ISectionDefinition): void;
     /** Creates a new, empty page collection for this definition. */
@@ -16,17 +19,25 @@ export interface IPageDefinition extends IDefinition {
     createPage(parent: Entity<Definition>): PageModel;
 }
 
+/** The page properties a caller may set when declaring a page; everything else is resolved from `name` or defaulted. */
+export type IPageDefinitionOptions = Partial<Pick<IPageDefinition, "title">>;
+
 /** Represents the definition of a page within a form. */
 export class PageDefinition<TPage extends PageModel = PageModel> extends Definition implements IPageDefinition {
+    readonly title: string;
+
     constructor(
         name: string,
         formDefinition: FormDefinition<FormModel<any>>,
-        ctor: PageModelConstructor<TPage>) {
+        ctor: PageModelConstructor<TPage>,
+        options?: IPageDefinitionOptions) {
         super(
             name,
             ctor,
             formDefinition
         );
+
+        this.title = options?.title ?? this.getDisplayName();
 
         formDefinition?.registerPage(this);
 

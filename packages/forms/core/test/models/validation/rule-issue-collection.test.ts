@@ -3,10 +3,14 @@ import { describe, expect, it } from "vitest";
 import type { IRuleIssue } from "../../../src/models/validation/rule-issue";
 import { RuleIssueSeverity } from "../../../src/models/validation/rule-issue";
 import { RuleIssueCollection } from "../../../src/models/validation/rule-issue-collection";
+import type { ISectionDefinition } from "../../../src/models/section-definition";
 import { StringFieldModel } from "../../../src/models/string-field";
 
+// this suite only exercises collection ordering/copy semantics, so the section is never inspected
+const section = {} as ISectionDefinition;
+
 function issue(message: string, severity: RuleIssueSeverity = RuleIssueSeverity.error): IRuleIssue {
-    return { field: new StringFieldModel({ label: "First name", name: "first-name", value: "" }), message, severity };
+    return { field: new StringFieldModel({ label: "First name", name: "first-name", value: "" }), section, message, severity };
 }
 
 describe("RuleIssueCollection", () => {

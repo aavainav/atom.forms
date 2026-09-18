@@ -27,7 +27,7 @@ export class NumberRangeFieldRule extends FieldRule implements INumberRangeField
         this.maximum = maximum;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
+    protected validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">> {
         // an empty value is the required rule's concern, and a non-numeric one the format rule's.
         if (field.getIsEmpty()) {
             return [];

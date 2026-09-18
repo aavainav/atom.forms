@@ -49,6 +49,11 @@ export abstract class Definition implements IDefinition {
 
     public abstract createNew(parent: IEntity<Definition>): Object;
 
+    /** Turns this definition's kebab-case name into a display title, e.g. "violator-section" -> "Violator Section". Used as the fallback for a definition that hasn't been given an explicit title. */
+    protected getDisplayName(): string {
+        return this.name.replace(/-/g, " ").replace(/\b\w/g, char => char.toUpperCase());
+    }
+
     protected registerChild(child: IDefinition): void {
         this._children.push(child);
     }

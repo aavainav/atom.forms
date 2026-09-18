@@ -19,14 +19,13 @@ export class PatternFieldRule extends FieldRule implements IPatternFieldRule {
     readonly pattern: RegExp;
 
     constructor(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, pattern: RegExp, message?: string, severity?: RuleIssueSeverity) {
-        // `new.target` is the constructor that was actually invoked, so a derived rule registers under its own name.
         super(new.target.name, fieldDefinition, message ?? PatternFieldRule.defaultMessage, severity);
 
         // a global pattern carries `lastIndex` between calls, and a rule is reused across every instance of its field.
         this.pattern = pattern.global ? new RegExp(pattern.source, pattern.flags.replace("g", "")) : pattern;
     }
 
-    protected validateField(field: FieldModel<TValueType>): Array<IRuleIssue> {
+    protected validateField(field: FieldModel<TValueType>): Array<Omit<IRuleIssue, "section">> {
         // an empty value is the required rule's concern, not the pattern's.
         if (field.getIsEmpty()) {
             return [];

@@ -108,6 +108,11 @@ export class CompositeRule extends Rule implements ICompositeRule {
     private replaceMessages(issues: Array<IRuleIssue>): Array<IRuleIssue> {
         const fields = new Set(issues.map(issue => issue.field));
 
-        return [...fields].map(field => ({ field: field, message: this.message, severity: this.severity }));
+        return [...fields].map(field => ({
+            field,
+            section: issues.find(issue => issue.field === field)!.section,
+            message: this.message,
+            severity: this.severity
+        }));
     }
 }
