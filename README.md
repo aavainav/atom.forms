@@ -33,7 +33,7 @@ for importing a person or a vehicle onto it.
 
 ## Layout
 
-A yarn-workspaces monorepo of 18 packages, with lerna as the task runner. Nothing is published; every package is
+A yarn-workspaces monorepo of 19 packages, with lerna as the task runner. Nothing is published; every package is
 `private`.
 
 | Package | What it owns |
@@ -44,6 +44,7 @@ A yarn-workspaces monorepo of 18 packages, with lerna as the task runner. Nothin
 | [`@forms/value-lists`](packages/forms/value-lists/) | The registry and code generator for the lists behind option fields, plus the national ones. |
 | [`@forms/violations`](packages/forms/violations/) | The registry of violations a citation is written for, plus the selector that puts them on a form. |
 | [`@forms/printing`](packages/forms/printing/) | The copies a form publishes, the print dialog and the `@page` rules. No PDF library — a print stylesheet and `window.print()`. |
+| [`@forms/audit`](packages/forms/audit/) | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never values. |
 | [`@forms/workbench`](packages/forms/workbench/) | Standalone app host: React root, router, bootstrapper. |
 | `packages/forms/<state>/<form>/` | One package per form. Six of them. |
 | `packages/common/*` | `@common/event-emitter`, `@common/react`, `@common/react-router`, `@common/zod`. |
@@ -56,12 +57,16 @@ core  ←  catalog  ←  report-viewer  ←  workbench
   ↑         ↑             ↑    ↑  ↑      ↑
   │         │             │  printing    │
   │         │             │  violations  │
+  │         │             │  audit       │
   └─────────┴─────value-lists──┴──┴──────┴───── form packages
 ```
 
 `printing` and `violations` sit above the report viewer and below the forms. Neither is imported by the report
 viewer: each registers its own button through `registerOption`, which is why a form package can gain printing or a
 violation selector without the report viewer knowing either exists.
+
+`audit` sits alongside them and depends on core alone: the report viewer mounts its recorder, and no form package
+depends on it.
 
 ## How a form is put together
 

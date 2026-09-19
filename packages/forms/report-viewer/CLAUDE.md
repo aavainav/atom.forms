@@ -2,10 +2,10 @@
 
 **The top of the stack and the only part of it a host app renders.** A host names a form and hands over its data;
 this package resolves the catalog item, builds the form model, populates it, mounts the options and panels the form
-offers, and renders it. Depends on `@forms/catalog`, `@forms/core`, `@forms/value-lists`, `@forms/violations`,
-`@forms/printing`.
+offers, and renders it. Depends on `@forms/audit`, `@forms/catalog`, `@forms/core`, `@forms/value-lists`,
+`@forms/violations`, `@forms/printing`.
 
-Module dependencies: `FormCatalogModule`, `ValueListsModule`, `ViolationsModule`, `PrintingModule`.
+Module dependencies: `AuditModule`, `FormCatalogModule`, `ValueListsModule`, `ViolationsModule`, `PrintingModule`.
 
 It depends on every package whose capability it offers rather than letting them register into it. That direction is
 the point: a form package, a violation list and a print copy all exist without a viewer, while a viewer is not much
@@ -14,8 +14,8 @@ even the workbench.
 
 ```
                 report-viewer          ← what a host app renders
-                 ↙   ↓   ↓   ↘
-      catalog  value-lists  violations  printing
+                 ↙   ↓   ↓   ↘   ↘
+      catalog  value-lists  violations  printing  audit
 ```
 
 ## The whole API
@@ -51,7 +51,7 @@ the previously loaded form on screen.
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
-| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation, and builds the `onError` the plugin components report through. |
+| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation, builds the `onError` the plugin components report through, and mounts `AuditRecorder` beside the managers. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own four. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
@@ -188,6 +188,22 @@ dark chrome around light paper, and leaves the print branch unaffected whichever
 The theme is **not persisted** — it survives in-app navigation, since the service is a singleton living as long as
 the app's runtime, but a reload starts light again.
 
+## Auditing
+
+`ReportViewerForm` mounts `AuditRecorder` from `@forms/audit`, which forwards what the form's audit controller records
+to `IAuditService`. A host subscribes once, at startup, and never renders anything:
+
+```ts
+services.get<IAuditService>(IAuditService).onRecord(record => send(record));
+```
+
+`IAuditService`, `AuditRecord` and `IAuditFormIdentity` are re-exported from this package. Records carry field paths
+and identity, never values; see [`@forms/audit`](../audit/) for what is recorded and how.
+
+**Saving is the one thing the audit cannot observe**, so `SaveOption` and the save path of `NewFormOption` tell it
+(`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`). A dirty→clean transition is ambiguous, since
+starting a new form calls `clean()` too. Anything new that saves must do the same.
+
 ## Routing — there is none
 
 This package registers no routes, owns no navigation service, and does not depend on react-router at all. A route is
@@ -208,5 +224,5 @@ is a component; mount it wherever the host's router puts it.
 - `ModalService` throws past three concurrent modals.
 - **The theme import lives on `report-viewer.tsx`.** It is the only one in the graph; move it and a host renders
   unstyled.
-- Since this package depends on violations and printing, **every host ships them**. The list *data* is still
+- Since this package depends on violations, printing and audit, **every host ships them**. The list *data* is still
   dynamically imported by its own definitions, which is where the real weight is.

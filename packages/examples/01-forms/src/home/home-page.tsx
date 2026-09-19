@@ -9,6 +9,11 @@ import { getFormRoutePath } from "../form-routes";
 /** The sandbox demos. These are not catalog forms, so unlike the forms they carry their own title and description. */
 const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: string; readonly title: string }> = [
     {
+        description: "What the audit records as a form is edited, validated, printed and saved, listed live beside it.",
+        path: "/demo/audit",
+        title: "Audit"
+    },
+    {
         description: "Drag mock person and vehicle records onto the public contact/warning form's dropzones.",
         path: "/demo/dropzone",
         title: "Dropzone"

@@ -112,7 +112,8 @@ parent's), `onChanged`, a protected `emitChanged()`, and no-op `start()`/`dispos
 
 `loadForm(form)` compares by `form.id` — re-seeding the same form on every render is a no-op; a genuinely different
 form disposes the form and rules controllers. It also creates every eager controller, after the form controller, and
-those survive a form swap. `dispose()` releases controllers last created first, so one that observes another goes
+those survive a form swap. When the form is new to the manager it raises `onControllerChanged` for the form
+controller, since seeding raises nothing itself and that is how an observer (`@forms/audit`) learns of a swap. `dispose()` releases controllers last created first, so one that observes another goes
 before what it observes.
 
 ## Shared sections

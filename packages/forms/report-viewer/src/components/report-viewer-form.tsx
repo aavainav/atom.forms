@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
 import { useService } from "@common/react";
+import { AuditRecorder } from "@forms/audit";
 import { useFormController, IControllerManager, ControllerManager, IReportData, IRuleIssue } from "@forms/core";
 
 import { ModalManager } from "./modal";
@@ -85,6 +86,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
         <>
             <ModalManager />
             <NotificationManager />
+            <AuditRecorder controllers={formControllers} />
             <ValidationManager controllers={formControllers} />
             <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
             <initialForm.Component controllers={formControllers} isReadOnly={isReadOnly} />

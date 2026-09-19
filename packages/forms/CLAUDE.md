@@ -13,6 +13,7 @@ task recipes; open that one rather than reading the package's source to orient.
 | [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the selector that puts them on a form. Citations only; bundles no lists of its own. |
 | [report-viewer/](report-viewer/) | `@forms/report-viewer` | **The host-facing entry point.** `<ReportViewer identity dataManager settings />` resolves the catalog item, builds and populates the form, and mounts whatever options and panels it offers. Owns modals, notifications and validation; no routing. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
+| [audit/](audit/) | `@forms/audit` | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never values. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, the root and not-found routes, bootstrapper. Knows nothing about forms. |
 | [south-carolina/s438/](south-carolina/s438/) | `@forms/s438` | SC S438 UTT citation form. |
 | [south-carolina/public-contact-or-warning/](south-carolina/public-contact-or-warning/) | `@forms/public-contact-or-warning` | SC Form 432 public contact / warning. |
@@ -26,8 +27,8 @@ and nothing in this repo depends on it except a host:
 
 ```
                        report-viewer
-                    ↙   ↓      ↓    ↘
-          catalog  value-lists  violations  printing
+                    ↙   ↓      ↓    ↘      ↘
+          catalog  value-lists  violations  printing  audit
               ↑         ↑           ↑          ↑
               └─────────┴───────────┴──────────┴──── form packages (south-carolina/*, oklahoma/*, georgia/*)
                                   ↓
@@ -39,6 +40,9 @@ that the report viewer imports and mounts itself, rather than registering one up
 only to declare what it contributes — the copies it can be printed as, or the violation list it draws on and how a
 chosen violation lands on its fields — and declares `violationListId` on its catalog item, which is the gate the
 viewer actually reads.
+
+`audit` is the same shape and depends on core alone: it exports a recorder component the report viewer mounts, and a
+controller that registers itself with core. No form package depends on it.
 
 `workbench` is off to the side: it hosts a react app, owns the router and the root/not-found routes, and knows
 nothing about forms at all. A host that already has a router skips it and renders `<ReportViewer />` directly.

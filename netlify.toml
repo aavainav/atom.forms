@@ -1,0 +1,13 @@
+[build]
+  command = "yarn build && yarn build-forms"
+  publish = "packages/examples/01-forms/dist"
+
+[build.environment]
+  # Matches the newest version in the CI matrix (.github/workflows/test.yml).
+  NODE_VERSION = "24.18.0"
+
+# Single-page app: serve index.html for deep links like /sc/s438.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

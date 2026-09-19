@@ -1,6 +1,6 @@
 {
-    "name": "@forms/report-viewer",
-    "description": "The report viewer package manages interacting and viewing reports.",
+    "name": "@forms/audit",
+    "description": "The audit package records what happens to a form -- when it is opened, edited, validated, printed and saved -- for a host to keep.",
     "version": "1.0.0",
     "private": true,
     "main": "dist/index.js",
@@ -18,12 +18,7 @@
     "dependencies": {
         "@common/event-emitter": "1.0.0",
         "@common/react": "1.0.0",
-        "@forms/audit": "1.0.0",
-        "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
-        "@forms/printing": "1.0.0",
-        "@forms/value-lists": "1.0.0",
-        "@forms/violations": "1.0.0",
         "@shrub/core": "0.5.91"
     }
 }

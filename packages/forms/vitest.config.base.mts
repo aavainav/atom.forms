@@ -7,6 +7,7 @@ const packageSources: Readonly<Record<string, string>> = {
     "@common/react": "../common/react/src/index.ts",
     "@common/react-router": "../common/react-router/src/index.ts",
     "@common/zod": "../common/zod/src/index.ts",
+    "@forms/audit": "audit/src/index.ts",
     "@forms/catalog": "catalog/src/index.ts",
     "@forms/core": "core/src/index.ts",
     "@forms/ga-utc": "georgia/utc/src/index.ts",

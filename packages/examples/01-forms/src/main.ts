@@ -6,6 +6,7 @@ import { PublicContactOrWarningFormBootstrapper } from "@forms/public-contact-or
 import { S438CitationFormBootstrapper } from "@forms/s438";
 import { TR310CrashFormBootstrapper } from "@forms/tr310";
 
+import { bootstrapper as AuditDemoBootstrapper } from "./demos/audit";
 import { bootstrapper as DropzoneDemoBootstrapper } from "./demos/dropzone";
 import { bootstrapper as FormsBootstrapper } from "./forms";
 import { bootstrapper as HomeBootstrapper } from "./home";
@@ -15,6 +16,7 @@ import { bootstrapper as WatermarkDemoBootstrapper } from "./demos/watermark";
 await WorkbenchBootstrapper.start({
     // kept alphabetical
     bootstrappers: [
+        AuditDemoBootstrapper,
         DropzoneDemoBootstrapper,
         FormsBootstrapper,
         GAUTCFormBootstrapper,

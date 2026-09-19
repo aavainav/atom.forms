@@ -20,6 +20,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/example-data.ts](src/example-data.ts) | The host data boundary: `createExampleDataManager(identity, searchParams)`, the fixture-per-identity table, and the sessionStorage round trip. A plain function, not a module or a service. |
 | [src/home/](src/home/) | The index route at `/`: `HomeModule` registers it, `home-page.tsx` renders it. |
 | [src/mock-citation-data.ts](src/mock-citation-data.ts) · [mock-ga-utc-data.ts](src/mock-ga-utc-data.ts) · [mock-public-contact-or-warning-data.ts](src/mock-public-contact-or-warning-data.ts) · [mock-tr310-data.ts](src/mock-tr310-data.ts) | The fixtures, each written in its own form's published data contract. Each exports a `Record<string, T>` keyed by scenario: `full` and `minimal`. |
+| [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
 | [src/demos/watermark/](src/demos/watermark/) | `/demo/watermark` — the watermark each `FormStatus` stamps, and that a form carries one only while read-only. |
 | [vite.config.ts](vite.config.ts) | Port 3002, react plugin, and the Sass deprecation categories silenced for Bootstrap 5.3. |
@@ -30,7 +31,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- | --- |
 | `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | **one** `FormRoutePage`, resolving its identity from the matched path | [src/forms/forms-module.ts](src/forms/forms-module.ts) |
-| `/demo/dropzone` · `/demo/watermark` | the demo pages | [src/demos/](src/demos/) |
+| `/demo/audit` · `/demo/dropzone` · `/demo/watermark` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/workbench` |
 
 Every route is a **child** of the workbench's `"app"` root route, registered through
@@ -99,7 +100,19 @@ Fixtures are chosen by **identity**, not by anything in a route context, because
 already knows which record it is asking for. **A form with no entry in the `forms` table gets no manager at all** —
 `ok/parking` and `ok/traffic` render empty and unsaveable rather than quietly borrowing another form's fixture.
 
-## The two demos take the advanced path
+## The audit demo takes the short path
+
+[audit-demo-page.tsx](src/demos/audit/audit-demo-page.tsx) renders a plain `<ReportViewer />`. It needs no controllers,
+because a host only subscribes to `IAuditService`; [audit-log.tsx](src/demos/audit/audit-log.tsx) does that in an
+effect and lists each record, newest first, with its raw JSON one click away. Records carry field paths and identity,
+never values, so that is all the log can show. Edit a field and wait about 1.5s for `fields-edited`; Validate, Print,
+Save and New Form raise the rest.
+
+**A save the host performs itself is not audited.** `FormRoutePage`'s leave-the-page prompt writes through the data
+manager directly, and on the short path a host has no controller to report it to, so it produces no `saved` record.
+Saves through the options bar do.
+
+## The other two demos take the advanced path
 
 Both call `IReportViewerService.loadForm` and render `<ReportViewerForm />` directly rather than `<ReportViewer />`,
 because each needs something the three props deliberately don't expose:

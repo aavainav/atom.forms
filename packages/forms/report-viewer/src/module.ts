@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { AuditModule } from "@forms/audit";
 import { FormCatalogModule } from "@forms/catalog";
 import { PrintingModule } from "@forms/printing";
 import { ValueListsModule } from "@forms/value-lists";
@@ -30,7 +31,7 @@ import {
  */
 export class ReportViewerModule implements IModule {
     readonly name = "report-viewer";
-    readonly dependencies = [FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule];
+    readonly dependencies = [AuditModule, FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule];
 
     configureServices(registration: IServiceRegistration): void {
         registration.register<IModalService, ModalService>(IModalService, ModalService);

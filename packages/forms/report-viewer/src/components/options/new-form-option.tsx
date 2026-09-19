@@ -1,5 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
+import { getAuditController } from "@forms/audit";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
 import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
@@ -46,7 +47,15 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
             onCancel: async () => {},
             onDiscard: startNew,
             onSave: async () => {
-                await reportViewerService.saveForm(form, dataManager);
+                try {
+                    await reportViewerService.saveForm(form, dataManager);
+                }
+                catch (error) {
+                    getAuditController(controllers).recordSaveFailed();
+                    throw error;
+                }
+
+                getAuditController(controllers).recordSaved();
                 controllers.getFormController().update(current => current.clean());
                 await startNew();
             }

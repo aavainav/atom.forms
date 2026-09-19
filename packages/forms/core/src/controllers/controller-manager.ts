@@ -53,7 +53,8 @@ export interface IControllerManager {
     /**
      * Points the manager at the form it drives, creating the form controller the first time and resetting it whenever a
      * different form is loaded. Loading a form the manager is already driving is a no-op, so this may be called during
-     * render, but only one component should call it for a given manager. Also creates every controller registered as eager.
+     * render, but only one component should call it for a given manager. Also creates every eager controller, and
+     * raises `onControllerChanged` for the form controller when the form is new to the manager.
      */
     loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm>;
 
@@ -76,7 +77,9 @@ export class ControllerManager implements IControllerManager {
 
         // the same form is re-seeded on every render, so the comparison is on the form's id, which is stable across
         // edits; only a genuinely different form resets the controllers, leaving repeat renders a no-op
-        if (existing?.isLoaded && existing.form.id !== form.id) {
+        const isNewForm = !existing?.isLoaded || existing.form.id !== form.id;
+
+        if (existing?.isLoaded && isNewForm) {
             this.disposeController(ControllerKey.form);
             this.disposeController(ControllerKey.rules);
         }
@@ -88,6 +91,11 @@ export class ControllerManager implements IControllerManager {
         // as soon as it starts; the ones already created are simply found again
         for (const registration of ControllerRegistry.getEager()) {
             this.getController(registration.key);
+        }
+
+        // seeding raises nothing, so this is how an observer learns the form was replaced
+        if (isNewForm) {
+            this._controllerChanged.emit({ key: ControllerKey.form, controller });
         }
 
         return controller;

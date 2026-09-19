@@ -264,6 +264,24 @@ describe("ControllerManager", () => {
             expect(events[0].controller).toBe(echo);
         });
 
+        /** Seeding raises nothing, so this is how an observer learns the form was replaced. */
+        it("announces the form controller when a form is loaded, and again for a different form, but not for the same one", async () => {
+            const manager = new ControllerManager();
+            const events: Array<IControllerChangedEventArgs> = [];
+            manager.onControllerChanged(event => events.push(event));
+            const form = await createTestForm();
+
+            manager.loadForm(form);
+            manager.loadForm(form);
+
+            expect(events.map(event => event.key)).toEqual([ControllerKey.form]);
+
+            manager.loadForm(await createTestForm());
+
+            expect(events.map(event => event.key)).toEqual([ControllerKey.form, ControllerKey.form]);
+            expect(events[1].controller).toBe(manager.getFormController());
+        });
+
         it("stops re-broadcasting a controller once it has been disposed", () => {
             const manager = new ControllerManager();
             const events: Array<IControllerChangedEventArgs> = [];

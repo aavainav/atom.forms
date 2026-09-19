@@ -1,5 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
+import { getAuditController } from "@forms/audit";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
 import { INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
@@ -15,10 +16,12 @@ export const SaveOption = ({ controllers, dataManager, title }: IReportViewerOpt
 
         try {
             await reportViewerService.saveForm(form, dataManager);
+            getAuditController(controllers).recordSaved();
             controllers.getFormController().update(current => current.clean());
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {
+            getAuditController(controllers).recordSaveFailed();
             notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The report could not be saved." });
         }
     };
