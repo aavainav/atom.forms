@@ -122,10 +122,10 @@ export { PersonDropzone, PersonDropzoneFields } from "./models/import/person-dro
 export { VehicleDropzone, VehicleDropzoneFields } from "./models/import/vehicle-dropzone";
 export { ViolationDropzone, ViolationDropzoneFields } from "./models/import/violation-dropzone";
 
-export { ControllerKey, ControllerManager, DragAndDropController, FormController, PrintController } from "./controllers";
-export type { ConfirmPageDelete, IController, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormController, IPageBinding, IPrintController, IPrintState, ISectionBinding, PrintLayout } from "./controllers";
+export { ControllerKey, ControllerManager, DragAndDropController, FormController, NavigationController, PrintController } from "./controllers";
+export type { ConfirmPageDelete, IController, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormController, INavigationController, INavigationTarget, IPageBinding, IPrintController, IPrintState, ISectionBinding, PrintLayout } from "./controllers";
 
-export { useForm, useFormController, usePrintState } from "./hooks";
+export { useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 
 export { setOptionWithDependents } from "./utils/dependent-fields";
 

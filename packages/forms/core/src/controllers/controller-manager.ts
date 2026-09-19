@@ -3,6 +3,7 @@ import { EventEmitter, IEvent, IEventListener } from "@common/event-emitter";
 import { IController } from "./controller";
 import { DragAndDropController, IDragAndDropController } from "./drag-and-drop-controller";
 import { FormController, IFormController } from "./form-controller";
+import { INavigationController, NavigationController } from "./navigation-controller";
 import { IPrintController, PrintController } from "./print-controller";
 
 import { FormModel } from "../models/form";
@@ -14,6 +15,7 @@ import { IRulesController, RulesController } from "../models/validation/rules-co
 export const ControllerKey = {
     dragAndDrop: "drag-and-drop",
     form: "form",
+    navigation: "navigation",
     print: "print",
     rules: "rules"
 } as const;
@@ -42,6 +44,8 @@ export interface IControllerManager {
 
     /** Gets the drag-and-drop controller for the form. */
     getDragAndDropController(): IDragAndDropController;
+    /** Gets the navigation controller, which carries a one-shot instruction to show a specific page and focus a specific field on it. */
+    getNavigationController(): INavigationController;
     /** Gets the print controller, which puts the form into its print layout. */
     getPrintController(): IPrintController;
     /** Gets the rules controller, refreshed with the form the form controller currently holds. */
@@ -85,6 +89,10 @@ export class ControllerManager implements IControllerManager {
 
     public getDragAndDropController(): IDragAndDropController {
         return this.getController<IDragAndDropController>(ControllerKey.dragAndDrop, () => new DragAndDropController());
+    }
+
+    public getNavigationController(): INavigationController {
+        return this.getController<INavigationController>(ControllerKey.navigation, () => new NavigationController());
     }
 
     public getPrintController(): IPrintController {

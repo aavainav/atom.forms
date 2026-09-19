@@ -5,6 +5,7 @@ import { IControllerManager } from "../../controllers/controller-manager";
 import { IPageBinding } from "../../controllers/form-controller";
 
 import { useForm } from "../../hooks/use-form";
+import { useNavigationTarget } from "../../hooks/use-navigation-target";
 import { usePrintState } from "../../hooks/use-print-state";
 
 import { PageCollection } from "../../models/page-collection";
@@ -45,6 +46,8 @@ export default function FPageCollection({ controllers, groups, isReadOnly, water
     const controller = controllers.getFormController();
     const form = useForm(controller);
     const printState = usePrintState(controllers.getPrintController());
+    const navigationController = controllers.getNavigationController();
+    const navigationTarget = useNavigationTarget(navigationController);
 
     // a read-only form is a record of something already settled, so its status is stamped across it; an editable form is
     // still being written and carries none. an explicitly supplied watermark wins over the status-derived one.
@@ -63,7 +66,25 @@ export default function FPageCollection({ controllers, groups, isReadOnly, water
 
     const [activeId, setActiveId] = React.useState<string | undefined>(entries[0]?.page.id);
 
-    const activeEntry = entries.find((entry) => entry.page.id === activeId) ?? entries[0];
+    // a pending navigation names the page to show, overriding whichever tab was last clicked, until the effect
+    // below consumes it
+    const effectiveActiveId = navigationTarget?.pageId ?? activeId;
+    const activeEntry = entries.find((entry) => entry.page.id === effectiveActiveId) ?? entries[0];
+
+    React.useEffect(() => {
+        if (!navigationTarget) {
+            return;
+        }
+
+        // keeps the tab active once the target is cleared below, rather than snapping back to whatever was active before
+        setActiveId(navigationTarget.pageId);
+
+        const field = document.getElementById(navigationTarget.fieldId);
+        field?.scrollIntoView({ block: "center" });
+        field?.focus();
+
+        navigationController.clear();
+    }, [navigationTarget, navigationController]);
 
     if (printState) {
         // the pages are rendered flat rather than as panes, since a print needs every page of the copy in the

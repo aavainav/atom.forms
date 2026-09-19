@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useService } from "@common/react";
-import { IRuleIssue } from "@forms/core";
+import { IControllerManager, IRuleIssue } from "@forms/core";
 
 import Validation from "./validation";
 import { IValidationService } from "../../services/validation";
 
+interface IValidationManagerProps {
+    /** The controllers belonging to the form this validation panel is for, so an entry can navigate to its field. */
+    readonly controllers: IControllerManager;
+}
+
 /** Defines a manager component for displaying the validation errors off canvas. */
-export default function ValidationManager(): React.JSX.Element {
+export default function ValidationManager({ controllers }: IValidationManagerProps): React.JSX.Element {
     const validationService = useService<IValidationService>(IValidationService);
 
     const [issues, setIssues] = useState<ReadonlyArray<IRuleIssue>>([]);
@@ -25,5 +30,5 @@ export default function ValidationManager(): React.JSX.Element {
         return () => listener.remove();
     }, [validationService]);
 
-    return <Validation issues={issues} isOpen={isOpen} onClose={() => setIsOpen(false)} />;
+    return <Validation controllers={controllers} issues={issues} isOpen={isOpen} onClose={() => setIsOpen(false)} />;
 }

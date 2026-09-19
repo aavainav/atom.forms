@@ -10,7 +10,7 @@ import type { SectionModel } from "./section";
 import type { SectionDefinition } from "./section-definition";
 import { ISchema } from "./schema";
 import { RuleCollection } from "./validation/rule-collection";
-import { RuleIssueSeverity } from "./validation/rule-issue";
+import { RuleIssueSeverity, type IRuleIssue } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
 
 import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
@@ -73,6 +73,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     getFields<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): Map<PageModel, Array<TField>>;
     /** Gets whether the form's data differs from what it held the last time `clean()` ran. A form without a mapper, or one that has never been cleaned, is never dirty. */
     getIsDirty(): boolean;
+    /** Finds the id of the page instance a rule issue was raised on -- the one whose copy of the issue's field carries the same id -- so a page that repeats can tell which occurrence produced a given issue. Undefined when no page instance matches. */
+    getPageIdForIssue(issue: IRuleIssue): string | undefined;
     /** Gets every page on the form, across all page definitions. */
     getPages(): Array<PageModel>;
     /** Gets the pages belonging to the specified page definition, or an empty array when the form has none. */
@@ -186,6 +188,21 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public getIsDirty(): boolean {
         return !!this.mapper && !!this.snapshot && JSON.stringify(this.mapper.extract(this)) !== JSON.stringify(this.snapshot);
+    }
+
+    public getPageIdForIssue(issue: IRuleIssue): string | undefined {
+        const fieldDefinition = issue.section.children.find(child => child.name === issue.field.name) as FieldDefinition<FieldModel<TValueType>> | undefined;
+        if (!fieldDefinition) {
+            return undefined;
+        }
+
+        for (const [page, fields] of this.getFields(fieldDefinition)) {
+            if (fields.some(field => field.id === issue.field.id)) {
+                return page.id;
+            }
+        }
+
+        return undefined;
     }
 
     public getPages(): Array<PageModel> {

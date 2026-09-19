@@ -85,7 +85,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
         <>
             <ModalManager />
             <NotificationManager />
-            <ValidationManager />
+            <ValidationManager controllers={formControllers} />
             <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
             <initialForm.Component controllers={formControllers} isReadOnly={isReadOnly} />
             {showOptions && (
