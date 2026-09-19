@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { ControllerManager } from "../../../src/controllers/controller-manager";
 import { RuleCollection } from "../../../src/models/validation/rule-collection";
-import { RulesController } from "../../../src/models/validation/rules-controller";
+import { IRulesController, RulesController } from "../../../src/models/validation/rules-controller";
 import { PatternFieldRule } from "../../../src/models/validation/rules/pattern-field-rule";
 import { RequiredFieldRule } from "../../../src/models/validation/rules/required-field-rule";
 import {
@@ -27,6 +28,14 @@ describe("RegisterRule", () => {
     });
 });
 
+/** Loads the form into a manager and answers its rules controller, holding the given rules in place of the form's own. */
+function rulesFor(form: TestCitationForm, rules?: RuleCollection): IRulesController {
+    const controllers = new ControllerManager();
+    controllers.loadForm(form);
+
+    return controllers.getRulesController(rules);
+}
+
 describe("RulesController", () => {
     let form: TestCitationForm;
 
@@ -35,7 +44,7 @@ describe("RulesController", () => {
     });
 
     it("reports an issue for a field left empty", () => {
-        const controller = new RulesController(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
+        const controller = rulesFor(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
 
         controller.validate();
 
@@ -47,7 +56,7 @@ describe("RulesController", () => {
     });
 
     it("reports nothing once the field holds a value", () => {
-        const controller = new RulesController(
+        const controller = rulesFor(
             setFieldValue(form, violatorSection, violatorFields.firstName, "Dana"),
             new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
 
@@ -62,7 +71,7 @@ describe("RulesController", () => {
      * all of them the same issue.
      */
     it("evaluates a shared rule once for the form and a per-page rule once per page", async () => {
-        const controller = new RulesController(
+        const controller = rulesFor(
             await addCitationPage(form),
             new RuleCollection([
                 new RequiredFieldRule(violatorFields.driverLicenseNumber),
@@ -82,7 +91,7 @@ describe("RulesController", () => {
         let twoPages = await addCitationPage(form);
         twoPages = setFieldValue(twoPages, chargeSection, chargeFields.offenseDescription, "Speeding", 0);
 
-        const controller = new RulesController(twoPages, new RuleCollection([new RequiredFieldRule(chargeFields.offenseDescription)]));
+        const controller = rulesFor(twoPages, new RuleCollection([new RequiredFieldRule(chargeFields.offenseDescription)]));
 
         controller.validate();
 
@@ -90,7 +99,7 @@ describe("RulesController", () => {
     });
 
     it("raises onChanged when it validates", () => {
-        const controller = new RulesController(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
+        const controller = rulesFor(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
         let raised = 0;
         controller.onChanged(() => { raised += 1; });
 
@@ -100,19 +109,32 @@ describe("RulesController", () => {
     });
 
     it("throws for a rule type that was never registered", () => {
-        expect(() => new RulesController(form).getTypeByName("NoSuchRule")).toThrowError(/not found in the registry/);
+        expect(() => rulesFor(form).getTypeByName("NoSuchRule")).toThrowError(/not found in the registry/);
     });
 
     it("adds a rule collection to the rules it already holds", () => {
-        const controller = new RulesController(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
+        const controller = rulesFor(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
 
         controller.addRuleCollection(new RuleCollection([new RequiredFieldRule(violatorFields.dateOfBirth)]));
 
         expect(controller.getRuleCollection().getRules()).toHaveLength(2);
     });
 
+    /** The form model is replaced on every edit, so a rules controller holding the one it started with would validate a stale form. */
+    it("validates the form as it stands after an edit rather than the one it was created with", () => {
+        const controllers = new ControllerManager();
+        controllers.loadForm(form);
+        const controller = controllers.getRulesController(new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
+
+        controllers.getFormController().setForm(setFieldValue(form, violatorSection, violatorFields.firstName, "Dana"));
+        controller.validate();
+
+        expect(controller.form).toBe(controllers.getFormController().form);
+        expect(controller.getIssueCollection().getIssues()).toHaveLength(0);
+    });
+
     it("clears its issues when disposed", () => {
-        const controller = new RulesController(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
+        const controller = rulesFor(form, new RuleCollection([new RequiredFieldRule(violatorFields.firstName)]));
         controller.validate();
 
         controller.dispose();

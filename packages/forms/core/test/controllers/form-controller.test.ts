@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { FormController } from "../../src/controllers/form-controller";
+import { ControllerManager } from "../../src/controllers/controller-manager";
+import type { IFormController } from "../../src/controllers/form-controller";
 import type { OptionFieldModel } from "../../src/models/option-field";
 import type { PageCollection } from "../../src/models/page-collection";
 import type { StringFieldModel } from "../../src/models/string-field";
@@ -16,10 +17,10 @@ import {
 } from "../fixtures/citation-form";
 
 describe("FormController", () => {
-    let controller: FormController<TestCitationForm>;
+    let controller: IFormController<TestCitationForm>;
 
     beforeEach(async () => {
-        controller = new FormController(await createTestForm());
+        controller = new ControllerManager().loadForm(await createTestForm());
     });
 
     /** Reads one field off every page of the citation, in page order. */

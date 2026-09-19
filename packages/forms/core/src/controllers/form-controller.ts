@@ -1,6 +1,5 @@
-import { EventEmitter, IEvent } from "@common/event-emitter";
-
-import { IController } from "./controller";
+import { Controller, ControllerKey, IController } from "./controller";
+import { RegisterController } from "./controller-registry";
 
 import { FieldModel, TValueType } from "../models/field";
 import { FieldDefinition } from "../models/field-definition";
@@ -160,29 +159,29 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
     }
 }
 
-export class FormController<TForm extends FormModel<any> = FormModel<any>> implements IFormController<TForm> {
+@RegisterController(ControllerKey.form)
+export class FormController<TForm extends FormModel<any> = FormModel<any>> extends Controller implements IFormController<TForm> {
     private readonly bindings: Map<string, IPageBinding<any>> = new Map<string, IPageBinding<any>>();
 
-    private readonly _changed = new EventEmitter<void>("form:changed");
-    private readonly _form: TForm;
-
     private readonly confirmDeletePage?: ConfirmPageDelete;
-
-    constructor(form: TForm) {
-        this._form = form;
-    }
+    private _form?: TForm;
 
     get form(): TForm {
+        if (!this._form) {
+            throw new Error("A form must be loaded before the form controller can be used.");
+        }
+
         return this._form;
     }
 
-    get onChanged(): IEvent<void> {
-        return this._changed.event;
+    /** Whether a form has been loaded into the controller yet. */
+    get isLoaded(): boolean {
+        return !!this._form;
     }
 
     public async addPage(pageDefinition: PageDefinition): Promise<void> {
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
-        const page = await pageDefinition.createPage(this._form).initialize();
+        const page = await pageDefinition.createPage(this.form).initialize();
         this.update(form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition));
     }
 
@@ -198,8 +197,19 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> imple
         return binding;
     }
 
+    /**
+     * Seeds the controller with the form it drives. The manager calls this straight after creating the controller,
+     * when nothing can be listening yet, so it raises nothing; once a form is held a further call does nothing, so
+     * re-seeding the same form on every render is harmless. Use `setForm` to replace a form that is already loaded.
+     */
+    public load(form: TForm): void {
+        if (!this._form) {
+            this._form = form;
+        }
+    }
+
     public async removePage(pageDefinition: PageDefinition, pageId: string): Promise<boolean> {
-        const page = this._form.get<PageCollection>(pageDefinition).findPageById(pageId);
+        const page = this.form.get<PageCollection>(pageDefinition).findPageById(pageId);
         if (!page) {
             return false;
         }
@@ -228,15 +238,16 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> imple
     }
 
     public update(update: (form: TForm) => TForm): void {
-        const form = update(this._form);
+        const current = this.form;
+        const form = update(current);
 
         // the models are immutable, so an update that changed nothing returns the same instance and need not be published
-        if (form === this._form) {
+        if (form === current) {
             return;
         }
 
-        (<Mutable<TForm>>this._form) = form;
-        this._changed.emit();
+        this._form = form;
+        this.emitChanged();
     }
 
     public dispose(): void {

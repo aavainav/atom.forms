@@ -46,7 +46,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. |
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
-| [src/controllers/](src/controllers/) | `ControllerManager` and the four controllers. See below. |
+| [src/controllers/](src/controllers/) | The `Controller` base class, `@RegisterController` and its registry, `ControllerManager`, and the four controllers. See below. |
 | [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, and `usePrintState(controller)`. |
 | [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData`/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
@@ -70,9 +70,26 @@ Every field also carries `hasError`, `isEnabled`, and a uuid `id` used as the DO
 `ControllerManager` is created by the React layer (`ReportViewerForm`), one per form. It caches controllers by key
 and re-broadcasts each one's `onChanged` through `onControllerChanged`.
 
-- **`FormController`** owns the current `FormModel` and is the single path for every edit. `update(fn)` computes a
-  new form and, if the identity changed, emits synchronously — deliberately **not** deferred through
-  `startTransition`, since subscribers read `controller.form` directly.
+Every controller extends the abstract `Controller` and is declared with `@RegisterController(key, { eager? })`, which
+puts a **descriptor** — the key and the class — in the static `ControllerRegistry` when the class's module loads. The
+registry holds no controllers: each manager constructs its own, lazily, the first time a key is asked for
+(`getController(key)` or one of the typed `getXController()` accessors), always as `new ctor(manager)` followed by
+`start()`. A controller that needs another asks the manager for it, and does so in `start()` rather than the
+constructor, since the manager cannot yet be asked for anything mid-construction. `eager: true` creates it when a form
+is loaded instead, for a controller that observes the others and would otherwise miss what happened before it was
+first asked for. A different class registering a key that is taken throws; the same class name replacing itself is
+allowed, because that is what a hot reload does.
+
+Registration is an import side effect, so a controller only exists for managers created after something has imported
+its module. The manager imports the ones in this package for exactly that reason. `Controller` gives each one its
+`key` (from the decorator, on the class itself — a subclass that skips the decorator throws rather than sharing its
+parent's), `onChanged`, a protected `emitChanged()`, and no-op `start()`/`dispose()` to override.
+
+- **`FormController`** owns the current `FormModel` and is the single path for every edit. It is constructed empty
+  like every other controller; `loadForm` seeds it through `load(form)` (which raises nothing and is a no-op once a
+  form is held), and `form` throws until then. `update(fn)` computes a new form and, if the identity changed, emits
+  synchronously — deliberately **not** deferred through `startTransition`, since subscribers read `controller.form`
+  directly.
   - `getPageBinding(pageDefinition, pageId)` → `IPageBinding`; `binding.getSection(sectionDefinition)` →
     `ISectionBinding`. Bindings are cached and address a page by **id**, so they survive other pages being
     added or removed.
@@ -89,11 +106,14 @@ and re-broadcasts each one's `onChanged` through `onControllerChanged`.
   and `begin`s the state; core only renders it. `state` is stored by reference and replaced only in `begin`/`end`,
   since it is a `useSyncExternalStore` snapshot.
 - **`RulesController`** (in `models/validation/`) runs the rule collection and holds the resulting
-  `RuleIssueCollection`. The manager reassigns its `form` and `ruleCollection` on every `getRulesController()` call,
-  because the form it was constructed with is already stale.
+  `RuleIssueCollection`. It reads `form` through the manager each time it is needed, so it can never be validating a
+  stale model; its rules are the form's own unless `getRulesController(ruleCollection)` sets one or
+  `addRuleCollection` adds to it.
 
 `loadForm(form)` compares by `form.id` — re-seeding the same form on every render is a no-op; a genuinely different
-form disposes the form and rules controllers.
+form disposes the form and rules controllers. It also creates every eager controller, after the form controller, and
+those survive a form swap. `dispose()` releases controllers last created first, so one that observes another goes
+before what it observes.
 
 ## Shared sections
 
@@ -163,6 +183,8 @@ Components and hooks have no tests yet; they need `jsdom` and are a separate wav
 | Import deep source paths, never `src/index.ts` or `src/utils/index.ts` | The barrel re-exports `src/utils`, which pulls in `disposable.ts` and with it a value import of react |
 | Build a fixture's definition tree once, at module scope | `Entity.set` validates by reference identity, so a tree rebuilt per test throws for any entity still holding the old definitions |
 | Give each fixture its own model subclasses | `Entity.definitionRegistry` is keyed by model constructor, so a constructor backs exactly one definition |
+| Give each fixture controller its own key | `ControllerRegistry` is static and throws when a different class claims a key that is taken |
+| Build a controller through a `ControllerManager`, never `new` | A controller's constructor takes the manager and finds its key from the decorator; `manager.loadForm(form)` is how a `FormController` gets its form |
 | Seed field values with `setValue`, never a field model's constructor | A concrete field's `value` class-field initializer runs after the base constructor and overwrites it — see Gotchas |
 | Never call `FormModel.dispose()` in a hook | It clears both registries process-wide. Vitest's per-file isolation already gives each file a fresh tree, which is why `isolate` is left on |
 | `await` a form's `initialize()` | It is what creates the pages; a form that has only been constructed holds empty page collections |
@@ -212,6 +234,14 @@ carries knowledge of another field.
 
 **Add a field type**: new `FieldModel` subclass in `src/models/`, export it from `index.ts`. Override `getIsEmpty`
 if the type's default should read as empty.
+
+**Add a controller**: a class extending `Controller` in `src/controllers/`, decorated `@RegisterController(key)` (add
+`{ eager: true }` if it observes the others). Give it a key in `ControllerKey` if this package owns it, and an
+interface extending `IController` beside it. Do no work in the constructor; read other controllers through
+`this.manager` in `start()`, and call `this.emitChanged()` when its state changes. Add a side-effect import for its
+module to `controller-manager.ts` and a typed `getXController()` accessor if callers will want one. A controller from
+another package needs none of that: it imports `Controller` and `RegisterController` from `@forms/core`, picks its own
+key, and offers a typed accessor wrapping `manager.getController<T>(key)`.
 
 **Add a validation rule**: subclass `FieldRule` (single field) or `Rule` (anything else) in
 `src/models/validation/rules/`, decorate with `@RegisterRule(YourRule.name)`, give it a

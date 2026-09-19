@@ -1,6 +1,7 @@
 import { EventEmitter, IEvent } from "@common/event-emitter";
 
-import { IController } from "./controller";
+import { Controller, ControllerKey, IController } from "./controller";
+import { RegisterController } from "./controller-registry";
 
 import { IDraggableItem } from "../models/import/draggable-item";
 
@@ -17,14 +18,11 @@ export interface IDragAndDropController extends IController {
     dragEnd(): void;
 }
 
-export class DragAndDropController implements IDragAndDropController {
-    private readonly _changed = new EventEmitter<void>("drag-and-drop:changed");
-    private readonly _dragStart = new EventEmitter<IDraggableItem>("drag-and-drop:drag-start");
-    private readonly _dragEnd = new EventEmitter<void>("drag-and-drop:drag-end");
-
-    get onChanged(): IEvent<void> {
-        return this._changed.event;
-    }
+/** Relays drag signals and holds no state of its own, so there is nothing to release on dispose; subscribers remove their own listeners. */
+@RegisterController(ControllerKey.dragAndDrop)
+export class DragAndDropController extends Controller implements IDragAndDropController {
+    private readonly _dragStart = new EventEmitter<IDraggableItem>(`${this.key}:drag-start`);
+    private readonly _dragEnd = new EventEmitter<void>(`${this.key}:drag-end`);
 
     get onDragStart(): IEvent<IDraggableItem> {
         return this._dragStart.event;
@@ -36,15 +34,11 @@ export class DragAndDropController implements IDragAndDropController {
 
     dragStart(item: IDraggableItem): void {
         this._dragStart.emit(item);
-        this._changed.emit();
+        this.emitChanged();
     }
 
     dragEnd(): void {
         this._dragEnd.emit();
-        this._changed.emit();
-    }
-
-    dispose(): void {
-        // the controller relays drag signals and holds no state of its own; subscribers remove their own listeners
+        this.emitChanged();
     }
 }

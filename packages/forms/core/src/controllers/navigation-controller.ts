@@ -1,6 +1,5 @@
-import { EventEmitter, IEvent } from "@common/event-emitter";
-
-import { IController } from "./controller";
+import { Controller, ControllerKey, IController } from "./controller";
+import { RegisterController } from "./controller-registry";
 
 /** Names the field a navigation is heading to; the page it's on is implied by the field, since a page instance -- not a field within it -- is the only thing ever ambiguous. */
 export interface INavigationTarget {
@@ -25,13 +24,9 @@ export interface INavigationController extends IController {
     clear(): void;
 }
 
-export class NavigationController implements INavigationController {
-    private readonly _changed = new EventEmitter<void>("navigation:changed");
+@RegisterController(ControllerKey.navigation)
+export class NavigationController extends Controller implements INavigationController {
     private _target?: INavigationTarget;
-
-    get onChanged(): IEvent<void> {
-        return this._changed.event;
-    }
 
     get target(): INavigationTarget | undefined {
         return this._target;
@@ -39,13 +34,13 @@ export class NavigationController implements INavigationController {
 
     public goTo(target: INavigationTarget): void {
         this._target = target;
-        this._changed.emit();
+        this.emitChanged();
     }
 
     public clear(): void {
         if (this._target) {
             this._target = undefined;
-            this._changed.emit();
+            this.emitChanged();
         }
     }
 

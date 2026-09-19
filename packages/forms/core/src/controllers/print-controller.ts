@@ -1,6 +1,5 @@
-import { EventEmitter, IEvent } from "@common/event-emitter";
-
-import { IController } from "./controller";
+import { Controller, ControllerKey, IController } from "./controller";
+import { RegisterController } from "./controller-registry";
 
 /** The arrangement the pages being printed are laid out in: beside one another on a sheet, or one beneath the next. */
 export type PrintLayout = "side-by-side" | "top-down";
@@ -30,13 +29,9 @@ export interface IPrintController extends IController {
     end(): void;
 }
 
-export class PrintController implements IPrintController {
-    private readonly _changed = new EventEmitter<void>("print:changed");
+@RegisterController(ControllerKey.print)
+export class PrintController extends Controller implements IPrintController {
     private _state?: IPrintState;
-
-    get onChanged(): IEvent<void> {
-        return this._changed.event;
-    }
 
     get state(): IPrintState | undefined {
         return this._state;
@@ -46,13 +41,13 @@ export class PrintController implements IPrintController {
         // the state is handed to useSyncExternalStore as its snapshot, so it is stored by reference and replaced
         // only here; a state object rebuilt on each read would never compare equal and would re-render endlessly
         this._state = state;
-        this._changed.emit();
+        this.emitChanged();
     }
 
     public end(): void {
         if (this._state) {
             this._state = undefined;
-            this._changed.emit();
+            this.emitChanged();
         }
     }
 

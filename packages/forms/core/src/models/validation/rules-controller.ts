@@ -1,5 +1,5 @@
-import { EventEmitter, IEvent } from "@common/event-emitter";
-import { IController } from "../../controllers/controller";
+import { Controller, ControllerKey, IController } from "../../controllers/controller";
+import { RegisterController } from "../../controllers/controller-registry";
 import { FormModel } from "../form";
 import { Rule } from "./rule";
 import { RuleCollection } from "./rule-collection";
@@ -36,31 +36,32 @@ export function RegisterRule(name: string) {
 }
 
 /**
- * Manages a form's validation rules and issues. The controller manager reassigns `form`/`ruleCollection` each
- * time this is requested, since the form model is immutable and replaced by a new instance on every edit.
+ * Manages a form's validation rules and issues. The form model is immutable and replaced by a new instance on every
+ * edit, so the form is read through the manager each time it is needed rather than held. The rules are the form's
+ * own unless a collection has been set or added to, which then stands in for them.
  */
-export class RulesController implements IRulesController {
+@RegisterController(ControllerKey.rules)
+export class RulesController extends Controller implements IRulesController {
     public static readonly typeRegistry: Map<string, RuleConstructor<Rule>> = new Map<string, RuleConstructor<Rule>>();
 
-    private readonly _changed = new EventEmitter<void>("rules:changed");
+    private _ruleCollection?: RuleCollection;
 
-    form: FormModel<any>;
+    issueCollection: RuleIssueCollection = new RuleIssueCollection();
 
-    issueCollection: RuleIssueCollection;
-    ruleCollection: RuleCollection;
-
-    constructor(form: FormModel<any>, ruleCollection: RuleCollection = new RuleCollection([])) {
-        this.form = form;
-        this.ruleCollection = ruleCollection;
-        this.issueCollection = new RuleIssueCollection();
+    get form(): FormModel<any> {
+        return this.manager.getFormController().form;
     }
 
-    get onChanged(): IEvent<void> {
-        return this._changed.event;
+    get ruleCollection(): RuleCollection {
+        return this._ruleCollection ?? this.form.getRuleCollection();
+    }
+
+    set ruleCollection(ruleCollection: RuleCollection) {
+        this._ruleCollection = ruleCollection;
     }
 
     public addRuleCollection(ruleCollection: RuleCollection): void {
-        this.ruleCollection = this.ruleCollection.addRuleCollection(ruleCollection);
+        this._ruleCollection = this.ruleCollection.addRuleCollection(ruleCollection);
     }
 
     public getRuleCollection(): RuleCollection {
@@ -81,24 +82,26 @@ export class RulesController implements IRulesController {
     }
 
     public validate(): void {
+        // read once, so every rule is evaluated against the same form
+        const form = this.form;
         let issueCollection = new RuleIssueCollection();
 
         for (const rule of this.ruleCollection.getRules()) {
-            const pages = this.form.getPagesFor(rule.getPageDefinition());
+            const pages = form.getPagesFor(rule.getPageDefinition());
 
             // a rule is evaluated once per page instance, so a rule reading several fields always compares
             // fields from the same page rather than fields from different copies of a repeatable page. a rule
             // reading only shared sections is the exception: every page holds the same values there, so evaluating
             // it per page would report the same issue once for each of them.
             for (const page of rule.isShared() ? pages.slice(0, 1) : pages) {
-                for (const issue of rule.validate(new RuleContext(this.form, page))) {
+                for (const issue of rule.validate(new RuleContext(form, page))) {
                     issueCollection = issueCollection.addIssue(issue);
                 }
             }
         }
 
         this.issueCollection = issueCollection;
-        this._changed.emit();
+        this.emitChanged();
     }
 
     public dispose(): void {
