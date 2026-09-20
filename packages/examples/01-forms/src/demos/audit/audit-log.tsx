@@ -14,6 +14,7 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "print-started": "info",
     "save-failed": "danger",
     "saved": "success",
+    "status-changed": "dark",
     "validated": "warning"
 };
 
@@ -28,9 +29,11 @@ function summarize(record: AuditRecord): string {
         case "fields-edited":
             return record.fields.join(", ");
         case "form-opened":
-            return `${record.form.name} v${record.form.version}`;
+            return `${record.form.name} v${record.form.version}, ${record.status}${record.isReadOnly ? ", read-only" : ""}`;
         case "print-started":
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
+        case "status-changed":
+            return `${record.from} → ${record.to}`;
         case "validated":
             return record.issueCount ? `${record.issueCount} issue(s): ${record.fields.join(", ")}` : "No issues.";
         default:

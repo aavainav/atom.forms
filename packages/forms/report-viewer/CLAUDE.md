@@ -51,7 +51,7 @@ the previously loaded form on screen.
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
-| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation, builds the `onError` the plugin components report through, and mounts `AuditRecorder` beside the managers. |
+| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own four. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
@@ -190,8 +190,8 @@ the app's runtime, but a reload starts light again.
 
 ## Auditing
 
-`ReportViewerForm` mounts `AuditRecorder` from `@forms/audit`, which forwards what the form's audit controller records
-to `IAuditService`. A host subscribes once, at startup, and never renders anything:
+`ReportViewerForm` calls `useAuditRecorder` from `@forms/audit`, which forwards what the form's audit controller
+records to `IAuditService`. A host subscribes once, at startup, and never renders anything:
 
 ```ts
 services.get<IAuditService>(IAuditService).onRecord(record => send(record));

@@ -67,7 +67,13 @@ describe("AuditController", () => {
         it("records the form being opened, stamped with its identity and the time", () => {
             const { records } = watch();
 
-            expect(records).toEqual([{ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened" }]);
+            expect(records).toEqual([{ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", status: "draft" }]);
+        });
+
+        it("records the status the form arrived with", () => {
+            const { records } = watch({ name: "Dana" }, { status: "issued" });
+
+            expect(records[0]).toMatchObject({ kind: "form-opened", status: "issued" });
         });
 
         it("holds what was raised before anything listened for the first listener, in order", () => {
@@ -146,6 +152,33 @@ describe("AuditController", () => {
                 ["fields-edited", "form-2"]
             ]);
             expect(records[2]).toMatchObject({ fields: ["name"] });
+        });
+    });
+
+    describe("status-changed", () => {
+        it("records a status change, naming both statuses", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { status: "issued" });
+
+            expect(records[1]).toEqual({ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "status-changed", to: "issued" });
+        });
+
+        it("records the edits made before it first", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Riley" });
+            edit(manager, { name: "Riley" }, { status: "issued" });
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "status-changed"]);
+        });
+
+        it("records nothing when the status is unchanged", () => {
+            const { manager, records } = watch({ name: "Dana" }, { status: "issued" });
+
+            edit(manager, { name: "Dana" }, { status: "issued" });
+
+            expect(kinds(records)).toEqual(["form-opened"]);
         });
     });
 

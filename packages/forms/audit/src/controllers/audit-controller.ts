@@ -1,7 +1,7 @@
-import { EventEmitter, IEvent, IEventListener } from "@common/event-emitter";
-import { Controller, ControllerKey, FormModel, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, RegisterController } from "@forms/core";
+import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
+import { IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
 
-import { AuditRecord, AuditRecordDetail, IAuditFormIdentity } from "../models/audit-record";
+import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
 
 /** How long a form must sit idle, in milliseconds, before its edits are recorded together. */
@@ -132,6 +132,12 @@ export class AuditController extends Controller implements IAuditController {
             return;
         }
 
+        if (form.status !== this.watched.form.status) {
+            // edits made under the old status come first
+            this.flush();
+            this.raise({ kind: "status-changed", from: this.watched.form.status, to: form.status });
+        }
+
         this.watched = { ...this.watched, form };
 
         if (form.mapper) {
@@ -165,7 +171,7 @@ export class AuditController extends Controller implements IAuditController {
         this.watched = { form, identity: { id: form.id ?? "", name: form.name, version: form.version } };
         this.baseline = form.mapper?.extract(form);
 
-        this.raise({ kind: "form-opened" });
+        this.raise({ kind: "form-opened", status: form.status });
     }
 
     private raise(detail: AuditRecordDetail): void {

@@ -5,7 +5,7 @@ import { ServicesContext } from "@common/react";
 import { ControllerManager } from "@forms/core";
 import type { IServiceCollection } from "@shrub/core";
 
-import { AuditRecorder } from "../../src/components/audit-recorder";
+import { useAuditRecorder } from "../../src/hooks/use-audit-recorder";
 import { getAuditController } from "../../src/controllers/audit-controller";
 import type { AuditRecord } from "../../src/models/audit-record";
 import { AuditService } from "../../src/services/audit";
@@ -21,8 +21,14 @@ interface IMount {
     unmount(): void;
 }
 
-/** Mounts the recorder for a freshly loaded form, with the records it forwards collected off a real service. */
-function mount(): IMount {
+/** A component whose only job is to call the hook, since no testing library is installed to render a bare hook. */
+function Harness({ controllers, isReadOnly }: { controllers: ControllerManager; isReadOnly?: boolean }): null {
+    useAuditRecorder(controllers, isReadOnly);
+    return null;
+}
+
+/** Mounts the hook for a freshly loaded form, with the records it forwards collected off a real service. */
+function mount(isReadOnly?: boolean): IMount {
     const manager = new ControllerManager();
     manager.loadForm(stubForm({ name: "Dana" }));
 
@@ -34,7 +40,7 @@ function mount(): IMount {
     const root = createRoot(document.createElement("div"));
     const unmount = (): void => act(() => root.unmount());
 
-    act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(AuditRecorder, { controllers: manager }))));
+    act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(Harness, { controllers: manager, isReadOnly }))));
     mounted.push(unmount);
 
     return { manager, records, unmount };
@@ -44,11 +50,21 @@ afterEach(() => {
     mounted.splice(0).forEach(unmount => unmount());
 });
 
-describe("AuditRecorder", () => {
+describe("useAuditRecorder", () => {
     it("forwards what was recorded while the form loaded, before it mounted", () => {
         const { records } = mount();
 
         expect(records.map(record => record.kind)).toEqual(["form-opened"]);
+    });
+
+    it("marks the opening with whether the form is read-only, and no other record", () => {
+        expect(mount(true).records[0]).toMatchObject({ kind: "form-opened", isReadOnly: true });
+        expect(mount().records[0]).toMatchObject({ kind: "form-opened", isReadOnly: false });
+
+        const { manager, records } = mount(true);
+        getAuditController(manager).recordSaved();
+
+        expect(records[1]).not.toHaveProperty("isReadOnly");
     });
 
     it("forwards what is recorded while it is mounted", () => {

@@ -41,7 +41,7 @@ only to declare what it contributes — the copies it can be printed as, or the 
 chosen violation lands on its fields — and declares `violationListId` on its catalog item, which is the gate the
 viewer actually reads.
 
-`audit` is the same shape and depends on core alone: it exports a recorder component the report viewer mounts, and a
+`audit` is the same shape and depends on core alone: it exports a hook the report viewer calls, and a
 controller that registers itself with core. No form package depends on it.
 
 `workbench` is off to the side: it hosts a react app, owns the router and the root/not-found routes, and knows

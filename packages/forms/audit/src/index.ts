@@ -5,7 +5,6 @@ export * from "./services";
 export { editQuietPeriod, getAuditController, maxPendingRecords, AuditController } from "./controllers";
 export type { IAuditController } from "./controllers";
 
-export { AuditRecorder } from "./components";
-export type { IAuditRecorderProps } from "./components";
+export { useAuditRecorder } from "./hooks";
 
 export type { AuditRecord, AuditRecordDetail, IAuditFormIdentity, IAuditRecordBase } from "./models";
