@@ -11,7 +11,7 @@ interface IFWatermarkProps {
 /** The fraction of the container's diagonal the watermark spans when no fill is given. */
 const defaultFill = 0.9;
 
-/** The watermark stamped across a form in each status. A status with no entry carries none: an issued form is the document itself rather than a copy of one. */
+/** The watermark stamped across a form in each status. A status with no entry carries none: an issued citation or an approved crash report is the document itself rather than a copy of one. */
 const statusWatermarks: Partial<Record<FormStatus, string>> = {
     canceled: "CANCELED",
     draft: "DRAFT",

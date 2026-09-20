@@ -152,13 +152,13 @@ describe("FormModel", () => {
         });
     });
 
-    describe("setReadOnly", () => {
-        it("disables every field on every page", async () => {
+    describe("setMode", () => {
+        it("disables every field on every page when switching to viewable", async () => {
             const withTwo = await addCitationPage(form);
 
-            const readOnly = withTwo.setReadOnly();
+            const viewable = withTwo.setMode("viewable");
 
-            const enabled = readOnly
+            const enabled = viewable
                 .getPages()
                 .flatMap(page => [violatorSection, chargeSection]
                     .flatMap(section => page.get<SectionModel>(section)
@@ -167,6 +167,16 @@ describe("FormModel", () => {
 
             expect(enabled).not.toHaveLength(0);
             expect(enabled.every(value => value === false)).toBe(true);
+            expect(viewable.mode).toBe("viewable");
+        });
+
+        it("stamps editable without re-enabling fields disabled for another reason", () => {
+            const viewable = form.setMode("viewable");
+
+            const editable = viewable.setMode("editable");
+
+            expect(editable.mode).toBe("editable");
+            expect(getFieldValue(editable, violatorSection, violatorFields.firstName).getIsEnabled()).toBe(false);
         });
     });
 

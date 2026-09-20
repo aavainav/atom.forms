@@ -1,20 +1,22 @@
 import { RuleCollection } from "@forms/core";
-import type { FormModel, FormStatus, Rule } from "@forms/core";
+import type { FormMode, FormModel, FormStatus, Rule } from "@forms/core";
 
 export interface IStubFormOptions {
     readonly hasMapper?: boolean;
     readonly id?: string;
+    readonly mode?: FormMode;
     readonly name?: string;
     readonly status?: FormStatus;
     readonly version?: string;
 }
 
-/** Stands in for a form: the audit reads only its identity, its status and what its mapper extracts. */
+/** Stands in for a form: the audit reads only its identity, its status, its mode and what its mapper extracts. */
 export function stubForm(data: object = {}, options: IStubFormOptions = {}): FormModel<any> {
-    const { hasMapper = true, id = "form-1", name = "Stub Form", status = "draft", version = "1.0" } = options;
+    const { hasMapper = true, id = "form-1", mode = "editable", name = "Stub Form", status = "draft", version = "1.0" } = options;
 
     return {
         id,
+        mode,
         name,
         status,
         version,

@@ -40,7 +40,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. `section` takes an optional `ISectionDefinitionOptions` — today just `isShared`. |
 | [src/models/schema.ts](src/models/schema.ts) | `Schema` base — an empty constructor; a schema is found through the definition tree it builds, not by registering itself. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
-| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setReadOnly`, `setStatus`, `validate`. |
+| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`. |
 | [src/models/page.ts](src/models/page.ts) · [page-collection.ts](src/models/page-collection.ts) · [section.ts](src/models/section.ts) | `PageModel` (also holds dropzones), the immutable `PageCollection`, `SectionModel`. |
 | [src/models/field.ts](src/models/field.ts) + [boolean-](src/models/boolean-field.ts)/[number-](src/models/number-field.ts)/[string-](src/models/string-field.ts)/[option-field.ts](src/models/option-field.ts) | `FieldModel` and its four concrete types. |
 | [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. |
@@ -218,18 +218,29 @@ no portal, so it has to be rendered somewhere that is not itself a stacking cont
 
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab
-strip numbered across all groups combined**. It derives the watermark from `form.status` when read-only, and wires
-the page add/delete buttons to the form controller.
+strip numbered across all groups combined**. It derives the watermark from `form.status` and wires the page
+add/delete buttons to the form controller, both gated on `form.mode === "viewable"`.
 
 While the print controller holds a state, it renders a second way instead: the pages the print is for, flat, inside
 `<div class="f-print f-print--{layout}">`, with the add and delete affordances omitted — neither belongs on paper.
 Pages are selected by page definition **name** and ordered by the print state's `pageNames`, so a printable copy can
 be declared as plain strings by a form module and a name matching a repeating page type contributes every instance
-of it. The watermark is derived once and passed to both branches, so a read-only form is stamped on paper too.
+of it. **Printing counts as viewable regardless of the form's own mode** — `isViewable = form.mode === "viewable" ||
+!!printState` — so printing an in-progress draft is watermarked and locked-looking the same as printing a finished
+record, without the form itself ever leaving edit mode. The print branch hands each page a binding wrapped by
+`asViewable`, which reports `mode: "viewable"` without touching the real form, so editing resumes normally once the
+print dialog closes.
+
+`IPageBinding.mode` mirrors the owning form's `FormModel.mode`, so a page component that only has a binding (never
+the form itself) can still gate a dropzone's `onDrop` on it without the mode being threaded down as a separate prop.
 
 `FFieldSelect` takes `options` as an array **or** a loader `(parentValue?) => Promise<IOptionValue[]>`, plus
 `parentValue`. A dependent select is expressed entirely by passing the parent's code as `parentValue` — no field
-carries knowledge of another field.
+carries knowledge of another field. Its placeholder (and `FFieldInput`'s) is hidden while `disabled`, since a locked
+field showing "Select..." reads as an invitation to edit something that cannot be; `showPlaceholderWhenDisabled`
+opts a field back in for the one legitimate case, a select disabled because another field's value is missing rather
+than because the form is read-only. Printing hides both the same way, purely in CSS (`.f-print` in
+`_print.scss`), since printing renders every field as viewable regardless of the form's own mode.
 
 ## Recipes
 
@@ -286,6 +297,6 @@ as `yarn test`.
   through `withChanges` and bypasses the constructor. Pinned by a characterization test in
   [test/models/field.test.ts](test/models/field.test.ts).
 - `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
-  `setReadOnly()` a newly added page arrives with its non-shared sections enabled.
+  `setMode("viewable")` a newly added page arrives with its non-shared sections enabled.
 - `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page
   definitions is only ever evaluated against the pages of the first.

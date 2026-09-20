@@ -9,12 +9,10 @@ import WarrantPage from "./warrant-page/warrant-page";
 interface IOKTrafficFormProps {
     /** The controllers belonging to this form. The form controller owns the form model. */
     readonly controllers: IControllerManager;
-    /** An indicator whether the report should be rendered read only. */
-    readonly isReadOnly: boolean;
 }
 
 /** The Oklahoma City traffic citation form. Three page groups render as one continuous tab strip in print order, each holding a single page, so add/delete affordances never come into play. */
-export default function OKTrafficForm({ controllers, isReadOnly }: IOKTrafficFormProps): React.JSX.Element {
+export default function OKTrafficForm({ controllers }: IOKTrafficFormProps): React.JSX.Element {
     const controller = controllers.getFormController<OKTrafficFormModel>();
     const form = useForm(controller);
 
@@ -22,12 +20,11 @@ export default function OKTrafficForm({ controllers, isReadOnly }: IOKTrafficFor
         <FForm form={form}>
             <FPageCollection
                 controllers={controllers}
-                isReadOnly={isReadOnly}
                 groups={[
                     {
                         pageDefinition: form.complaintPage,
                         children: (binding) => (
-                            <ComplaintPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <ComplaintPage controllers={controllers} binding={binding} />
                         )
                     },
                     {

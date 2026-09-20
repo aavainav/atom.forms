@@ -3,7 +3,7 @@ import { RegisterController } from "./controller-registry";
 
 import { FieldModel, TValueType } from "../models/field";
 import { FieldDefinition } from "../models/field-definition";
-import { FormModel } from "../models/form";
+import { FormMode, FormModel } from "../models/form";
 import { PageCollection } from "../models/page-collection";
 import { PageDefinition } from "../models/page-definition";
 import { PageModel } from "../models/page";
@@ -29,6 +29,9 @@ export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
 
 /** Binds a single page instance, identified by its id so it survives other pages being added or removed. */
 export interface IPageBinding<TPage extends PageModel = PageModel> {
+    /** The mode of the form this page belongs to. */
+    readonly mode: FormMode;
+    /** The page definition that is used to get the corresponding page model. */
     readonly pageDefinition: PageDefinition<TPage>;
     /** The page instance's id, which is stable for the life of the page unlike its index in the collection. */
     readonly pageId: string;
@@ -117,6 +120,10 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
         private readonly controller: IFormController,
         readonly pageDefinition: PageDefinition<TPage>,
         readonly pageId: string) {
+    }
+
+    get mode(): FormMode {
+        return this.controller.form.mode;
     }
 
     public get(): TPage {

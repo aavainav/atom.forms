@@ -23,12 +23,10 @@ interface IPersonPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<PersonPageModel>;
-    /** When true, the drag-and-drop import target is not offered. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines one person page of the TR-310, recording a driver or a non-motorist and the passengers riding with them. */
-export default function PersonPage({ controllers, binding, isReadOnly }: IPersonPageProps): React.JSX.Element {
+export default function PersonPage({ controllers, binding }: IPersonPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const tr310Service = useService<ITR310Service>(ITR310Service);
@@ -40,7 +38,7 @@ export default function PersonPage({ controllers, binding, isReadOnly }: IPerson
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(PersonPagePersonDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((current) => tr310Service.applyPersonDropzone(current, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((current) => tr310Service.applyPersonDropzone(current, dropzone))}
             >
                 <PersonSection binding={binding.getSection(page.personSection)} />
             </FDropzone>

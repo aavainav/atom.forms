@@ -22,7 +22,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/mock-citation-data.ts](src/mock-citation-data.ts) · [mock-ga-utc-data.ts](src/mock-ga-utc-data.ts) · [mock-public-contact-or-warning-data.ts](src/mock-public-contact-or-warning-data.ts) · [mock-tr310-data.ts](src/mock-tr310-data.ts) | The fixtures, each written in its own form's published data contract. Each exports a `Record<string, T>` keyed by scenario: `full` and `minimal`. |
 | [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
-| [src/demos/watermark/](src/demos/watermark/) | `/demo/watermark` — the watermark each `FormStatus` stamps, and that a form carries one only while read-only. |
+| [src/demos/form-mode/](src/demos/form-mode/) | `/demo/form-mode` — how a form's `FormMode` changes what's on screen: fields disabling, placeholders disappearing, and the watermark each `FormStatus` stamps. |
 | [vite.config.ts](vite.config.ts) | Port 3002, react plugin, and the Sass deprecation categories silenced for Bootstrap 5.3. |
 
 ## Routes
@@ -31,7 +31,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- | --- |
 | `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | **one** `FormRoutePage`, resolving its identity from the matched path | [src/forms/forms-module.ts](src/forms/forms-module.ts) |
-| `/demo/audit` · `/demo/dropzone` · `/demo/watermark` | the demo pages | [src/demos/](src/demos/) |
+| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/workbench` |
 
 Every route is a **child** of the workbench's `"app"` root route, registered through
@@ -117,7 +117,7 @@ Saves through the options bar do.
 Both call `IReportViewerService.loadForm` and render `<ReportViewerForm />` directly rather than `<ReportViewer />`,
 because each needs something the three props deliberately don't expose:
 
-- [watermark-demo-page.tsx](src/demos/watermark/watermark-demo-page.tsx) mutates the loaded model (`setStatus`)
+- [form-mode-demo-page.tsx](src/demos/form-mode/form-mode-demo-page.tsx) mutates the loaded model (`setStatus`)
   before rendering it;
 - [dropzone-demo-page.tsx](src/demos/dropzone/dropzone-demo-page.tsx) owns a `ControllerManager` so its
   outside-the-form `FDraggableItem`s share the form's `DragAndDropController`.
@@ -147,7 +147,7 @@ That is the intended escape hatch, and it is exactly what `ReportViewer` does in
 3. optionally add a fixture module and an entry in the `forms` table in [src/example-data.ts](src/example-data.ts)
    so the form loads with data and can be saved.
 
-**Add a demo route**: copy [src/demos/watermark/](src/demos/watermark/) — module, page, barrel — change the path, and
+**Add a demo route**: copy [src/demos/form-mode/](src/demos/form-mode/) — module, page, barrel — change the path, and
 register the bootstrapper in [src/main.ts](src/main.ts).
 
 **Add a fixture scenario**: add a key alongside `full`/`minimal` in the form's mock data module and reach it with

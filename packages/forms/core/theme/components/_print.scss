@@ -24,6 +24,16 @@
     margin-bottom: 0;
 }
 
+// printing renders every page as viewable regardless of the form's own mode, so a hint meant to invite an edit
+// has no business showing on paper
+.f-print input::placeholder {
+    color: transparent;
+}
+
+.f-print .f-field-select__placeholder {
+    visibility: hidden;
+}
+
 @media print {
     // zoom, unlike transform, shrinks the layout box along with the content, so the pages still paginate onto
     // sheets after being scaled down to fit one

@@ -19,9 +19,9 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         title: "Dropzone"
     },
     {
-        description: "The watermark each form status stamps across a page, and that a form carries one only while it renders read-only.",
-        path: "/demo/watermark",
-        title: "Watermark"
+        description: "How a form's mode changes what's on screen: fields disabling, placeholders disappearing, and the watermark each status stamps -- everything a printed copy would show too.",
+        path: "/demo/form-mode",
+        title: "Form Mode"
     }
 ];
 

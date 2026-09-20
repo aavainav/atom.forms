@@ -10,12 +10,10 @@ import NarrativePage from "./narrative-page/narrative-page";
 interface ITR310FormProps {
     /** The controllers belonging to this form. The form controller owns the form model. */
     readonly controllers: IControllerManager;
-    /** An indicator whether the report should be rendered read only. */
-    readonly isReadOnly: boolean;
 }
 
 /** The TR-310 traffic collision report. Four page groups render as one continuous tab strip in print order. Person and unit groups carry the collection's add/delete affordances, growing a page per person or unit involved; collision and narrative are one each. */
-export default function TR310Form({ controllers, isReadOnly }: ITR310FormProps): React.JSX.Element {
+export default function TR310Form({ controllers }: ITR310FormProps): React.JSX.Element {
     const controller = controllers.getFormController<TR310FormModel>();
     const form = useForm(controller);
 
@@ -23,7 +21,6 @@ export default function TR310Form({ controllers, isReadOnly }: ITR310FormProps):
         <FForm form={form}>
             <FPageCollection
                 controllers={controllers}
-                isReadOnly={isReadOnly}
                 groups={[
                     {
                         pageDefinition: form.collisionPage,
@@ -34,13 +31,13 @@ export default function TR310Form({ controllers, isReadOnly }: ITR310FormProps):
                     {
                         pageDefinition: form.personPage,
                         children: (binding) => (
-                            <PersonPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <PersonPage controllers={controllers} binding={binding} />
                         )
                     },
                     {
                         pageDefinition: form.unitPage,
                         children: (binding) => (
-                            <UnitPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <UnitPage controllers={controllers} binding={binding} />
                         )
                     },
                     {

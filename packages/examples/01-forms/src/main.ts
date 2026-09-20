@@ -8,9 +8,9 @@ import { TR310CrashFormBootstrapper } from "@forms/tr310";
 
 import { bootstrapper as AuditDemoBootstrapper } from "./demos/audit";
 import { bootstrapper as DropzoneDemoBootstrapper } from "./demos/dropzone";
+import { bootstrapper as FormModeDemoBootstrapper } from "./demos/form-mode";
 import { bootstrapper as FormsBootstrapper } from "./forms";
 import { bootstrapper as HomeBootstrapper } from "./home";
-import { bootstrapper as WatermarkDemoBootstrapper } from "./demos/watermark";
 
 // Entry point and startup for the forms react app. Better place to do this?
 await WorkbenchBootstrapper.start({
@@ -18,6 +18,7 @@ await WorkbenchBootstrapper.start({
     bootstrappers: [
         AuditDemoBootstrapper,
         DropzoneDemoBootstrapper,
+        FormModeDemoBootstrapper,
         FormsBootstrapper,
         GAUTCFormBootstrapper,
         HomeBootstrapper,
@@ -26,7 +27,6 @@ await WorkbenchBootstrapper.start({
         PublicContactOrWarningFormBootstrapper,
         S438CitationFormBootstrapper,
         TR310CrashFormBootstrapper,
-        WatermarkDemoBootstrapper,
     ],
     settings: {}
 });

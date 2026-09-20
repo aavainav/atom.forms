@@ -18,7 +18,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 
 | `kind` | Raised when | Detected from |
 | --- | --- | --- |
-| `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status`, and `isReadOnly` once it passes through `useAuditRecorder` | `start()`, and the manager announcing a new form |
+| `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }` | Form controller changes, comparing `status` |
 | `validated` | The form is validated | Rules controller changing |
@@ -35,7 +35,7 @@ Every record is `{ at, form: { id, name, version }, kind, … }` (`AuditRecord`)
 | [src/models/audit-record.ts](src/models/audit-record.ts) | `AuditRecord` and its pieces. `IAuditRecordMap` is the one place a kind is declared; the rest is derived from it. |
 | [src/utils/changed-paths.ts](src/utils/changed-paths.ts) | `getChangedPaths(before, after)`, the diff over two contract extracts. |
 | [src/services/audit.ts](src/services/audit.ts) | `IAuditService` (`onRecord`, `record`) and the `AuditService` singleton. Event only, like the notification service. |
-| [src/hooks/use-audit-recorder.ts](src/hooks/use-audit-recorder.ts) | `useAuditRecorder`: forwards the controller's records to the service, adding `isReadOnly` to `form-opened`. |
+| [src/hooks/use-audit-recorder.ts](src/hooks/use-audit-recorder.ts) | `useAuditRecorder`: forwards the controller's records to the service, unchanged. |
 | [src/module.ts](src/module.ts) | `AuditModule`. Registers the service and nothing else. |
 
 ## How it works
@@ -83,8 +83,8 @@ new form calls `clean()` too. So the report viewer's `SaveOption` and the save p
 
 - **Adding a kind is one entry in `IAuditRecordMap`.** The union and `AuditRecordDetailKind` follow from it, and the
   sandbox's `kindColours` stops compiling until it names the new kind.
-- **`isReadOnly` is added by `useAuditRecorder`, not the controller**, which cannot tell whether a form is read-only.
-  A record read straight off the controller carries `status` but no `isReadOnly`.
+- **`mode` is stamped by the controller itself**, straight off `form.mode`, the same way `status` is -- unlike the
+  old `isReadOnly` field this replaced, which only the host knew and had to be added downstream by the recorder.
 - **`status-changed` only fires for a change made through the form controller.** A status set on the model before it
   is loaded is part of what `form-opened` reports.
 - **A form with no mapper has its edits unrecorded**: there is nothing to diff. Every shipped form has one.

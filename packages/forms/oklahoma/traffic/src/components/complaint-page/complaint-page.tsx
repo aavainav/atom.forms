@@ -25,12 +25,10 @@ interface IComplaintPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<ComplaintPageModel>;
-    /** Whether the complaint page's fields are read-only. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the complaint page of the Oklahoma City traffic citation form. */
-export default function ComplaintPage({ controllers, binding, isReadOnly }: IComplaintPageProps): React.JSX.Element {
+export default function ComplaintPage({ controllers, binding }: IComplaintPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const okTrafficService = useService<IOKTrafficService>(IOKTrafficService);
@@ -43,7 +41,7 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
             >
                 <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
@@ -57,7 +55,7 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
                 // the dropped make and model arrive as names, and turning them into the codes the form stores means
                 // consulting value lists that have to be loaded, so the dropzone is resolved before it is applied
                 // rather than inside the update
-                onDrop={isReadOnly ? undefined : (dropzone) => {
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
                     okTrafficService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => okTrafficService.applyVehicleDropzone(page, resolved)));
                 }}
@@ -68,7 +66,7 @@ export default function ComplaintPage({ controllers, binding, isReadOnly }: ICom
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>

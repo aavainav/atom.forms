@@ -16,12 +16,10 @@ interface IDetailPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<DetailPageModel>;
-    /** Whether the detail page's fields are read-only. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the detail page of the Oklahoma City parking violation form. */
-export default function DetailPage({ controllers, binding, isReadOnly }: IDetailPageProps): React.JSX.Element {
+export default function DetailPage({ controllers, binding }: IDetailPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
@@ -38,7 +36,7 @@ export default function DetailPage({ controllers, binding, isReadOnly }: IDetail
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={detailPage.getDropzone(DetailPageOwnerDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okParkingService.applyOwnerDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okParkingService.applyOwnerDropzone(page, dropzone))}
             >
                 <RegisteredOwnerSection binding={binding.getSection(detailPage.registeredOwnerSection)} />
             </FDropzone>

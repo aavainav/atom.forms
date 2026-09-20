@@ -78,6 +78,8 @@ interface IFFieldSelectProps {
     readonly placeholder?: string;
     /** Shows a search box to filter options by value/description; recommended for long option lists. Default false. */
     readonly searchable?: boolean;
+    /** Keeps showing the placeholder while disabled -- for a field disabled because another field's value is missing, not because the form is read-only. Default false. */
+    readonly showPlaceholderWhenDisabled?: boolean;
     /** The currently selected option, or options when `multiple` is true. */
     readonly value?: IOptionValue | IOptionValue[];
 
@@ -100,6 +102,7 @@ export default function FFieldSelect({
     parentValue,
     placeholder = "Select...",
     searchable = false,
+    showPlaceholderWhenDisabled = false,
     value,
     onChange
 }: IFFieldSelectProps): React.JSX.Element {
@@ -225,7 +228,7 @@ export default function FFieldSelect({
         [value]);
 
     const title = selectedOptions.length === 0
-        ? placeholder
+        ? (disabled && !showPlaceholderWhenDisabled ? "" : placeholder)
         : selectedOptions.length === 1
             ? formatSelectedText(selectedOptions[0], format)
             : `${selectedOptions.length} selected`;
@@ -257,7 +260,7 @@ export default function FFieldSelect({
                     variant="none"
                     onClick={toggleMenu}
                 >
-                    <span className={buildClasses("fw-bold", selectedOptions.length === 0 ? "text-muted" : "")}>{title}</span>
+                    <span className={buildClasses("fw-bold", selectedOptions.length === 0 ? "text-muted f-field-select__placeholder" : "")}>{title}</span>
                 </FButton>
             </div>
             <div

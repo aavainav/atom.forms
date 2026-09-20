@@ -54,7 +54,7 @@ export default function DropzoneDemoPage(): React.JSX.Element {
                             controllers={controllers}
                             initialForm={initialForm}
                             dataManager={dataManager}
-                            isReadOnly={false}
+                            mode="editable"
                             showOptions
                         />
                     )}

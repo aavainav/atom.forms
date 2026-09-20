@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
 import { useService } from "@common/react";
 import { useAuditRecorder } from "@forms/audit";
-import { useFormController, IControllerManager, ControllerManager, IReportData, IRuleIssue } from "@forms/core";
+import { useFormController, IControllerManager, IReportData, IRuleIssue, ControllerManager, FormMode } from "@forms/core";
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
@@ -32,7 +32,7 @@ interface IReportViewerFormProps {
     readonly initialForm: IInitialForm;
     /** Where the form's data goes when it is saved. Without one the save option is not offered. */
     readonly dataManager?: IReportViewerDataManager<any>;
-    readonly isReadOnly: boolean;
+    readonly mode: FormMode;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
 }
@@ -42,7 +42,7 @@ interface IReportViewerFormProps {
  * loading the form itself; a host needing shared controllers or a mutation of the loaded model calls
  * `IReportViewerService.loadForm` and renders this directly, so both paths wire a form up identically.
  */
-export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, isReadOnly, showOptions }, ref) {
+export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, showOptions }, ref) {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -50,11 +50,11 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
     const ownedControllers = useMemo(() => controllers ? undefined : new ControllerManager(), [controllers, initialForm]);
     const formControllers = controllers ?? ownedControllers!;
 
-    const initialState = useMemo(() => isReadOnly ? initialForm.form.setReadOnly() : initialForm.form, [initialForm, isReadOnly]);
+    const initialState = useMemo(() => mode === "viewable" ? initialForm.form.setMode("viewable") : initialForm.form, [initialForm, mode]);
 
     const controller = useFormController(formControllers, initialState);
 
-    useAuditRecorder(formControllers, isReadOnly);
+    useAuditRecorder(formControllers);
 
     useImperativeHandle(ref, () => ({
         canSave: () => reportViewerService.canSaveForm(controller.form, dataManager),
@@ -90,7 +90,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             <NotificationManager />
             <ValidationManager controllers={formControllers} />
             <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
-            <initialForm.Component controllers={formControllers} isReadOnly={isReadOnly} />
+            <initialForm.Component controllers={formControllers} />
             {showOptions && (
                 <ReportViewerOptions
                     catalogItem={initialForm.catalogItem}

@@ -122,7 +122,7 @@ describe("FormController", () => {
          * correctly disabled and its own sections enabled.
          */
         it("carries the read-only state onto a new page's shared sections but not its own", async () => {
-            controller.setForm(controller.form.setReadOnly());
+            controller.setForm(controller.form.setMode("viewable"));
 
             await controller.addPage(citationPage);
 

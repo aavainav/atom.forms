@@ -24,12 +24,10 @@ interface IUnitPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<UnitPageModel>;
-    /** When true, the drag-and-drop import targets are not offered. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines one unit page of the TR-310, recording a vehicle involved in the collision and its owner. */
-export default function UnitPage({ controllers, binding, isReadOnly }: IUnitPageProps): React.JSX.Element {
+export default function UnitPage({ controllers, binding }: IUnitPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const tr310Service = useService<ITR310Service>(ITR310Service);
@@ -44,7 +42,7 @@ export default function UnitPage({ controllers, binding, isReadOnly }: IUnitPage
                 // the dropped make and model arrive as names, and turning them into the codes the report stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={isReadOnly ? undefined : (dropzone) => {
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
                     tr310Service.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((current) => tr310Service.applyVehicleDropzone(current, resolved)));
                 }}
@@ -55,7 +53,7 @@ export default function UnitPage({ controllers, binding, isReadOnly }: IUnitPage
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageOwnerDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((current) => tr310Service.applyOwnerDropzone(current, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((current) => tr310Service.applyOwnerDropzone(current, dropzone))}
             >
                 <OwnerSection binding={binding.getSection(page.ownerSection)} />
             </FDropzone>

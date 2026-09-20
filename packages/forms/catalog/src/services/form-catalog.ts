@@ -9,8 +9,6 @@ export const IFormCatalogRegistrationService = createService<IFormCatalogRegistr
 export interface IFormComponentProps {
     /** The controllers belonging to this form. The form controller owns the form model and is how every edit is applied. */
     readonly controllers: IControllerManager;
-    /** When true, the form's editing affordances (add/delete page, drag-and-drop import) should not be offered; individual fields report their own disabled state via `FieldModel.isEnabled`. */
-    readonly isReadOnly: boolean;
 }
 
 /**

@@ -18,12 +18,10 @@ interface ICitationPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<CitationPageModel>;
-    /** Whether the citation page's fields are read-only. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the citation page of the Oklahoma City parking violation form. */
-export default function CitationPage({ controllers, binding, isReadOnly }: ICitationPageProps): React.JSX.Element {
+export default function CitationPage({ controllers, binding }: ICitationPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const okParkingService = useService<IOKParkingService>(IOKParkingService);
@@ -39,7 +37,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => okParkingService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okParkingService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
             </FDropzone>
@@ -52,7 +50,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                 // the dropped make arrives as a name, and turning it into the code the form stores means consulting
                 // a value list that has to be loaded, so the dropzone is resolved before it is applied rather than
                 // inside the update
-                onDrop={isReadOnly ? undefined : (dropzone) => {
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
                     okParkingService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => okParkingService.applyVehicleDropzone(page, resolved)));
                 }}

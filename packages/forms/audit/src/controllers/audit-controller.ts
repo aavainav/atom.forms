@@ -171,7 +171,7 @@ export class AuditController extends Controller implements IAuditController {
         this.watched = { form, identity: { id: form.id ?? "", name: form.name, version: form.version } };
         this.baseline = form.mapper?.extract(form);
 
-        this.raise({ kind: "form-opened", status: form.status });
+        this.raise({ kind: "form-opened", status: form.status, mode: form.mode });
     }
 
     private raise(detail: AuditRecordDetail): void {

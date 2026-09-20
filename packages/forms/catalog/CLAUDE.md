@@ -32,8 +32,9 @@ the form:
 `IResolvedFormCatalogItem` is `IFormCatalogItem & ILoadedFormCatalogItem` — a registered item together with what
 loading it resolved to, which is what `FormCatalogService.get()` hands back.
 
-`IFormComponentProps` is `{ controllers: IControllerManager, isReadOnly: boolean }` — the contract every form's
-root component implements.
+`IFormComponentProps` is `{ controllers: IControllerManager }` — the contract every form's root component
+implements. A component reads its own form's mode off the model (`useForm(controller).mode`) rather than taking it
+as a prop -- see [`@forms/core`](../core/CLAUDE.md)'s `FormModel.mode`.
 
 **Nothing about a form's own code — its model, schema, or component — is imported or evaluated until `load()` is
 called.** `type` is the one piece of metadata declared eagerly, because it is the one thing worth showing (a

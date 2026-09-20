@@ -24,12 +24,10 @@ interface IFrontPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<FrontPageModel>;
-    /** When true, the drag-and-drop import targets are not offered. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the front page of the S438 citation form. */
-export default function FrontPage({ controllers, binding, isReadOnly }: IFrontPageProps): React.JSX.Element {
+export default function FrontPage({ controllers, binding }: IFrontPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
     const s438CitationService = useService<IS438CitationService>(IS438CitationService);
     const frontPage = binding.get();
@@ -40,28 +38,28 @@ export default function FrontPage({ controllers, binding, isReadOnly }: IFrontPa
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageViolatorDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolatorDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolatorDropzone(page, dropzone))}
             >
                 <ViolatorSection binding={binding.getSection(frontPage.violatorSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageViolationDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(frontPage.violationSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageVehicleDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyVehicleDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyVehicleDropzone(page, dropzone))}
             >
                 <VehicleSection binding={binding.getSection(frontPage.vehicleSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageOwnerDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyOwnerDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyOwnerDropzone(page, dropzone))}
             >
                 <OwnerSection binding={binding.getSection(frontPage.ownerSection)} />
             </FDropzone>

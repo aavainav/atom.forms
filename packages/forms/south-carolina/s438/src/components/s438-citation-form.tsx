@@ -7,12 +7,10 @@ import NoticePage from "./notice-page/notice-page";
 interface IS438FormProps {
     /** The controllers belonging to this form. The form controller owns the form model. */
     readonly controllers: IControllerManager;
-    /** An indicator whether the report should be rendered read only. */
-    readonly isReadOnly: boolean;
 }
 
 /** Defines the S438 citation form. */
-export default function S438Form({ controllers, isReadOnly }: IS438FormProps): React.JSX.Element {
+export default function S438Form({ controllers }: IS438FormProps): React.JSX.Element {
     const controller = controllers.getFormController<S438FormModel>();
     const form = useForm(controller);
 
@@ -20,12 +18,11 @@ export default function S438Form({ controllers, isReadOnly }: IS438FormProps): R
         <FForm form={form}>
             <FPageCollection
                 controllers={controllers}
-                isReadOnly={isReadOnly}
                 groups={[
                     {
                         pageDefinition: form.frontPage,
                         children: (binding) => (
-                            <FrontPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <FrontPage controllers={controllers} binding={binding} />
                         )
                     },
                     {

@@ -1,4 +1,4 @@
-import type { FormStatus, PrintLayout } from "@forms/core";
+import type { FormMode, FormStatus, PrintLayout } from "@forms/core";
 
 /** Identifies the form a record is about. */
 export interface IAuditFormIdentity {
@@ -14,8 +14,8 @@ export interface IAuditFormIdentity {
 export interface IAuditRecordMap {
     /** Edits settled. `fields` are data-contract paths, such as `violatorSex` or `additionalViolations[1].violationDescription`. */
     "fields-edited": { readonly fields: ReadonlyArray<string> };
-    /** The form was shown, freshly loaded or swapped in. The recorder adds `isReadOnly`, which only the host knows. */
-    "form-opened": { readonly status: FormStatus; readonly isReadOnly?: boolean };
+    /** The form was shown, freshly loaded or swapped in. */
+    "form-opened": { readonly status: FormStatus; readonly mode: FormMode };
     /** The form left its print layout. */
     "print-ended": Record<never, never>;
     /** The form went into its print layout. `pageNames` is undefined when every page prints. */

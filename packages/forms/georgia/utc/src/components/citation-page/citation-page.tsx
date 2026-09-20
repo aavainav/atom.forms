@@ -26,12 +26,10 @@ interface ICitationPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<CitationPageModel>;
-    /** When true, the drag-and-drop import targets are not offered. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the citation page of the Georgia uniform traffic citation - the face of the printed form. */
-export default function CitationPage({ controllers, binding, isReadOnly }: ICitationPageProps): React.JSX.Element {
+export default function CitationPage({ controllers, binding }: ICitationPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
 
     const gaUtcService = useService<IGAUTCService>(IGAUTCService);
@@ -44,7 +42,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolatorDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolatorDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolatorDropzone(page, dropzone))}
             >
                 <ViolatorSection binding={binding.getSection(citationPage.violatorSection)} />
             </FDropzone>
@@ -55,7 +53,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
                 // the dropped make and model arrive as names, and turning them into the codes the citation stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={isReadOnly ? undefined : (dropzone) => {
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
                     gaUtcService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => gaUtcService.applyVehicleDropzone(page, resolved)));
                 }}
@@ -69,7 +67,7 @@ export default function CitationPage({ controllers, binding, isReadOnly }: ICita
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolationDropzone(page, dropzone))}
             >
                 <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
             </FDropzone>

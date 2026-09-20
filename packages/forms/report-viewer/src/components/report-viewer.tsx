@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react";
 import { useService } from "@common/react";
-import { FAsyncLoader, FLoadingIndicator, IFormIdentity, IReportData } from "@forms/core";
+import { IFormIdentity, IReportData, FAsyncLoader, FLoadingIndicator, FormMode } from "@forms/core";
 
 import { IReportViewerComponent, ReportViewerForm } from "./report-viewer-form";
 import { IInitialForm, IReportViewerDataManager, IReportViewerService } from "../services";
@@ -9,8 +9,8 @@ import "@forms/core/theme/_main.scss";
 
 /** Defines how a report is rendered, as opposed to which one is rendered or where its data comes from. */
 export interface IReportViewerSettings {
-    /** When true, every field on the form is disabled and its editing affordances (add/delete page, drag-and-drop import) are not offered. */
-    readonly isReadOnly?: boolean;
+    /** How the form's fields and editing affordances behave. Defaults to "editable". */
+    readonly mode?: FormMode;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
 }
@@ -50,7 +50,7 @@ function ReportViewerInner<TData extends object = IReportData>(
                         ref={ref}
                         initialForm={initialForm}
                         dataManager={dataManager}
-                        isReadOnly={!!settings?.isReadOnly}
+                        mode={settings?.mode ?? "editable"}
                         showOptions={settings?.showOptions}
                     />
                 )}

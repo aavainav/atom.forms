@@ -9,12 +9,10 @@ import DetailPage from "./detail-page/detail-page";
 interface IOKParkingFormProps {
     /** The controllers belonging to this form. The form controller owns the form model. */
     readonly controllers: IControllerManager;
-    /** An indicator whether the report should be rendered read only. */
-    readonly isReadOnly: boolean;
 }
 
 /** The Oklahoma City parking violation form. Three page groups render as one continuous tab strip in print order, each holding a single page, so add/delete affordances never come into play. */
-export default function OKParkingForm({ controllers, isReadOnly }: IOKParkingFormProps): React.JSX.Element {
+export default function OKParkingForm({ controllers }: IOKParkingFormProps): React.JSX.Element {
     const controller = controllers.getFormController<OKParkingFormModel>();
     const form = useForm(controller);
 
@@ -22,12 +20,11 @@ export default function OKParkingForm({ controllers, isReadOnly }: IOKParkingFor
         <FForm form={form}>
             <FPageCollection
                 controllers={controllers}
-                isReadOnly={isReadOnly}
                 groups={[
                     {
                         pageDefinition: form.citationPage,
                         children: (binding) => (
-                            <CitationPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <CitationPage controllers={controllers} binding={binding} />
                         )
                     },
                     {
@@ -37,7 +34,7 @@ export default function OKParkingForm({ controllers, isReadOnly }: IOKParkingFor
                     {
                         pageDefinition: form.detailPage,
                         children: (binding) => (
-                            <DetailPage controllers={controllers} binding={binding} isReadOnly={isReadOnly} />
+                            <DetailPage controllers={controllers} binding={binding} />
                         )
                     }
                 ]}

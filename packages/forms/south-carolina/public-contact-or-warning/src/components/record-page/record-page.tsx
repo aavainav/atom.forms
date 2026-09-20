@@ -24,12 +24,10 @@ interface IRecordPageProps {
     readonly controllers: IControllerManager;
     /** Binds this page instance to the form controller. */
     readonly binding: IPageBinding<RecordPageModel>;
-    /** Whether the record page's fields are read-only. */
-    readonly isReadOnly?: boolean;
 }
 
 /** Defines the record page of the public contact/warning form. */
-export default function RecordPage({ controllers, binding, isReadOnly }: IRecordPageProps): React.JSX.Element {
+export default function RecordPage({ controllers, binding }: IRecordPageProps): React.JSX.Element {
     const dragAndDropController = controllers.getDragAndDropController();
     
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
@@ -41,7 +39,7 @@ export default function RecordPage({ controllers, binding, isReadOnly }: IRecord
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPagePersonDropzone)}
-                onDrop={isReadOnly ? undefined : (dropzone) => binding.update((page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone))}
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone))}
             >
                 <PersonSection binding={binding.getSection(recordPage.personSection)} />
             </FDropzone>
@@ -59,7 +57,7 @@ export default function RecordPage({ controllers, binding, isReadOnly }: IRecord
                 // the dropped make and model arrive as names, and turning them into the codes the record stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={isReadOnly ? undefined : (dropzone) => {
+                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
                     publicContactOrWarningService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => publicContactOrWarningService.applyVehicleDropzone(page, resolved)));
                 }}

@@ -387,7 +387,7 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
             // turn autocomplete off when async
             autoComplete={async ? "off" : autocomplete}
             autoFocus={autofocus}
-            placeholder={placeholder}
+            placeholder={disabled ? undefined : placeholder}
             max={typeof max === "string" ? parseInt(max, 10) : max}
             maxLength={typeof maxlength === "string" ? parseInt(maxlength, 10) : maxlength}
             value={displayValue}

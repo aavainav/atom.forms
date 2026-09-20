@@ -17,8 +17,10 @@ import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
 import type { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
+/** How a form renders: "editable" allows edits and the add/delete/import affordances; "viewable" is a locked snapshot, styled like a printed record. */
+export type FormMode = "editable" | "viewable";
 export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
-export type FormStatus = "canceled" | "draft" | "rejected" | "inProgress" | "issued" | "voided";
+export type FormStatus = "approved" | "canceled" | "draft" | "rejected" | "inProgress" | "issued" | "voided";
 export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
 
 /** Identifies a form registered with the form catalog. A missing version resolves to the latest. */
@@ -44,6 +46,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     readonly description?: string;
     /** Translates this form to and from the data contract it publishes. A form without one can be neither extracted nor saved. */
     readonly mapper?: IFormMapper<any, TData>;
+    /** How the form renders. Defaults to "editable". */
+    readonly mode: FormMode;
     /** The status of the form. This will also determine if a watermark is needed to be displayed. */
     readonly status: FormStatus;
     /** The type of the form. */
@@ -85,8 +89,11 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>>;
     /** Removes the page at the specified index from the page collection for the specified page definition. */
     removePage(index: number, pageDefinition: PageDefinition): this;
-    /** Disables every field on the form, so it renders read-only. */
-    setReadOnly(): this;
+    /**
+     * Sets the form's mode. Switching to "viewable" disables every field; switching to "editable" only stamps
+     * the mode -- it does not re-enable fields disabled for another reason, such as a `readOnlyFields` lock.
+     */
+    setMode(mode: FormMode): this;
     /** Returns a form with the given status, which determines the watermark stamped across its pages. */
     setStatus(status: FormStatus): this;
     /** Applies the given issue collection, setting the has error state for every field on the form. */
@@ -100,6 +107,7 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     public readonly name: string;
     public readonly description?: string;
     public readonly mapper?: IFormMapper<FormModel<TData>, TData>;
+    public readonly mode: FormMode = "editable";
     public readonly status: FormStatus = "draft";
     public readonly type: FormType;
     public readonly valueListIds?: ReadonlyArray<string>;
@@ -252,8 +260,9 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         return this.set(pageDefinition, pageCollection.remove(index));
     }
 
-    public setReadOnly(): this {
-        return this.mapFields(field => field.setIsEnabled(false));
+    public setMode(mode: FormMode): this {
+        const form = mode === "viewable" ? this.mapFields(field => field.setIsEnabled(false)) : this;
+        return withChanges(form, { mode });
     }
 
     public setStatus(status: FormStatus): this {

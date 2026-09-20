@@ -30,7 +30,7 @@ Three props, nothing else:
 | --- | --- |
 | `identity` | `IFormIdentity`. The catalog resolves it, answering with the latest version when none is named. |
 | `dataManager` | `IReportViewerDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
-| `settings` | `IReportViewerSettings` — `isReadOnly?` and `showOptions?`. How the report renders, as opposed to which one. |
+| `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`) and `showOptions?`. How the report renders, as opposed to which one. |
 
 There is deliberately **no `controllers` prop**. A host needing shared controllers or a mutation of the loaded model
 takes the advanced path instead: `IReportViewerService.loadForm(identity, dataManager)` then `<ReportViewerForm />`,
@@ -51,7 +51,7 @@ the previously loaded form on screen.
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
-| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies read-only, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
+| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own four. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
@@ -214,9 +214,11 @@ is a component; mount it wherever the host's router puts it.
 
 - `ReportViewerForm` creates its own `ControllerManager` unless one is passed in. **Pass one in** when something
   outside the form (a panel of draggable items) needs the same controllers.
-- Read-only is applied by `form.setReadOnly()` (disables every field). The `isReadOnly` prop separately suppresses
-  add/delete page and drop handlers. It is a **per-instance** setting, not an app-wide one: an issued citation
-  versus a draft is a per-record decision.
+- Viewable mode is applied by `form.setMode("viewable")` (disables every field and stamps `mode` on the model).
+  Everything downstream — add/delete page, drop handlers, the watermark, placeholders — reads `form.mode` (or
+  `binding.mode`) off the model itself rather than taking a separate prop; see [`@forms/core`](../core/CLAUDE.md)'s
+  `FPageCollection`. It is a **per-instance** setting, not an app-wide one: an issued citation versus a draft is a
+  per-record decision.
 - The delete-page confirmation is installed here (`controller.setConfirmDeletePage`) and removed on unmount, so it
   cannot be skipped by a form that forgets to supply one.
 - The save button reads `controllers.getFormController().form` **at click time** — the controller replaces the model

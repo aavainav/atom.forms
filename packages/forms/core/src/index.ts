@@ -74,7 +74,7 @@ export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/fie
 export type { IOptionField } from "./models/option-field";
 export type { ISectionModel, ISection, SectionModelConstructor } from "./models/section";
 export type { IPageModel, IPage, PageModelConstructor } from "./models/page";
-export type { IForm, IFormIdentity, IFormModel, FormModelConstructor, FormStatus, FormType } from "./models/form";
+export type { IForm, IFormIdentity, IFormModel, FormMode, FormModelConstructor, FormStatus, FormType } from "./models/form";
 export type { FormFactory, FormFactoryConstructor } from "./models/form-factory";
 
 export type { ICitationForm } from "./models/citation-form";

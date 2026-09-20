@@ -107,6 +107,7 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
                         invalid={model.getHasError()}
                         options={loadModelOptions}
                         placeholder={makeCode ? "Select..." : "Select a make first"}
+                        showPlaceholderWhenDisabled={model.getIsEnabled()}
                         searchable
                         value={model.getValue()}
                         onChange={(value) => binding.setValue(section.model, value as IOptionValue)}

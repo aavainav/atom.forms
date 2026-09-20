@@ -67,7 +67,7 @@ describe("AuditController", () => {
         it("records the form being opened, stamped with its identity and the time", () => {
             const { records } = watch();
 
-            expect(records).toEqual([{ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", status: "draft" }]);
+            expect(records).toEqual([{ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", mode: "editable", status: "draft" }]);
         });
 
         it("records the status the form arrived with", () => {
