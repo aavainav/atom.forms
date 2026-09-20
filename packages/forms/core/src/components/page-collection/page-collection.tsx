@@ -42,18 +42,6 @@ interface IPageEntry {
     readonly binding: IPageBinding<any>;
 }
 
-/** Presents a page binding as viewable without touching the form itself -- used only for the print layout, so printing an editable draft renders the same as viewing a finished record. */
-function asViewable<TPage extends PageModel>(binding: IPageBinding<TPage>): IPageBinding<TPage> {
-    return {
-        pageDefinition: binding.pageDefinition,
-        pageId: binding.pageId,
-        mode: "viewable",
-        get: () => binding.get(),
-        getSection: sectionDefinition => binding.getSection(sectionDefinition),
-        update: update => binding.update(update)
-    };
-}
-
 /** A page collection is a group of related pages rendered together as a single continuous tab strip. Pages are numbered by position across all `groups` combined, not per group — e.g. adding a second front page numbers it "Page 2", even though front pages are their own group. While a print is in progress the tab strip gives way to the pages that print is for, laid out flat. */
 export default function FPageCollection({ controllers, groups, watermark }: IFPageCollectionProps): React.JSX.Element {
     const controller = controllers.getFormController();
@@ -62,9 +50,7 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
     const navigationController = controllers.getNavigationController();
     const navigationTarget = useNavigationTarget(navigationController);
 
-    // printing an in-progress draft should look exactly like viewing a finished record, since that's the page
-    // being handed to the printer
-    const isViewable = form.mode === "viewable" || !!printState;
+    const isViewable = form.mode === "viewable";
 
     // a read-only form is a record of something already settled, so its status is stamped across it; an editable form is
     // still being written and carries none. an explicitly supplied watermark wins over the status-derived one.
@@ -110,7 +96,7 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
             <div className={buildClasses("f-print", `f-print--${printState.layout}`)} style={getPrintStyle(printState.scale)}>
                 {toEntries(selectPrintGroups(groups, printState.pageNames)).map((entry) => (
                     <FPage key={entry.page.id} formType={form.type} watermark={pageWatermark}>
-                        {entry.group.children(asViewable(entry.binding))}
+                        {entry.group.children(entry.binding)}
                     </FPage>
                 ))}
             </div>

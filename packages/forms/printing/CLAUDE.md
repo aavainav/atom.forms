@@ -44,14 +44,32 @@ the component that renders it. This package owns every decision *about* a print;
    wide as a sheet is tall;
 2. `validateProfile` — a copy naming a page the form does not carry **throws**, rather than printing a blank sheet.
    The page names are checked against `new catalogItem.ctor().getChildDefinitions()`;
-3. write `@page { size: <paper> <orientation>; margin: <margin>in }` into a `<style id="f-print-page-rules">` in the
+3. if the form is `"editable"`, switch it to `"viewable"` via `formController.setForm(form.setMode("viewable"))` --
+   a printed page is a copy of the record, not a form to edit, so it renders exactly as viewing a finished one
+   would (see **Printing is viewable** below);
+4. write `@page { size: <paper> <orientation>; margin: <margin>in }` into a `<style id="f-print-page-rules">` in the
    head. An `@page` rule cannot be selected by a class, so it has to be swapped at print time;
-4. `printController.begin({ layout, pageNames, scale })` — the page collection drops its tab strip and renders the
+5. `printController.begin({ layout, pageNames, scale })` — the page collection drops its tab strip and renders the
    copy's pages flat;
-5. wait two animation frames, measure, and `begin` again with the scale that fits the copy onto its sheet;
-6. `window.print()`;
-7. in a `finally`: `end()` and remove the `@page` rules. `window.print()` blocks until the print dialog is
-   dismissed, so by then the sheets have been rendered.
+6. wait two animation frames, measure, and `begin` again with the scale that fits the copy onto its sheet;
+7. `window.print()`;
+8. in a `finally`: `end()`, remove the `@page` rules, and restore the form to the exact object captured in step 3,
+   if it was switched. `window.print()` blocks until the print dialog is dismissed, so by then the sheets have been
+   rendered.
+
+## Printing is viewable
+
+**A printed page renders exactly as a viewable one would, because printing switches the form to viewable mode for
+the duration of the print.** An in-progress draft printed mid-edit looks the same as printing the finished record
+later would: fields disabled, no placeholders, the status watermark stamped. Nothing in `@forms/core`'s rendering
+has to know printing is happening at all — `FPageCollection`, `FFieldSelect` and `FFieldInput` all key off
+`form.mode`/`disabled` exactly as they do outside of print.
+
+The switch is restored by handing back the **exact form object captured before printing**, not by calling
+`setMode("editable")` on the printed one. `setMode("editable")` deliberately never re-enables a field disabled for
+another reason (a `readOnlyFields` lock, say), so it cannot undo the viewable switch by itself -- only restoring the
+original object does. A form already `"viewable"` when printing starts (an issued citation) is left alone entirely,
+so printing it does not raise a redundant form-controller update.
 
 ## Scaling — the part with the sharp edges
 

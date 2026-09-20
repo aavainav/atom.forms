@@ -16,6 +16,12 @@
         height: 100%;
     }
 
+    // bootstrap's disabled .form-select only dims its colors, it never drops the chevron -- a disabled toggle
+    // should not invite a click it can't act on
+    .f-field-select__toggle:disabled {
+        background-image: none;
+    }
+
     .f-field-select__toggle:active {
         box-shadow: 0 0 0 0.25rem color.change(variables.$primary, $alpha: 0.25) !important;
     }

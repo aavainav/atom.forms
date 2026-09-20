@@ -96,10 +96,16 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
 
         this.validateProfile(catalogItem, profile);
 
-        const controller = controllers.getPrintController();
+        const printController = controllers.getPrintController();
+        const formController = controllers.getFormController();
+
+        const editingForm = formController.form.mode === "editable" ? formController.form : undefined;
+        if (editingForm) {
+            formController.setForm(editingForm.setMode("viewable"));
+        }
 
         this.applyPageRules(orientation, paper, margin);
-        controller.begin({ layout, pageNames: profile.pages, scale: profile.scale });
+        printController.begin({ layout, pageNames: profile.pages, scale: profile.scale });
 
         try {
             await this.waitForLayout();
@@ -107,7 +113,7 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
             if (profile.scale === undefined) {
                 // the pages have to be laid out before they can be measured, so the scale that fits them onto the
                 // sheet is applied as a second pass over the layout the first one produced
-                controller.begin({ layout, pageNames: profile.pages, scale: this.getScale(layout, orientation, paper, margin) });
+                printController.begin({ layout, pageNames: profile.pages, scale: this.getScale(layout, orientation, paper, margin) });
                 await this.waitForLayout();
             }
 
@@ -116,8 +122,12 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
         finally {
             // window.print() blocks until the print dialog is dismissed, so by here the sheets have been rendered
             // and the form can go back to the way it was
-            controller.end();
+            printController.end();
             this.removePageRules();
+
+            if (editingForm) {
+                formController.setForm(editingForm);
+            }
         }
     }
 

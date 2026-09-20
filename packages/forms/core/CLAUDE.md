@@ -225,22 +225,28 @@ While the print controller holds a state, it renders a second way instead: the p
 `<div class="f-print f-print--{layout}">`, with the add and delete affordances omitted — neither belongs on paper.
 Pages are selected by page definition **name** and ordered by the print state's `pageNames`, so a printable copy can
 be declared as plain strings by a form module and a name matching a repeating page type contributes every instance
-of it. **Printing counts as viewable regardless of the form's own mode** — `isViewable = form.mode === "viewable" ||
-!!printState` — so printing an in-progress draft is watermarked and locked-looking the same as printing a finished
-record, without the form itself ever leaving edit mode. The print branch hands each page a binding wrapped by
-`asViewable`, which reports `mode: "viewable"` without touching the real form, so editing resumes normally once the
-print dialog closes.
+of it.
+
+**`FPageCollection` itself knows nothing about printing being "like" viewable mode — it doesn't have to, because
+`@forms/printing` switches the form to `"viewable"` for the duration of the print.** See
+[`@forms/printing`](../printing/CLAUDE.md)'s `PrintService.print`. By the time the print branch renders, `form.mode`
+already reads `"viewable"`, so the watermark, the disabled fields, and everything downstream that keys off `mode` or
+`disabled` behave exactly as they would if the record had been opened read-only in the first place — nothing here
+is print-specific.
 
 `IPageBinding.mode` mirrors the owning form's `FormModel.mode`, so a page component that only has a binding (never
 the form itself) can still gate a dropzone's `onDrop` on it without the mode being threaded down as a separate prop.
 
 `FFieldSelect` takes `options` as an array **or** a loader `(parentValue?) => Promise<IOptionValue[]>`, plus
 `parentValue`. A dependent select is expressed entirely by passing the parent's code as `parentValue` — no field
-carries knowledge of another field. Its placeholder (and `FFieldInput`'s) is hidden while `disabled`, since a locked
-field showing "Select..." reads as an invitation to edit something that cannot be; `showPlaceholderWhenDisabled`
-opts a field back in for the one legitimate case, a select disabled because another field's value is missing rather
-than because the form is read-only. Printing hides both the same way, purely in CSS (`.f-print` in
-`_print.scss`), since printing renders every field as viewable regardless of the form's own mode.
+carries knowledge of another field. Its placeholder (and `FFieldInput`'s), and its toggle's dropdown chevron, are
+hidden while `disabled`, since a locked field inviting a click or a keystroke it can't act on is confusing whether
+that lock came from the whole form being viewable or from print. `showPlaceholderWhenDisabled` opts a select back in
+for the one legitimate case where `disabled` means something else: a select disabled because another field's value
+is missing, not because the form is read-only. A date `FFieldInput` with nothing typed into it renders as plain text
+rather than `type="date"` while disabled, since an empty native date input shows its own "mm/dd/yyyy" regardless of
+`placeholder` -- that hint is the browser's own control chrome, not styleable text, so it can't be hidden any other
+way; a date carrying a value keeps rendering as `type="date"` so it still shows through the browser's own display.
 
 ## Recipes
 

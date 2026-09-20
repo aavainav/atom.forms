@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { IResolvedFormCatalogItem } from "@forms/catalog";
-import type { IControllerManager } from "@forms/core";
+import type { FormMode, FormModel, IControllerManager } from "@forms/core";
 import type { IPrintProfile } from "../../src/models/print-profile";
 import { allPagesProfileId, PrintService } from "../../src/services/print";
 
@@ -26,6 +26,28 @@ function catalogItem(name: string, ...pageNames: Array<string>): IResolvedFormCa
 
 function profile(id: string, pages: Array<string>, overrides: Partial<IPrintProfile> = {}): IPrintProfile {
     return { id, name: id, pages, ...overrides };
+}
+
+/** Stands in for a form: only `mode`/`setMode` matter here, since the service reads and switches nothing else. */
+function stubForm(mode: FormMode): FormModel<any> {
+    return { mode, setMode: (next: FormMode) => stubForm(next) } as unknown as FormModel<any>;
+}
+
+/** A controllers manager whose form and print controllers are plain, inspectable stubs. */
+function controllersStub(mode: FormMode) {
+    const formController = {
+        form: stubForm(mode),
+        setForm(this: { form: FormModel<any> }, form: FormModel<any>) { this.form = form; }
+    };
+
+    const printController = { begin: vi.fn(), end: vi.fn() };
+
+    const controllers = {
+        getFormController: () => formController,
+        getPrintController: () => printController
+    } as unknown as IControllerManager;
+
+    return { controllers, formController, printController };
 }
 
 describe("PrintService", () => {
@@ -132,6 +154,53 @@ describe("PrintService", () => {
 
             await expect(service.print(controllers, item, { profileId: "violator" }))
                 .rejects.toThrowError("The print profile violator for s438 names the page missing-page, which the form does not carry.");
+        });
+
+        /** A print is a copy of the record, so it renders exactly as viewing a finished one would. */
+        describe("mode", () => {
+            beforeEach(() => {
+                vi.spyOn(window, "print").mockImplementation(() => {});
+                vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => { callback(0); return 0; });
+            });
+
+            afterEach(() => {
+                vi.restoreAllMocks();
+                vi.unstubAllGlobals();
+            });
+
+            it("is viewable for the duration of the print, when it started out editable", async () => {
+                const item = catalogItem("s438", "front-page");
+                const { controllers, formController, printController } = controllersStub("editable");
+
+                let modeWhilePrinting: FormMode | undefined;
+                printController.begin.mockImplementation(() => { modeWhilePrinting = formController.form.mode; });
+
+                await service.print(controllers, item, { profileId: allPagesProfileId });
+
+                expect(modeWhilePrinting).toBe("viewable");
+            });
+
+            it("restores the original form object once the print finishes", async () => {
+                const item = catalogItem("s438", "front-page");
+                const { controllers, formController } = controllersStub("editable");
+                const original = formController.form;
+
+                await service.print(controllers, item, { profileId: allPagesProfileId });
+
+                expect(formController.form).toBe(original);
+            });
+
+            it("leaves a form already viewable alone, rather than replacing it and back again", async () => {
+                const item = catalogItem("s438", "front-page");
+                const { controllers, formController } = controllersStub("viewable");
+                const original = formController.form;
+                const setForm = vi.spyOn(formController, "setForm");
+
+                await service.print(controllers, item, { profileId: allPagesProfileId });
+
+                expect(setForm).not.toHaveBeenCalled();
+                expect(formController.form).toBe(original);
+            });
         });
     });
 });

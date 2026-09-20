@@ -373,6 +373,12 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
 
     const showClear = enableClear && !!displayValue;
 
+    // an empty native date input shows its own "mm/dd/yyyy" hint regardless of `placeholder`, which the browser
+    // renders as part of the control itself rather than as styleable text -- so a disabled, empty date field is
+    // rendered as plain text instead, rather than trying to suppress that hint. a date carrying a value keeps
+    // rendering as a date, so it still shows through the browser's own (nicely localized) date display.
+    const inputType = disabled && type === "date" && !displayValue ? "text" : type;
+
     const inputStyle: React.CSSProperties = {
         ...getMarginStyle(undefined, margin),
         ...getPaddingStyle({ start: 8, top: 16, end: 8, bottom: 4 }, padding)
@@ -382,7 +388,7 @@ const FFieldInput = forwardRef<IFieldInputComponent, IFFieldInputProps>(function
         <input
             id={id}
             ref={inputRef}
-            type={type}
+            type={inputType}
             disabled={disabled}
             // turn autocomplete off when async
             autoComplete={async ? "off" : autocomplete}
