@@ -13,6 +13,8 @@ export interface INotificationService {
 
 /** Defines a notification to display in the report viewer. */
 export interface IReportViewerNotification {
+    /** How long, in milliseconds, the notification stays up before closing itself; 0 keeps it up until closed. Defaults by type. */
+    readonly duration?: number;
     /** The message to display in the notification. */
     readonly message: string;
     /** An optional title for the notification. */

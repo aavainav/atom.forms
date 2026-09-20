@@ -2,22 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useService } from "@common/react";
 import { useDisposables, FNotification } from "@forms/core";
 
-import { INotificationService, IReportViewerNotification } from "../../services/notification";
-
-export interface IReportViewerNotificationItem {
-    readonly id: number;
-    readonly message: string;
-    readonly type: "danger" | "info" | "success" | "warning";
-}
-
-let nextId = 1;
-function toNotificationItem(notification: IReportViewerNotification): IReportViewerNotificationItem {
-    return {
-        id: nextId++,
-        message: notification.message,
-        type: notification.type
-    };
-}
+import { IReportViewerNotificationItem, addNotification } from "./notification-items";
+import { INotificationService } from "../../services/notification";
 
 /** Defines a manager component for displaying notifications in the window. */
 export default function NotificationManager(): React.JSX.Element | null {
@@ -28,22 +14,24 @@ export default function NotificationManager(): React.JSX.Element | null {
 
     useEffect(() => {
         disposables.add(notificationService.onShowNotification(notification => {
-            setNotifications(prev => [...prev, toNotificationItem(notification)]);
+            setNotifications(prev => addNotification(prev, notification));
         }));
     }, [notificationService]);
 
-    const removeNotification = (id: number): void => {
-        setNotifications(prev => prev.filter(notification => notification.id !== id));
+    const removeNotification = (key: string): void => {
+        setNotifications(prev => prev.filter(notification => notification.key !== key));
     };
 
     return (
         <div className="notification-container report-viewer-notification-container">
             {notifications.map(notification => (
                 <FNotification
+                    count={notification.count}
                     dismissible={true}
-                    key={notification.id}
+                    duration={notification.duration}
+                    key={notification.key}
                     type={notification.type}
-                    onClose={() => removeNotification(notification.id)}
+                    onClose={() => removeNotification(notification.key)}
                 >
                     {notification.message}
                 </FNotification>

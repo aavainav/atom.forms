@@ -206,6 +206,14 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   cannot currently be dragged — it clears `draggable` and refuses `dragStart`, which is what stops a panel's
   locked row reaching the form by the one route a disabled checkbox does not cover.
 
+`FNotification` closes itself after `duration` milliseconds, counting down in a bar along its bottom edge. **The bar
+is the timer**: the notification calls `onClose` on the bar's `animationend`, so pausing the animation (on hover, on
+focus within, or while the tab is hidden) pauses both, with no timer to keep in step. `count` shows a `×N` badge once
+above one, and doubles as the bar's `key`, so raising the same notification again restarts the countdown. Dismissal
+depends on animations running: if something suppresses them the notification simply stays until closed, and the
+animation must not be disabled under `prefers-reduced-motion`, or nothing would ever close it. An omitted or `0`
+`duration` shows no bar and never closes on its own.
+
 `FPage` pins `data-bs-theme="light"` on itself. A page is a printed document — white paper with a dark border in
 either color mode — so when the host flips the document to dark, the attribute stops at the page and every field
 rendered on it stays legible. Anything painting page chrome should keep that in mind rather than reaching for a
