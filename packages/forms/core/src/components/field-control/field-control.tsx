@@ -93,7 +93,7 @@ export default function FFieldControl({
     };
 
     return (
-        <div style={style} className={buildClasses(
+        <div data-field-id={labelFor} style={style} className={buildClasses(
             "f-field-control position-relative border-dark",
             border === "hidden" ? "border-0" : "",
             border === "visible" && edges.top ? "border-top" : "",

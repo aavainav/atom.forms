@@ -99,9 +99,9 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
         const printController = controllers.getPrintController();
         const formController = controllers.getFormController();
 
-        const editingForm = formController.form.mode === "editable" ? formController.form : undefined;
-        if (editingForm) {
-            formController.setForm(editingForm.setMode("viewable"));
+        const originalForm = formController.form.mode === "viewable" ? undefined : formController.form;
+        if (originalForm) {
+            formController.setForm(originalForm.setMode("viewable"));
         }
 
         this.applyPageRules(orientation, paper, margin);
@@ -125,8 +125,8 @@ export class PrintService implements IPrintService, IPrintRegistrationService {
             printController.end();
             this.removePageRules();
 
-            if (editingForm) {
-                formController.setForm(editingForm);
+            if (originalForm) {
+                formController.setForm(originalForm);
             }
         }
     }

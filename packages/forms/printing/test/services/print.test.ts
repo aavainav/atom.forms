@@ -168,9 +168,9 @@ describe("PrintService", () => {
                 vi.unstubAllGlobals();
             });
 
-            it("is viewable for the duration of the print, when it started out editable", async () => {
+            it.each(["editable", "reviewable"] as const)("is viewable for the duration of the print, when it started out %s", async (mode) => {
                 const item = catalogItem("s438", "front-page");
-                const { controllers, formController, printController } = controllersStub("editable");
+                const { controllers, formController, printController } = controllersStub(mode);
 
                 let modeWhilePrinting: FormMode | undefined;
                 printController.begin.mockImplementation(() => { modeWhilePrinting = formController.form.mode; });
@@ -180,9 +180,9 @@ describe("PrintService", () => {
                 expect(modeWhilePrinting).toBe("viewable");
             });
 
-            it("restores the original form object once the print finishes", async () => {
+            it.each(["editable", "reviewable"] as const)("restores the original form object once the print finishes, when it started out %s", async (mode) => {
                 const item = catalogItem("s438", "front-page");
-                const { controllers, formController } = controllersStub("editable");
+                const { controllers, formController } = controllersStub(mode);
                 const original = formController.form;
 
                 await service.print(controllers, item, { profileId: allPagesProfileId });

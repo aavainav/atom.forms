@@ -50,11 +50,11 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
     const navigationController = controllers.getNavigationController();
     const navigationTarget = useNavigationTarget(navigationController);
 
-    const isViewable = form.mode === "viewable";
+    const isEditable = form.mode === "editable";
 
     // a read-only form is a record of something already settled, so its status is stamped across it; an editable form is
     // still being written and carries none. an explicitly supplied watermark wins over the status-derived one.
-    const pageWatermark = watermark ?? (isViewable ? getStatusWatermark(form.status) : undefined);
+    const pageWatermark = watermark ?? (isEditable ? undefined : getStatusWatermark(form.status));
 
     const toEntries = (source: ReadonlyArray<IPageCollectionGroup<any>>): Array<IPageEntry> => source.flatMap((group) => {
         const pageCollection = form.get<PageCollection>(group.pageDefinition);
@@ -126,9 +126,9 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
                         <FPage
                             formType={form.type}
                             watermark={pageWatermark}
-                            onAddPage={isViewable ? undefined : () => controller.addPage(entry.group.pageDefinition)}
+                            onAddPage={isEditable ? () => controller.addPage(entry.group.pageDefinition) : undefined}
                             // the controller asks its confirm-delete policy, so the confirmation cannot be skipped by a host that forgets to supply one
-                            onDeletePage={isViewable ? undefined : () => controller.removePage(entry.group.pageDefinition, entry.page.id!)}
+                            onDeletePage={isEditable ? () => controller.removePage(entry.group.pageDefinition, entry.page.id!) : undefined}
                         >
                             {entry.group.children(entry.binding)}
                         </FPage>

@@ -16,6 +16,7 @@ const statusWatermarks: Partial<Record<FormStatus, string>> = {
     canceled: "CANCELED",
     draft: "DRAFT",
     inProgress: "IN PROGRESS",
+    inReview: "IN REVIEW",
     rejected: "REJECTED",
     voided: "VOID"
 };

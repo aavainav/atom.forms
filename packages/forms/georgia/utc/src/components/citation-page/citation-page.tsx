@@ -42,7 +42,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolatorDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolatorDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolatorDropzone(page, dropzone))}
             >
                 <ViolatorSection binding={binding.getSection(citationPage.violatorSection)} />
             </FDropzone>
@@ -53,7 +53,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
                 // the dropped make and model arrive as names, and turning them into the codes the citation stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     gaUtcService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => gaUtcService.applyVehicleDropzone(page, resolved)));
                 }}
@@ -67,7 +67,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => gaUtcService.applyViolationDropzone(page, dropzone))}
             >
                 <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
             </FDropzone>

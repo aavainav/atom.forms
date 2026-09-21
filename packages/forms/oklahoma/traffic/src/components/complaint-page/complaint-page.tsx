@@ -41,7 +41,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
             >
                 <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
@@ -55,7 +55,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
                 // the dropped make and model arrive as names, and turning them into the codes the form stores means
                 // consulting value lists that have to be loaded, so the dropzone is resolved before it is applied
                 // rather than inside the update
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     okTrafficService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => okTrafficService.applyVehicleDropzone(page, resolved)));
                 }}
@@ -66,7 +66,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>

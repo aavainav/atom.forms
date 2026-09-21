@@ -128,6 +128,7 @@ export type { ConfirmPageDelete, ControllerConstructor, IController, IController
 export { useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 
 export { setOptionWithDependents } from "./utils/dependent-fields";
+export { getFieldControl, getFieldId } from "./utils/field-control";
 
 export { schema as ImportablePersonSchema, validateImportablePerson } from "./models/import/importable-person";
 export { schema as ImportableVehicleSchema, validateImportableVehicle } from "./models/import/importable-vehicle";

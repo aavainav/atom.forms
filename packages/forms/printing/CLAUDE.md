@@ -44,9 +44,9 @@ the component that renders it. This package owns every decision *about* a print;
    wide as a sheet is tall;
 2. `validateProfile` — a copy naming a page the form does not carry **throws**, rather than printing a blank sheet.
    The page names are checked against `new catalogItem.ctor().getChildDefinitions()`;
-3. if the form is `"editable"`, switch it to `"viewable"` via `formController.setForm(form.setMode("viewable"))` --
-   a printed page is a copy of the record, not a form to edit, so it renders exactly as viewing a finished one
-   would (see **Printing is viewable** below);
+3. unless the form is already `"viewable"`, switch it to `"viewable"` via `formController.setForm(form.setMode("viewable"))` --
+   a printed page is a copy of the record, not a form to edit or review, so it renders exactly as viewing a finished
+   one would (see **Printing is viewable** below);
 4. write `@page { size: <paper> <orientation>; margin: <margin>in }` into a `<style id="f-print-page-rules">` in the
    head. An `@page` rule cannot be selected by a class, so it has to be swapped at print time;
 5. `printController.begin({ layout, pageNames, scale })` — the page collection drops its tab strip and renders the
@@ -69,7 +69,8 @@ The switch is restored by handing back the **exact form object captured before p
 `setMode("editable")` on the printed one. `setMode("editable")` deliberately never re-enables a field disabled for
 another reason (a `readOnlyFields` lock, say), so it cannot undo the viewable switch by itself -- only restoring the
 original object does. A form already `"viewable"` when printing starts (an issued citation) is left alone entirely,
-so printing it does not raise a redundant form-controller update.
+so printing it does not raise a redundant form-controller update. A `"reviewable"` form is switched like an editable
+one, so anything drawn only for reviewing stays off the paper.
 
 ## Scaling — the part with the sharp edges
 

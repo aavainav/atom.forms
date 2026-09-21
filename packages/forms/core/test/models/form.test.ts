@@ -153,12 +153,12 @@ describe("FormModel", () => {
     });
 
     describe("setMode", () => {
-        it("disables every field on every page when switching to viewable", async () => {
+        it.each(["reviewable", "viewable"] as const)("disables every field on every page when switching to %s", async (mode) => {
             const withTwo = await addCitationPage(form);
 
-            const viewable = withTwo.setMode("viewable");
+            const locked = withTwo.setMode(mode);
 
-            const enabled = viewable
+            const enabled = locked
                 .getPages()
                 .flatMap(page => [violatorSection, chargeSection]
                     .flatMap(section => page.get<SectionModel>(section)
@@ -167,13 +167,13 @@ describe("FormModel", () => {
 
             expect(enabled).not.toHaveLength(0);
             expect(enabled.every(value => value === false)).toBe(true);
-            expect(viewable.mode).toBe("viewable");
+            expect(locked.mode).toBe(mode);
         });
 
-        it("stamps editable without re-enabling fields disabled for another reason", () => {
-            const viewable = form.setMode("viewable");
+        it.each(["reviewable", "viewable"] as const)("stamps editable over %s without re-enabling fields disabled for another reason", (mode) => {
+            const locked = form.setMode(mode);
 
-            const editable = viewable.setMode("editable");
+            const editable = locked.setMode("editable");
 
             expect(editable.mode).toBe("editable");
             expect(getFieldValue(editable, violatorSection, violatorFields.firstName).getIsEnabled()).toBe(false);

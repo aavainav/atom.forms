@@ -227,7 +227,11 @@ no portal, so it has to be rendered somewhere that is not itself a stacking cont
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab
 strip numbered across all groups combined**. It derives the watermark from `form.status` and wires the page
-add/delete buttons to the form controller, both gated on `form.mode === "viewable"`.
+add/delete buttons to the form controller, both only while `form.mode === "editable"`. `FormMode` has three
+values: `"editable"`, `"viewable"` (a locked snapshot, styled like a printed record) and `"reviewable"` (viewable that
+a reviewer can also comment on). Everything that locks a form -- `setMode`, the watermark, add/delete, the dropzone
+gates in the form packages' page components -- asks whether the mode is *not* `"editable"`, so a new locked mode
+needs no change to any of them.
 
 While the print controller holds a state, it renders a second way instead: the pages the print is for, flat, inside
 `<div class="f-print f-print--{layout}">`, with the add and delete affordances omitted — neither belongs on paper.
@@ -311,6 +315,6 @@ as `yarn test`.
   through `withChanges` and bypasses the constructor. Pinned by a characterization test in
   [test/models/field.test.ts](test/models/field.test.ts).
 - `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
-  `setMode("viewable")` a newly added page arrives with its non-shared sections enabled.
+  `setMode("viewable")` (or `"reviewable"`) a newly added page arrives with its non-shared sections enabled.
 - `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page
   definitions is only ever evaluated against the pages of the first.

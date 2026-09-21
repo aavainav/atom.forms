@@ -42,7 +42,7 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
                 // the dropped make and model arrive as names, and turning them into the codes the report stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     tr310Service.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((current) => tr310Service.applyVehicleDropzone(current, resolved)));
                 }}
@@ -53,7 +53,7 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageOwnerDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((current) => tr310Service.applyOwnerDropzone(current, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((current) => tr310Service.applyOwnerDropzone(current, dropzone))}
             >
                 <OwnerSection binding={binding.getSection(page.ownerSection)} />
             </FDropzone>

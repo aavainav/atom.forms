@@ -37,7 +37,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => binding.update((page) => okParkingService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => okParkingService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
             </FDropzone>
@@ -50,7 +50,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
                 // the dropped make arrives as a name, and turning it into the code the form stores means consulting
                 // a value list that has to be loaded, so the dropzone is resolved before it is applied rather than
                 // inside the update
-                onDrop={binding.mode === "viewable" ? undefined : (dropzone) => {
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     okParkingService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update((page) => okParkingService.applyVehicleDropzone(page, resolved)));
                 }}

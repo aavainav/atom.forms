@@ -29,7 +29,7 @@ function summarize(record: AuditRecord): string {
         case "fields-edited":
             return record.fields.join(", ");
         case "form-opened":
-            return `${record.form.name} v${record.form.version}, ${record.status}${record.mode === "viewable" ? ", viewable" : ""}`;
+            return `${record.form.name} v${record.form.version}, ${record.status}${record.mode === "editable" ? "" : `, ${record.mode}`}`;
         case "print-started":
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
         case "status-changed":

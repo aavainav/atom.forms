@@ -10,7 +10,7 @@ import { createExampleDataManager } from "../../example-data";
 const catalogIdentity = { name: "SC Form 432 - Public Contact / Warning", version: "1.0" };
 
 /** The statuses the demo offers, in the order the picker lists them. */
-const demoStatuses: ReadonlyArray<FormStatus> = ["draft", "inProgress", "issued", "approved", "canceled", "rejected", "voided"];
+const demoStatuses: ReadonlyArray<FormStatus> = ["draft", "inProgress", "inReview", "issued", "approved", "canceled", "rejected", "voided"];
 
 /** The display name for each status, since the status itself is camel cased. */
 const statusLabels: Record<FormStatus, string> = {
@@ -18,9 +18,17 @@ const statusLabels: Record<FormStatus, string> = {
     canceled: "Canceled",
     draft: "Draft",
     inProgress: "In Progress",
+    inReview: "In Review",
     issued: "Issued",
     rejected: "Rejected",
     voided: "Voided"
+};
+
+/** The display name for each mode. */
+const modeLabels: Record<FormMode, string> = {
+    editable: "Editable",
+    reviewable: "Reviewable",
+    viewable: "Viewable"
 };
 
 interface IFormModeDemoFormProps {
@@ -39,8 +47,8 @@ function describeMode(status: FormStatus, mode: FormMode): string {
     const watermark = getStatusWatermark(status);
 
     return watermark
-        ? `Viewable: fields are disabled, placeholders are hidden, and the page is stamped "${watermark}" -- the same as printing it.`
-        : "Viewable: fields are disabled and placeholders are hidden, but this status carries no watermark -- the same as printing it.";
+        ? `${modeLabels[mode]}: fields are disabled, placeholders are hidden, and the page is stamped "${watermark}" -- the same as printing it.`
+        : `${modeLabels[mode]}: fields are disabled and placeholders are hidden, but this status carries no watermark -- the same as printing it.`;
 }
 
 /** Renders the loaded form with the demo's status applied, which is how a form arriving from a data source would carry one. */
@@ -90,8 +98,9 @@ export default function FormModeDemoPage(): React.JSX.Element {
                         value={mode}
                         onChange={(e) => setMode(e.target.value as FormMode)}
                     >
-                        <option value="editable">Editable</option>
-                        <option value="viewable">Viewable</option>
+                        {(Object.keys(modeLabels) as Array<FormMode>).map((demoMode) => (
+                            <option key={demoMode} value={demoMode}>{modeLabels[demoMode]}</option>
+                        ))}
                     </select>
                 </div>
                 <div className="text-muted mb-2">{describeMode(status, mode)}</div>

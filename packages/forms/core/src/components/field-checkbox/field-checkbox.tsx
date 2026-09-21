@@ -76,7 +76,7 @@ export default function FFieldCheckbox({
     };
 
     return (
-        <div style={wrapperStyle} className={buildClasses(
+        <div data-field-id={id} style={wrapperStyle} className={buildClasses(
             "f-field-checkbox form-check",
             isSwitch ? "form-switch" : ""
         )}>

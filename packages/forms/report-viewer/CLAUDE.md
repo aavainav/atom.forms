@@ -215,7 +215,7 @@ is a component; mount it wherever the host's router puts it.
 
 - `ReportViewerForm` creates its own `ControllerManager` unless one is passed in. **Pass one in** when something
   outside the form (a panel of draggable items) needs the same controllers.
-- Viewable mode is applied by `form.setMode("viewable")` (disables every field and stamps `mode` on the model).
+- Any mode but `"editable"` is applied by `form.setMode(mode)` (disables every field and stamps `mode` on the model).
   Everything downstream — add/delete page, drop handlers, the watermark, placeholders — reads `form.mode` (or
   `binding.mode`) off the model itself rather than taking a separate prop; see [`@forms/core`](../core/CLAUDE.md)'s
   `FPageCollection`. It is a **per-instance** setting, not an app-wide one: an issued citation versus a draft is a

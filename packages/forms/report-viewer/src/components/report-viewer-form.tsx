@@ -50,7 +50,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
     const ownedControllers = useMemo(() => controllers ? undefined : new ControllerManager(), [controllers, initialForm]);
     const formControllers = controllers ?? ownedControllers!;
 
-    const initialState = useMemo(() => mode === "viewable" ? initialForm.form.setMode("viewable") : initialForm.form, [initialForm, mode]);
+    const initialState = useMemo(() => mode === "editable" ? initialForm.form : initialForm.form.setMode(mode), [initialForm, mode]);
 
     const controller = useFormController(formControllers, initialState);
 

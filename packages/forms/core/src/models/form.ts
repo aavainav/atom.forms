@@ -17,10 +17,10 @@ import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
 import type { IReportData } from "../mapping/data/report-data";
 import { withChanges } from "../utils/clone";
 
-/** How a form renders: "editable" allows edits and the add/delete/import affordances; "viewable" is a locked snapshot, styled like a printed record. */
-export type FormMode = "editable" | "viewable";
+/** How a form renders: "editable" allows edits and the add/delete/import affordances; "viewable" is a locked snapshot, styled like a printed record; "reviewable" is viewable that a reviewer can also comment on. */
+export type FormMode = "editable" | "reviewable" | "viewable";
 export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
-export type FormStatus = "approved" | "canceled" | "draft" | "rejected" | "inProgress" | "issued" | "voided";
+export type FormStatus = "approved" | "canceled" | "draft" | "inProgress" | "inReview" | "issued" | "rejected" | "voided";
 export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
 
 /** Identifies a form registered with the form catalog. A missing version resolves to the latest. */
@@ -90,8 +90,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     /** Removes the page at the specified index from the page collection for the specified page definition. */
     removePage(index: number, pageDefinition: PageDefinition): this;
     /**
-     * Sets the form's mode. Switching to "viewable" disables every field; switching to "editable" only stamps
-     * the mode -- it does not re-enable fields disabled for another reason, such as a `readOnlyFields` lock.
+     * Sets the form's mode. Switching to any mode but "editable" disables every field; switching to "editable" only
+     * stamps the mode -- it does not re-enable fields disabled for another reason, such as a `readOnlyFields` lock.
      */
     setMode(mode: FormMode): this;
     /** Returns a form with the given status, which determines the watermark stamped across its pages. */
@@ -261,7 +261,7 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     }
 
     public setMode(mode: FormMode): this {
-        const form = mode === "viewable" ? this.mapFields(field => field.setIsEnabled(false)) : this;
+        const form = mode === "editable" ? this : this.mapFields(field => field.setIsEnabled(false));
         return withChanges(form, { mode });
     }
 
