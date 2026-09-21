@@ -4,13 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReviewLayer } from "../../src/components/review-layer";
 import { ReviewThread } from "../../src/components/review-thread";
 import type { IReviewComment } from "../../src/models/review-comment";
-import { firstName, placement, review } from "../fixtures/review-form";
+import { firstName, osei, placement, review } from "../fixtures/review-form";
 import type { IReviewOptions } from "../fixtures/review-form";
 import { click, mount, unmountAll } from "../fixtures/mount";
 
 afterEach(unmountAll);
 
-const held: IReviewComment = { at: 1_700_000_000_000, author: "Lt. Osei", id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
+const held: IReviewComment = { at: 1_700_000_000_000, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
 
 /** Puts a control for each field id in the document, as the page collection does for the fields on the page showing. */
 function drawControls(...fieldIds: string[]): void {

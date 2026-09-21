@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { IReviewComment } from "../../src/models/review-comment";
-import { firstName, lastName, person, personPage, placement, report, review, vehicle } from "../fixtures/review-form";
+import { firstName, lastName, osei, person, personPage, placement, report, review, rivera, vehicle } from "../fixtures/review-form";
 
 const now = 1_700_000_000_000;
 
@@ -24,12 +24,12 @@ describe("ReviewController", () => {
             expect(review({ mode }).controller.canComment).toBe(expected);
         });
 
-        it("is false until a reviewer has been set, even on a reviewable form", () => {
-            const { controller } = review({ reviewer: "" });
+        it("is false until a user has been set, even on a reviewable form", () => {
+            const { controller } = review({ user: null });
 
             expect(controller.canComment).toBe(false);
 
-            controller.setReviewer("Sgt. Rivera");
+            controller.setUser(rivera);
 
             expect(controller.canComment).toBe(true);
         });
@@ -51,7 +51,7 @@ describe("ReviewController", () => {
 
             const comment = controller.add(firstName, "  Wrong date.  ");
 
-            expect(comment).toMatchObject({ at: now, author: "Sgt. Rivera", isResolved: false, target: firstName, text: "Wrong date." });
+            expect(comment).toMatchObject({ at: now, author: rivera, isResolved: false, target: firstName, text: "Wrong date." });
             expect(comment.id).toBeTruthy();
             expect(controller.comments).toEqual([comment]);
             expect(getChanges()).toBe(1);
@@ -62,9 +62,9 @@ describe("ReviewController", () => {
                 .toThrowError("Comments can only be added while the form is reviewable.");
         });
 
-        it("refuses until a reviewer has been set", () => {
-            expect(() => review({ reviewer: "" }).controller.add(firstName, "Wrong date."))
-                .toThrowError("A reviewer must be set before comments can be added.");
+        it("refuses until a user has been set", () => {
+            expect(() => review({ user: null }).controller.add(firstName, "Wrong date."))
+                .toThrowError("A user must be set before comments can be added.");
         });
 
         it("refuses a comment with no text", () => {
@@ -110,7 +110,7 @@ describe("ReviewController", () => {
 
         it("lets the officer resolve a comment while the form is editable", () => {
             const { controller } = review({ mode: "editable" });
-            controller.load([{ at: 1, author: "Lt. Osei", id: "held-1", isResolved: false, target: firstName, text: "Wrong date." }]);
+            controller.load([{ at: 1, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." }]);
 
             controller.setResolved("held-1", true);
 
@@ -119,7 +119,7 @@ describe("ReviewController", () => {
 
         it("refuses while the form is viewable", () => {
             const { controller } = review({ mode: "viewable" });
-            controller.load([{ at: 1, author: "Lt. Osei", id: "held-1", isResolved: false, target: firstName, text: "Wrong date." }]);
+            controller.load([{ at: 1, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." }]);
 
             expect(() => controller.setResolved("held-1", true)).toThrowError("Comments cannot be resolved or reopened while the form is viewable.");
             expect(controller.openCount).toBe(1);
@@ -206,7 +206,7 @@ describe("ReviewController", () => {
     describe("load", () => {
         it("replaces the comments with the host's, and raises a change", () => {
             const { controller, getChanges } = review();
-            const held: IReviewComment = { at: 1, author: "Lt. Osei", id: "held-1", isResolved: true, target: report, text: "Approved once fixed." };
+            const held: IReviewComment = { at: 1, author: osei, id: "held-1", isResolved: true, target: report, text: "Approved once fixed." };
 
             controller.add(firstName, "Wrong date.");
             controller.load([held]);

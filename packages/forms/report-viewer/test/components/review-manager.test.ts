@@ -15,20 +15,22 @@ import { ReviewService } from "../../src/services/review";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+const rivera = { id: "4471", name: "Sgt. Rivera" };
 const report: ReviewTarget = { level: "form" };
-const held: IReviewComment = { at: 1, author: "Lt. Osei", id: "held-1", isResolved: false, target: report, text: "Needs a narrative." };
+const held: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "held-1", isResolved: false, target: report, text: "Needs a narrative." };
 
 const mounted: Array<() => void> = [];
 
 interface IMountOptions {
+    /** Comments the report viewer form has already loaded onto the controller when the manager mounts. */
+    readonly comments?: ReadonlyArray<IReviewComment>;
     readonly dataManager?: Partial<IReportViewerDataManager<any>>;
     readonly mode?: FormMode;
-    readonly reviewer?: string;
 }
 
 /** Mounts the real manager, and the layer and panel it renders, over a form with no fields and against a real review service. */
 function mount(options: IMountOptions = {}) {
-    const { mode = "reviewable", reviewer = "Sgt. Rivera" } = options;
+    const { mode = "reviewable" } = options;
     const controllers = new ControllerManager();
     controllers.loadForm({
         id: "form-1",
@@ -38,7 +40,11 @@ function mount(options: IMountOptions = {}) {
         getPagesFor: () => []
     } as unknown as FormModel<any>);
 
+    // the report viewer form holds the user and the comments on the controller before this mounts
     const review = getReviewController(controllers);
+    review.setUser(rivera);
+    review.load(options.comments ?? []);
+
     const reviewService = new ReviewService();
     const showModal = vi.fn();
     const onError = vi.fn();
@@ -48,7 +54,7 @@ function mount(options: IMountOptions = {}) {
     const root = createRoot(container);
 
     const render = (dataManager = options.dataManager): void => {
-        act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(ReviewManager, { controllers, dataManager: dataManager as IReportViewerDataManager<any>, reviewer, onError }))));
+        act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(ReviewManager, { controllers, dataManager: dataManager as IReportViewerDataManager<any>, onError }))));
     };
 
     render();
@@ -57,69 +63,24 @@ function mount(options: IMountOptions = {}) {
     return { container, controllers, onError, render, review, reviewService, showModal };
 }
 
-/** Lets the manager's read, and whatever it starts once that is done, run to completion. */
-async function settle(): Promise<void> {
-    await act(async () => { await Promise.resolve(); });
-}
-
 afterEach(() => {
     mounted.splice(0).forEach(unmount => unmount());
     document.body.innerHTML = "";
 });
 
 describe("ReviewManager", () => {
-    describe("loading", () => {
-        it("loads the comments the data manager holds", async () => {
-            const { review } = mount({ dataManager: { readComments: async () => [held] } });
-
-            await settle();
-
-            expect(review.comments).toEqual([held]);
-        });
-
-        it("reads them once, even when the host hands over a new data manager each time it renders", async () => {
-            const readComments = vi.fn(async () => [held]);
-            const { render } = mount({ dataManager: { readComments } });
-
-            await settle();
-            render({ readComments: vi.fn(async () => []) });
-            await settle();
-
-            expect(readComments).toHaveBeenCalledTimes(1);
-        });
-
-        it("works with no data manager, the comments lasting as long as the form is on screen", async () => {
-            const { review } = mount();
-
-            await settle();
-            await act(async () => { review.add(report, "Needs a narrative."); });
-
-            expect(review.comments).toHaveLength(1);
-        });
-
-        it("reports comments that cannot be read", async () => {
-            const { onError } = mount({ dataManager: { readComments: async () => { throw new Error("offline"); } } });
-
-            await settle();
-
-            expect(onError).toHaveBeenCalledWith("The review comments could not be loaded.");
-        });
-    });
-
     describe("saving", () => {
-        it("does not write back the comments it has just loaded", async () => {
+        it("writes nothing until a comment changes, and does not write back what was loaded before it mounted", () => {
             const writeComments = vi.fn(async () => undefined);
-            mount({ dataManager: { readComments: async () => [held], writeComments } });
 
-            await settle();
+            mount({ comments: [held], dataManager: { writeComments } });
 
             expect(writeComments).not.toHaveBeenCalled();
         });
 
-        it("writes the comments after each change", async () => {
+        it("writes all the comments after each change", async () => {
             const writeComments = vi.fn(async () => undefined);
-            const { review } = mount({ dataManager: { readComments: async () => [held], writeComments } });
-            await settle();
+            const { review } = mount({ comments: [held], dataManager: { writeComments } });
 
             await act(async () => { review.add(report, "Wrong date."); });
             expect(writeComments).toHaveBeenLastCalledWith(review.comments);
@@ -130,21 +91,18 @@ describe("ReviewManager", () => {
             expect(writeComments).toHaveBeenLastCalledWith(review.comments);
         });
 
-        it("saves even when the data manager holds no comments to read", async () => {
-            const writeComments = vi.fn(async () => undefined);
-            const { review } = mount({ dataManager: { writeComments } });
-            await settle();
+        it("works with no data manager, the comments lasting as long as the form is on screen", async () => {
+            const { review } = mount();
 
-            await act(async () => { review.add(report, "Wrong date."); });
+            await act(async () => { review.add(report, "Needs a narrative."); });
 
-            expect(writeComments).toHaveBeenCalledTimes(1);
+            expect(review.comments).toHaveLength(1);
         });
 
         it("writes one at a time, following a change that lands mid-write with one write of the latest comments", async () => {
             const finishes: Array<() => void> = [];
             const writeComments = vi.fn((_comments: ReadonlyArray<IReviewComment>) => new Promise<void>(resolve => { finishes.push(resolve); }));
             const { review } = mount({ dataManager: { writeComments } });
-            await settle();
 
             await act(async () => { review.add(report, "First."); });
             await act(async () => { review.add(report, "Second."); });
@@ -165,7 +123,6 @@ describe("ReviewManager", () => {
         it("reports comments that cannot be written, and goes on saving the next change", async () => {
             const writeComments = vi.fn().mockRejectedValueOnce(new Error("offline")).mockResolvedValue(undefined);
             const { onError, review } = mount({ dataManager: { writeComments } });
-            await settle();
 
             await act(async () => { review.add(report, "First."); });
             expect(onError).toHaveBeenCalledWith("The review comments could not be saved.");
@@ -174,10 +131,21 @@ describe("ReviewManager", () => {
             expect(writeComments).toHaveBeenCalledTimes(2);
         });
 
+        it("reads the data manager as it is now, not as it was when it mounted", async () => {
+            const first = vi.fn(async () => undefined);
+            const second = vi.fn(async () => undefined);
+            const { render, review } = mount({ dataManager: { writeComments: first } });
+
+            render({ writeComments: second });
+            await act(async () => { review.add(report, "Wrong date."); });
+
+            expect(first).not.toHaveBeenCalled();
+            expect(second).toHaveBeenCalledTimes(1);
+        });
+
         it("stops saving once it is unmounted", async () => {
             const writeComments = vi.fn(async () => undefined);
             const { review } = mount({ dataManager: { writeComments } });
-            await settle();
 
             mounted.splice(0).forEach(unmount => unmount());
             review.add(report, "Wrong date.");
@@ -186,27 +154,9 @@ describe("ReviewManager", () => {
         });
     });
 
-    describe("the reviewer", () => {
-        it("attributes comments to the reviewer it is given", async () => {
-            const { review } = mount({ reviewer: "Sgt. Rivera" });
-            await settle();
-
-            expect(review.canComment).toBe(true);
-            expect(review.add(report, "Wrong date.").author).toBe("Sgt. Rivera");
-        });
-
-        it("leaves a form with no reviewer unable to take comments", async () => {
-            const { review } = mount({ reviewer: "" });
-            await settle();
-
-            expect(review.canComment).toBe(false);
-        });
-    });
-
     describe("the panel", () => {
-        it("opens and closes each time it is toggled", async () => {
+        it("opens and closes each time it is toggled", () => {
             const { container, reviewService } = mount();
-            await settle();
 
             expect(container.querySelector(".offcanvas")!.classList.contains("show")).toBe(false);
 
@@ -217,9 +167,8 @@ describe("ReviewManager", () => {
             expect(container.querySelector(".offcanvas")!.classList.contains("show")).toBe(false);
         });
 
-        it("closes from its header", async () => {
+        it("closes from its header", () => {
             const { container, reviewService } = mount();
-            await settle();
 
             act(() => reviewService.togglePanel());
             act(() => container.querySelector<HTMLElement>(".btn-close")!.click());
@@ -227,9 +176,8 @@ describe("ReviewManager", () => {
             expect(container.querySelector(".offcanvas")!.classList.contains("show")).toBe(false);
         });
 
-        it("opens the thread for the whole report through the modal service", async () => {
+        it("opens the thread for the whole report through the modal service", () => {
             const { container, showModal } = mount();
-            await settle();
 
             act(() => Array.from(container.querySelectorAll("button")).find(button => button.textContent === "Comment on the report")!.click());
 

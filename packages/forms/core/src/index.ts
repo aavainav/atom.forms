@@ -25,6 +25,7 @@ export { FListGroupCheckbox } from "./components/list-group-checkbox";
 export { FListGroupItem } from "./components/list-group-item";
 export { FLoadingIndicator } from "./components/loading-indicator";
 export { FModal } from "./components/modal";
+export { FNavTab } from "./components/nav-tab";
 export { FNotification } from "./components/notification";
 export { FOffCanvas } from "./components/off-canvas";
 export type { FOffCanvasPlacement } from "./components/off-canvas";
@@ -72,6 +73,7 @@ export type { ICrash } from "./mapping/data/crash";
 export type { IReportData } from "./mapping/data/report-data";
 export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./mapping/form-mapper";
 
+export type { IActor } from "./models/actor";
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";
 export type { IFieldPlacement } from "./models/field-placement";

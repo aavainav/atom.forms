@@ -1,3 +1,5 @@
+import type { IActor } from "@forms/core";
+
 /**
  * What a comment is about: the whole report, or one page, section or field of it. Below the form, a target names
  * the page, section and field by the names their definitions carry, which stay the same across loads where an id
@@ -14,7 +16,7 @@ export interface IReviewComment {
     /** When it was made, in milliseconds since the epoch. */
     readonly at: number;
     /** Who made it. */
-    readonly author: string;
+    readonly author: IActor;
     /** Identifies it, for resolving it and for telling it apart from the others. */
     readonly id: string;
     /** Whether it has been dealt with. */

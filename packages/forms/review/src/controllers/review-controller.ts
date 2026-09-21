@@ -1,11 +1,11 @@
-import { IController, IControllerManager, IFieldPlacement, INavigationTarget, Controller, FormModel, RegisterController } from "@forms/core";
+import { IActor, IController, IControllerManager, IFieldPlacement, INavigationTarget, Controller, FormModel, RegisterController } from "@forms/core";
 
 import { IReviewComment, ReviewTarget, getTargetKey } from "../models/review-comment";
 import { getPlacementTargets } from "../utils/placement-targets";
 
 /** Defines the controller that holds a report's review comments. It reads the form, so it throws until one is loaded. */
 export interface IReviewController extends IController {
-    /** Whether comments can be added, which they can only while the form is reviewable and a reviewer has been set. */
+    /** Whether comments can be added, which they can only while the form is reviewable and a user has been set. */
     readonly canComment: boolean;
     /** Whether comments can be resolved and reopened, which they can in any mode but viewable: the officer whose report is reviewed deals with them too. */
     readonly canResolve: boolean;
@@ -14,7 +14,7 @@ export interface IReviewController extends IController {
     /** How many comments have not been resolved. */
     readonly openCount: number;
 
-    /** Adds a comment from the reviewer, throwing unless the form is reviewable, a reviewer has been set and there is some text. */
+    /** Adds a comment from the user, throwing unless the form is reviewable, a user has been set and there is some text. */
     add(target: ReviewTarget, text: string): IReviewComment;
     /** Describes where a target is in the words the form uses, outermost first -- "Vehicle > Details > Make" -- for showing beside a comment. */
     describeTarget(target: ReviewTarget): string;
@@ -33,7 +33,7 @@ export interface IReviewController extends IController {
     /** Sets whether a comment has been dealt with, throwing while the form is viewable. */
     setResolved(id: string, isResolved: boolean): void;
     /** Sets who comments are attributed to. */
-    setReviewer(reviewer: string): void;
+    setUser(user: IActor | undefined): void;
 }
 
 /** Gets the review controller, which core's manager has no accessor for. */
@@ -58,10 +58,10 @@ function getTargetNames(target: Exclude<ReviewTarget, { readonly level: "form" }
 export class ReviewController extends Controller implements IReviewController {
     private _comments: ReadonlyArray<IReviewComment> = [];
     private placements?: { readonly placements: ReadonlyMap<string, IFieldPlacement>; readonly signature: string };
-    private reviewer = "";
+    private user?: IActor;
 
     get canComment(): boolean {
-        return this.form.mode === "reviewable" && !!this.reviewer;
+        return this.form.mode === "reviewable" && !!this.user;
     }
 
     get canResolve(): boolean {
@@ -85,15 +85,15 @@ export class ReviewController extends Controller implements IReviewController {
             throw new Error("Comments can only be added while the form is reviewable.");
         }
 
-        if (!this.reviewer) {
-            throw new Error("A reviewer must be set before comments can be added.");
+        if (!this.user) {
+            throw new Error("A user must be set before comments can be added.");
         }
 
         if (!text.trim()) {
             throw new Error("A comment needs some text.");
         }
 
-        const comment: IReviewComment = { at: Date.now(), author: this.reviewer, id: crypto.randomUUID(), isResolved: false, target, text: text.trim() };
+        const comment: IReviewComment = { at: Date.now(), author: this.user, id: crypto.randomUUID(), isResolved: false, target, text: text.trim() };
 
         this.replace([...this._comments, comment]);
 
@@ -176,8 +176,8 @@ export class ReviewController extends Controller implements IReviewController {
         }
     }
 
-    public setReviewer(reviewer: string): void {
-        this.reviewer = reviewer;
+    public setUser(user: IActor | undefined): void {
+        this.user = user;
     }
 
     private findPlacement(target: ReviewTarget): { readonly fieldId: string; readonly placement: IFieldPlacement } | undefined {

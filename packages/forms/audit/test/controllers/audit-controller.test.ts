@@ -67,7 +67,7 @@ describe("AuditController", () => {
         it("records the form being opened, stamped with its identity and the time", () => {
             const { records } = watch();
 
-            expect(records).toEqual([{ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", mode: "editable", status: "draft" }]);
+            expect(records).toEqual([{ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", mode: "editable", status: "draft" }]);
         });
 
         it("records the status the form arrived with", () => {
@@ -161,7 +161,7 @@ describe("AuditController", () => {
 
             edit(manager, { name: "Dana" }, { status: "issued" });
 
-            expect(records[1]).toEqual({ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "status-changed", to: "issued" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "status-changed", to: "issued" });
         });
 
         it("records the edits made before it first", () => {
@@ -193,7 +193,7 @@ describe("AuditController", () => {
 
             vi.advanceTimersByTime(1);
 
-            expect(records[1]).toEqual({ at: now + editQuietPeriod, fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "fields-edited" });
+            expect(records[1]).toEqual({ at: now + editQuietPeriod, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "fields-edited" });
         });
 
         it("records a burst of edits as one", () => {
@@ -317,7 +317,7 @@ describe("AuditController", () => {
 
             manager.getPrintController().begin({ layout: "side-by-side" });
 
-            expect(records[1]).toEqual({ at: now, form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "print-started", layout: "side-by-side" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "print-started", layout: "side-by-side" });
         });
 
         it("records nothing for ending a print that never began", () => {
@@ -376,6 +376,122 @@ describe("AuditController", () => {
             settle();
 
             expect(kinds(records)).toEqual(["form-opened"]);
+        });
+    });
+
+    describe("ids", () => {
+        it("gives every record an id of its own", () => {
+            const { audit, records } = watch();
+
+            audit.recordSaved();
+            audit.recordSaved();
+
+            expect(new Set(records.map(record => record.id)).size).toBe(3);
+        });
+    });
+
+    describe("who", () => {
+        const rivera = { id: "4471", name: "Sgt. Rivera" };
+
+        it("attributes the records raised after a user is set to that user, and not the ones before", () => {
+            const { audit, records } = watch();
+
+            audit.setUser(rivera);
+            audit.recordSaved();
+
+            expect(records[0].by).toBeUndefined();
+            expect(records[1].by).toEqual(rivera);
+        });
+
+        it("stops attributing records once the user is cleared", () => {
+            const { audit, records } = watch();
+
+            audit.setUser(rivera);
+            audit.setUser(undefined);
+            audit.recordSaved();
+
+            expect(records[1].by).toBeUndefined();
+        });
+    });
+
+    describe("history", () => {
+        const loaded: AuditRecord = { at: 1, by: { id: "9", name: "Lt. Osei" }, form: { id: "form-0", name: "Stub Form", version: "1.0" }, id: "loaded-1", kind: "saved" };
+
+        it("holds what has been raised, in order", () => {
+            const { audit } = watch();
+
+            audit.recordSaved();
+
+            expect(kinds(audit.history)).toEqual(["form-opened", "saved"]);
+        });
+
+        it("is the same array until a record is added, so it can be a snapshot", () => {
+            const { audit } = watch();
+            const before = audit.history;
+
+            expect(audit.history).toBe(before);
+
+            audit.recordSaved();
+
+            expect(audit.history).not.toBe(before);
+        });
+
+        it("puts what was loaded ahead of what has been raised, and raises a change", () => {
+            const { audit } = watch();
+            let changes = 0;
+            audit.onChanged(() => { changes += 1; });
+
+            audit.load([loaded]);
+
+            expect(audit.history.map(record => record.id)).toEqual(["loaded-1", audit.session[0].id]);
+            expect(changes).toBe(1);
+        });
+
+        it("raises a change each time a record is added", () => {
+            const { audit } = watch();
+            let changes = 0;
+            audit.onChanged(() => { changes += 1; });
+
+            audit.recordSaved();
+            audit.recordSaveFailed();
+
+            expect(changes).toBe(2);
+        });
+
+        it("leaves what was loaded out of the session, which is only what was raised", () => {
+            const { audit } = watch();
+
+            audit.load([loaded]);
+
+            expect(kinds(audit.session)).toEqual(["form-opened"]);
+        });
+
+        it("forgets what was loaded when a different form replaces the form, since it is not that report", () => {
+            const { audit, manager } = watch();
+            audit.load([loaded]);
+
+            manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+
+            expect(audit.history.map(record => [record.kind, record.form.id])).toEqual([["form-opened", "form-2"]]);
+        });
+
+        it("keeps the records of a form that was replaced in the session, for whoever is writing them, and out of the history", () => {
+            const { audit, manager } = watch();
+
+            manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+
+            expect(audit.session.map(record => record.form.id)).toEqual(["form-1", "form-2"]);
+            expect(audit.history.map(record => record.form.id)).toEqual(["form-2"]);
+        });
+
+        it("lets go of it all when it is disposed", () => {
+            const { audit } = watch();
+            audit.load([loaded]);
+
+            audit.dispose();
+
+            expect(audit.history).toEqual([]);
+            expect(audit.session).toEqual([]);
         });
     });
 });

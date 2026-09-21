@@ -40,6 +40,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. `section` takes an optional `ISectionDefinitionOptions` — today just `isShared`. |
 | [src/models/schema.ts](src/models/schema.ts) | `Schema` base — an empty constructor; a schema is found through the definition tree it builds, not by registering itself. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
+| [src/models/actor.ts](src/models/actor.ts) | `IActor { id, name }`: who did something to a report, as the host identifies them. Audit records, review comments and (to come) workflow history carry one. |
 | [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`. |
 | [src/models/page.ts](src/models/page.ts) · [page-collection.ts](src/models/page-collection.ts) · [section.ts](src/models/section.ts) | `PageModel` (also holds dropzones), the immutable `PageCollection`, `SectionModel`. |
 | [src/models/field.ts](src/models/field.ts) + [boolean-](src/models/boolean-field.ts)/[number-](src/models/number-field.ts)/[string-](src/models/string-field.ts)/[option-field.ts](src/models/option-field.ts) | `FieldModel` and its four concrete types. |
@@ -202,7 +203,8 @@ Components and hooks have no tests yet; they need `jsdom` and are a separate wav
 Presentational and mostly prop-driven; they do not reach for the form themselves.
 
 - Structure: `FForm`, `FPageCollection`, `FPage`, `FSection`, `FFormStackPanel`, `FBorder`, `FAccordion`,
-  `FWatermark` (+ `getStatusWatermark`).
+  `FWatermark` (+ `getStatusWatermark`), `FNavTab` (tabs and panes; a pane's `content` is a component, lazy or not,
+  and `onSelect` reports each tab selected -- `FPageCollection` composes its `Tab` and `Pane` parts directly).
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.

@@ -33,8 +33,8 @@ export interface IFTab {
 }
 
 export interface IFPane<TProps extends IFPaneContentProps<any>> {
-    /** The content to display inside the pane for the navtab. */
-    readonly content: React.LazyExoticComponent<React.ComponentType<TProps>>;
+    /** The content to display inside the pane for the navtab: a component, lazy or not. */
+    readonly content: React.ComponentType<TProps> | React.LazyExoticComponent<React.ComponentType<TProps>>;
     /** The props to pass to the pane component. */
     readonly props?: TProps;
 }
@@ -55,6 +55,9 @@ interface IFNavTabProps {
     readonly style: NavTabStyle;
     /** The collection of tab/pane pairs to display in the nav-tab. */
     readonly pairs: Array<IFNavTabPair>;
+
+    /** Invoked with the name of the tab whenever one is selected. */
+    onSelect?: (name: string) => void;
 }
 
 interface IFNavTabPair {
@@ -64,8 +67,13 @@ interface IFNavTabPair {
     readonly pane: IFPane<any>;
 }
 
-export default function FNavTab({ id, defaultTab, pairs, style = "tabs" }: IFNavTabProps): React.JSX.Element {
+export default function FNavTab({ id, defaultTab, pairs, style = "tabs", onSelect }: IFNavTabProps): React.JSX.Element {
     const [activeTab, setActiveTab] = useState(defaultTab ?? "");
+
+    const select = (name: string): void => {
+        setActiveTab(name);
+        onSelect?.(name);
+    };
 
     return (
         <div id={id}>
@@ -77,7 +85,7 @@ export default function FNavTab({ id, defaultTab, pairs, style = "tabs" }: IFNav
                         title={pair.tab.title}
                         disabled={pair.tab.disabled}
                         activeTab={activeTab}
-                        onSelect={setActiveTab}
+                        onSelect={select}
                     />
                 ))}
             </ul>

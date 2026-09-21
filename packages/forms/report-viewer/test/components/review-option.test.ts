@@ -13,7 +13,7 @@ import { ReviewService } from "../../src/services/review";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const held: IReviewComment = { at: 1, author: "Lt. Osei", id: "held-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
+const held: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "held-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
 
 const mounted: Array<() => void> = [];
 

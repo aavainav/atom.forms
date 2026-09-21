@@ -23,6 +23,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
 | [src/demos/form-mode/](src/demos/form-mode/) | `/demo/form-mode` — how a form's `FormMode` changes what's on screen: fields disabling, placeholders disappearing, and the watermark each `FormStatus` stamps. |
+| [src/demos/review/](src/demos/review/) | `/demo/review` — a reviewer comments on the public contact/warning form and an officer resolves the comments, both working from the same comments and audit history, held in memory the way a host's database would hold them. |
 | [vite.config.ts](vite.config.ts) | Port 3002, react plugin, and the Sass deprecation categories silenced for Bootstrap 5.3. |
 
 ## Routes
@@ -31,7 +32,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- | --- |
 | `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | **one** `FormRoutePage`, resolving its identity from the matched path | [src/forms/forms-module.ts](src/forms/forms-module.ts) |
-| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` | the demo pages | [src/demos/](src/demos/) |
+| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` · `/demo/review` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/workbench` |
 
 Every route is a **child** of the workbench's `"app"` root route, registered through
@@ -111,6 +112,15 @@ Save and New Form raise the rest.
 **A save the host performs itself is not audited.** `FormRoutePage`'s leave-the-page prompt writes through the data
 manager directly, and on the short path a host has no controller to report it to, so it produces no `saved` record.
 Saves through the options bar do.
+
+## The review demo is the host side of loading and writing back
+
+[review-demo-page.tsx](src/demos/review/review-demo-page.tsx) renders a plain `<ReportViewer />`, and its data manager is
+the one place the example shows a host **keeping** what the viewer hands it. The comments and the audit history live in
+`useRef`s standing in for a database. `read()` returns them with the record, in the one object; `writeComments`
+replaces the comments; `writeAudit` appends the new records **by id**, as a real host should. Switching role remounts
+the viewer (the mode is applied as the form loads), and the comments and history survive it -- which is what shows they
+came back through `read()`. The user field becomes the `settings.user` the records and comments are attributed to.
 
 ## The other two demos take the advanced path
 

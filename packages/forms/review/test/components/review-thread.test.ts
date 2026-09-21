@@ -3,13 +3,13 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { ReviewThread } from "../../src/components/review-thread";
 import type { IReviewComment } from "../../src/models/review-comment";
-import { firstName, lastName, review } from "../fixtures/review-form";
+import { firstName, lastName, osei, review } from "../fixtures/review-form";
 import type { IReviewOptions } from "../fixtures/review-form";
 import { click, findButton, mount, type, unmountAll } from "../fixtures/mount";
 
 afterEach(unmountAll);
 
-const held: IReviewComment = { at: 1_700_000_000_000, author: "Lt. Osei", id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
+const held: IReviewComment = { at: 1_700_000_000_000, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
 
 /** Mounts the thread on the first name field, with the comments already held; they are loaded rather than added, which an editable form refuses. */
 function thread(options: IReviewOptions = {}, comments: ReadonlyArray<IReviewComment> = []) {

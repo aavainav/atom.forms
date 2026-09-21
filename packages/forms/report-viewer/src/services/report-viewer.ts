@@ -1,7 +1,8 @@
 import { ComponentType } from "react";
+import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
-import { IReviewComment } from "@forms/review";
+import { getReviewController, IReviewComment } from "@forms/review";
 import { createService, Singleton } from "@shrub/core";
 
 export type ReadReason = "open" | "new";
@@ -19,21 +20,46 @@ export interface IReportViewerDataManager<TData extends object = IReportData> {
      * resetting to a blank form -- a manager whose data isn't tied to a specific record can ignore which one it gets.
      */
     read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;
-    /** Reads the review comments the host holds for the record. Without one, comments last only as long as the form is on screen. */
-    readComments?(): Promise<ReadonlyArray<IReviewComment>>;
-    /** Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable. */
+    /** Hands the form's extracted data back to the host when the report is saved, unless the host has a `writeBundle`. A manager with neither leaves the form unsaveable. */
     write?(data: IReportData): Promise<void>;
-    /** Hands the review comments back to the host each time one is added, resolved or reopened. They are review metadata, never part of what `write` receives. */
+    /** Hands the audit records raised since the last write back to the host, after each settled batch of them. Append-only: the host adds them to what it holds, matching by id, and is never handed a record twice once it has taken it. */
+    writeAudit?(records: ReadonlyArray<AuditRecord>): Promise<void>;
+    /** Hands the whole report back to the host in one call when it is saved, in place of `write`. For a host that keeps a report as one document. */
+    writeBundle?(bundle: IReportBundle): Promise<void>;
+    /** Hands the review comments back to the host each time one is added, resolved or reopened, all of them each time. They are review metadata, never part of what `write` receives. */
     writeComments?(comments: ReadonlyArray<IReviewComment>): Promise<void>;
 }
 
-/** What a data manager's `read` returns. */
-export type IReadDataResult<TData extends object = IReportData> = IPopulateData<TData>;
+/** What a data manager's `read` returns: the record, and everything else the host holds for it, in one object. */
+export interface IReadDataResult<TData extends object = IReportData> extends IPopulateData<TData> {
+    /** The audit history of the report, for the history to carry on from. Shown, never written back. */
+    readonly audit?: ReadonlyArray<AuditRecord>;
+    /** The review comments made on the report. */
+    readonly comments?: ReadonlyArray<IReviewComment>;
+}
+
+/** Everything the report viewer holds about a report, as one object: what a host is handed to keep it as a document, or to export it. */
+export interface IReportBundle {
+    /** The audit history: what was loaded for the report, then what has been raised since. */
+    readonly audit: ReadonlyArray<AuditRecord>;
+    /** Every review comment. */
+    readonly comments: ReadonlyArray<IReviewComment>;
+    /** The report's data, with the identity and status stamped on it, as `write` receives it. */
+    readonly data: IReportData;
+    /** When the bundle was made, in milliseconds since the epoch. */
+    readonly exportedAt: number;
+    /** The shape of the bundle, for a host reading one back to tell which it is. */
+    readonly version: 1;
+}
 
 /** Describes a form resolved from the form catalog and ready to render. */
 export interface IInitialForm {
+    /** The audit history the host held for the report, if any. */
+    readonly audit?: ReadonlyArray<AuditRecord>;
     /** The catalog item the form was resolved from; printing and violations resolve against this, not the form. */
     readonly catalogItem: IResolvedFormCatalogItem;
+    /** The review comments the host held for the report, if any. */
+    readonly comments?: ReadonlyArray<IReviewComment>;
     /** The form model -- self-describing: its own mapper, value-list ids and violation list travel with it. */
     readonly form: FormModel<any>;
     /** The component used to render the form. */
@@ -43,12 +69,14 @@ export interface IInitialForm {
 export interface IReportViewerService {
     /** Whether the form's data can be extracted -- true once it carries a mapper. */
     canExtractData: (form: FormModel<any>) => boolean;
-    /** Whether the form has review to show: a reviewable form always does, an editable one only when the host holds comments for its officer to read, and a viewable one never. */
+    /** Whether the form has review to show: a reviewable form always does, an editable one only when the host can keep comments for its officer to resolve, and a viewable one never. */
     canReview: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
-    /** Whether the form can be saved -- true once it carries a mapper and the data manager can write. */
+    /** Whether the form can be saved -- true once it carries a mapper and the data manager can write, by `write` or `writeBundle`. */
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
+    /** Gathers everything held about the report -- its data, the audit history and the review comments -- into one object, unpersisted. */
+    getBundle: (form: FormModel<any>, controllers: IControllerManager) => IReportBundle;
     /** The form's options, in the order the bar renders them. */
     getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
@@ -56,8 +84,12 @@ export interface IReportViewerService {
      * for a first load, `"new"` for a reset. Nothing to populate leaves the form as its constructor built it.
      */
     loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason) => Promise<IInitialForm>;
-    /** Extracts the form's data and hands it to the data manager, if it can write. Returned either way, so a host that persists it itself can reuse this. */
-    saveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Promise<IReportData>;
+    /**
+     * Extracts the form's data and hands it to the data manager, if it can write. Returned either way, so a host that
+     * persists it itself can reuse this. With the controllers, and a data manager that has a `writeBundle`, the whole
+     * bundle is written in one call instead; without them only the data can be, so `write` is used.
+     */
+    saveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>, controllers?: IControllerManager) => Promise<IReportData>;
 }
 
 /** Describes an option offered in the report viewer's options bar, in the order the bar renders them. */
@@ -114,15 +146,25 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
     }
 
     canReview(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
-        return form.mode === "reviewable" || (form.mode === "editable" && !!dataManager?.readComments);
+        return form.mode === "reviewable" || (form.mode === "editable" && (!!dataManager?.writeComments || !!dataManager?.writeBundle));
     }
 
     canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
-        return !!form.mapper && !!dataManager?.write;
+        return !!form.mapper && (!!dataManager?.write || !!dataManager?.writeBundle);
     }
 
     extractData(form: FormModel<any>): IReportData {
         return form.extractData();
+    }
+
+    getBundle(form: FormModel<any>, controllers: IControllerManager): IReportBundle {
+        return {
+            audit: getAuditController(controllers).history,
+            comments: getReviewController(controllers).comments,
+            data: this.extractData(form),
+            exportedAt: Date.now(),
+            version: 1
+        };
     }
 
     getOptions(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): Array<IReportViewerOption> {
@@ -139,7 +181,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
             form = await form.populate(<IPopulateData<IReportData>>result);
         }
 
-        return { catalogItem, form: form.clean(), Component: catalogItem.component };
+        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), Component: catalogItem.component };
     }
 
     registerOption(option: IReportViewerOption): void {
@@ -150,10 +192,15 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         this.options.set(option.id, option);
     }
 
-    async saveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): Promise<IReportData> {
+    async saveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>, controllers?: IControllerManager): Promise<IReportData> {
         const data = this.extractData(form);
 
-        await dataManager?.write?.(data);
+        if (dataManager?.writeBundle && controllers) {
+            await dataManager.writeBundle({ ...this.getBundle(form, controllers), data });
+        }
+        else {
+            await dataManager?.write?.(data);
+        }
 
         return data;
     }

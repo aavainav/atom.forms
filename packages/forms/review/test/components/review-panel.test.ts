@@ -4,13 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ReviewPanel } from "../../src/components/review-panel";
 import { ReviewThread } from "../../src/components/review-thread";
 import type { IReviewComment } from "../../src/models/review-comment";
-import { firstName, report, review } from "../fixtures/review-form";
+import { firstName, osei, report, review } from "../fixtures/review-form";
 import type { IReviewOptions } from "../fixtures/review-form";
 import { click, findButton, mount, unmountAll } from "../fixtures/mount";
 
 afterEach(unmountAll);
 
-const held: IReviewComment = { at: 1_700_000_000_000, author: "Lt. Osei", id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
+const held: IReviewComment = { at: 1_700_000_000_000, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." };
 
 /** Mounts the panel open, with the comments already held. */
 function panel(options: IReviewOptions = {}, comments: ReadonlyArray<IReviewComment> = [], isOpen = true) {

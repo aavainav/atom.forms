@@ -2,31 +2,41 @@ import React from "react";
 import { useService } from "@common/react";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
-import { ReportDataDialog } from "./report-data-dialog";
+import { IReportDataTab, ReportDataDialog } from "./report-data-dialog";
 import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
 
-/** Defines the option for viewing the data the current report would be saved as. */
+/** Defines the option for viewing the data held about the current report: what it would be saved as, its audit history, and its review comments. */
 export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
-    const copy = async (json: string): Promise<void> => {
+    const copy = async (tab: IReportDataTab): Promise<void> => {
         try {
-            await navigator.clipboard.writeText(json);
-            notificationService.showNotification({ type: "success", message: "Report data copied." });
+            await navigator.clipboard.writeText(tab.json);
+            notificationService.showNotification({ type: "success", message: `${tab.title} copied.` });
         }
         catch (error) {
             // the browser can refuse clipboard access outright, and a copy button that silently did nothing would
             // read as broken rather than as denied
-            notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The report data could not be copied." });
+            notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : `${tab.title} could not be copied.` });
         }
     };
 
     const showDialog = (): void => {
         // the form controller owns the current model and replaces it on every edit, so it is read at click time
-        const form = controllers.getFormController().form;
-        const json = JSON.stringify(reportViewerService.extractData(form), null, 2);
+        const bundle = reportViewerService.getBundle(controllers.getFormController().form, controllers);
+        const format = (value: unknown): string => JSON.stringify(value, null, 2);
+
+        const tabs: ReadonlyArray<IReportDataTab> = [
+            { id: "data", title: "Report data", json: format(bundle.data) },
+            { id: "audit", title: "Audit history", json: format(bundle.audit) },
+            { id: "comments", title: "Comments", json: format(bundle.comments) }
+        ];
+
+        // the modal's actions are handed over when it opens, so they cannot re-render with the dialog's state; the
+        // dialog reports the tab it is on back into this instead, and the copy action reads whichever it last held
+        let active = tabs[0];
 
         // the dialog is shown through the modal service rather than rendered here, so that it lands at the root of
         // the report viewer instead of inside the options bar. the bar is fixed positioned, which makes it a
@@ -34,7 +44,7 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
         modalService.showModal({
             title: "Report data",
             content: ReportDataDialog,
-            contentProps: { json },
+            contentProps: { tabs, onChange: (tab: IReportDataTab) => { active = tab; } },
             size: "xl",
             close: { invoke: async () => ({ result: true }) },
             actions: [
@@ -42,7 +52,7 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
                     title: "Copy",
                     // only a true result closes the modal, so copying leaves the data on screen to copy again
                     invoke: async () => {
-                        await copy(json);
+                        await copy(active);
                         return { result: false };
                     }
                 },

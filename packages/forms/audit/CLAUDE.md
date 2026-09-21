@@ -1,8 +1,8 @@
 # `@forms/audit`
 
 Records what happens to a form: opened, edited, status changed, validated, printed, saved. Owns the record types, the controller
-that produces them, the service a host subscribes to, and the hook that connects the two. Depends on
-`@forms/core`.
+that produces them and holds the history of the report, the service a host subscribes to, and the hook that
+connects the two. Depends on `@forms/core`.
 
 Module dependencies: none.
 
@@ -25,7 +25,9 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
 
-Every record is `{ at, form: { id, name, version }, kind, … }` (`AuditRecord`).
+Every record is `{ at, by?, form: { id, name, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped when
+the record is raised, so a host handed one twice can tell. `by` is the `IActor` the controller was told is using the
+report (`setUser`), and is absent when the host did not say.
 
 ## Files
 
@@ -73,6 +75,25 @@ only that package. Whatever is still waiting out the quiet period is recorded on
 
 To watch it live, open the sandbox's `/demo/audit` (`yarn dev-forms`), which lists each record beside a form.
 
+## The history: loading it back, and getting it out whole
+
+The stream above hands each record over and forgets it. The controller **also keeps them**, so a report's history can
+be carried from one session to the next:
+
+- `session` is every record raised since the controller started, for whichever form -- what is written back to the
+  host. `history` is what is shown and exported: the records `load`ed for the report, then the session's records for
+  the form now on screen. Each is the same array until a record is added, so either can be a snapshot; the controller
+  raises `onChanged` when a record is added or history is loaded.
+- `load(records)` takes the history the host held. The report viewer calls it with what the host's `read()` returned
+  as `audit`, and again for a new form, since a new form is a new report. A different form replacing the watched one
+  drops what was loaded, but leaves the old form's records in the session, so a write in flight still finds them.
+- `setUser(actor)` sets who `by` is on every record raised from then on.
+
+The report viewer writes the session back through the data manager's `writeAudit`, **only the records not yet given**,
+so the host is appended to. A host **merges by `id`** and never overwrites what it holds with what arrives: the history
+is assembled on the client, and the ids exist so that taking a record twice is harmless. The whole history is also in
+the bundle the viewer can hand over (`getBundle`, `writeBundle`). None of this changes the stream.
+
 ## Saves are pushed, not inferred
 
 The save flow lives in the report viewer, above this package, and a dirty→clean transition is ambiguous: starting a
@@ -97,6 +118,8 @@ new form calls `clean()` too. So the report viewer's `SaveOption` and the save p
   giving this package `"sideEffects": false` would silently break that.
 - **`getAuditController` throws if no form is loaded**, because `start()` reads the form controller.
 - **Only one component should call `useAuditRecorder` per manager**, or every record is forwarded once per call.
+- **`by` is only as good as what the host says.** The viewer stamps it from `settings.user` on the client, so a host that
+  needs it trusted must check it on the way in.
 
 ## Tests
 

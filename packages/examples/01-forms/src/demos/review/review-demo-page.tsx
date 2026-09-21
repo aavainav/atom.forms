@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { FormMode } from "@forms/core";
-import { IReportViewerDataManager, IReviewComment, ReportViewer } from "@forms/report-viewer";
+import { AuditRecord, IActor, IReportViewerDataManager, IReviewComment, ReportViewer } from "@forms/report-viewer";
 
 import { createExampleDataManager } from "../../example-data";
 
@@ -29,26 +29,50 @@ const roles: Record<DemoRole, { readonly description: string; readonly label: st
     }
 };
 
-/** Demonstrates review: a reviewer's comments on a report, and the officer who reads and resolves them. Both work from the same comments, as a host's database would hold them. */
+/** Makes the id a host would hold for a user from what they are called, so the demo needs only the one field. */
+function toActor(name: string): IActor | undefined {
+    const trimmed = name.trim();
+
+    return trimmed ? { id: trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-"), name: trimmed } : undefined;
+}
+
+/** Demonstrates review: a reviewer's comments on a report, and the officer who reads and resolves them. Both work from the same comments and audit history, as a host's database would hold them. */
 export default function ReviewDemoPage(): React.JSX.Element {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const [reviewer, setReviewer] = useState("Sgt. Rivera");
     const [role, setRole] = useState<DemoRole>("reviewer");
-    const [savedCount, setSavedCount] = useState(0);
+    const [savedAudit, setSavedAudit] = useState(0);
+    const [savedComments, setSavedComments] = useState(0);
+    const [userName, setUserName] = useState("Sgt. Rivera");
 
-    // stands in for the host's database: it outlives a change of role, so what the reviewer writes is what the officer reads
-    const held = useRef<ReadonlyArray<IReviewComment>>([]);
+    // stand in for the host's database: they outlive a change of role, so what the reviewer writes is what the officer reads
+    const audit = useRef<ReadonlyArray<AuditRecord>>([]);
+    const comments = useRef<ReadonlyArray<IReviewComment>>([]);
 
-    const dataManager = useMemo((): IReportViewerDataManager => ({
-        read: async () => undefined,
-        ...createExampleDataManager(catalogIdentity, searchParams, setSearchParams),
-        readComments: async () => held.current,
-        writeComments: async comments => {
-            held.current = comments;
-            setSavedCount(comments.length);
-        }
-    }), [searchParams]);
+    const dataManager = useMemo((): IReportViewerDataManager => {
+        const record = createExampleDataManager(catalogIdentity, searchParams, setSearchParams);
+
+        return {
+            ...record,
+            // the comments and the audit history come back with the record, in the one object
+            read: async reason => {
+                const result = await record?.read(reason);
+
+                return result && { ...result, audit: audit.current, comments: comments.current };
+            },
+            // append-only: the records are new to the host, matched by id, so a record handed over twice is kept once
+            writeAudit: async records => {
+                const known = new Set(audit.current.map(held => held.id));
+
+                audit.current = [...audit.current, ...records.filter(added => !known.has(added.id))];
+                setSavedAudit(audit.current.length);
+            },
+            writeComments: async next => {
+                comments.current = next;
+                setSavedComments(next.length);
+            }
+        };
+    }, [searchParams]);
 
     return (
         <div className="d-flex flex-column">
@@ -62,17 +86,17 @@ export default function ReviewDemoPage(): React.JSX.Element {
                     </select>
                 </div>
                 <div>
-                    <label className="form-label" htmlFor="review-demo-reviewer">Reviewer</label>
-                    <input id="review-demo-reviewer" className="form-control" value={reviewer} onChange={(e) => setReviewer(e.target.value)} />
+                    <label className="form-label" htmlFor="review-demo-user">User</label>
+                    <input id="review-demo-user" className="form-control" value={userName} onChange={(e) => setUserName(e.target.value)} />
                 </div>
-                <div className="text-muted mb-2">{roles[role].description} The host holds {savedCount} comment(s).</div>
+                <div className="text-muted mb-2">{roles[role].description} The host holds {savedComments} comment(s) and {savedAudit} audit record(s).</div>
             </div>
-            {/* keyed on the role because the mode is applied as the form loads; the comments survive the reload in the host's store */}
+            {/* keyed on the role because the mode is applied as the form loads; the comments and the history survive the reload in the host's store */}
             <ReportViewer
                 key={role}
                 identity={catalogIdentity}
                 dataManager={dataManager}
-                settings={{ mode: roles[role].mode, reviewer: reviewer || undefined, showOptions: true }}
+                settings={{ mode: roles[role].mode, showOptions: true, user: toActor(userName) }}
             />
         </div>
     );

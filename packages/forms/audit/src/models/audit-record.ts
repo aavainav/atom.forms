@@ -1,4 +1,4 @@
-import type { FormMode, FormStatus, PrintLayout } from "@forms/core";
+import type { IActor, FormMode, FormStatus, PrintLayout } from "@forms/core";
 
 /** Identifies the form a record is about. */
 export interface IAuditFormIdentity {
@@ -40,8 +40,12 @@ export type AuditRecordDetail = { [K in AuditRecordDetailKind]: { readonly kind:
 export interface IAuditRecordBase {
     /** When it happened, in milliseconds since the epoch. */
     readonly at: number;
+    /** Who was using the report when it happened. Undefined when the host did not say who that was. */
+    readonly by?: IActor;
     /** The form it happened to. */
     readonly form: IAuditFormIdentity;
+    /** Identifies the record, so a host handed the same one twice can tell. */
+    readonly id: string;
 }
 
 /** Something that happened to a form, as a host receives it. */

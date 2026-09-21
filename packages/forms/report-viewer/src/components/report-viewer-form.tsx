@@ -1,7 +1,8 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { useService } from "@common/react";
-import { useAuditRecorder } from "@forms/audit";
-import { useFormController, IControllerManager, IReportData, IRuleIssue, ControllerManager, FormMode } from "@forms/core";
+import { useAuditRecorder, getAuditController } from "@forms/audit";
+import { useFormController, IActor, IControllerManager, IReportData, IRuleIssue, ControllerManager, FormMode } from "@forms/core";
+import { getReviewController } from "@forms/review";
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
@@ -9,7 +10,8 @@ import { PanelManager } from "./panel";
 import { ReportViewerOptions } from "./report-viewer-options";
 import { ReviewManager } from "./review";
 import { ValidationManager } from "./validation";
-import { IInitialForm, IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../services";
+import { useAuditWriter } from "../hooks";
+import { IInitialForm, IModalService, INotificationService, IReportBundle, IReportViewerDataManager, IReportViewerService } from "../services";
 
 /**
  * The imperative surface a host can reach through a ref on `ReportViewer`/`ReportViewerForm`, for the handful of
@@ -21,6 +23,8 @@ export interface IReportViewerComponent {
     canSave(): boolean;
     /** Extracts the form's current data through its own mapper, without persisting any of it. */
     extractData(): IReportData;
+    /** Gathers everything held about the report -- its data, the audit history and the review comments -- into one object, without persisting any of it. */
+    getBundle(): IReportBundle;
     /** Whether the form's data differs from what it held the last time it was loaded or saved. */
     getIsDirty(): boolean;
     /** Runs the form's validation rules and returns the issues found, without changing anything the user sees. */
@@ -34,10 +38,10 @@ interface IReportViewerFormProps {
     /** Where the form's data goes when it is saved. Without one the save option is not offered. */
     readonly dataManager?: IReportViewerDataManager<any>;
     readonly mode: FormMode;
-    /** Who the comments a reviewer makes are attributed to. A reviewable form without one shows its comments but cannot add any. */
-    readonly reviewer?: string;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
+    /** Who is using the report: the audit records and the review comments are attributed to them. A reviewable form without one shows its comments but cannot add any. */
+    readonly user?: IActor;
 }
 
 /**
@@ -45,7 +49,7 @@ interface IReportViewerFormProps {
  * loading the form itself; a host needing shared controllers or a mutation of the loaded model calls
  * `IReportViewerService.loadForm` and renders this directly, so both paths wire a form up identically.
  */
-export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, reviewer, showOptions }, ref) {
+export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, showOptions, user }, ref) {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -57,11 +61,27 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
 
     const controller = useFormController(formControllers, initialState);
 
+    // handed to the controllers during render, like the form itself, so they hold them before anything below reads or
+    // subscribes to them: who records and comments are attributed to, and what the host held for the report
+    const audit = getAuditController(formControllers);
+    const review = getReviewController(formControllers);
+    audit.setUser(user);
+    review.setUser(user);
+
+    const loaded = useRef<{ readonly controllers: IControllerManager; readonly initialForm: IInitialForm }>(undefined);
+
+    if (loaded.current?.controllers !== formControllers || loaded.current.initialForm !== initialForm) {
+        loaded.current = { controllers: formControllers, initialForm };
+        audit.load(initialForm.audit ?? []);
+        review.load(initialForm.comments ?? []);
+    }
+
     useAuditRecorder(formControllers);
 
     useImperativeHandle(ref, () => ({
         canSave: () => reportViewerService.canSaveForm(controller.form, dataManager),
         extractData: () => reportViewerService.extractData(controller.form),
+        getBundle: () => reportViewerService.getBundle(controller.form, formControllers),
         getIsDirty: () => controller.form.getIsDirty(),
         validate: () => {
             const rulesController = formControllers.getRulesController();
@@ -82,6 +102,8 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
     // reaching for a notification service, since the notifications belong to whoever is hosting them
     const onError = useCallback((message: string) => notificationService.showNotification({ type: "danger", message }), [notificationService]);
 
+    useAuditWriter(formControllers, dataManager, onError);
+
     useEffect(() => {
         controller.setConfirmDeletePage(confirmDeletePage);
         return () => controller.setConfirmDeletePage(undefined);
@@ -94,7 +116,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             <ValidationManager controllers={formControllers} />
             <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
             {reportViewerService.canReview(initialState, dataManager) && (
-                <ReviewManager controllers={formControllers} dataManager={dataManager} reviewer={reviewer} onError={onError} />
+                <ReviewManager controllers={formControllers} dataManager={dataManager} onError={onError} />
             )}
             <initialForm.Component controllers={formControllers} />
             {showOptions && (

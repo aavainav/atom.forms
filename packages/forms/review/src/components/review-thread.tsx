@@ -31,7 +31,7 @@ export const ReviewThread = ({ controllers, target }: IReviewThreadProps): React
         <>
             {comments.length === 0 && <FLabel margin={{ bottom: 16 }}>No comments yet.</FLabel>}
             {comments.map(comment => (
-                <FComment key={comment.id} at={comment.at} author={comment.author} isResolved={comment.isResolved} text={comment.text}>
+                <FComment key={comment.id} at={comment.at} author={comment.author.name} isResolved={comment.isResolved} text={comment.text}>
                     {review.canResolve && (
                         <FButton
                             variant="outline-secondary"

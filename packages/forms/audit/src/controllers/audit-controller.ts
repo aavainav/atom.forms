@@ -1,5 +1,5 @@
 import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
-import { IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
+import { IActor, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
 
 import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
@@ -18,15 +18,23 @@ interface IWatchedForm {
 
 /** Defines the controller that turns what happens to a form into records. */
 export interface IAuditController extends IController {
+    /** The history of the report the form is: what was loaded for it, then the records raised for it since. The same array until a record is added, so a subscriber can take it as its snapshot. */
+    readonly history: ReadonlyArray<AuditRecord>;
     /** Raised for each record. Any raised while nothing listens are held for the next listener. */
     readonly onRecord: IEvent<AuditRecord>;
+    /** Every record raised since the controller started, for whichever form, in the order they were raised. The same array until a record is added. */
+    readonly session: ReadonlyArray<AuditRecord>;
 
     /** Records any edits still waiting out the quiet period. */
     flush(): void;
+    /** Loads the history the host holds for the report, ahead of the records raised since. */
+    load(records: ReadonlyArray<AuditRecord>): void;
     /** Records that the form was saved. */
     recordSaved(): void;
     /** Records that saving the form failed. */
     recordSaveFailed(): void;
+    /** Sets who the records raised from now on are attributed to. */
+    setUser(user: IActor | undefined): void;
 }
 
 /** Gets the audit controller, which core's manager has no accessor for. */
@@ -40,17 +48,29 @@ export function getAuditController(controllers: IControllerManager): IAuditContr
  */
 @RegisterController("audit", { eager: true })
 export class AuditController extends Controller implements IAuditController {
+    private _history: ReadonlyArray<AuditRecord> = [];
+    private _loaded: ReadonlyArray<AuditRecord> = [];
     private readonly _record = new EventEmitter<AuditRecord>(`${this.key}:record`, { onFirstListenerAdd: () => this.deliverPending() });
 
+    private _session: ReadonlyArray<AuditRecord> = [];
     private baseline?: unknown;
     private editTimer?: ReturnType<typeof setTimeout>;
     private isPrinting = false;
     private listener?: IEventListener;
     private pending: Array<AuditRecord> = [];
+    private user?: IActor;
     private watched?: IWatchedForm;
+
+    get history(): ReadonlyArray<AuditRecord> {
+        return this._history;
+    }
 
     get onRecord(): IEvent<AuditRecord> {
         return this._record.event;
+    }
+
+    get session(): ReadonlyArray<AuditRecord> {
+        return this._session;
     }
 
     public dispose(): void {
@@ -59,6 +79,9 @@ export class AuditController extends Controller implements IAuditController {
         this.listener?.remove();
         this.listener = undefined;
         this.pending = [];
+        this._history = [];
+        this._loaded = [];
+        this._session = [];
     }
 
     public flush(): void {
@@ -80,6 +103,11 @@ export class AuditController extends Controller implements IAuditController {
         }
     }
 
+    public load(records: ReadonlyArray<AuditRecord>): void {
+        this._loaded = records;
+        this.refresh();
+    }
+
     public recordSaved(): void {
         this.flush();
         this.raise({ kind: "saved" });
@@ -88,6 +116,10 @@ export class AuditController extends Controller implements IAuditController {
     public recordSaveFailed(): void {
         this.flush();
         this.raise({ kind: "save-failed" });
+    }
+
+    public setUser(user: IActor | undefined): void {
+        this.user = user;
     }
 
     public start(): void {
@@ -173,6 +205,8 @@ export class AuditController extends Controller implements IAuditController {
     }
 
     private open(form: FormModel<any>): void {
+        // what was loaded is the history of the report the last form was, which this one is not
+        this._loaded = [];
         this.watched = { form, identity: { id: form.id ?? "", name: form.name, version: form.version } };
         this.baseline = form.mapper?.extract(form);
 
@@ -184,7 +218,10 @@ export class AuditController extends Controller implements IAuditController {
             return;
         }
 
-        const record: AuditRecord = { ...detail, at: Date.now(), form: this.watched.identity };
+        const record: AuditRecord = { ...detail, at: Date.now(), by: this.user, form: this.watched.identity, id: crypto.randomUUID() };
+
+        this._session = [...this._session, record];
+        this.refresh();
 
         if (this._record.count > 0) {
             this._record.emit(record);
@@ -197,6 +234,14 @@ export class AuditController extends Controller implements IAuditController {
                 this.pending.shift();
             }
         }
+    }
+
+    private refresh(): void {
+        // a form swapped in after this one leaves its records in the session, for whoever is writing them, but not in this history
+        const current = this.watched?.identity.id;
+
+        this._history = [...this._loaded, ...this._session.filter(record => record.form.id === current)];
+        this.emitChanged();
     }
 
     private scheduleEdit(): void {

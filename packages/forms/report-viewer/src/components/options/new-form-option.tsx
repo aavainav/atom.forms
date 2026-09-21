@@ -2,6 +2,7 @@ import React from "react";
 import { useService } from "@common/react";
 import { getAuditController } from "@forms/audit";
 import { FButton, FIcon, FTooltip } from "@forms/core";
+import { getReviewController } from "@forms/review";
 
 import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
 
@@ -13,8 +14,12 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
 
     const startNew = async (): Promise<void> => {
         try {
-            const { form } = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new");
+            const { audit, comments, form } = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new");
             controllers.getFormController().setForm(form);
+
+            // a new form is a new report, so what was held for the last one goes with it
+            getAuditController(controllers).load(audit ?? []);
+            getReviewController(controllers).load(comments ?? []);
         }
         catch (error) {
             notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The new form could not be started." });
@@ -48,7 +53,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
             onDiscard: startNew,
             onSave: async () => {
                 try {
-                    await reportViewerService.saveForm(form, dataManager);
+                    await reportViewerService.saveForm(form, dataManager, controllers);
                 }
                 catch (error) {
                     getAuditController(controllers).recordSaveFailed();

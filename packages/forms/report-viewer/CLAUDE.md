@@ -30,7 +30,7 @@ Three props, nothing else:
 | --- | --- |
 | `identity` | `IFormIdentity`. The catalog resolves it, answering with the latest version when none is named. |
 | `dataManager` | `IReportViewerDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
-| `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`), `reviewer?` (who a reviewer's comments are attributed to) and `showOptions?`. How the report renders, as opposed to which one. |
+| `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`), `showOptions?` and `user?` (an `IActor`: who is using the report, which its audit records and review comments are attributed to). How the report renders, as opposed to which one. |
 
 There is deliberately **no `controllers` prop**. A host needing shared controllers or a mutation of the loaded model
 takes the advanced path instead: `IReportViewerService.loadForm(identity, dataManager)` then `<ReportViewerForm />`,
@@ -54,29 +54,34 @@ the previously loaded form on screen.
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
-| [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
+| [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments -- as formatted JSON, with a Copy action that copies the tab showing. The dialog is the **body** only — the chrome belongs to `IModalService`. |
+| [src/hooks/use-audit-writer.ts](src/hooks/use-audit-writer.ts) | `useAuditWriter`: hands the audit controller's session records to the data manager's `writeAudit`, only the ones it has not yet handed over. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
 | [src/components/notification/notification-items.ts](src/components/notification/notification-items.ts) | What `NotificationManager` shows and how: `addNotification` merges a raised notification into the list. Owns `maxNotifications` (3) and `defaultDurations` (danger 10s, warning 8s, info/success 5s). |
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, alongside the other managers. |
-| [src/components/review/manager.tsx](src/components/review/manager.tsx) · [options/review-option.tsx](src/components/options/review-option.tsx) | `ReviewManager` mounts `@forms/review`'s markers and panel and keeps the comments in step with the data manager; `ReviewOption` is the button that toggles the panel. See *Review* below. |
+| [src/components/review/manager.tsx](src/components/review/manager.tsx) · [options/review-option.tsx](src/components/options/review-option.tsx) | `ReviewManager` mounts `@forms/review`'s markers and panel and writes the comments back through the data manager; `ReviewOption` is the button that toggles the panel. See *Review* below. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
 ## `IReportViewerDataManager` — the host's side of the data
 
 ```ts
 interface IReportViewerDataManager<TData extends object = IReportData> {
-    read(): Promise<IReadDataResult<TData> | undefined>;
-    write?(data: IReportData): Promise<void>;
+    read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;   // one object in
+    write?(data: IReportData): Promise<void>;                                // the record, on Save
+    writeAudit?(records: ReadonlyArray<AuditRecord>): Promise<void>;         // the audit records not yet handed over
+    writeBundle?(bundle: IReportBundle): Promise<void>;                      // everything, on Save, in place of write
+    writeComments?(comments: ReadonlyArray<IReviewComment>): Promise<void>;  // all the comments, on every change
 }
 
-interface IReadDataResult<TData extends object = IReportData> {
-    readonly data: TData;
-    readonly readOnlyFields?: ReadOnlyFields<TData>;
+interface IReadDataResult<TData extends object = IReportData> extends IPopulateData<TData> {
+    readonly audit?: ReadonlyArray<AuditRecord>;        // the report's audit history, shown and carried on from
+    readonly comments?: ReadonlyArray<IReviewComment>;  // the review comments made on it
+    // and, from IPopulateData: data, readOnlyFields?
 }
 ```
 
-- **`read()` takes no arguments.** The host owns its own routing, so a manager closes over whichever record it was
-  built for rather than being handed a context to guess from.
+- **`read(reason)` takes only why it is being called** -- `"open"` or `"new"`. The host owns its own routing, so a
+  manager closes over whichever record it was built for rather than being handed a context to guess from.
 - **There is no separate notion of defaults.** A host with no record yet answers with the values a new one should
   start with; resolving `undefined` loads a blank form. One path, not two.
 - **`readOnlyFields` mirrors the shape of `data` itself**, marking whichever fields -- at any depth -- should come
@@ -86,10 +91,17 @@ interface IReadDataResult<TData extends object = IReportData> {
   down to `FormModel.populate`, rather than being split into separate parameters partway through. A field the
   mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable regardless of being
   marked.
-- **`readComments` and `writeComments` are optional, and are the comments' whole route in and out.** Comments are
-  review metadata the host keeps beside the record, never part of `write`'s data. Without them comments last only as
-  long as the form is on screen. `IReviewComment` and `ReviewTarget` are re-exported from this package, so a host
-  need not depend on `@forms/review`.
+- **The audit history and the comments come in with the record, in the one `read()` object, and go out through
+  separate writes.** They are the host's to keep beside the record and never part of `write`'s data, and each changes
+  on its own clock: the record on Save, the comments on every change, the audit as records are raised. So each has its
+  own optional write, and `writeBundle` is the one call that takes everything at once. Without a write, the comments
+  and the history last only as long as the form is on screen. `IReviewComment`, `ReviewTarget`, `AuditRecord` and
+  `IActor` are re-exported from this package, so a host need not depend on the packages they come from.
+- **`writeAudit` is append-only and gets only what is new**, one write at a time after each settled batch of records;
+  the host adds them by `id`. **`writeComments` gets all of them** each time, since a comment can be resolved as well
+  as added. **`writeBundle` is what Save calls when the host has one**, in place of `write`: a host that keeps a report
+  as one document gets an atomic snapshot of `{ version, data, audit, comments, exportedAt }` (`IReportBundle`). A host
+  that has both `write` and `writeBundle` is given the bundle only.
 - **`write` doesn't depend on `TData`.** It always takes the full `IReportData` -- `FormModel.extractData()` stamps
   `name`/`status`/`type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never
   just the contract that went in. That's why the props, the options bar and `saveForm` all type their `dataManager`
@@ -104,10 +116,11 @@ interface IReadDataResult<TData extends object = IReportData> {
 1. `formCatalogService.get(identity)` — resolves and caches the catalog item, calling its `load()` at most once per
    identity, ever.
 2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages.
-3. `await dataManager?.read()`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
+3. `await dataManager?.read(reason)`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
    decides for itself whether it has a mapper to run (awaited either way, since a repeating-page mapper must create
    pages, which is async; a form with no mapper just returns itself unchanged).
-4. → `IInitialForm { catalogItem, form, Component }`.
+4. → `IInitialForm { audit?, catalogItem, comments?, form, Component }`: the audit history and the comments the read
+   returned ride along, and `ReportViewerForm` loads them onto the controllers.
 
 **The form is self-describing -- its own `mapper`, `valueListIds` and `violationListId` travel with it.** Nothing
 here reaches into the catalog item to decide what the form can do; it asks the constructed `form` instead.
@@ -117,11 +130,13 @@ then **stamps the whole of `IForm` -- `name`, `description`, `status`, `type`, `
 itself**, which declares the identity it is registered under and assigns it to itself. Without the stamp the saved
 data could not be resolved back to a form. Persists nothing.
 
-`saveForm(form, dataManager?)` is `extractData(form)` then `dataManager?.write?.(data)`, returning the data whether
-or not it was consumed. The extract-and-stamp lives on the form alone so that **what a preview shows and what a
+`saveForm(form, dataManager?, controllers?)` is `extractData(form)` then `dataManager?.write?.(data)`, returning the data
+whether or not it was consumed -- or, when the data manager has a `writeBundle` and the controllers are given, the
+whole `getBundle(form, controllers)` in one `writeBundle` call instead. `getBundle` gathers the data, the audit
+history and the comments into one object and persists nothing; the ref's `getBundle()` returns the same. The extract-and-stamp lives on the form alone so that **what a preview shows and what a
 save sends cannot drift** — the report-data option renders exactly this payload without touching the writer.
 
-`canExtractData(form)` is `!!form.mapper`. `canSaveForm(form, dataManager?)` is that *plus* `!!dataManager?.write`.
+`canExtractData(form)` is `!!form.mapper`. `canSaveForm(form, dataManager?)` is that *plus* `write` or `writeBundle`.
 They are different gates on purpose: a form with a mapper but nowhere to write still produces perfectly good
 outgoing data, so the report-data option is offered where save is not. Both exist only as `ReportViewerService`
 instance methods now -- not free functions -- so `ReportViewerModule.configure` reaches the singleton through
@@ -135,7 +150,7 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | id | offered when |
 | --- | --- |
 | `validate` | always |
-| `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager has `readComments` |
+| `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager can keep comments (`writeComments` or `writeBundle`) |
 | `violations` | `!!form.violationListId` |
 | `save` | `!!form.mapper && !!dataManager?.write` |
 | `report-data` | `!!form.mapper` |
@@ -184,18 +199,21 @@ a service.
 ## Review
 
 `ReportViewerForm` mounts `ReviewManager` when `reportViewerService.canReview(form, dataManager)` -- a `"reviewable"`
-form always, an `"editable"` one only when the host can `readComments` for the officer to read, a `"viewable"` one
-never -- and the `review` option is gated on the same call. The manager, beside the other managers at the viewer's
-root:
+form always, an `"editable"` one only when the host can keep comments for the officer to resolve, a `"viewable"` one
+never -- and the `review` option is gated on the same call.
 
-- **sets the reviewer during render**, from `settings.reviewer`, not in an effect. The layer decides from it whether
-  to offer commenting on its first pass, and nothing raises a change when it is set. Without one a `"reviewable"`
-  form shows its comments but cannot add any.
-- **loads once, then saves on every change.** It reads `readComments` when it mounts and `load`s the answer, and
-  only *then* subscribes to the controller, so loading is not written straight back. Every add, resolve or reopen
-  calls `writeComments` with the full list -- one write at a time, a change landing mid-write costing one more
-  write of the latest. The data manager is read through a ref, so a host that rebuilds it on every render does not
-  reload the comments. A failure to read or write goes to `onError`.
+**`ReportViewerForm` does the setting up, during render, before anything below subscribes:** it hands the user
+(`settings.user`) to the audit and review controllers, and loads what the host held -- `initialForm.audit` into the
+audit controller, `initialForm.comments` into the review controller -- once for each form it is given. That is during
+render, not in an effect, for two reasons: the layer decides from the user whether to offer commenting on its first
+pass, and the manager's writer subscribes in an effect that runs *before* the parent's, so loading in an effect would be
+written straight back. Without a user a `"reviewable"` form shows its comments but cannot add any.
+
+The manager, beside the other managers at the viewer's root:
+
+- **saves on every change.** Every add, resolve or reopen calls `writeComments` with the full list -- one write at a
+  time, a change landing mid-write costing one more write of the latest. The data manager is read through a ref, so a
+  host that rebuilds it on every render does not restart the writer. A failure goes to `onError`.
 - **renders the layer and the panel**, giving both a `showModal` bound to `IModalService`, so the thread modal opens
   at the viewer's root and not inside a report.
 
@@ -225,14 +243,18 @@ the app's runtime, but a reload starts light again.
 ## Auditing
 
 `ReportViewerForm` calls `useAuditRecorder` from `@forms/audit`, which forwards what the form's audit controller
-records to `IAuditService`. A host subscribes once, at startup, and never renders anything:
+records to `IAuditService`, and `useAuditWriter` hands the same records to the data manager's `writeAudit`. A host that
+wants them live subscribes once, at startup, and never renders anything:
 
 ```ts
 services.get<IAuditService>(IAuditService).onRecord(record => send(record));
 ```
 
 `IAuditService`, `AuditRecord` and `IAuditFormIdentity` are re-exported from this package. Records carry field paths
-and identity, never values; see [`@forms/audit`](../audit/) for what is recorded and how.
+and identity, never values, and `by` -- the `settings.user` -- when there is one; see [`@forms/audit`](../audit/) for
+what is recorded and how. The history a host handed back through `read()` is loaded onto the audit controller, so the
+report data dialog and the bundle show it ahead of this session's records. **The viewer never writes the loaded
+history back**: `writeAudit` is given only the session's records, for the host to append by `id`.
 
 **Saving is the one thing the audit cannot observe**, so `SaveOption` and the save path of `NewFormOption` tell it
 (`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`). A dirty→clean transition is ambiguous, since

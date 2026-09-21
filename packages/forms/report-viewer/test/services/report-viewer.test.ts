@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AuditRecord } from "@forms/audit";
 import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
-import { FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
+import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
+import { getReviewController } from "@forms/review";
+import type { IReviewComment } from "@forms/review";
 
 import { IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
 
@@ -44,6 +47,14 @@ function stubMapper(): ReturnType<typeof vi.fn> {
     const populate = vi.fn(async (form: StubFormModel) => form);
     StubFormModel.mapper = { extract: () => ({} as IReportData), populate };
     return populate;
+}
+
+/** A controller manager over a stub form, which is all the audit and review controllers the bundle is gathered from need. */
+function stubControllers(): ControllerManager {
+    const controllers = new ControllerManager();
+    controllers.loadForm({ id: "form-1", mode: "editable", name: "Stub", status: "draft", version: "1.0" } as unknown as FormModel<any>);
+
+    return controllers;
 }
 
 /** The service resolves the form itself now, so every test needs a catalog to resolve it from. */
@@ -102,6 +113,26 @@ describe("ReportViewerService", () => {
             expect(populate).not.toHaveBeenCalled();
         });
 
+        it("hands the audit history and the comments the data manager read along with the form", async () => {
+            const audit: ReadonlyArray<AuditRecord> = [{ at: 1, form: { id: "form-0", name: "Stub", version: "1.0" }, id: "a-1", kind: "saved" }];
+            const comments: ReadonlyArray<IReviewComment> = [{ at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." }];
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ audit, comments, data: record("Stub") }) });
+
+            expect(initialForm.audit).toBe(audit);
+            expect(initialForm.comments).toBe(comments);
+        });
+
+        it("has no audit history or comments to hand along when the data manager read none", async () => {
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) });
+
+            expect(initialForm.audit).toBeUndefined();
+            expect(initialForm.comments).toBeUndefined();
+        });
+
         it("builds a form without populating it when the form carries no mapper", async () => {
             const service = createService(catalogItem);
 
@@ -120,6 +151,30 @@ describe("ReportViewerService", () => {
             const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write });
 
             expect(write).toHaveBeenCalledWith(data);
+        });
+
+        it("writes the whole bundle in one call instead, when the data manager has a writeBundle and the controllers are given", async () => {
+            const service = createService(catalogItem);
+            const controllers = stubControllers();
+            const write = vi.fn(async () => { });
+            const writeBundle = vi.fn(async () => { });
+
+            const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write, writeBundle }, controllers);
+
+            expect(writeBundle).toHaveBeenCalledTimes(1);
+            expect(writeBundle).toHaveBeenCalledWith(expect.objectContaining({ data, version: 1 }));
+            expect(write).not.toHaveBeenCalled();
+        });
+
+        it("writes only the data when the data manager has a writeBundle but no controllers are given to build the bundle from", async () => {
+            const service = createService(catalogItem);
+            const write = vi.fn(async () => { });
+            const writeBundle = vi.fn(async () => { });
+
+            const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write, writeBundle });
+
+            expect(write).toHaveBeenCalledWith(data);
+            expect(writeBundle).not.toHaveBeenCalled();
         });
 
         it("returns the extracted data even with nothing to write it to", async () => {
@@ -161,6 +216,13 @@ describe("ReportViewerService", () => {
             expect(service.canSaveForm(new StubFormModel())).toBe(false);
         });
 
+        it("is true with a mapper and a data manager that only writes a bundle", () => {
+            stubMapper();
+            const service = createService(catalogItem);
+
+            expect(service.canSaveForm(new StubFormModel(), { read: async () => undefined, writeBundle: async () => { } })).toBe(true);
+        });
+
         it("is false with a data manager that only reads", () => {
             stubMapper();
             const service = createService(catalogItem);
@@ -169,22 +231,40 @@ describe("ReportViewerService", () => {
         });
     });
 
-    describe("canReview", () => {
-        const withComments = { read: async () => undefined, readComments: async () => [] };
+    describe("getBundle", () => {
+        it("gathers the form's data, the audit history and the comments into one object", () => {
+            const service = createService(catalogItem);
+            const controllers = stubControllers();
+            const comment: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
+            getReviewController(controllers).load([comment]);
 
-        it("is true for a reviewable form, whether or not the host holds comments", () => {
+            const bundle = service.getBundle(new StubFormModel(), controllers);
+
+            expect(bundle.version).toBe(1);
+            expect(bundle.data.name).toBe(new StubFormModel().name);
+            expect(bundle.comments).toEqual([comment]);
+            expect(bundle.audit.map(entry => entry.kind)).toEqual(["form-opened"]);
+            expect(bundle.exportedAt).toBeGreaterThan(0);
+        });
+    });
+
+    describe("canReview", () => {
+        const withComments = { read: async () => undefined, writeComments: async () => { } };
+
+        it("is true for a reviewable form, whether or not the host can keep comments", () => {
             const service = createService(catalogItem);
 
             expect(service.canReview(new StubFormModel().setMode("reviewable"))).toBe(true);
             expect(service.canReview(new StubFormModel().setMode("reviewable"), withComments)).toBe(true);
         });
 
-        it("is true for an editable form only when the host holds comments for the officer to read", () => {
+        it("is true for an editable form only when the host can keep comments for the officer to resolve", () => {
             const service = createService(catalogItem);
 
             expect(service.canReview(new StubFormModel())).toBe(false);
             expect(service.canReview(new StubFormModel(), { read: async () => undefined })).toBe(false);
             expect(service.canReview(new StubFormModel(), withComments)).toBe(true);
+            expect(service.canReview(new StubFormModel(), { read: async () => undefined, writeBundle: async () => { } })).toBe(true);
         });
 
         it("is never true for a viewable form", () => {

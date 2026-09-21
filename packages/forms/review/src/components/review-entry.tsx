@@ -32,7 +32,7 @@ export const ReviewEntry = ({ comment, controllers, onNavigate }: IReviewEntryPr
             {destination
                 ? <FButton type="button" variant="link" size="small" text={location} onClick={navigate} />
                 : <FLabel>{location}</FLabel>}
-            <FComment at={comment.at} author={comment.author} isResolved={comment.isResolved} text={comment.text}>
+            <FComment at={comment.at} author={comment.author.name} isResolved={comment.isResolved} text={comment.text}>
                 {review.canResolve && (
                     <FButton
                         variant="outline-secondary"

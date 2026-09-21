@@ -7,8 +7,9 @@ them. Depends on `@forms/core`.
 Module dependencies: none.
 
 **This package sits below whatever renders a form, and reaches nothing upward.** Like `@forms/audit`, it is
-mounted by `@forms/report-viewer`, which sets the reviewer, loads and saves the comments through the host's data
-manager, opens the thread modal, and offers the panel as an option. A form package never depends on it.
+mounted by `@forms/report-viewer`, which sets the user, loads the comments the host held when it loads the form,
+saves them back through the data manager, opens the thread modal, and offers the panel as an option. A form package
+never depends on it.
 
 **Comments are not part of the record.** They are review metadata the host keeps beside a report, never in its data
 contract and never in a field's value.
@@ -49,9 +50,10 @@ be a `useSyncExternalStore` snapshot. `getComments(target)` builds a new array o
   target whose definitions have gone is named by the names it was made with, so an orphaned comment still says where
   it was.
 - **The host owns persistence.** It hands comments over with `load` and writes them back on `onChanged`.
-- **`add` fails loudly** unless the form is `"reviewable"`, a reviewer has been set with `setReviewer`, and there is
-  some text. The controller stamps the id, the time and the author itself. `canComment` is the same test without the
-  text, so a reviewable form with no reviewer named shows its comments but offers no way to add one.
+- **`add` fails loudly** unless the form is `"reviewable"`, a user has been set with `setUser`, and there is some
+  text. The controller stamps the id, the time and the author itself, and the author is the user as an `IActor`, so a
+  comment keeps who made it by id and not only by name. `canComment` is the same test without the text, so a
+  reviewable form with no user named shows its comments but offers no way to add one.
 - **`setResolved` works in any mode but `"viewable"`, and throws there.** The officer whose report is reviewed
   resolves comments as they deal with them, so an editable form can resolve and reopen; it cannot add. The components
   hide the button when `canResolve` is false rather than relying on the throw.
@@ -85,8 +87,8 @@ controller (and, for the layer, the navigation and print controllers) through it
 - **The controller registers when its module loads.** `src/index.ts` exports it so importing the package is enough;
   giving this package `"sideEffects": false` would silently break that.
 - **It throws if no form is loaded**, because it reads the form controller. That includes `canComment`.
-- **Only `"reviewable"` with a reviewer can comment.** An editable form's officer reads comments; adding is the
-  reviewer's. The host sets the reviewer before the components draw (the report viewer does it during render), since
+- **Only `"reviewable"` with a user can comment.** An editable form's officer reads comments; adding is the
+  reviewer's. The host sets the user before the components draw (the report viewer does it during render), since
   nothing raises a change when it is set.
 - **A marker is placed when the layer renders.** It looks its control up in the document then, so a field that
   appears without a comment change, a page change or a print ending -- a conditionally shown section -- is not marked
