@@ -142,6 +142,13 @@ line. The base resolves every workspace package to its **source** rather than it
 a fresh clone without `yarn build` first, and it pins `experimentalDecorators` for the `@RegisterRule` and
 `@Singleton` classes, whose decorators reference the class being decorated.
 
+It runs the suites on `pool: "vmThreads"`. Building the environment is the dearest thing a suite does -- over half of
+the time in most packages, the tests themselves about 2% -- and vitest builds one per file by default. `vmThreads`
+builds jsdom once per worker while still running each file in a context of its own, so a static registry starts empty
+in every file exactly as it did before. **Do not switch it to `isolate: false`** to go faster still: that shares the
+module graph and the document between files, which the registries (see [core/](core/)'s Tests section) and any test
+that leaves the DOM dirty would not survive. The four `@common/*` packages carry the same setting in their own configs.
+
 Its default environment is `jsdom`, because importing the `@forms/core` barrel loads `@popperjs/core`, which reads
 `document` as it is imported — and a form package reaches core through the barrel in every file. [core/](core/),
 [value-lists/](value-lists/) and [violations/](violations/) override it to `node`: they import deep source paths and

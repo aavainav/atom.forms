@@ -211,7 +211,7 @@ or it takes jsdom for an old browser and listens for the webkit-prefixed animati
 | Give each fixture controller its own key | `ControllerRegistry` is static and throws when a different class claims a key that is taken |
 | Build a controller through a `ControllerManager`, never `new` | A controller's constructor takes the manager and finds its key from the decorator; `manager.loadForm(form)` is how a `FormController` gets its form |
 | Seed field values with `setValue`, never a field model's constructor | A concrete field's `value` class-field initializer runs after the base constructor and overwrites it — see Gotchas |
-| Never call `FormModel.dispose()` in a hook | It clears both registries process-wide. Vitest's per-file isolation already gives each file a fresh tree, which is why `isolate` is left on |
+| Never call `FormModel.dispose()` in a hook | It clears both registries process-wide. Vitest's per-file isolation already gives each file a fresh tree, which is why `isolate` is left on and the pool is `vmThreads` (a context per file) rather than `isolate: false` |
 | `await` a form's `initialize()` | It is what creates the pages; a form that has only been constructed holds empty page collections |
 | A rule needs no form | `IRuleContext` is `{form, page, getField}` and nothing reads `form` or `page`, so `stubRuleContext(field)` is a complete stand-in. Only `RulesController.validate` needs a real `RuleContext` |
 

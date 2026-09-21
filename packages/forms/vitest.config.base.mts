@@ -61,7 +61,11 @@ export function defineFormsConfig(options: IFormsTestOptions = {}) {
             name: options.name,
             environment: options.environment ?? "jsdom",
             // pinned, since the default glob would also scan `dist`
-            include: ["test/**/*.test.ts"]
+            include: ["test/**/*.test.ts"],
+            // each file still runs in a context of its own, so a static registry starts empty in every file, but the
+            // environment is built once per worker rather than once per file -- which was over half of the time these
+            // suites took, jsdom being far dearer to build than any test is to run
+            pool: "vmThreads"
         }
     });
 }
