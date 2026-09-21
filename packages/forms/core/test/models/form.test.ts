@@ -152,6 +152,33 @@ describe("FormModel", () => {
         });
     });
 
+    describe("getFieldPlacements", () => {
+        it("places a field by the definition it was made from and the page it is on", () => {
+            const field = getFieldValue(form, chargeSection, chargeFields.offenseDescription);
+
+            expect(form.getFieldPlacements().get(field.id!)).toEqual({
+                definition: chargeFields.offenseDescription,
+                pageId: form.getPages()[0].id,
+                pageOrdinal: 0
+            });
+        });
+
+        it("counts the pages of a repeating page definition from zero", async () => {
+            const withTwo = await addCitationPage(form);
+            const second = withTwo.getPages()[1];
+            const field = second.get<SectionModel>(chargeSection).get<FieldModel<TValueType>>(chargeFields.offenseDescription);
+
+            expect(withTwo.getFieldPlacements().get(field.id!)).toMatchObject({ pageId: second.id, pageOrdinal: 1 });
+        });
+
+        it("places every field, each under its own id", async () => {
+            const withTwo = await addCitationPage(form);
+            const fieldCount = withTwo.getPages().length * (Object.keys(violatorFields).length + Object.keys(chargeFields).length);
+
+            expect(withTwo.getFieldPlacements().size).toBe(fieldCount);
+        });
+    });
+
     describe("setMode", () => {
         it.each(["reviewable", "viewable"] as const)("disables every field on every page when switching to %s", async (mode) => {
             const withTwo = await addCitationPage(form);

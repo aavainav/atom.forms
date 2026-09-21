@@ -2,6 +2,7 @@ import { Definition } from "./definition";
 import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
+import type { IFieldPlacement } from "./field-placement";
 
 import { PageModel } from "./page";
 import { PageCollection } from "./page-collection";
@@ -73,6 +74,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     get<TPage>(pageDefinition: PageDefinition): TPage;
     /** Gets the first field across all pages that matches the specified field definition. */
     getFirstField<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): TField;
+    /** Locates every field on every page, keyed by the field's id, in one walk of the form. */
+    getFieldPlacements(): Map<string, IFieldPlacement>;
     /** Gets every field matching the specified field definition, grouped by the page it belongs to. */
     getFields<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): Map<PageModel, Array<TField>>;
     /** Gets whether the form's data differs from what it held the last time `clean()` ran. A form without a mapper, or one that has never been cleaned, is never dirty. */
@@ -173,6 +176,30 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         }
 
         return firstField;
+    }
+
+    public getFieldPlacements(): Map<string, IFieldPlacement> {
+        const placements = new Map<string, IFieldPlacement>();
+
+        for (const pageDefinition of this.getChildDefinitions()) {
+            this.getPagesFor(pageDefinition).forEach((page, pageOrdinal) => {
+                for (const sectionDefinition of pageDefinition.children) {
+                    const section = page.get<SectionModel>(sectionDefinition as SectionDefinition);
+
+                    for (const fieldDefinition of sectionDefinition.children) {
+                        if (fieldDefinition instanceof FieldDefinition) {
+                            const id = section.get<FieldModel<TValueType>>(fieldDefinition).id;
+
+                            if (id) {
+                                placements.set(id, { definition: fieldDefinition, pageId: page.id!, pageOrdinal });
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        return placements;
     }
 
     public getFields<TField extends FieldModel<TValueType>>(fieldDefinition: FieldDefinition<TField>): Map<PageModel, Array<TField>> {

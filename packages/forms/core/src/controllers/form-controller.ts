@@ -64,6 +64,42 @@ export interface IFormController<TForm extends FormModel<any> = FormModel<any>> 
     update(update: (form: TForm) => TForm): void;
 }
 
+/**
+ * Copies the shared sections' values from the collection's first page onto a page about to be added -- a page
+ * arrives from `createPage` empty, so without this its shared sections would stay blank until an edit converged them.
+ *
+ * Copied field by field rather than by carrying the whole section, so the new page keeps the field uuids
+ * `initialize` gave it -- the ids inputs and labels are addressed by, which must stay distinct across pages that
+ * print together.
+ */
+function copySharedSections<TPage extends PageModel>(form: FormModel<any>, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
+    const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);
+    if (!shared.length) {
+        return page;
+    }
+
+    // the first page of a collection has nothing to copy from, and is itself what every later page copies
+    const source = form.get<PageCollection>(pageDefinition).pages[0];
+    if (!source) {
+        return page;
+    }
+
+    return shared.reduce((result, sectionDefinition) => {
+        const from = source.get<SectionModel>(sectionDefinition);
+
+        const section = sectionDefinition.children.reduce((target, child) => {
+            const fieldDefinition = child as FieldDefinition<FieldModel<TValueType>>;
+            const field = from.get<FieldModel<TValueType>>(fieldDefinition);
+
+            return target.set(
+                fieldDefinition,
+                target.get<FieldModel<TValueType>>(fieldDefinition).setValue(field.getValue()).setIsEnabled(field.getIsEnabled()));
+        }, result.get<SectionModel>(sectionDefinition));
+
+        return result.set(sectionDefinition, section);
+    }, page);
+}
+
 class SectionBinding<TSection extends SectionModel> implements ISectionBinding<TSection> {
     constructor(private readonly page: IPageBinding<PageModel>, readonly sectionDefinition: SectionDefinition<TSection>) {
     }
@@ -265,40 +301,4 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     private getBindingKey(pageDefinition: PageDefinition<PageModel>, pageId: string): string {
         return `${pageDefinition.id}:${pageId}`;
     }
-}
-
-/**
- * Copies the shared sections' values from the collection's first page onto a page about to be added -- a page
- * arrives from `createPage` empty, so without this its shared sections would stay blank until an edit converged them.
- *
- * Copied field by field rather than by carrying the whole section, so the new page keeps the field uuids
- * `initialize` gave it -- the ids inputs and labels are addressed by, which must stay distinct across pages that
- * print together.
- */
-function copySharedSections<TPage extends PageModel>(form: FormModel<any>, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
-    const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);
-    if (!shared.length) {
-        return page;
-    }
-
-    // the first page of a collection has nothing to copy from, and is itself what every later page copies
-    const source = form.get<PageCollection>(pageDefinition).pages[0];
-    if (!source) {
-        return page;
-    }
-
-    return shared.reduce((result, sectionDefinition) => {
-        const from = source.get<SectionModel>(sectionDefinition);
-
-        const section = sectionDefinition.children.reduce((target, child) => {
-            const fieldDefinition = child as FieldDefinition<FieldModel<TValueType>>;
-            const field = from.get<FieldModel<TValueType>>(fieldDefinition);
-
-            return target.set(
-                fieldDefinition,
-                target.get<FieldModel<TValueType>>(fieldDefinition).setValue(field.getValue()).setIsEnabled(field.getIsEnabled()));
-        }, result.get<SectionModel>(sectionDefinition));
-
-        return result.set(sectionDefinition, section);
-    }, page);
 }

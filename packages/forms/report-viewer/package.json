@@ -22,6 +22,7 @@
         "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
         "@forms/printing": "1.0.0",
+        "@forms/review": "1.0.0",
         "@forms/value-lists": "1.0.0",
         "@forms/violations": "1.0.0",
         "@shrub/core": "0.5.91"

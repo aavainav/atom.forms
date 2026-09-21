@@ -73,6 +73,12 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
     // below consumes it
     const effectiveActiveId = navigationTarget?.pageId ?? activeId;
     const activeEntry = entries.find((entry) => entry.page.id === effectiveActiveId) ?? entries[0];
+    const activePageId = activeEntry?.page.id;
+
+    // a page not showing has no controls in the document, so whoever marks controls has to know which one is
+    React.useEffect(() => {
+        navigationController.setActivePage(printState ? undefined : activePageId);
+    }, [navigationController, activePageId, printState]);
 
     React.useEffect(() => {
         if (!navigationTarget) {

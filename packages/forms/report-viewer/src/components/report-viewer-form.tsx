@@ -7,6 +7,7 @@ import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
 import { PanelManager } from "./panel";
 import { ReportViewerOptions } from "./report-viewer-options";
+import { ReviewManager } from "./review";
 import { ValidationManager } from "./validation";
 import { IInitialForm, IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../services";
 
@@ -33,6 +34,8 @@ interface IReportViewerFormProps {
     /** Where the form's data goes when it is saved. Without one the save option is not offered. */
     readonly dataManager?: IReportViewerDataManager<any>;
     readonly mode: FormMode;
+    /** Who the comments a reviewer makes are attributed to. A reviewable form without one shows its comments but cannot add any. */
+    readonly reviewer?: string;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
 }
@@ -42,7 +45,7 @@ interface IReportViewerFormProps {
  * loading the form itself; a host needing shared controllers or a mutation of the loaded model calls
  * `IReportViewerService.loadForm` and renders this directly, so both paths wire a form up identically.
  */
-export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, showOptions }, ref) {
+export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, reviewer, showOptions }, ref) {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -90,6 +93,9 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             <NotificationManager />
             <ValidationManager controllers={formControllers} />
             <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
+            {reportViewerService.canReview(initialState, dataManager) && (
+                <ReviewManager controllers={formControllers} dataManager={dataManager} reviewer={reviewer} onError={onError} />
+            )}
             <initialForm.Component controllers={formControllers} />
             {showOptions && (
                 <ReportViewerOptions

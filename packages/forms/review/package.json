@@ -1,0 +1,21 @@
+{
+    "name": "@forms/review",
+    "description": "The review package holds a reviewer's comments on a report -- on the form, a page, a section or a field -- for a host to keep.",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "typings": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "yarn run build-ts",
+        "build-ts": "tsc -b .",
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+        "test": "vitest run",
+        "test-types": "tsc -p test/tsconfig.json",
+        "test-watch": "vitest"
+    },
+    "dependencies": {
+        "@forms/core": "1.0.0"
+    }
+}

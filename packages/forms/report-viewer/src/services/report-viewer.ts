@@ -1,6 +1,7 @@
 import { ComponentType } from "react";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
+import { IReviewComment } from "@forms/review";
 import { createService, Singleton } from "@shrub/core";
 
 export type ReadReason = "open" | "new";
@@ -18,8 +19,12 @@ export interface IReportViewerDataManager<TData extends object = IReportData> {
      * resetting to a blank form -- a manager whose data isn't tied to a specific record can ignore which one it gets.
      */
     read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;
+    /** Reads the review comments the host holds for the record. Without one, comments last only as long as the form is on screen. */
+    readComments?(): Promise<ReadonlyArray<IReviewComment>>;
     /** Hands the form's extracted data back to the host. A manager without one leaves the form unsaveable. */
     write?(data: IReportData): Promise<void>;
+    /** Hands the review comments back to the host each time one is added, resolved or reopened. They are review metadata, never part of what `write` receives. */
+    writeComments?(comments: ReadonlyArray<IReviewComment>): Promise<void>;
 }
 
 /** What a data manager's `read` returns. */
@@ -38,6 +43,8 @@ export interface IInitialForm {
 export interface IReportViewerService {
     /** Whether the form's data can be extracted -- true once it carries a mapper. */
     canExtractData: (form: FormModel<any>) => boolean;
+    /** Whether the form has review to show: a reviewable form always does, an editable one only when the host holds comments for its officer to read, and a viewable one never. */
+    canReview: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Whether the form can be saved -- true once it carries a mapper and the data manager can write. */
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
@@ -104,6 +111,10 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
 
     canExtractData(form: FormModel<any>): boolean {
         return !!form.mapper;
+    }
+
+    canReview(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {
+        return form.mode === "reviewable" || (form.mode === "editable" && !!dataManager?.readComments);
     }
 
     canSaveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>): boolean {

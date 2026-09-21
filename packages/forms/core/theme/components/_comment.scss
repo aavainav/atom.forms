@@ -1,0 +1,90 @@
+@use "../variables";
+
+// a marker sits in the corner of the control it comments on, so the control has to be what it is positioned against
+[data-field-id]:has(> .f-comment-marker) {
+    position: relative;
+}
+
+.f-comment-marker {
+    align-items: center;
+    background: variables.$primary;
+    border: 0;
+    border-radius: 0.75rem;
+    color: variables.$light;
+    display: flex;
+    font-size: 0.7rem;
+    font-weight: bold;
+    height: 1.5rem;
+    justify-content: center;
+    min-width: 1.5rem;
+    padding: 0 0.3rem;
+    position: absolute;
+    right: -0.5rem;
+    top: -0.5rem;
+    transition: opacity 0.15s;
+    z-index: 2;
+}
+
+// every comment on it has been dealt with
+.f-comment-marker--commented:not(.f-comment-marker--open) {
+    background: variables.$secondary;
+}
+
+.f-comment-marker--open {
+    background: variables.$warning;
+    color: variables.$dark;
+}
+
+// the invitation to add a first comment stays out of the way until the control is reached, by pointer or by keyboard
+.f-comment-marker--empty {
+    opacity: 0;
+}
+
+[data-field-id]:hover > .f-comment-marker--empty,
+[data-field-id]:focus-within > .f-comment-marker--empty,
+.f-comment-marker--empty:focus-visible {
+    opacity: 1;
+}
+
+.f-comment {
+    border-left: 3px solid variables.$primary;
+    padding: 0.25rem 0.75rem;
+}
+
+.f-comment--resolved {
+    border-left-color: variables.$success;
+    opacity: 0.7;
+}
+
+.f-comment-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.f-comment-author {
+    font-weight: bold;
+}
+
+.f-comment-header {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.f-comment-status {
+    color: variables.$success;
+    font-size: variables.$font-size-sm;
+    font-weight: bold;
+}
+
+.f-comment-text {
+    white-space: pre-wrap;
+}
+
+// theme-aware, so the time follows the day/night toggle
+.f-comment-time {
+    color: var(--bs-secondary-color);
+    font-size: variables.$font-size-sm;
+}

@@ -22,6 +22,11 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         description: "How a form's mode changes what's on screen: fields disabling, placeholders disappearing, and the watermark each status stamps -- everything a printed copy would show too.",
         path: "/demo/form-mode",
         title: "Form Mode"
+    },
+    {
+        description: "A reviewer comments on a report -- on a field, a page or the whole of it -- and the officer reads and resolves the comments, both working from the same ones.",
+        path: "/demo/review",
+        title: "Review"
     }
 ];
 

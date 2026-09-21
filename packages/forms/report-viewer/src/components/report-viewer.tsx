@@ -11,6 +11,8 @@ import "@forms/core/theme/_main.scss";
 export interface IReportViewerSettings {
     /** How the form's fields and editing affordances behave. Defaults to "editable". */
     readonly mode?: FormMode;
+    /** Who the comments a reviewer makes are attributed to. A reviewable form without one shows its comments but cannot add any. */
+    readonly reviewer?: string;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
 }
@@ -51,6 +53,7 @@ function ReportViewerInner<TData extends object = IReportData>(
                         initialForm={initialForm}
                         dataManager={dataManager}
                         mode={settings?.mode ?? "editable"}
+                        reviewer={settings?.reviewer}
                         showOptions={settings?.showOptions}
                     />
                 )}

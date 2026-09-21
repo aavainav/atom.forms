@@ -169,6 +169,31 @@ describe("ReportViewerService", () => {
         });
     });
 
+    describe("canReview", () => {
+        const withComments = { read: async () => undefined, readComments: async () => [] };
+
+        it("is true for a reviewable form, whether or not the host holds comments", () => {
+            const service = createService(catalogItem);
+
+            expect(service.canReview(new StubFormModel().setMode("reviewable"))).toBe(true);
+            expect(service.canReview(new StubFormModel().setMode("reviewable"), withComments)).toBe(true);
+        });
+
+        it("is true for an editable form only when the host holds comments for the officer to read", () => {
+            const service = createService(catalogItem);
+
+            expect(service.canReview(new StubFormModel())).toBe(false);
+            expect(service.canReview(new StubFormModel(), { read: async () => undefined })).toBe(false);
+            expect(service.canReview(new StubFormModel(), withComments)).toBe(true);
+        });
+
+        it("is never true for a viewable form", () => {
+            const service = createService(catalogItem);
+
+            expect(service.canReview(new StubFormModel().setMode("viewable"), withComments)).toBe(false);
+        });
+    });
+
     describe("registerOption / getOptions", () => {
         // the production option list lives in ReportViewerModule.configure now rather than on the service, so
         // these register a small stand-in set through the same registration seam a module uses, reusing the two

@@ -11,11 +11,13 @@ import {
     INotificationService,
     IReportViewerOptionRegistrationService,
     IReportViewerService,
+    IReviewService,
     IThemeService,
     IValidationService,
     ModalService,
     NotificationService,
     ReportViewerService,
+    ReviewService,
     ThemeService,
     ValidationService,
 } from "./services";
@@ -43,6 +45,7 @@ export class ReportViewerModule implements IModule {
         registration.registerSingleton<IReportViewerService, ReportViewerService>(IReportViewerService, reportViewerServiceFactory);
         registration.registerSingleton<IReportViewerOptionRegistrationService, ReportViewerService>(IReportViewerOptionRegistrationService, reportViewerServiceFactory);
 
+        registration.register<IReviewService, ReviewService>(IReviewService, ReviewService);
         registration.register<IThemeService, ThemeService>(IThemeService, ThemeService);
         registration.register<IValidationService, ValidationService>(IValidationService, ValidationService);
     }
@@ -58,7 +61,14 @@ export class ReportViewerModule implements IModule {
         const reportViewerService = services.get<IReportViewerService>(IReportViewerService);
 
         options.registerOption({ id: "validate", title: "Validate", Component: lazy(() => import("./components/options").then(m => ({ default: m.ValidateOption }))) });
-        
+
+        options.registerOption({
+            id: "review",
+            title: "Review comments",
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.ReviewOption }))),
+            canShow: (form, dataManager) => reportViewerService.canReview(form, dataManager)
+        });
+
         options.registerOption({
             id: "violations",
             title: "Violations",

@@ -11,9 +11,10 @@ task recipes; open that one rather than reading the package's source to orient.
 | [catalog/](catalog/) | `@forms/catalog` | Registry of forms by name+version — the source of truth for a form's identity, definition, mapper and the shared lists it draws on. Holds no data boundary. |
 | [value-lists/](value-lists/) | `@forms/value-lists` | Value-list registry + service, the code generator, and the national (jurisdiction-free) lists. |
 | [violations/](violations/) | `@forms/violations` | Registry of the violations a citation is written for, plus the selector that puts them on a form. Citations only; bundles no lists of its own. |
-| [report-viewer/](report-viewer/) | `@forms/report-viewer` | **The host-facing entry point.** `<ReportViewer identity dataManager settings />` resolves the catalog item, builds and populates the form, and mounts whatever options and panels it offers. Owns modals, notifications and validation; no routing. |
+| [report-viewer/](report-viewer/) | `@forms/report-viewer` | **The host-facing entry point.** `<ReportViewer identity dataManager settings />` resolves the catalog item, builds and populates the form, and mounts whatever options and panels it offers. Owns modals, notifications, validation and the review wiring; no routing. |
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
 | [audit/](audit/) | `@forms/audit` | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never values. |
+| [review/](review/) | `@forms/review` | A reviewer's comments on a report -- on the form, a page, a section or a field -- and where in a form each belongs. A controller and its types, plus the markers, thread modal and panel that show them, which the report viewer mounts. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, the root and not-found routes, bootstrapper. Knows nothing about forms. |
 | [south-carolina/s438/](south-carolina/s438/) | `@forms/s438` | SC S438 UTT citation form. |
 | [south-carolina/public-contact-or-warning/](south-carolina/public-contact-or-warning/) | `@forms/public-contact-or-warning` | SC Form 432 public contact / warning. |
@@ -28,7 +29,7 @@ and nothing in this repo depends on it except a host:
 ```
                        report-viewer
                     ↙   ↓      ↓    ↘      ↘
-          catalog  value-lists  violations  printing  audit
+          catalog  value-lists  violations  printing  audit  review
               ↑         ↑           ↑          ↑
               └─────────┴───────────┴──────────┴──── form packages (south-carolina/*, oklahoma/*, georgia/*)
                                   ↓
@@ -43,6 +44,9 @@ viewer actually reads.
 
 `audit` is the same shape and depends on core alone: it exports a hook the report viewer calls, and a
 controller that registers itself with core. No form package depends on it.
+
+`review` is the same again, but exports components rather than a hook: the markers over a form and the panel beside
+it, which the report viewer mounts. Like `audit`, it depends on core alone and no form package depends on it.
 
 `workbench` is off to the side: it hosts a react app, owns the router and the root/not-found routes, and knows
 nothing about forms at all. A host that already has a router skips it and renders `<ReportViewer />` directly.

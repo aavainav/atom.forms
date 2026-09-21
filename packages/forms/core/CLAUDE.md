@@ -47,7 +47,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | The `Controller` base class, `@RegisterController` and its registry, `ControllerManager`, and the four controllers. See below. |
-| [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, and `usePrintState(controller)`. |
+| [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) · [use-active-page-id.ts](src/hooks/use-active-page-id.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, `usePrintState(controller)`, and `useActivePageId(controller)`. |
 | [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData`/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
@@ -105,6 +105,12 @@ parent's), `onChanged`, a protected `emitChanged()`, and no-op `start()`/`dispos
   pages the print is for. It carries no notion of *what* is being printed or why — `@forms/printing` decides that
   and `begin`s the state; core only renders it. `state` is stored by reference and replaced only in `begin`/`end`,
   since it is a `useSyncExternalStore` snapshot.
+- **`NavigationController`** carries a one-shot `goTo({ pageId, fieldId })` to the page collection, which shows the
+  page and focuses the field, and remembers which page is showing. `FPageCollection` reports that with `setActivePage`
+  after each commit -- `undefined` while a print is in progress -- and anything that marks controls in the document
+  (`@forms/review`'s comment markers) reads it through `useActivePageId`, because `FPane` renders an empty `<div>` for
+  a tab that is not active, so only the active page's controls exist to be found. The controls are found by the
+  `data-field-id` attribute `FFieldControl` and `FFieldCheckbox` carry on their root, through `getFieldControl`.
 - **`RulesController`** (in `models/validation/`) runs the rule collection and holds the resulting
   `RuleIssueCollection`. It reads `form` through the manager each time it is needed, so it can never be validating a
   stale model; its rules are the form's own unless `getRulesController(ruleCollection)` sets one or
@@ -197,8 +203,15 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 
 - Structure: `FForm`, `FPageCollection`, `FPage`, `FSection`, `FFormStackPanel`, `FBorder`, `FAccordion`,
   `FWatermark` (+ `getStatusWatermark`).
-- Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`, `FLabel`,
+- Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
+  `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.
+- Review: `FComment` (author, time, text, and its children as its actions) and `FCommentMarker` (a button in a
+  control's corner: a count, or an invitation to add the first comment). Presentational only -- `@forms/review` owns
+  what they show. A marker sits in the corner of a control, so the control has to be positioned; `_comment.scss`
+  does that for any `[data-field-id]` holding one. An empty marker is hidden until its control is hovered or focused,
+  but stays a real button, since a disabled input swallows the pointer and a reviewer on a locked form still has to
+  reach it by keyboard.
 - Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FCode`, `FIcon`, `FModal`,
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`. `FCode` is a `<pre><code>` panel whose
   colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle.

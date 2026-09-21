@@ -3,6 +3,8 @@ export { FAsyncLoader } from "./components/async-loader";
 export { FBorder } from "./components/border";
 export { FButton } from "./components/button";
 export { FCode } from "./components/code";
+export { FComment } from "./components/comment";
+export { FCommentMarker } from "./components/comment-marker";
 export { FContainer } from "./components/container";
 export { FDraggableItem } from "./components/draggable-item";
 export { FDropzone } from "./components/dropzone";
@@ -10,6 +12,7 @@ export { FFieldCheckbox } from "./components/field-checkbox";
 export { FFieldControl } from "./components/field-control";
 
 export { FFieldSelect } from "./components/field-select";
+export { FFieldTextArea } from "./components/field-textarea";
 
 export { FForm } from "./components/form";
 export { FFieldInput } from "./components/field-input";
@@ -71,6 +74,7 @@ export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./m
 
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";
+export type { IFieldPlacement } from "./models/field-placement";
 export type { IOptionField } from "./models/option-field";
 export type { ISectionModel, ISection, SectionModelConstructor } from "./models/section";
 export type { IPageModel, IPage, PageModelConstructor } from "./models/page";
@@ -125,7 +129,7 @@ export { ViolationDropzone, ViolationDropzoneFields } from "./models/import/viol
 export { Controller, ControllerKey, ControllerManager, DragAndDropController, FormController, NavigationController, PrintController, RegisterController } from "./controllers";
 export type { ConfirmPageDelete, ControllerConstructor, IController, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormController, INavigationController, INavigationTarget, IPageBinding, IPrintController, IPrintState, IRegisterControllerOptions, ISectionBinding, PrintLayout } from "./controllers";
 
-export { useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
+export { useActivePageId, useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 
 export { setOptionWithDependents } from "./utils/dependent-fields";
 export { getFieldControl, getFieldId } from "./utils/field-control";

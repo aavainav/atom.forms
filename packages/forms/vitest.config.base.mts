@@ -16,6 +16,7 @@ const packageSources: Readonly<Record<string, string>> = {
     "@forms/printing": "printing/src/index.ts",
     "@forms/public-contact-or-warning": "south-carolina/public-contact-or-warning/src/index.ts",
     "@forms/report-viewer": "report-viewer/src/index.ts",
+    "@forms/review": "review/src/index.ts",
     "@forms/s438": "south-carolina/s438/src/index.ts",
     "@forms/tr310": "south-carolina/tr310/src/index.ts",
     "@forms/value-lists": "value-lists/src/index.ts",

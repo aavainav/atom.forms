@@ -3,7 +3,7 @@
 **The top of the stack and the only part of it a host app renders.** A host names a form and hands over its data;
 this package resolves the catalog item, builds the form model, populates it, mounts the options and panels the form
 offers, and renders it. Depends on `@forms/audit`, `@forms/catalog`, `@forms/core`, `@forms/value-lists`,
-`@forms/violations`, `@forms/printing`.
+`@forms/violations`, `@forms/printing`, `@forms/review`.
 
 Module dependencies: `AuditModule`, `FormCatalogModule`, `ValueListsModule`, `ViolationsModule`, `PrintingModule`.
 
@@ -15,7 +15,7 @@ even the workbench.
 ```
                 report-viewer          ← what a host app renders
                  ↙   ↓   ↓   ↘   ↘
-      catalog  value-lists  violations  printing  audit
+      catalog  value-lists  violations  printing  audit  review
 ```
 
 ## The whole API
@@ -30,7 +30,7 @@ Three props, nothing else:
 | --- | --- |
 | `identity` | `IFormIdentity`. The catalog resolves it, answering with the latest version when none is named. |
 | `dataManager` | `IReportViewerDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
-| `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`) and `showOptions?`. How the report renders, as opposed to which one. |
+| `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`), `reviewer?` (who a reviewer's comments are attributed to) and `showOptions?`. How the report renders, as opposed to which one. |
 
 There is deliberately **no `controllers` prop**. A host needing shared controllers or a mutation of the loaded model
 takes the advanced path instead: `IReportViewerService.loadForm(identity, dataManager)` then `<ReportViewerForm />`,
@@ -44,19 +44,21 @@ the previously loaded form on screen.
 
 | Path | Contents |
 | --- | --- |
-| [src/module.ts](src/module.ts) | `ReportViewerModule`. Registers five services and nothing else — there is no configuration seam, because there is nothing left to register with it. |
+| [src/module.ts](src/module.ts) | `ReportViewerModule`. Registers six services and nothing else — there is no configuration seam, because there is nothing left to register with it. |
 | [src/services/report-viewer.ts](src/services/report-viewer.ts) | The heart: `IReportViewerDataManager`/`IReadDataResult`, `IInitialForm`, `IReportViewerService`, `IReportViewerOption(Props)`, `IReportViewerPanelProps`, and **the built-in option table**. |
 | [src/services/modal.ts](src/services/modal.ts) | `IModalService`: `showModal`, `showConfirmModal`, `showSaveChangesModal`. Max 3 concurrent. Re-exports core's modal types, `IModalOptions` included. |
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. A notification may name a `duration` (ms; `0` keeps it up until closed), otherwise its type's default applies. |
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
+| [src/services/review.ts](src/services/review.ts) | `IReviewService.togglePanel` — event only, same shape as validation; `ReviewManager` listens. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
-| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own four. |
+| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing `extractData`'s payload as formatted JSON with a Copy action. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
 | [src/components/notification/notification-items.ts](src/components/notification/notification-items.ts) | What `NotificationManager` shows and how: `addNotification` merges a raised notification into the list. Owns `maxNotifications` (3) and `defaultDurations` (danger 10s, warning 8s, info/success 5s). |
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, alongside the other managers. |
+| [src/components/review/manager.tsx](src/components/review/manager.tsx) · [options/review-option.tsx](src/components/options/review-option.tsx) | `ReviewManager` mounts `@forms/review`'s markers and panel and keeps the comments in step with the data manager; `ReviewOption` is the button that toggles the panel. See *Review* below. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
 ## `IReportViewerDataManager` — the host's side of the data
@@ -84,6 +86,10 @@ interface IReadDataResult<TData extends object = IReportData> {
   down to `FormModel.populate`, rather than being split into separate parameters partway through. A field the
   mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable regardless of being
   marked.
+- **`readComments` and `writeComments` are optional, and are the comments' whole route in and out.** Comments are
+  review metadata the host keeps beside the record, never part of `write`'s data. Without them comments last only as
+  long as the form is on screen. `IReviewComment` and `ReviewTarget` are re-exported from this package, so a host
+  need not depend on `@forms/review`.
 - **`write` doesn't depend on `TData`.** It always takes the full `IReportData` -- `FormModel.extractData()` stamps
   `name`/`status`/`type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never
   just the contract that went in. That's why the props, the options bar and `saveForm` all type their `dataManager`
@@ -129,6 +135,7 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | id | offered when |
 | --- | --- |
 | `validate` | always |
+| `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager has `readComments` |
 | `violations` | `!!form.violationListId` |
 | `save` | `!!form.mapper && !!dataManager?.write` |
 | `report-data` | `!!form.mapper` |
@@ -173,6 +180,32 @@ stacking context, which ranks anything fixed inside it only against the bar's ow
 z-index — the same trap that put the print dialog behind `IModalService`. A panel is mounted for as long as the form
 is and decides for itself whether it is showing, which is what lets the option be a plain button raising an event on
 a service.
+
+## Review
+
+`ReportViewerForm` mounts `ReviewManager` when `reportViewerService.canReview(form, dataManager)` -- a `"reviewable"`
+form always, an `"editable"` one only when the host can `readComments` for the officer to read, a `"viewable"` one
+never -- and the `review` option is gated on the same call. The manager, beside the other managers at the viewer's
+root:
+
+- **sets the reviewer during render**, from `settings.reviewer`, not in an effect. The layer decides from it whether
+  to offer commenting on its first pass, and nothing raises a change when it is set. Without one a `"reviewable"`
+  form shows its comments but cannot add any.
+- **loads once, then saves on every change.** It reads `readComments` when it mounts and `load`s the answer, and
+  only *then* subscribes to the controller, so loading is not written straight back. Every add, resolve or reopen
+  calls `writeComments` with the full list -- one write at a time, a change landing mid-write costing one more
+  write of the latest. The data manager is read through a ref, so a host that rebuilds it on every render does not
+  reload the comments. A failure to read or write goes to `onError`.
+- **renders the layer and the panel**, giving both a `showModal` bound to `IModalService`, so the thread modal opens
+  at the viewer's root and not inside a report.
+
+The panel's open/closed state is the manager's own, toggled through `IReviewService` -- the same shape as the
+violations panel. `ReviewOption` raises that event, and its tooltip carries how many comments are open. `FTooltip`
+reads its title once, when bootstrap builds the tooltip, so the option **keys the tooltip on its label** to get a
+new one when the count changes.
+
+The review panel is on the end edge, and so is the violations panel. A form that offers both should not have them
+open together.
 
 ## Day/night mode
 

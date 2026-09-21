@@ -29,6 +29,11 @@ export interface IAuditController extends IController {
     recordSaveFailed(): void;
 }
 
+/** Gets the audit controller, which core's manager has no accessor for. */
+export function getAuditController(controllers: IControllerManager): IAuditController {
+    return controllers.getController<IAuditController>(AuditController.key);
+}
+
 /**
  * Watches the form, rules and print controllers and records what they report. Eager, so it misses nothing.
  * Edits are found by diffing the mapper's extract, so a form with no mapper goes unrecorded.
@@ -198,9 +203,4 @@ export class AuditController extends Controller implements IAuditController {
         clearTimeout(this.editTimer);
         this.editTimer = setTimeout(() => this.flush(), editQuietPeriod);
     }
-}
-
-/** Gets the audit controller, which core's manager has no accessor for. */
-export function getAuditController(controllers: IControllerManager): IAuditController {
-    return controllers.getController<IAuditController>(AuditController.key);
 }
