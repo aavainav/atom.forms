@@ -4,7 +4,7 @@ import { IFormCatalogItem } from "@forms/catalog";
 import { useForm, IControllerManager, FButton, FOffCanvas } from "@forms/core";
 
 import { ViolationSelectionList } from "./violation-selection-list";
-import { IViolation } from "../models";
+import { isViolationsClosed, IViolation } from "../models";
 import { IViolationSelectorService, IViolationService } from "../services";
 
 /** How many violations may be ticked before the rest of the list stops accepting picks. */
@@ -92,6 +92,12 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
 
     const add = async (): Promise<void> => {
         if (!binding) {
+            return;
+        }
+
+        // the selector is closed to a form that has closed its violations, but it may already have been open
+        if (isViolationsClosed(form, binding)) {
+            onError?.("The violations cannot be changed on this form.");
             return;
         }
 

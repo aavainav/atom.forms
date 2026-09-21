@@ -40,16 +40,17 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/definition-factory.ts](src/models/definition-factory.ts) | `DefinitionFactory.form/page/section` and `defineFields(section, specs)`. `defineFields` derives the wire name by camel→kebab unless `name` overrides it. `section` takes an optional `ISectionDefinitionOptions` — today just `isShared`. |
 | [src/models/schema.ts](src/models/schema.ts) | `Schema` base — an empty constructor; a schema is found through the definition tree it builds, not by registering itself. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
-| [src/models/actor.ts](src/models/actor.ts) | `IActor { id, name }`: who did something to a report, as the host identifies them. Audit records, review comments and (to come) workflow history carry one. |
-| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`. |
+| [src/models/actor.ts](src/models/actor.ts) | `IActor`: who did something to a report, as the host identifies them -- an `id` and a `name`, and optionally a `badgeId`, a `rank` and an `agency`. It is a **snapshot**, copied onto what the user does rather than looked up later, so a change of rank afterwards does not rewrite a report. Roles are deliberately not part of it. Audit records, review comments and workflow history carry one. |
+| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`, and the workflow surface: `workflow`, `history`, `getTransitions`, `canTransition`, `transition`, `lockSection`, `lockPageSet`, `isSectionLocked`, `isPageSetLocked`, `restoreWorkflow`. `FormStatus` is a plain closed union. |
+| [src/models/workflow.ts](src/models/workflow.ts) | `IWorkflow`, `defineWorkflow`, and the types around them: `IWorkflowTransition`, `ITransitionOptions`, `IWorkflowEntry` (one line of history), `IWorkflowStamp` (a record's history), `WorkflowGuard`, `WorkflowStep`. See Workflow below. |
 | [src/models/page.ts](src/models/page.ts) · [page-collection.ts](src/models/page-collection.ts) · [section.ts](src/models/section.ts) | `PageModel` (also holds dropzones), the immutable `PageCollection`, `SectionModel`. |
 | [src/models/field.ts](src/models/field.ts) + [boolean-](src/models/boolean-field.ts)/[number-](src/models/number-field.ts)/[string-](src/models/string-field.ts)/[option-field.ts](src/models/option-field.ts) | `FieldModel` and its four concrete types. |
-| [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. |
+| [src/models/citation-form.ts](src/models/citation-form.ts) · [crash-form.ts](src/models/crash-form.ts) | Abstract `FormModel` subclasses for the two form families. Every `set*` on both returns `this` — a form stamping a value on itself must thread the change back through the page collection, or the immutable setter's result is discarded. `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`; `CrashForm` leaves the chaining to the concrete form. Each also carries its family's `workflow` (`citationWorkflow`, `crashWorkflow`), which a concrete form overrides with `with`. |
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | The `Controller` base class, `@RegisterController` and its registry, `ControllerManager`, and the four controllers. See below. |
 | [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) · [use-active-page-id.ts](src/hooks/use-active-page-id.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, `usePrintState(controller)`, and `useActivePageId(controller)`. |
-| [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData`/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
+| [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData` (`data`, `readOnlyFields?`, `status?`, `workflow?`)/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
 | [theme/](theme/) | SCSS. `theme/_main.scss` is the entry a host imports. |
@@ -146,6 +147,38 @@ is set to an absolute value rather than by a delta.
 A mapper does **not** get this for free: a page it creates goes through `pageDefinition.createPage` rather than the
 form controller, so `populate` has to write the shared sections onto every page itself.
 
+## Workflow
+
+A form declares the rules its reports move by as an `IWorkflow` on the form model: `transitions` keyed by id, and `locks`
+keyed by status. It works off the closed `FormStatus` union -- a workflow does not invent statuses -- and `CitationForm`
+and `CrashForm` each carry a preset (`citationWorkflow`, `crashWorkflow`) that a jurisdiction overrides with
+`preset.with({ id, locks, transitions })`: the same as the preset except for what it is given, a lock or a transition
+replacing the preset's under the same key. `defineWorkflow` freezes what it makes, since one workflow is shared by every
+form of its family, and refuses a transition made from no status.
+
+A transition names the statuses it is made `from`, the `mode` the form must be in (the capacity the user acts in --
+roles are deliberately not modelled, so the host still picks the mode), the `to` status, an optional `effect` run on the
+form as it moves, and optional `guards` (today one: `"hasOpenComments"`). `form.getTransitions()` lists what can be made
+now, and `form.transition(id, by, { issues, note?, openComments?, at? })` makes one, returning the new form. It
+**throws** unless the transition exists, the form is in a `from` status and the right mode, **the validation result holds
+no error** (warnings do not count, and there is no exception for Reject), and, for `hasOpenComments`, at least one
+comment is open. The model is *told* the validation result and the open-comment count rather than finding them itself --
+it cannot see the rules controller or the review controller -- so a caller has to validate first. Each transition
+appends `{ transition, from, to, at, by, note? }` to `form.history`, and `extractData` stamps `{ id, version, history }`
+into the record as `workflow`.
+
+A `lock` is a function `(form) => form` run when a form takes the status **and again when a record in that status is
+loaded** -- `populate` restores `status` and `workflow` from `IPopulateData` after the mapper, and a status that is not
+in the union throws. Three primitives close things without a mode change:
+
+- `lockSection(definition)` disables the section's fields on every page, and on any page added later.
+- `lockPageSet(definition)` closes the structure only: `addPage` and `removePage` throw, and the fields are untouched.
+- `setMode("viewable")` closes the whole form, and is what the family presets use.
+
+`isSectionLocked` / `isPageSetLocked` are what a component asks (`IPageBinding.isSectionLocked` for a page's own
+section), and `FPageCollection` hides add and delete for a locked page set. A record loaded under a different workflow
+id keeps its history rather than dropping what it cannot read.
+
 ## Validation
 
 `Rule` (abstract) → `FieldRule` (bound to one `FieldDefinition`) → the concrete rules. `Rule.when(condition)`
@@ -201,7 +234,10 @@ events get a `dataTransfer` defined on a plain `Event`; layout (`clientWidth` an
 defined on `HTMLElement.prototype` for the length of a test; and `AnimationEvent` is defined before react-dom loads,
 or it takes jsdom for an old browser and listens for the webkit-prefixed animation event. `FFieldSelect` mocks
 `@popperjs/core`, since popper measures layout. `FPageCollection` is driven over a real form and controllers from
-[test/fixtures/citation-form.ts](test/fixtures/citation-form.ts) rather than stubs.
+[test/fixtures/citation-form.ts](test/fixtures/citation-form.ts) rather than stubs. Workflow behaviour is driven over
+[test/fixtures/workflow-form.ts](test/fixtures/workflow-form.ts) (a header and a charge section on one repeating page, with a
+workflow that runs an effect, needs an open comment and locks the charge) and the family presets over
+[test/fixtures/preset-forms.ts](test/fixtures/preset-forms.ts) (concrete citation and crash forms with no pages).
 
 | Rule | Why |
 | --- | --- |
@@ -346,6 +382,12 @@ as `yarn test`.
   because `FieldDefinition.createNew` always passes `""` and real values arrive through `setValue`, which goes
   through `withChanges` and bypasses the constructor. Pinned by a characterization test in
   [test/models/field.test.ts](test/models/field.test.ts).
+- `setMode` only ever disables, so a status whose lock is `setMode("viewable")` cannot be reopened by setting the mode
+  back: a rejected report is edited again by *loading* it (the fresh form is editable, and its status is restored).
+- `form.addPage` / `removePage` throw for a locked page set, so a caller gates on `isPageSetLocked` before offering the
+  affordance rather than relying on the throw. `FormController.addPage` therefore rejects for one.
+- `transition` does not save, validate or comment anything; it is a pure function of the form and what it is told. The
+  ordering of validate, save the candidate, then apply belongs to the caller.
 - `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
   `setMode("viewable")` (or `"reviewable"`) a newly added page arrives with its non-shared sections enabled.
 - `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page

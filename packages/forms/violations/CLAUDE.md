@@ -22,8 +22,8 @@ form is a change to that form's catalog item, not to this package.
 | [src/models/violation.ts](src/models/violation.ts) | `IViolation`, `ViolationRow`, `toViolations(rows)`. |
 | [src/models/violation-list.ts](src/models/violation-list.ts) | `ViolationList` — a loaded list, its lazy code and category indexes, `getCategories` and `search`. |
 | [src/models/violation-list-definition.ts](src/models/violation-list-definition.ts) | `IViolationListDefinition`: `{ id, load() }`. |
-| [src/models/violation-binding.ts](src/models/violation-binding.ts) | `IViolationBinding` — the per-form seam. |
-| [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` for an options bar, plus `IViolationsOptionProps` (`title`). Raises the event, nothing more. |
+| [src/models/violation-binding.ts](src/models/violation-binding.ts) | `IViolationBinding` — the per-form seam — and `isViolationsClosed(form, binding)`. |
+| [src/components/violations-option.tsx](src/components/violations-option.tsx) | The `#violations-button` for an options bar, plus `IViolationsOptionProps` (`catalogItem`, `controllers`, `title`). Raises the event, and is disabled while the form has closed its violations. |
 | [src/components/violations-panel.tsx](src/components/violations-panel.tsx) | The manager — owns `isOpen` and the newly ticked set, reads the applied set off the form, loads the list, calls the form's `apply`. Takes `IViolationsPanelProps` (`catalogItem`, `controllers`, `onError?`). |
 | [src/components/violation-selection-list.tsx](src/components/violation-selection-list.tsx) | The list: category filter, search box, tickable and draggable rows. |
 | [src/violations.ts](src/violations.ts) | `ViolationListId` and `standardViolationLists`. **Both empty, deliberately** — see below. |
@@ -60,6 +60,22 @@ gate, because a form that declared a list and forgot its binding is a bug to see
 This replaced a `canShow` that asked the binding registry *plus* `catalogItem.ctor.prototype instanceof
 CitationForm`. The declaration is the better gate: it is the form saying what it draws on, in the one place a form's
 whole registration lives, rather than the renderer working it out from what happened to be registered elsewhere.
+
+## Closing the violations
+
+A form can close its violations without closing itself: a jurisdiction may leave everything but the charges open to the
+officer once a citation is issued (see the S438 workflow). `isViolationsClosed(form, binding)` is the one answer to
+"can the violations still change?": true when the form is not `"editable"`, **or** when it has locked the page set the
+binding names (`binding.pageName`, since a violation lands as a page). Three places ask it, so they cannot disagree:
+
+- `ViolationsOption` reads the form through `useForm` and disables the button, so it closes *as the form does* -- on
+  being issued, with no remount.
+- `ViolationsPanel.add` checks again and reports through `onError` instead of applying, because the panel is mounted for
+  the life of the form and may already have been open when the form closed.
+- the form's own dropzone gate (in its front page) asks the form's lock directly, for the drag route the panel does not cover.
+
+A form that declares no binding has nothing to close, so the option is left enabled rather than disabled for a reason
+that does not exist.
 
 ## Reporting a failure
 

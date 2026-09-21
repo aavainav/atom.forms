@@ -1,4 +1,5 @@
 import { IForm, FormModel, FormType } from "./form";
+import { defineWorkflow, IWorkflow } from "./workflow";
 
 /** Defines the citation form. */
 export interface ICitationForm extends IForm {
@@ -15,6 +16,25 @@ export interface ICitationForm extends IForm {
 }
 
 /**
+ * The rules a citation moves by: it is issued once, which stamps the date and time it was issued and closes the whole
+ * of it. A jurisdiction that leaves some of it open to the officer once it is issued changes that lock.
+ */
+export const citationWorkflow: IWorkflow = defineWorkflow({
+    id: "citation",
+    locks: { issued: form => form.setMode("viewable") },
+    transitions: {
+        issue: {
+            effect: form => (form as CitationForm<any>).setIssuedDate().setIssuedTime(),
+            from: ["draft", "inProgress"],
+            mode: "editable",
+            title: "Issue",
+            to: "issued"
+        }
+    },
+    version: "1"
+});
+
+/**
  * Represents an abstract base class for a citation form.
  *
  * The setters answer with a form rather than changing the one they are called on, because a form model is
@@ -22,6 +42,7 @@ export interface ICitationForm extends IForm {
  */
 export abstract class CitationForm<TData extends object> extends FormModel<TData> implements ICitationForm {
     readonly type: FormType = "citation";
+    readonly workflow: IWorkflow = citationWorkflow;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();

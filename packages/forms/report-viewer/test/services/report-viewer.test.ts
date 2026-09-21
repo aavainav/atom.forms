@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuditRecord } from "@forms/audit";
 import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
+import type { IWorkflowStamp } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 
@@ -13,6 +14,12 @@ const noopOption: Pick<IReportViewerOption, "title" | "Component"> = { title: "S
 function record(name: string): IReportData {
     return { name, status: "draft", type: "none", version: "1.0" };
 }
+
+const issuedWorkflow: IWorkflowStamp = {
+    history: [{ at: 5, by: { id: "officer-1", name: "Officer One" }, from: "draft", to: "issued", transition: "issue" }],
+    id: "stub-workflow",
+    version: "1"
+};
 
 /**
  * A form with no pages of its own -- just enough for `loadForm` to resolve and initialize it. `mapper` is read off
@@ -93,6 +100,51 @@ describe("ReportViewerService", () => {
             await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), readOnlyFields: { name: true } }) });
 
             expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ readOnlyFields: { name: true } }));
+        });
+
+        it("hands the read's status and workflow history to the mapper", async () => {
+            const populate = stubMapper();
+            const service = createService(catalogItem);
+
+            await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), status: "issued", workflow: issuedWorkflow }) });
+
+            expect(populate).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ status: "issued", workflow: issuedWorkflow }));
+        });
+
+        it("leaves the form in the status the record was stored with, and with the history it kept", async () => {
+            stubMapper();
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), status: "issued", workflow: issuedWorkflow }) });
+
+            expect(initialForm.form.status).toBe("issued");
+            expect(initialForm.form.history).toEqual(issuedWorkflow.history);
+        });
+
+        it("restores the status even when the form carries no mapper to populate", async () => {
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), status: "inReview" }) });
+
+            expect(initialForm.form.status).toBe("inReview");
+        });
+
+        it("keeps the status the form was built with when the read carries none", async () => {
+            stubMapper();
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) });
+
+            expect(initialForm.form.status).toBe("draft");
+            expect(initialForm.form.history).toEqual([]);
+        });
+
+        it("refuses a record stored with a status no form can have", async () => {
+            stubMapper();
+            const service = createService(catalogItem);
+
+            await expect(service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub"), status: "bogus" as never }) }))
+                .rejects.toThrowError('"bogus" is not a status a form can have.');
         });
 
         it("builds a form without populating it when there is no data manager", async () => {

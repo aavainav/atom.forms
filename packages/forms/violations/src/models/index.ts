@@ -1,5 +1,6 @@
 export { ViolationList } from "./violation-list";
 export { toViolations } from "./violation";
+export { isViolationsClosed } from "./violation-binding";
 
 export type { IViolationBinding } from "./violation-binding";
 export type { IViolationListDefinition } from "./violation-list-definition";

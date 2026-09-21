@@ -74,6 +74,7 @@ export type { IReportData } from "./mapping/data/report-data";
 export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./mapping/form-mapper";
 
 export type { IActor } from "./models/actor";
+export type { IAvailableTransition, ITransitionOptions, IWorkflow, IWorkflowDefinition, IWorkflowEntry, IWorkflowStamp, IWorkflowTransition, WorkflowGuard, WorkflowStep } from "./models/workflow";
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";
 export type { IFieldPlacement } from "./models/field-placement";
@@ -140,8 +141,9 @@ export { schema as ImportablePersonSchema, validateImportablePerson } from "./mo
 export { schema as ImportableVehicleSchema, validateImportableVehicle } from "./models/import/importable-vehicle";
 export { schema as ImportableViolationSchema, validateImportableViolation } from "./models/import/importable-violation";
 
-export { CitationForm } from "./models/citation-form";
-export { CrashForm } from "./models/crash-form";
+export { CitationForm, citationWorkflow } from "./models/citation-form";
+export { CrashForm, crashWorkflow } from "./models/crash-form";
+export { defineWorkflow } from "./models/workflow";
 
 export { Definition } from "./models/definition";
 export { FieldDefinition } from "./models/field-definition";
@@ -156,6 +158,7 @@ export { LogicalOperator } from "./models/validation/logical-operator";
 export { RuleCollection } from "./models/validation/rule-collection";
 export { RuleContext } from "./models/validation/rule-context";
 export { RuleIssueSeverity } from "./models/validation/rule-issue";
+export { RuleIssueCollection } from "./models/validation/rule-issue-collection";
 export type { IRulesController } from "./models/validation/rules-controller";
 export { RulesController } from "./models/validation/rules-controller";
 

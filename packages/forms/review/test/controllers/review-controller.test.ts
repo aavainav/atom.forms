@@ -57,6 +57,12 @@ describe("ReviewController", () => {
             expect(getChanges()).toBe(1);
         });
 
+        it("keeps everything known about the user on the comment, not only their name", () => {
+            const { author } = review().controller.add(firstName, "Wrong date.");
+
+            expect(author).toEqual({ agency: "Riverside Police Department", badgeId: "4471", id: "4471", name: "Sgt. Rivera", rank: "Sergeant" });
+        });
+
         it("refuses while the form is not reviewable", () => {
             expect(() => review({ mode: "editable" }).controller.add(firstName, "Wrong date."))
                 .toThrowError("Comments can only be added while the form is reviewable.");

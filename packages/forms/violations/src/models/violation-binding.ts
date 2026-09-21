@@ -1,4 +1,4 @@
-import { IControllerManager } from "@forms/core";
+import { IControllerManager, FormModel } from "@forms/core";
 
 import { IViolation } from "./violation";
 
@@ -14,4 +14,9 @@ export interface IViolationBinding {
 
     /** Narrows the violations to those the form already carries, as a subset of the loaded list rather than bare codes, so the selector never has to match a stored string back to a row. */
     getApplied: (controllers: IControllerManager, violations: ReadonlyArray<IViolation>) => ReadonlyArray<IViolation>;
+}
+
+/** Whether the form has closed its violations: it is no longer editable, or it has locked the pages a violation lands on, which is what the binding names. */
+export function isViolationsClosed(form: FormModel<any>, binding: IViolationBinding): boolean {
+    return form.mode !== "editable" || form.getChildDefinitions().some(definition => definition.name === binding.pageName && form.isPageSetLocked(definition));
 }

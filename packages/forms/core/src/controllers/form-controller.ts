@@ -40,6 +40,8 @@ export interface IPageBinding<TPage extends PageModel = PageModel> {
     get(): TPage;
     /** Gets the binding for one of the page's sections. */
     getSection<TSection extends SectionModel>(sectionDefinition: SectionDefinition<TSection>): ISectionBinding<TSection>;
+    /** Whether the form has locked the section, closing its fields and anything that would write to them. */
+    isSectionLocked(sectionDefinition: SectionDefinition): boolean;
     /** Applies a change computed from the page's current state. */
     update(update: (page: TPage) => TPage): void;
 }
@@ -185,6 +187,10 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
         }
 
         return binding;
+    }
+
+    public isSectionLocked(sectionDefinition: SectionDefinition): boolean {
+        return this.controller.form.isSectionLocked(sectionDefinition);
     }
 
     public update(update: (page: TPage) => TPage): void {

@@ -1,4 +1,5 @@
 import { IForm, FormModel, FormType } from "./form";
+import { defineWorkflow, IWorkflow } from "./workflow";
 import { ICrash } from "../mapping/data/crash";
 
 /** Defines the crash form. */
@@ -15,6 +16,24 @@ export interface ICrashForm extends IForm {
 }
 
 /**
+ * The rules a crash report moves by: the officer submits it for review, and the reviewer approves it or sends it back
+ * with comments to be fixed, which the officer then submits again. Once submitted, and once approved, it is closed.
+ */
+export const crashWorkflow: IWorkflow = defineWorkflow({
+    id: "crash",
+    locks: {
+        approved: form => form.setMode("viewable"),
+        inReview: form => form.setMode("viewable")
+    },
+    transitions: {
+        approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
+        reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
+        submit: { from: ["draft", "inProgress", "rejected"], mode: "editable", title: "Submit for review", to: "inReview" }
+    },
+    version: "1"
+});
+
+/**
  * Represents an abstract base class for a crash form.
  *
  * The setters answer with a form rather than changing the one they are called on, because a form model is
@@ -22,6 +41,7 @@ export interface ICrashForm extends IForm {
  */
 export abstract class CrashForm<TData extends object> extends FormModel<TData> implements ICrashForm {
     readonly type: FormType = "crash";
+    readonly workflow: IWorkflow = crashWorkflow;
 
     abstract getCrashData(): ICrash;
     abstract setCrashNumber(): this;

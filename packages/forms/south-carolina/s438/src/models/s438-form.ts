@@ -1,4 +1,4 @@
-import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { citationWorkflow, CitationForm, FieldDefinition, FormModel, IForm, IWorkflow, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { CATALOG_IDENTITY } from "../module";
 import { IS438Data, S438Mapper } from "../mapping";
 import { S438ViolationListId } from "../violations";
@@ -34,6 +34,22 @@ export class S438FormModel extends CitationForm<IS438Data> implements IS438Form 
     private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormModel);
     public readonly frontPage: PageDefinition<FrontPageModel> = this.schema.frontPage;
     public readonly noticePage: PageDefinition<NoticePageModel> = this.schema.noticePage;
+
+    /**
+     * The citation workflow with its lock changed. In South Carolina the officer may correct an issued citation until
+     * the court takes it, so issuing closes only what the citation charges: the violations themselves, where they
+     * were, and the adding or removing of a page for one. The court's taking it is the host's to say, by loading it
+     * viewable.
+     */
+    public readonly workflow: IWorkflow = citationWorkflow.with({
+        id: "sc-citation",
+        locks: {
+            issued: form => form
+                .lockPageSet(this.frontPage)
+                .lockSection(this.schema.violationSection)
+                .lockSection(this.schema.violationLocationSection)
+        }
+    });
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();

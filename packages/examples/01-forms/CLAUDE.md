@@ -79,7 +79,8 @@ right. The round trip works with no server:
 
 - the **writer** puts the extracted data in `sessionStorage` under `` `example-data:${name}@${version}` `` — keyed
   by identity, so a record saved for one form is never read back into another;
-- the **reader** prefers a saved record over the fixture, so load → edit → save → reload shows the edit.
+- the **reader** prefers a saved record over the fixture, so load → edit → save → reload shows the edit. It hands the
+  saved `status` and `workflow` back beside the record, so a form saved after it was issued reloads locked, with its history.
 
 Query string controls: `?record=full` / `?record=minimal` picks the scenario (`?citation=` is accepted as an alias),
 `?record=new` starts from the values a host gives a record that does not exist yet, and `?reset=1` clears the saved
@@ -120,7 +121,8 @@ the one place the example shows a host **keeping** what the viewer hands it. The
 `useRef`s standing in for a database. `read()` returns them with the record, in the one object; `writeComments`
 replaces the comments; `writeAudit` appends the new records **by id**, as a real host should. Switching role remounts
 the viewer (the mode is applied as the form loads), and the comments and history survive it -- which is what shows they
-came back through `read()`. The user field becomes the `settings.user` the records and comments are attributed to.
+came back through `read()`. The user fields -- name, badge ID, rank and agency -- become the `settings.user` the records and comments are
+attributed to, so the whole actor can be seen on the Audit history and Comments tabs of the report data dialog.
 
 ## The other two demos take the advanced path
 

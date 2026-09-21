@@ -55,6 +55,14 @@ differs. The violation *location* is shared: one stop happens in one place.
   - `setTimeOfViolation` stamps the time and leaves it editable. It is **not** called from `initialize()`.
   - `setIssuedDate` / `setIssuedTime` return the form unchanged — the citation has no boxes for them distinct from
     the arrest date and time of violation.
+- **The workflow is South Carolina's own.** `S438FormModel.workflow` is `citationWorkflow.with({ id: "sc-citation", locks })`:
+  the transitions are the citation family's (one, `issue`), and only the lock differs. In SC an officer may correct an
+  issued citation until the court takes it, so issuing closes just what the citation *charges* -- the violation section,
+  the violation-location section, and the set of front pages (so no page can be added or removed, which is how a
+  violation would otherwise be moved). Everything else stays editable and the form stays in `editable` mode. "The court
+  has taken it" is the host's to say, by loading the record `viewable`. The front page's violation dropzone gate asks
+  `binding.isSectionLocked(frontPage.violationSection)` rather than the mode, and the same lock is applied again when
+  an issued record is loaded. Georgia and Oklahoma keep the family's whole-form lock.
 - `setTicketNumber` holds a hard-coded `"20250000000000"` behind a `// TODO`; the citation cannot issue its own
   number and no ticket-number source is wired up yet.
 - `VehicleSectionModel.make` is a `StringFieldModel` here (free text), so the vehicle dropzone applies the dropped

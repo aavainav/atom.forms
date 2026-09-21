@@ -1,11 +1,12 @@
 import { BooleanFieldModel } from "../models/boolean-field";
 import { FieldModel, IOptionValue, TValueType } from "../models/field";
 import { FieldDefinition } from "../models/field-definition";
-import { FormModel } from "../models/form";
+import { FormModel, FormStatus } from "../models/form";
 import { NumberFieldModel } from "../models/number-field";
 import { OptionFieldModel } from "../models/option-field";
 import { SectionModel } from "../models/section";
 import { StringFieldModel } from "../models/string-field";
+import type { IWorkflowStamp } from "../models/workflow";
 
 /** Maps a contract field's own value type to the one concrete `FieldModel` capable of holding it. */
 export type FieldModelFor<T> =
@@ -33,6 +34,10 @@ export interface IPopulateData<TData extends object> {
     readonly data: TData;
     /** Which of `data`'s own fields come back locked rather than editable. */
     readonly readOnlyFields?: ReadOnlyFields<TData>;
+    /** The status the record was stored with, which the form takes -- and the lock it carries -- when it is populated. Without one the form keeps the status it was built with. */
+    readonly status?: FormStatus;
+    /** The workflow history the record was stored with. */
+    readonly workflow?: IWorkflowStamp;
 }
 
 /** Translates between a form and the data contract it publishes. */

@@ -131,6 +131,13 @@ describe("FPageCollection", () => {
             expect(container.textContent).not.toContain("Add Page");
         });
 
+        it("offers neither while the form has locked its set of pages, though it is still editable", async () => {
+            const { container } = await mount({ form: (await createTestForm()).lockPageSet(citationPage) });
+
+            expect(container.querySelector(".btn-danger")).toBeNull();
+            expect(container.textContent).not.toContain("Add Page");
+        });
+
         it("offers both while the form is editable", async () => {
             const { container } = await mount();
 

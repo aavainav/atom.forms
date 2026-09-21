@@ -123,7 +123,8 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
 
             const saved = getSavedData(form.identity);
             if (saved) {
-                return { data: saved };
+                // the status and the workflow history are kept beside the record, so they come back with it
+                return { data: saved, status: saved.status, workflow: saved.workflow };
             }
 
             if (!scenario) {

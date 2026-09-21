@@ -132,9 +132,9 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
                         <FPage
                             formType={form.type}
                             watermark={pageWatermark}
-                            onAddPage={isEditable ? () => controller.addPage(entry.group.pageDefinition) : undefined}
+                            onAddPage={isEditable && !form.isPageSetLocked(entry.group.pageDefinition) ? () => controller.addPage(entry.group.pageDefinition) : undefined}
                             // the controller asks its confirm-delete policy, so the confirmation cannot be skipped by a host that forgets to supply one
-                            onDeletePage={isEditable ? () => controller.removePage(entry.group.pageDefinition, entry.page.id!) : undefined}
+                            onDeletePage={isEditable && !form.isPageSetLocked(entry.group.pageDefinition) ? () => controller.removePage(entry.group.pageDefinition, entry.page.id!) : undefined}
                         >
                             {entry.group.children(entry.binding)}
                         </FPage>

@@ -38,8 +38,8 @@ export const vehicle: ReviewTarget = { level: "section", page: "person-page", pa
 export const personPage: ReviewTarget = { level: "page", page: "person-page", pageOrdinal: 0 };
 export const report: ReviewTarget = { level: "form" };
 
-export const rivera: IActor = { id: "4471", name: "Sgt. Rivera" };
-export const osei: IActor = { id: "9", name: "Lt. Osei" };
+export const rivera: IActor = { agency: "Riverside Police Department", badgeId: "4471", id: "4471", name: "Sgt. Rivera", rank: "Sergeant" };
+export const osei: IActor = { agency: "Riverside Police Department", badgeId: "0912", id: "9", name: "Lt. Osei", rank: "Lieutenant" };
 
 export interface IReviewOptions {
     readonly mode?: FormMode;

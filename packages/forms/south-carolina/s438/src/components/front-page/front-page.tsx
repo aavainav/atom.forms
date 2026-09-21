@@ -45,7 +45,7 @@ export default function FrontPage({ controllers, binding }: IFrontPageProps): Re
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" || binding.isSectionLocked(frontPage.violationSection) ? undefined : (dropzone) => binding.update((page) => s438CitationService.applyViolationDropzone(page, dropzone))}
             >
                 <ViolationSection binding={binding.getSection(frontPage.violationSection)} />
             </FDropzone>

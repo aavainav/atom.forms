@@ -76,7 +76,7 @@ interface IReportViewerDataManager<TData extends object = IReportData> {
 interface IReadDataResult<TData extends object = IReportData> extends IPopulateData<TData> {
     readonly audit?: ReadonlyArray<AuditRecord>;        // the report's audit history, shown and carried on from
     readonly comments?: ReadonlyArray<IReviewComment>;  // the review comments made on it
-    // and, from IPopulateData: data, readOnlyFields?
+    // and, from IPopulateData: data, readOnlyFields?, status?, workflow?
 }
 ```
 
@@ -91,6 +91,12 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
   down to `FormModel.populate`, rather than being split into separate parameters partway through. A field the
   mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable regardless of being
   marked.
+- **`status` and `workflow` come back with the record too, and take effect when the form is populated.** `status` is the
+  status the record was stored with and `workflow` its `{ id, version, history }` stamp -- both are already in what
+  `write` was given (`extractData` stamps them), so a host that stores the whole record can hand `saved.status` and
+  `saved.workflow` straight back. `populate` restores them after the mapper, so the lock the status carries (an issued
+  citation's, a submitted crash report's) is applied again on load, and a status a form cannot have rejects the load.
+  Without them the form keeps the status it was built with, `draft`.
 - **The audit history and the comments come in with the record, in the one `read()` object, and go out through
   separate writes.** They are the host's to keep beside the record and never part of `write`'s data, and each changes
   on its own clock: the record on Save, the comments on every change, the audit as records are raised. So each has its

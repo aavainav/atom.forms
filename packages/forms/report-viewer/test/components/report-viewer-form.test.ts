@@ -21,7 +21,7 @@ import { IValidationService, ValidationService } from "../../src/services/valida
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const rivera: IActor = { id: "4471", name: "Sgt. Rivera" };
+const rivera: IActor = { agency: "Riverside Police Department", badgeId: "4471", id: "4471", name: "Sgt. Rivera", rank: "Sergeant" };
 const loadedRecord: AuditRecord = { at: 1, form: { id: "form-0", name: "Stub Form", version: "1.0" }, id: "loaded-1", kind: "saved" };
 const heldComment: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "held-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
 
@@ -149,6 +149,12 @@ describe("ReportViewerForm", () => {
             audit.recordSaved();
 
             expect(audit.session.at(-1)!.by).toEqual(rivera);
+        });
+
+        it("attributes the comments a reviewer makes to the whole of them", () => {
+            const { review } = mount({ mode: "reviewable", user: rivera });
+
+            expect(review.add({ level: "form" }, "Wrong date.").author).toEqual(rivera);
         });
 
         it("lets a reviewer comment once there is a user, and not before", () => {

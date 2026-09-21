@@ -183,6 +183,43 @@ describe("FormController", () => {
         });
     });
 
+    describe("a page binding's isSectionLocked", () => {
+        it("says whether the form has locked the section", () => {
+            controller.update(form => form.lockSection(chargeSection));
+            const binding = controller.getPageBinding(citationPage, firstPageId());
+
+            expect(binding.isSectionLocked(chargeSection)).toBe(true);
+            expect(binding.isSectionLocked(violatorSection)).toBe(false);
+        });
+
+        it("follows the form, so a binding made before a lock reports it once it is applied", () => {
+            const binding = controller.getPageBinding(citationPage, firstPageId());
+
+            expect(binding.isSectionLocked(chargeSection)).toBe(false);
+
+            controller.update(form => form.lockSection(chargeSection));
+
+            expect(binding.isSectionLocked(chargeSection)).toBe(true);
+        });
+    });
+
+    describe("a locked set of pages", () => {
+        it("refuses a page to be added", async () => {
+            controller.update(form => form.lockPageSet(citationPage));
+
+            await expect(controller.addPage(citationPage)).rejects.toThrowError("cannot be added while they are locked");
+            expect(controller.form.getPages()).toHaveLength(1);
+        });
+
+        it("refuses a page to be removed", async () => {
+            await controller.addPage(citationPage);
+            controller.update(form => form.lockPageSet(citationPage));
+
+            await expect(controller.removePage(citationPage, firstPageId())).rejects.toThrowError("cannot be removed while they are locked");
+            expect(controller.form.getPages()).toHaveLength(2);
+        });
+    });
+
     describe("getPageBinding", () => {
         it("hands back the same binding for the same page", () => {
             const id = firstPageId();

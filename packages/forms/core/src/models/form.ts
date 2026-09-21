@@ -1,3 +1,4 @@
+import type { IActor } from "./actor";
 import { Definition } from "./definition";
 import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
@@ -13,6 +14,7 @@ import { ISchema } from "./schema";
 import { RuleCollection } from "./validation/rule-collection";
 import { RuleIssueSeverity, type IRuleIssue } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
+import type { IAvailableTransition, ITransitionOptions, IWorkflow, IWorkflowEntry, IWorkflowStamp } from "./workflow";
 
 import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
 import type { IReportData } from "../mapping/data/report-data";
@@ -23,6 +25,9 @@ export type FormMode = "editable" | "reviewable" | "viewable";
 export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
 export type FormStatus = "approved" | "canceled" | "draft" | "inProgress" | "inReview" | "issued" | "rejected" | "voided";
 export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
+
+/** Every status, as a record so that a status added to `FormStatus` will not compile until it is added here too. A status a report is stored with is checked against it when the report is loaded. */
+const knownStatuses: Readonly<Record<FormStatus, true>> = { approved: true, canceled: true, draft: true, inProgress: true, inReview: true, issued: true, rejected: true, voided: true };
 
 /** Identifies a form registered with the form catalog. A missing version resolves to the latest. */
 export interface IFormIdentity {
@@ -45,6 +50,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     readonly name: string;
     /** A human-readable description of the form. */
     readonly description?: string;
+    /** What has been done to move the report along its workflow, oldest first. */
+    readonly history: ReadonlyArray<IWorkflowEntry>;
     /** Translates this form to and from the data contract it publishes. A form without one can be neither extracted nor saved. */
     readonly mapper?: IFormMapper<any, TData>;
     /** How the form renders. Defaults to "editable". */
@@ -59,6 +66,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     readonly version: string;
     /** The violation list this citation draws its charges from, if any. */
     readonly violationListId?: string;
+    /** The rules the form's reports move by. A form without one has no transitions, and its status is set directly. */
+    readonly workflow?: IWorkflow;
 
     /** Creates and initializes a page for each child page definition, adding it to the form. */
     initialize(): Promise<this>;
@@ -66,6 +75,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     addPage(page: PageModel, pageDefinition: PageDefinition): this;
     /** Adds a rule collection used to validate the form. */
     addRuleCollection(ruleCollection: RuleCollection): this;
+    /** Whether the transition can be made now: the form has the status it is made from, and is in the mode it is made in. */
+    canTransition(id: string): boolean;
     /** Returns a new form whose current data becomes the reference `getIsDirty()` compares against, going forward. */
     clean(): this;
     /** Extracts this form's data through its own mapper, stamped with the identity it carries. A form without a mapper returns just the identity. */
@@ -88,10 +99,22 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     getPagesFor(pageDefinition: PageDefinition): Array<PageModel>;
     /** Gets the rule collection used to validate the form. */
     getRuleCollection(): RuleCollection;
-    /** Returns a new form with the given data applied through its own mapper. A form without one returns itself unchanged. */
+    /** Gets the transitions the form can make now: those made from its status, in its mode. */
+    getTransitions(): Array<IAvailableTransition>;
+    /** Whether pages of the definition are locked, so that none can be added or removed. */
+    isPageSetLocked(pageDefinition: PageDefinition): boolean;
+    /** Whether the section is locked, so that its fields, and anything that would write to them, are closed. */
+    isSectionLocked(sectionDefinition: SectionDefinition): boolean;
+    /** Returns a form in which no page of the definition can be added or removed. Its fields are not closed; lock a section for that. */
+    lockPageSet(pageDefinition: PageDefinition): this;
+    /** Returns a form in which the section's fields are closed on every page, including a page added later, and stay closed. */
+    lockSection(sectionDefinition: SectionDefinition): this;
+    /** Returns a new form with the given data applied through its own mapper, and the status and workflow history it is handed restored. A form without a mapper applies only the latter. */
     populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>>;
     /** Removes the page at the specified index from the page collection for the specified page definition. */
     removePage(index: number, pageDefinition: PageDefinition): this;
+    /** Returns a form with the status and workflow history of a stored report, and the lock its status carries applied. Throws for a status a form cannot have. */
+    restoreWorkflow(status?: FormStatus, stamp?: IWorkflowStamp): this;
     /**
      * Sets the form's mode. Switching to any mode but "editable" disables every field; switching to "editable" only
      * stamps the mode -- it does not re-enable fields disabled for another reason, such as a `readOnlyFields` lock.
@@ -99,6 +122,12 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     setMode(mode: FormMode): this;
     /** Returns a form with the given status, which determines the watermark stamped across its pages. */
     setStatus(status: FormStatus): this;
+    /**
+     * Makes a transition, returning the form it leaves: its effect run, its status set, the entry kept in its history,
+     * and the lock its new status carries applied. Throws unless the transition can be made now, and unless the form
+     * has no validation error and, for a transition that needs one, an open comment.
+     */
+    transition(id: string, by: IActor, options: ITransitionOptions): this;
     /** Applies the given issue collection, setting the has error state for every field on the form. */
     validate(issueCollection: RuleIssueCollection): this;
     /** Releases resources held by the form model, such as registered schemas and definitions. */
@@ -109,6 +138,7 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
 export class FormModel<TData extends object> extends Entity<PageDefinition> implements IFormModel<TData> {
     public readonly name: string;
     public readonly description?: string;
+    public readonly history: ReadonlyArray<IWorkflowEntry> = [];
     public readonly mapper?: IFormMapper<FormModel<TData>, TData>;
     public readonly mode: FormMode = "editable";
     public readonly status: FormStatus = "draft";
@@ -116,9 +146,12 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     public readonly valueListIds?: ReadonlyArray<string>;
     public readonly version: string;
     public readonly violationListId?: string;
+    public readonly workflow?: IWorkflow;
 
     public readonly ruleCollection: RuleCollection = new RuleCollection([]);
 
+    private readonly lockedPageSets: ReadonlySet<string> = new Set<string>();
+    private readonly lockedSections: ReadonlySet<string> = new Set<string>();
     private readonly snapshot?: TData;
 
     public async initialize(): Promise<this> {
@@ -133,16 +166,24 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     }
 
     public addPage(page: PageModel, pageDefinition: PageDefinition): this {
+        if (this.isPageSetLocked(pageDefinition)) {
+            throw new Error(`Pages of ${pageDefinition.name} cannot be added while they are locked.`);
+        }
+
         const pageCollection = this.get<PageCollection>(pageDefinition);
         if (!pageCollection) {
             throw new Error("A page collection for the specified page definition does not exist.");
         }
 
-        return this.set(pageDefinition, pageCollection.add(page));
+        return this.set(pageDefinition, pageCollection.add(this.lockAddedPage(page, pageDefinition)));
     }
 
     public addRuleCollection(ruleCollection: RuleCollection): this {
         return withChanges(this, { ruleCollection: this.ruleCollection.addRuleCollection(ruleCollection) });
+    }
+
+    public canTransition(id: string): boolean {
+        return this.getTransitions().some(available => available.id === id);
     }
 
     public clean(): this {
@@ -160,7 +201,8 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
             description: this.description,
             status: this.status,
             type: this.type,
-            version: this.version
+            version: this.version,
+            ...(this.workflow ? { workflow: { history: this.history, id: this.workflow.id, version: this.workflow.version } } : {})
         };
     }
 
@@ -270,21 +312,59 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         return this.ruleCollection;
     }
 
-    public populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>> {
-        if (!this.mapper) {
-            return this;
-        }
+    public getTransitions(): Array<IAvailableTransition> {
+        return Object.entries(this.workflow?.transitions ?? {})
+            .filter(([, transition]) => transition.from.includes(this.status) && transition.mode === this.mode)
+            .map(([id, transition]) => ({ id, transition }));
+    }
 
-        return this.mapper.populate(this, <IPopulateData<TData>>input);
+    public isPageSetLocked(pageDefinition: PageDefinition): boolean {
+        return this.lockedPageSets.has(pageDefinition.id);
+    }
+
+    public isSectionLocked(sectionDefinition: SectionDefinition): boolean {
+        return this.lockedSections.has(sectionDefinition.id);
+    }
+
+    public lockPageSet(pageDefinition: PageDefinition): this {
+        return withChanges(this, { lockedPageSets: new Set([...this.lockedPageSets, pageDefinition.id]) });
+    }
+
+    public lockSection(sectionDefinition: SectionDefinition): this {
+        const closed = this.mapSectionFields(sectionDefinition, field => field.setIsEnabled(false));
+
+        return withChanges(closed, { lockedSections: new Set([...this.lockedSections, sectionDefinition.id]) });
+    }
+
+    public populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>> {
+        const populated = this.mapper ? this.mapper.populate(this, <IPopulateData<TData>>input) : this;
+        const restore = (form: FormModel<TData>): FormModel<TData> => form.restoreWorkflow(input.status, input.workflow);
+
+        // a mapper that has pages to create answers with a promise, and one that has none may answer without
+        return populated instanceof Promise ? populated.then(restore) : restore(populated);
     }
 
     public removePage(index: number, pageDefinition: PageDefinition): this {
+        if (this.isPageSetLocked(pageDefinition)) {
+            throw new Error(`Pages of ${pageDefinition.name} cannot be removed while they are locked.`);
+        }
+
         const pageCollection = this.get<PageCollection>(pageDefinition);
         if (!pageCollection) {
             throw new Error("A page collection for the specified page definition does not exist.");
         }
 
         return this.set(pageDefinition, pageCollection.remove(index));
+    }
+
+    public restoreWorkflow(status?: FormStatus, stamp?: IWorkflowStamp): this {
+        if (status !== undefined && !Object.hasOwn(knownStatuses, status)) {
+            throw new Error(`"${status}" is not a status a form can have.`);
+        }
+
+        const form = status === undefined ? this : this.setStatus(status);
+
+        return (stamp ? withChanges(form, { history: [...stamp.history] }) : form).applyLocks();
     }
 
     public setMode(mode: FormMode): this {
@@ -294,6 +374,42 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public setStatus(status: FormStatus): this {
         return withChanges(this, { status });
+    }
+
+    public transition(id: string, by: IActor, options: ITransitionOptions): this {
+        const step = this.workflow?.transitions[id];
+
+        if (!step) {
+            throw new Error(`The form has no transition called "${id}".`);
+        }
+
+        if (!step.from.includes(this.status)) {
+            throw new Error(`"${id}" cannot be made while the form is ${this.status}.`);
+        }
+
+        if (step.mode !== this.mode) {
+            throw new Error(`"${id}" can only be made while the form is ${step.mode}.`);
+        }
+
+        if (options.issues.getIssues().some(issue => issue.severity === RuleIssueSeverity.error)) {
+            throw new Error(`"${id}" cannot be made while the form has validation errors.`);
+        }
+
+        if (step.guards?.includes("hasOpenComments") && !options.openComments) {
+            throw new Error(`"${id}" needs at least one open comment.`);
+        }
+
+        const entry: IWorkflowEntry = {
+            at: options.at ?? Date.now(),
+            by,
+            from: this.status,
+            ...(options.note ? { note: options.note } : {}),
+            to: step.to,
+            transition: id
+        };
+        const moved = (step.effect ? step.effect(this) : this).setStatus(step.to);
+
+        return (withChanges(moved, { history: [...moved.history, entry] }) as FormModel<TData>).applyLocks() as this;
     }
 
     public validate(issueCollection: RuleIssueCollection): this {
@@ -319,6 +435,26 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     public static getSchema<TSchema extends ISchema>(ctor: Function): TSchema {
         const definition = Entity.resolveDefinition<Definition>(ctor as EntityConstructor<Definition>);
         return Entity.resolveSchema(definition) as TSchema;
+    }
+
+    /** Returns a form with the lock the workflow gives the form's status applied, or the form itself when it gives none. */
+    private applyLocks(): this {
+        const lock = this.workflow?.locks?.[this.status];
+
+        return lock ? lock(this) as this : this;
+    }
+
+    /** Returns the page with the fields of every section the form has locked closed, for a page about to be added. */
+    private lockAddedPage(page: PageModel, pageDefinition: PageDefinition): PageModel {
+        let locked = page;
+
+        for (const sectionDefinition of pageDefinition.children as Array<SectionDefinition>) {
+            if (this.lockedSections.has(sectionDefinition.id)) {
+                locked = locked.set(sectionDefinition, FormModel.mapSection(locked.get<SectionModel>(sectionDefinition), sectionDefinition, field => field.setIsEnabled(false)));
+            }
+        }
+
+        return locked;
     }
 
     /** Returns a new form with every field on every page replaced by the result of the given mapping. */
@@ -351,5 +487,26 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         });
 
         return form;
+    }
+
+    /** Returns a new form with every field of the section, on every page, replaced by the result of the given mapping. */
+    private mapSectionFields(sectionDefinition: SectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): this {
+        const pageDefinition = sectionDefinition.getPageDefinition();
+        const pages = this.getPagesFor(pageDefinition).map(page => page.set(sectionDefinition, FormModel.mapSection(page.get<SectionModel>(sectionDefinition), sectionDefinition, map)));
+
+        return this.set(pageDefinition, new PageCollection(pages));
+    }
+
+    /** Returns a section with each of its fields replaced by the result of the given mapping. */
+    private static mapSection(section: SectionModel, sectionDefinition: SectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): SectionModel {
+        let mapped = section;
+
+        sectionDefinition.children.forEach(fieldDefinition => {
+            if (fieldDefinition instanceof FieldDefinition) {
+                mapped = mapped.set(fieldDefinition, map(mapped.get<FieldModel<TValueType>>(fieldDefinition)));
+            }
+        });
+
+        return mapped;
     }
 }

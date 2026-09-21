@@ -4,7 +4,7 @@ export { IViolationsConfiguration, ViolationsModule } from "./module";
 export { ViolationsOption, ViolationsPanel } from "./components";
 export type { IViolationsOptionProps, IViolationsPanelProps } from "./components";
 export { IViolationRegistrationService, IViolationSelectorService, IViolationService, ViolationSelectorService, ViolationService } from "./services";
-export { toViolations, ViolationList } from "./models";
+export { isViolationsClosed, toViolations, ViolationList } from "./models";
 export { standardViolationLists, ViolationListId } from "./violations";
 
 export type { IViolation, IViolationBinding, IViolationListDefinition, ViolationRow } from "./models";

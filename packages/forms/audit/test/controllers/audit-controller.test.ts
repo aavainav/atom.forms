@@ -391,7 +391,7 @@ describe("AuditController", () => {
     });
 
     describe("who", () => {
-        const rivera = { id: "4471", name: "Sgt. Rivera" };
+        const rivera = { agency: "Riverside Police Department", badgeId: "4471", id: "4471", name: "Sgt. Rivera", rank: "Sergeant" };
 
         it("attributes the records raised after a user is set to that user, and not the ones before", () => {
             const { audit, records } = watch();
@@ -401,6 +401,15 @@ describe("AuditController", () => {
 
             expect(records[0].by).toBeUndefined();
             expect(records[1].by).toEqual(rivera);
+        });
+
+        it("attributes a record to the whole of the user, not only their name", () => {
+            const { audit, records } = watch();
+
+            audit.setUser(rivera);
+            audit.recordSaved();
+
+            expect(records[1].by).toMatchObject({ agency: "Riverside Police Department", badgeId: "4471", rank: "Sergeant" });
         });
 
         it("stops attributing records once the user is cleared", () => {
