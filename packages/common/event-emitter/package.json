@@ -10,6 +10,9 @@
     "scripts": {
         "build": "yarn run build-ts",
         "build-ts": "tsc -b .",
-        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo"
+        "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
+        "test": "vitest run",
+        "test-types": "tsc -p test/tsconfig.json",
+        "test-watch": "vitest"
     }
 }

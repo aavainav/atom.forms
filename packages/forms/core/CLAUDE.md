@@ -184,7 +184,24 @@ shim. That is also why this package's tests import deep source paths rather than
 Tests live in [test/](test/), mirroring `src/`, **not** beside the source: `tsconfig.json` sets `include: ["src"]`
 and `rootDir: "src"`, so a colocated `*.test.ts` would be compiled into `dist/`. [test/tsconfig.json](test/tsconfig.json)
 is what typechecks them and what oxc reads compiler options from — Vitest itself strips types without checking them.
-Components and hooks have no tests yet; they need `jsdom` and are a separate wave.
+Every component has a test in [test/components/](test/components/), one file per component (a family such as
+`FGrid` or `FOffCanvas` shares one). Hooks are tested in [test/hooks/](test/hooks/), and `useDisposables` in
+[test/utils/](test/utils/), through `renderHook` in [test/fixtures/render-hook.ts](test/fixtures/render-hook.ts): it calls
+the hook from inside a small component, since no testing library is installed, and gives back the last result, a count
+of renders, `rerender` and `unmount`. A hook that subscribes to a controller is checked for the same things each time:
+that it answers what the controller holds, follows a change, does **not** render again for an update that changed
+nothing (the snapshot is the stored state itself, so a fresh object would loop), stops listening on unmount, and
+listens to the controller it is handed *now* when given another.
+
+Components are tested one of two ways. A purely presentational one is rendered with `renderToStaticMarkup`, which needs
+no DOM, so it stays in the `node` environment. One that has behaviour -- a click, a drag, a focus, an effect -- opts
+into `jsdom` for its file with a `// @vitest-environment jsdom` docblock and is driven with `createRoot` and `act`. The
+files are `.ts`, so elements are built with `createElement`. Three things jsdom lacks are stood in for by hand: drag
+events get a `dataTransfer` defined on a plain `Event`; layout (`clientWidth` and the like, for `FWatermark`) is
+defined on `HTMLElement.prototype` for the length of a test; and `AnimationEvent` is defined before react-dom loads,
+or it takes jsdom for an old browser and listens for the webkit-prefixed animation event. `FFieldSelect` mocks
+`@popperjs/core`, since popper measures layout. `FPageCollection` is driven over a real form and controllers from
+[test/fixtures/citation-form.ts](test/fixtures/citation-form.ts) rather than stubs.
 
 | Rule | Why |
 | --- | --- |
