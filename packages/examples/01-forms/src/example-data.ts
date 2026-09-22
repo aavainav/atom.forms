@@ -137,6 +137,11 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
     };
 }
 
+/** Forgets the record saved for the given form, so that it is read from its fixture again. */
+export function clearExampleData(identity: IFormIdentity): void {
+    sessionStorage.removeItem(getStorageKey(identity));
+}
+
 /** Returns this form's "full" fixture, for "Load test data" to fill an already-open form with on demand. A form this host holds no fixtures for returns nothing, which is how the option knows not to offer itself. */
 export function getExampleTestData(identity: IFormIdentity): IPopulateData<IReportData> | undefined {
     const form = forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version);

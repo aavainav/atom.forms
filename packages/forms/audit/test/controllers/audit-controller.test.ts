@@ -3,6 +3,8 @@ import { ControllerManager, RuleCollection } from "@forms/core";
 
 import { AuditController, editQuietPeriod, getAuditController, maxPendingRecords } from "../../src/controllers/audit-controller";
 import type { IAuditController } from "../../src/controllers/audit-controller";
+import type { IWorkflowEntry } from "@forms/core";
+
 import type { AuditRecord } from "../../src/models/audit-record";
 import { failingRule, stubForm } from "../fixtures/stub-form";
 import type { IStubFormOptions } from "../fixtures/stub-form";
@@ -179,6 +181,89 @@ describe("AuditController", () => {
             edit(manager, { name: "Dana" }, { status: "issued" });
 
             expect(kinds(records)).toEqual(["form-opened"]);
+        });
+    });
+
+    describe("workflow-transition", () => {
+        const submit: IWorkflowEntry = { at: 5, by: { id: "u-1", name: "Officer One" }, from: "draft", to: "inReview", transition: "submit" };
+        const approve: IWorkflowEntry = { at: 6, by: { id: "u-2", name: "Reviewer One" }, from: "inReview", note: "Looks right.", to: "approved", transition: "approve" };
+
+        it("records a transition, naming it and both statuses", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
+
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "workflow-transition", to: "inReview", transition: "submit" });
+        });
+
+        it("records it instead of a change of status, since the transition is what changed it", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
+
+            expect(kinds(records)).toEqual(["form-opened", "workflow-transition"]);
+        });
+
+        it("carries the note kept with the transition, and leaves the key out when there is none", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit, approve], status: "approved" });
+
+            expect(records[1]).not.toHaveProperty("note");
+            expect(records[2]).toMatchObject({ note: "Looks right.", transition: "approve" });
+        });
+
+        it("records each of several the one change made, in the order they were made", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit, approve], status: "approved" });
+
+            expect(records.slice(1).map(record => record.kind === "workflow-transition" ? record.transition : record.kind)).toEqual(["submit", "approve"]);
+        });
+
+        it("records the edits made before it first", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Riley" });
+            edit(manager, { name: "Riley" }, { history: [submit], status: "inReview" });
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "workflow-transition"]);
+        });
+
+        it("records only what was done since, not the history the form arrived with", () => {
+            const { manager, records } = watch({ name: "Dana" }, { history: [submit], status: "inReview" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
+            edit(manager, { name: "Dana" }, { history: [submit, approve], status: "approved" });
+
+            expect(kinds(records)).toEqual(["form-opened", "workflow-transition"]);
+            expect(records[1]).toMatchObject({ transition: "approve" });
+        });
+
+        it("still records a change of status the transitions do not account for", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "voided" });
+
+            expect(kinds(records)).toEqual(["form-opened", "workflow-transition", "status-changed"]);
+            expect(records[2]).toMatchObject({ from: "inReview", to: "voided" });
+        });
+
+        it("is attributed to the user, as every record is", () => {
+            const { audit, manager, records } = watch({ name: "Dana" });
+            audit.setUser({ id: "u-1", name: "Officer One" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
+
+            expect(records[1].by).toEqual({ id: "u-1", name: "Officer One" });
+        });
+
+        it("is part of the history the report is shown with", () => {
+            const { audit, manager } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
+
+            expect(kinds(audit.history)).toEqual(["form-opened", "workflow-transition"]);
         });
     });
 

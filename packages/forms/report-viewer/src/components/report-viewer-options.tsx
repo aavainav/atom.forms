@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import { useService } from "@common/react";
 import { IResolvedFormCatalogItem } from "@forms/catalog";
-import { IControllerManager } from "@forms/core";
+import { IActor, IControllerManager } from "@forms/core";
 
 import { IModalService, IReportViewerDataManager, IReportViewerService } from "../services";
 
@@ -14,6 +14,8 @@ interface IFormViewerOptionsProps {
     readonly dataManager?: IReportViewerDataManager<any>;
     /** Reports an option's failure through the report viewer's notifications. */
     readonly onError: (message: string) => void;
+    /** Who is using the report, for the options that change it in their name. */
+    readonly user?: IActor;
 }
 
 /**
@@ -27,7 +29,7 @@ interface IFormViewerOptionsProps {
  * report viewer that can't resolve its services. The modal specifically must open at the viewer's root: this bar
  * is `position-fixed`, a stacking context that would paint a modal under the body's own backdrop.
  */
-export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onError }: IFormViewerOptionsProps): React.JSX.Element => {
+export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onError, user }: IFormViewerOptionsProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
@@ -47,6 +49,7 @@ export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onE
                             title={title}
                             showModal={options => modalService.showModal(options)}
                             onError={onError}
+                            user={user}
                         />
                     </Suspense>
                 </div>

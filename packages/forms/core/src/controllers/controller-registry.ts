@@ -20,6 +20,19 @@ export interface IControllerRegistration {
     readonly key: string;
 }
 
+/**
+ * Registers a controller class under `key`, for a controller manager to create when the controller is asked for by that
+ * key. The class must extend `Controller`, and its constructor is called with the manager and nothing else.
+ */
+export function RegisterController(key: string, options?: IRegisterControllerOptions) {
+    return function <T extends ControllerConstructor>(target: T): void {
+        ControllerRegistry.register(key, target, options);
+
+        // defined on the class itself, which is what `Controller` checks, so a subclass never inherits its parent's key
+        Object.defineProperty(target, "key", { value: key });
+    };
+}
+
 /** Holds a descriptor for every controller type that has been registered, for a manager to create controllers from. */
 export class ControllerRegistry {
     private static readonly registrations: Map<string, IControllerRegistration> = new Map<string, IControllerRegistration>();
@@ -46,20 +59,4 @@ export class ControllerRegistry {
 
         ControllerRegistry.registrations.set(key, { ctor, eager: options.eager ?? false, key });
     }
-}
-
-/**
- * Registers a controller class under `key`, for a controller manager to create when the controller is asked for by that
- * key. The class must extend `Controller`, and its constructor is called with the manager and nothing else.
- *
- * Registration happens when the class's module is first loaded, so a controller only exists for managers created after
- * something has imported it.
- */
-export function RegisterController(key: string, options?: IRegisterControllerOptions) {
-    return function <T extends ControllerConstructor>(target: T): void {
-        ControllerRegistry.register(key, target, options);
-
-        // defined on the class itself, which is what `Controller` checks, so a subclass never inherits its parent's key
-        Object.defineProperty(target, "key", { value: key });
-    };
 }

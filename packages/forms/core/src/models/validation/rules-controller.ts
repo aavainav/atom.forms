@@ -43,10 +43,10 @@ export function RegisterRule(name: string) {
 @RegisterController(ControllerKey.rules)
 export class RulesController extends Controller implements IRulesController {
     public static readonly typeRegistry: Map<string, RuleConstructor<Rule>> = new Map<string, RuleConstructor<Rule>>();
+    
+    public issueCollection: RuleIssueCollection = new RuleIssueCollection();
 
     private _ruleCollection?: RuleCollection;
-
-    issueCollection: RuleIssueCollection = new RuleIssueCollection();
 
     get form(): FormModel<any> {
         return this.manager.getFormController().form;

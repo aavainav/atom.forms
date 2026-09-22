@@ -1,6 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { FButton, FIcon, FTooltip, IRuleIssue } from "@forms/core";
+import { FButton, FIcon, FTooltip } from "@forms/core";
 
 import { INotificationService, IReportViewerOptionProps } from "../../services";
 import { IValidationService } from "../../services/validation";
@@ -12,17 +12,7 @@ export const ValidateOption = ({ controllers, title }: IReportViewerOptionProps)
     const validationService = useService<IValidationService>(IValidationService);
 
     const handleValidate = (): void => {
-        const formController = controllers.getFormController();
-
-        // the rules controller is cached by the manager and reads the current form, so its issues survive edits
-        const rulesController = controllers.getRulesController();
-        rulesController.validate();
-
-        const issueCollection = rulesController.getIssueCollection();
-        const result: ReadonlyArray<IRuleIssue> = issueCollection.getIssues();
-        validationService.showIssues(result);
-
-        formController.update(form => form.validate(issueCollection));
+        const result = validationService.validate(controllers).getIssues();
 
         notificationService.showNotification(
             result.length === 0

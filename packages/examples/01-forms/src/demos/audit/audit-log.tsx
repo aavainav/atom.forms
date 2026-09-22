@@ -15,7 +15,8 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "save-failed": "danger",
     "saved": "success",
     "status-changed": "dark",
-    "validated": "warning"
+    "validated": "warning",
+    "workflow-transition": "dark"
 };
 
 interface ILoggedRecord {
@@ -34,6 +35,8 @@ function summarize(record: AuditRecord): string {
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
         case "status-changed":
             return `${record.from} → ${record.to}`;
+        case "workflow-transition":
+            return `${record.transition}: ${record.from} → ${record.to}${record.note ? ` (${record.note})` : ""}`;
         case "validated":
             return record.issueCount ? `${record.issueCount} issue(s): ${record.fields.join(", ")}` : "No issues.";
         default:

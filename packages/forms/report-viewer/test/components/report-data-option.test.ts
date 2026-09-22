@@ -25,12 +25,12 @@ const bundle: IReportBundle = {
 
 const mounted: Array<() => void> = [];
 
-function mount() {
+function mount(held: IReportBundle = bundle) {
     const controllers = new ControllerManager();
     const form = { id: "form-1" } as unknown as FormModel<any>;
     controllers.loadForm(form);
 
-    const getBundle = vi.fn(() => bundle);
+    const getBundle = vi.fn(() => held);
     const showModal = vi.fn();
     const showNotification = vi.fn();
     const registry = new Map<unknown, unknown>([
@@ -76,6 +76,26 @@ describe("ReportDataOption", () => {
         expect(options.title).toBe("Report data");
         expect(options.size).toBe("xl");
         expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments"]);
+    });
+
+    describe("the workflow tab", () => {
+        const workflow = {
+            history: [{ at: 5, by: { id: "9", name: "Lt. Osei" }, from: "draft", to: "issued", transition: "issue" }],
+            id: "citation",
+            version: "1"
+        };
+        const withWorkflow: IReportBundle = { ...bundle, data: { ...bundle.data, workflow } as IReportBundle["data"] };
+
+        it("is offered last when the report has a workflow, with its id, version and history", () => {
+            const { tabs } = mount(withWorkflow);
+
+            expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments", "Workflow"]);
+            expect(tabs[3].json).toBe(JSON.stringify(workflow, null, 2));
+        });
+
+        it("is left out when the report has none, since it would only be empty", () => {
+            expect(mount().tabs.map(tab => tab.title)).not.toContain("Workflow");
+        });
     });
 
     it("formats each tab's data as indented json", () => {

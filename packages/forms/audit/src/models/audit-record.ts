@@ -28,6 +28,8 @@ export interface IAuditRecordMap {
     "status-changed": { readonly from: FormStatus; readonly to: FormStatus };
     /** The form was validated. `fields` are the names of the failing fields, without repeats. */
     "validated": { readonly issueCount: number; readonly fields: ReadonlyArray<string> };
+    /** The form made a transition of its workflow. `transition` is the id it is made by, and `note` is what was kept with it. */
+    "workflow-transition": { readonly transition: string; readonly from: FormStatus; readonly to: FormStatus; readonly note?: string };
 }
 
 /** The kinds of record there are. */

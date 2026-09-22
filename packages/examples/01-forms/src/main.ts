@@ -10,6 +10,7 @@ import { bootstrapper as AuditDemoBootstrapper } from "./demos/audit";
 import { bootstrapper as DropzoneDemoBootstrapper } from "./demos/dropzone";
 import { bootstrapper as FormModeDemoBootstrapper } from "./demos/form-mode";
 import { bootstrapper as ReviewDemoBootstrapper } from "./demos/review";
+import { bootstrapper as WorkflowDemoBootstrapper } from "./demos/workflow";
 import { bootstrapper as FormsBootstrapper } from "./forms";
 import { bootstrapper as HomeBootstrapper } from "./home";
 
@@ -29,6 +30,7 @@ await WorkbenchBootstrapper.start({
         ReviewDemoBootstrapper,
         S438CitationFormBootstrapper,
         TR310CrashFormBootstrapper,
+        WorkflowDemoBootstrapper,
     ],
     settings: {}
 });

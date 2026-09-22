@@ -169,10 +169,25 @@ export class AuditController extends Controller implements IAuditController {
             return;
         }
 
-        if (form.status !== this.watched.form.status) {
+        const previous = this.watched.form;
+
+        // a form's history only grows, so what is past the length it had is what was done since
+        const transitions = form.history.slice(previous.history.length);
+
+        // a status the transitions account for is recorded as them, not a second time as a change of status
+        const explained = transitions.at(-1)?.to ?? previous.status;
+
+        if (transitions.length || form.status !== previous.status) {
             // edits made under the old status come first
             this.flush();
-            this.raise({ kind: "status-changed", from: this.watched.form.status, to: form.status });
+        }
+
+        for (const { from, note, to, transition } of transitions) {
+            this.raise({ kind: "workflow-transition", from, to, transition, ...(note ? { note } : {}) });
+        }
+
+        if (form.status !== explained) {
+            this.raise({ kind: "status-changed", from: explained, to: form.status });
         }
 
         this.watched = { ...this.watched, form };

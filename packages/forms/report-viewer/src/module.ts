@@ -84,6 +84,13 @@ export class ReportViewerModule implements IModule {
         });
 
         options.registerOption({
+            id: "workflow",
+            title: "Workflow",
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.WorkflowOption }))),
+            canShow: form => !!form.workflow
+        });
+
+        options.registerOption({
             id: "new-form",
             title: "Start a new form",
             Component: lazy(() => import("./components/options").then(module => ({ default: module.NewFormOption })))

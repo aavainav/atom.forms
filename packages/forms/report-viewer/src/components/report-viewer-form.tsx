@@ -125,6 +125,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
                     controllers={formControllers}
                     dataManager={dataManager}
                     onError={onError}
+                    user={user}
                 />
             )}
         </>

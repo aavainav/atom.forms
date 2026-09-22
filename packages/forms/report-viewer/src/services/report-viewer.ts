@@ -1,7 +1,7 @@
 import { ComponentType } from "react";
 import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
+import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
 import { getReviewController, IReviewComment } from "@forms/review";
 import { createService, Singleton } from "@shrub/core";
 
@@ -130,6 +130,9 @@ export interface IReportViewerOptionProps extends IReportViewerPanelProps {
     readonly title: string;
     /** The data manager the form was rendered with, if any. Save writes through it. */
     readonly dataManager?: IReportViewerDataManager<any>;
+    /** Who is using the report, which a change to it is attributed to. Without one a transition cannot be made. */
+    readonly user?: IActor;
+
     /** Opens a modal at the report viewer's root -- never inside the options bar, which is a stacking context. */
     readonly showModal: (options: IModalOptions) => void;
 }

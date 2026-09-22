@@ -27,6 +27,11 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         description: "A reviewer comments on a report -- on a field, a page or the whole of it -- and the officer reads and resolves the comments, both working from the same ones.",
         path: "/demo/review",
         title: "Review"
+    },
+    {
+        description: "A report reaches the viewer in one status and leaves it in another, moved once: a crash report from draft to approved by the officer and then the reviewer, and a citation from draft to issued.",
+        path: "/demo/workflow",
+        title: "Workflow"
     }
 ];
 

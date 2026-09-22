@@ -15,7 +15,7 @@ import type { IReportViewerComponent } from "../../src/components/report-viewer-
 import { IModalService, ModalService } from "../../src/services/modal";
 import { INotificationService, NotificationService } from "../../src/services/notification";
 import { IReportViewerService, ReportViewerService } from "../../src/services/report-viewer";
-import type { IInitialForm, IReportViewerDataManager } from "../../src/services/report-viewer";
+import type { IInitialForm, IReportViewerDataManager, IReportViewerOption, IReportViewerOptionProps } from "../../src/services/report-viewer";
 import { IReviewService, ReviewService } from "../../src/services/review";
 import { IValidationService, ValidationService } from "../../src/services/validation";
 
@@ -51,6 +51,9 @@ interface IMountOptions {
     readonly comments?: ReadonlyArray<IReviewComment>;
     readonly dataManager?: Partial<IReportViewerDataManager<any>>;
     readonly mode?: FormMode;
+    /** An option to register, which is rendered when the options bar is shown. */
+    readonly option?: IReportViewerOption;
+    readonly showOptions?: boolean;
     readonly user?: IActor;
 }
 
@@ -58,11 +61,17 @@ interface IMountOptions {
 function mount(options: IMountOptions = {}) {
     const { mode = "editable" } = options;
     const controllers = new ControllerManager();
+    const reportViewerService = new ReportViewerService({} as never);
+
+    if (options.option) {
+        reportViewerService.registerOption(options.option);
+    }
+
     const registry = new Map<unknown, unknown>([
         [IAuditService, new AuditService()],
         [IModalService, new ModalService()],
         [INotificationService, new NotificationService()],
-        [IReportViewerService, new ReportViewerService({} as never)],
+        [IReportViewerService, reportViewerService],
         [IReviewService, new ReviewService()],
         [IValidationService, new ValidationService()]
     ]);
@@ -87,6 +96,7 @@ function mount(options: IMountOptions = {}) {
             dataManager: options.dataManager as IReportViewerDataManager<any>,
             initialForm: form,
             mode,
+            showOptions: options.showOptions,
             user: options.user
         }))));
     };
@@ -139,6 +149,33 @@ describe("ReportViewerForm", () => {
 
             expect(writeComments).not.toHaveBeenCalled();
             expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.id))).not.toContain("loaded-1");
+        });
+    });
+
+    describe("the options bar", () => {
+        /** An option that shows the props it was rendered with. */
+        function probe(seen: Array<IReportViewerOptionProps>): IReportViewerOption {
+            return { Component: props => { seen.push(props); return createElement("span", { id: "probe" }); }, id: "probe", title: "Probe" };
+        }
+
+        it("hands the user to each option, for the ones that act in their name", () => {
+            const seen: Array<IReportViewerOptionProps> = [];
+
+            mount({ option: probe(seen), showOptions: true, user: rivera });
+
+            expect(seen.at(-1)!.user).toEqual(rivera);
+        });
+
+        it("hands them no user when the host said none", () => {
+            const seen: Array<IReportViewerOptionProps> = [];
+
+            mount({ option: probe(seen), showOptions: true });
+
+            expect(seen.at(-1)!.user).toBeUndefined();
+        });
+
+        it("is not rendered unless it is asked for", () => {
+            expect(mount({ option: probe([]), user: rivera }).container.querySelector("#probe")).toBeNull();
         });
     });
 

@@ -1,6 +1,6 @@
 # `@forms/audit`
 
-Records what happens to a form: opened, edited, status changed, validated, printed, saved. Owns the record types, the controller
+Records what happens to a form: opened, edited, status changed, moved along its workflow, validated, printed, saved. Owns the record types, the controller
 that produces them and holds the history of the report, the service a host subscribes to, and the hook that
 connects the two. Depends on `@forms/core`.
 
@@ -20,7 +20,8 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | --- | --- | --- |
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
-| `status-changed` | The form's `status` changes while it is open, as `{ from, to }` | Form controller changes, comparing `status` |
+| `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
+| `workflow-transition` | The form makes a transition of its workflow: `{ transition, from, to, note? }` | Form controller changes, comparing `form.history` |
 | `validated` | The form is validated | Rules controller changing |
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
@@ -94,6 +95,19 @@ so the host is appended to. A host **merges by `id`** and never overwrites what 
 is assembled on the client, and the ids exist so that taking a record twice is harmless. The whole history is also in
 the bundle the viewer can hand over (`getBundle`, `writeBundle`). None of this changes the stream.
 
+## Transitions are inferred, from the form's history
+
+A form's `history` only grows, so on each change to the form the controller takes what is past the length it had and
+raises a `workflow-transition` for each entry -- in order, after the edits that came before them. That is inferred
+rather than pushed like a save, because the model itself says a transition happened; nothing about it is ambiguous.
+The record names the transition by its id and carries both statuses and the `note`, and is attributed to the
+controller's user like every other record.
+
+**One happening is one record.** A transition changes the status, so the controller works out the status the entries
+account for -- the last one's `to` -- and raises `status-changed` only if the form's status is something else. A status
+set on the model directly still records as `status-changed`. A form that arrives with a history (a loaded report)
+records none of it, since it only compares what came after it was opened.
+
 ## Saves are pushed, not inferred
 
 The save flow lives in the report viewer, above this package, and a dirty→clean transition is ambiguous: starting a
@@ -106,7 +120,7 @@ new form calls `clean()` too. So the report viewer's `SaveOption` and the save p
   sandbox's `kindColours` stops compiling until it names the new kind.
 - **`mode` is stamped by the controller itself**, straight off `form.mode`, the same way `status` is -- unlike the
   old `isReadOnly` field this replaced, which only the host knew and had to be added downstream by the recorder.
-- **`status-changed` only fires for a change made through the form controller.** A status set on the model before it
+- **`status-changed` and `workflow-transition` only fire for a change made through the form controller.** A status set on the model before it
   is loaded is part of what `form-opened` reports.
 - **A form with no mapper has its edits unrecorded**: there is nothing to diff. Every shipped form has one.
 - **A hard crash loses up to `editQuietPeriod` of edits.** Unmount and `pagehide` flush; nothing else can.
@@ -125,5 +139,5 @@ new form calls `clean()` too. So the report viewer's `SaveOption` and the save p
 
 `yarn test` runs under `jsdom`, since the controller extends core's `Controller` and so loads the barrel. The
 controller tests use a real `ControllerManager` with **stub forms** ([test/fixtures/stub-form.ts](test/fixtures/stub-form.ts)):
-the audit reads only a form's identity and what its mapper extracts. Timers are faked, and the hook's test mounts a
+the audit reads only a form's identity, its status, its `history` and what its mapper extracts. Timers are faked, and the hook's test mounts a
 small harness component that calls it, with `react-dom` and `act`, since no testing library is installed.

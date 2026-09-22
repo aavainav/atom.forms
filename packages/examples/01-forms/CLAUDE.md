@@ -23,6 +23,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
 | [src/demos/form-mode/](src/demos/form-mode/) | `/demo/form-mode` — how a form's `FormMode` changes what's on screen: fields disabling, placeholders disappearing, and the watermark each `FormStatus` stamps. |
+| [src/demos/workflow/](src/demos/workflow/) | `/demo/workflow` — a crash report (TR-310) moved from draft to approved by an officer and then a reviewer, and a citation (S438) from draft to issued. See *The workflow demo* below. |
 | [src/demos/review/](src/demos/review/) | `/demo/review` — a reviewer comments on the public contact/warning form and an officer resolves the comments, both working from the same comments and audit history, held in memory the way a host's database would hold them. |
 | [vite.config.ts](vite.config.ts) | Port 3002, react plugin, and the Sass deprecation categories silenced for Bootstrap 5.3. |
 
@@ -32,7 +33,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- | --- |
 | `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | **one** `FormRoutePage`, resolving its identity from the matched path | [src/forms/forms-module.ts](src/forms/forms-module.ts) |
-| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` · `/demo/review` | the demo pages | [src/demos/](src/demos/) |
+| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` · `/demo/review` · `/demo/workflow` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/workbench` |
 
 Every route is a **child** of the workbench's `"app"` root route, registered through
@@ -123,6 +124,28 @@ replaces the comments; `writeAudit` appends the new records **by id**, as a real
 the viewer (the mode is applied as the form loads), and the comments and history survive it -- which is what shows they
 came back through `read()`. The user fields -- name, badge ID, rank and agency -- become the `settings.user` the records and comments are
 attributed to, so the whole actor can be seen on the Audit history and Comments tabs of the report data dialog.
+
+## The workflow demo moves a report once per session
+
+A report reaches the viewer in one status and leaves in another, moved once, so [workflow-demo-page.tsx](src/demos/workflow/workflow-demo-page.tsx)
+does not move a report through its whole life in one go: it keeps the report the way a host's database would, and the
+user **opens it again** as each person in turn. The page shows what the host holds -- the status, the workflow history
+with who moved it and when, and how many comments and audit records -- and says who should open it next.
+
+- **Form**: the crash report (TR-310: submit, then approve or reject with a comment) or the citation (S438: issue).
+  Changing it starts a new report.
+- **Arrives as**: the status a report the host has not kept yet arrives in -- draft, in progress or in review for a
+  crash report, draft or issued for a citation. It goes into `read()` as `status`; a report the host *has* kept carries
+  its own. Changing it starts over.
+- **Open it as**: the officer (`"editable"`), the reviewer (`"reviewable"`) or a viewer (`"viewable"`), each with an
+  actor of their own, so the history shows different people. Switching remounts the viewer, which reads the report as it
+  now stands from the host.
+
+The data manager wraps `createExampleDataManager` with the full fixture (a blank report has validation errors that stop
+every move), and adds what the example manager leaves to a real host: `write` also tells the page what was kept, and
+the audit and comments live in refs. `clearExampleData(identity)` empties the sessionStorage record on Start over --
+the `?reset=1` param cannot be used for it, since that clears the record on every read, which would wipe a move as
+soon as the role changed.
 
 ## The other two demos take the advanced path
 

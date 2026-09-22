@@ -50,11 +50,11 @@ the previously loaded form on screen.
 | [src/services/notification.ts](src/services/notification.ts) | `INotificationService.showNotification` — event only; the UI listens. A notification may name a `duration` (ms; `0` keeps it up until closed), otherwise its type's default applies. |
 | [src/services/theme.ts](src/services/theme.ts) | `IThemeService`: `theme`, `setTheme`, `toggleTheme`, `onThemeChanged`. Holds the current theme rather than only raising an event, since the option button renders a different icon per theme. |
 | [src/services/review.ts](src/services/review.ts) | `IReviewService.togglePanel` — event only, same shape as validation; `ReviewManager` listens. |
-| [src/services/validation.ts](src/services/validation.ts) | `IValidationService.showIssues` — event only, same shape as notification; `ValidationManager` listens. |
+| [src/services/validation.ts](src/services/validation.ts) | `IValidationService`: `showIssues` (event only, same shape as notification; `ValidationManager` listens) and `validate(controllers)`, which runs the rules, shows what they found, marks the failing fields on the form and answers with the `RuleIssueCollection`. The Validate button and the workflow option both go through it. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
-| [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments -- as formatted JSON, with a Copy action that copies the tab showing. The dialog is the **body** only — the chrome belongs to `IModalService`. |
+| [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments, and Workflow (the record's `workflow` stamp, only when the form has one) -- as formatted JSON, with a Copy action that copies the tab showing. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/hooks/use-audit-writer.ts](src/hooks/use-audit-writer.ts) | `useAuditWriter`: hands the audit controller's session records to the data manager's `writeAudit`, only the ones it has not yet handed over. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
 | [src/components/notification/notification-items.ts](src/components/notification/notification-items.ts) | What `NotificationManager` shows and how: `addNotification` merges a raised notification into the list. Owns `maxNotifications` (3) and `defaultDurations` (danger 10s, warning 8s, info/success 5s). |
@@ -159,6 +159,7 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager can keep comments (`writeComments` or `writeBundle`) |
 | `violations` | `!!form.violationListId` |
 | `save` | `!!form.mapper && !!dataManager?.write` |
+| `workflow` | `!!form.workflow` |
 | `report-data` | `!!form.mapper` |
 | `print` | always |
 | `day-night-mode` | always |
@@ -190,6 +191,37 @@ saying so, rather than the viewer working it out from what happened to be regist
 something before the form is even constructed (the catalog listing, say) only has the cheap, registered
 `IFormCatalogItem` to work with -- `type` is there for exactly that; nothing else about the form's own behavior is
 knowable without loading and constructing it.
+
+## Workflow
+
+`WorkflowOption` renders a text button for each transition the form can make now (`form.getTransitions()`: its status
+and its mode both match), and follows the form as it moves. **Who acts is the host's to say, through the mode** -- the
+officer's session is `"editable"`, the reviewer's `"reviewable"` -- and the option is handed `settings.user` as `user`,
+which is who a change is attributed to. A report reaches the viewer in one status and leaves in another, **moved once**:
+a report that takes several people is opened again for each, and the host keeps it between times. After a move the form
+usually closes (its lock), so the buttons go and the next person loads it.
+
+Clicking one, in order:
+
+1. **validate**, through `IValidationService.validate` -- an error stops it with a notification and the issues panel open;
+   a warning does not.
+2. **confirm** in a modal saying where the status is going.
+3. **build the candidate**, `form.transition(id, user, { issues, openComments })`, which is pure. The model throws if it
+   cannot be made; that is shown as a notification and nothing is saved.
+4. **save the candidate**, through `saveForm`, when the form can be saved at all. A failure records `save-failed`,
+   notifies, and leaves the form on screen untouched.
+5. **apply it**, `update(() => candidate.clean())`, and only then record `saved`.
+
+**Saved before it is applied**, so a failed save cannot leave a transition in the audit history that was never kept:
+the audit raises `workflow-transition` from the form's history as the form is replaced (see `@forms/audit`). The catch
+is that a bundle-only host's bundle does not hold this transition's audit record until its next save -- the same as
+`saved` today -- though `data.workflow.history` has the transition in it.
+
+A guard the transition names is checked in the button before it can be clicked: `hasOpenComments` disables it, with a
+tooltip saying to add a comment, until the review controller counts one open (the button follows the count through
+`useReviewComments`). Without a `user` every button is disabled, and says why, the way commenting is. The tooltip
+sits on a wrapper because a disabled button raises no mouse events, and is keyed on its reason, since bootstrap reads a
+title once.
 
 ## The panel seam — where an off canvas goes
 
@@ -274,6 +306,8 @@ is a component; mount it wherever the host's router puts it.
 
 ## Gotchas
 
+- `IReportViewerOptionProps.user` is `settings.user`, threaded `ReportViewerForm` → `ReportViewerOptions` → each option.
+  An option that acts in the user's name (today, the workflow option) reads it there rather than from a controller.
 - `ReportViewerForm` creates its own `ControllerManager` unless one is passed in. **Pass one in** when something
   outside the form (a panel of draggable items) needs the same controllers.
 - Any mode but `"editable"` is applied by `form.setMode(mode)` (disables every field and stamps `mode` on the model).
