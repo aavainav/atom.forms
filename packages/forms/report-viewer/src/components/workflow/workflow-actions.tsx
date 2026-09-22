@@ -1,7 +1,7 @@
 import React from "react";
 import { useService } from "@common/react";
 import { getAuditController } from "@forms/audit";
-import { useForm, IActor, IAvailableTransition, IControllerManager, FFormHeader, FormModel, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
+import { useForm, IActor, IAvailableTransition, IControllerManager, FGrid, FFormHeader, FormModel, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import { getReviewController, useReviewComments } from "@forms/review";
 
 import { IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../../services";
@@ -98,8 +98,10 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
     }
 
     return (
-        <FFormHeader title={form.name} subtitle={toWords(form.status)}>
-            <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />
-        </FFormHeader>
+        <FGrid>
+            <FFormHeader title={form.name} subtitle={toWords(form.status)}>
+                <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />
+            </FFormHeader>
+        </FGrid>
     );
 }
