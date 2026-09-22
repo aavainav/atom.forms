@@ -4,4 +4,3 @@ export { ReportDataOption } from "./report-data-option";
 export { ReviewOption } from "./review-option";
 export { SaveOption } from "./save-option";
 export { ValidateOption } from "./validate-option";
-export { WorkflowOption } from "./workflow-option";

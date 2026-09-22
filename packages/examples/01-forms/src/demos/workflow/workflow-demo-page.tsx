@@ -51,7 +51,7 @@ const forms: Record<DemoForm, IDemoForm> = {
             draft: "Open it as the Officer, and submit it for review.",
             inProgress: "Open it as the Officer, and submit it for review.",
             inReview: "Open it as the Reviewer, and approve it -- or add a comment, and reject it.",
-            rejected: "Open it as the Officer, fix what the comments say, and submit it again."
+            rejected: "Open it as the Officer, fix what the comments say, resolve each one, and submit it again -- resubmitting stays blocked while any comment is open."
         }
     }
 };

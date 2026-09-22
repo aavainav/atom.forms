@@ -3,7 +3,7 @@ import type { FormMode, FormModel, FormStatus } from "./form";
 import type { RuleIssueCollection } from "./validation/rule-issue-collection";
 
 /** A check, beyond the form being valid, that a transition needs before it can be made. */
-export type WorkflowGuard = "hasOpenComments";
+export type WorkflowGuard = "hasOpenComments" | "noOpenComments";
 
 /** Turns a form into the form it becomes: with a value stamped on it, say, or with parts of it closed to editing. */
 export type WorkflowStep = (form: FormModel<any>) => FormModel<any>;
@@ -38,7 +38,7 @@ export interface ITransitionOptions {
     readonly issues: RuleIssueCollection;
     /** A note to keep with it. */
     readonly note?: string;
-    /** How many review comments are still open, for a transition that needs one. None, when omitted. */
+    /** How many review comments are still open, for a transition whose guard checks it. None, when omitted. */
     readonly openComments?: number;
 }
 

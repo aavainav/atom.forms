@@ -50,8 +50,9 @@ function setTitle(form: WorkflowForm, value: string): WorkflowForm {
 }
 
 /**
- * Four transitions, one of each kind: one that runs an effect, one that needs an open comment, and two made in
- * different modes. Approving closes the whole form; issuing closes the charge and the adding of pages, and no more.
+ * Four transitions, one of each kind: one that runs an effect, one that needs an open comment, one that needs none
+ * open, and one made in a different mode. Approving closes the whole form; issuing closes the charge and the adding
+ * of pages, and no more.
  */
 export const testWorkflow: IWorkflow = defineWorkflow({
     id: "test-workflow",
@@ -63,7 +64,7 @@ export const testWorkflow: IWorkflow = defineWorkflow({
         approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
         issue: { effect: form => setTitle(form as WorkflowForm, "Issued"), from: ["draft"], mode: "editable", title: "Issue", to: "issued" },
         reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
-        submit: { from: ["draft", "rejected"], mode: "editable", title: "Submit", to: "inReview" }
+        submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit", to: "inReview" }
     },
     version: "2"
 });

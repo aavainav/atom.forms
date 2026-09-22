@@ -52,8 +52,9 @@ the previously loaded form on screen.
 | [src/services/review.ts](src/services/review.ts) | `IReviewService.togglePanel` — event only, same shape as validation; `ReviewManager` listens. |
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService`: `showIssues` (event only, same shape as notification; `ValidationManager` listens) and `validate(controllers)`, which runs the rules, shows what they found, marks the failing fields on the form and answers with the `RuleIssueCollection`. The Validate button and the workflow option both go through it. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
-| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, and calls `useAuditRecorder`. |
+| [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, calls `useAuditRecorder`, and renders `WorkflowActions` above the form. |
 | [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
+| [src/components/workflow/workflow-actions.tsx](src/components/workflow/workflow-actions.tsx) | `WorkflowActions` — **not** an options-bar entry; see *Workflow* below. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments, and Workflow (the record's `workflow` stamp, only when the form has one) -- as formatted JSON, with a Copy action that copies the tab showing. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/hooks/use-audit-writer.ts](src/hooks/use-audit-writer.ts) | `useAuditWriter`: hands the audit controller's session records to the data manager's `writeAudit`, only the ones it has not yet handed over. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
@@ -159,7 +160,6 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager can keep comments (`writeComments` or `writeBundle`) |
 | `violations` | `!!form.violationListId` |
 | `save` | `!!form.mapper && !!dataManager?.write` |
-| `workflow` | `!!form.workflow` |
 | `report-data` | `!!form.mapper` |
 | `print` | always |
 | `day-night-mode` | always |
@@ -194,12 +194,34 @@ knowable without loading and constructing it.
 
 ## Workflow
 
-`WorkflowOption` renders a text button for each transition the form can make now (`form.getTransitions()`: its status
-and its mode both match), and follows the form as it moves. **Who acts is the host's to say, through the mode** -- the
-officer's session is `"editable"`, the reviewer's `"reviewable"` -- and the option is handed `settings.user` as `user`,
-which is who a change is attributed to. A report reaches the viewer in one status and leaves in another, **moved once**:
-a report that takes several people is opened again for each, and the host keeps it between times. After a move the form
-usually closes (its lock), so the buttons go and the next person loads it.
+**Not an options-bar entry.** Every form with a workflow gets this, above the form itself, regardless of
+`showOptions` -- `ReportViewerForm` renders `WorkflowActions` unconditionally, right before `initialForm.Component`,
+and the component itself answers `null` for a form with no `workflow`. It used to be `WorkflowOption`, one more
+entry in the floating options bar; it moved because the workflow buttons are primary "move the report forward"
+actions, not a utility alongside Print and the day/night toggle, and hiding them behind `showOptions={false}` meant
+a host could suppress the one affordance a workflowed report actually needs.
+
+The split follows the dependency graph: `@forms/core` depends on nothing above it, so the presentational half lives
+there and the orchestration stays here.
+
+- **`FFormHeader`** (`@forms/core`) is a plain, prop-driven header -- `title`, `subtitle?`, `borderVisibility?`,
+  and `children` as an actions slot. No workflow knowledge at all.
+- **`FWorkflowActions`** (`@forms/core`) is a button for each `IAvailableTransition` it is given, disabled and
+  tooltipped off a blocker computed from `openComments` and `user` (both plain props -- core can reach neither a
+  review controller nor a service). A click just calls `onSelect(transition, user)`; it validates, confirms, saves
+  and applies nothing itself.
+- **`WorkflowActions`** (here, `src/components/workflow/`) is what `ReportViewerForm` actually renders. It reads
+  the live form (`useForm(formController)`) and the review controller's open-comment count, renders
+  `<FFormHeader title={form.name} subtitle={toWords(form.status)}><FWorkflowActions ... /></FFormHeader>`, and
+  supplies `onSelect` with the whole orchestration described below. `IValidationService`, `IModalService`,
+  `INotificationService` and `@forms/audit`/`@forms/review` all stay here, one level above core.
+
+`FWorkflowActions` follows the form as it moves (`form.getTransitions()`: its status and its mode both match).
+**Who acts is the host's to say, through the mode** -- the officer's session is `"editable"`, the reviewer's
+`"reviewable"` -- and `WorkflowActions` is handed `settings.user` as `user`, which is who a change is attributed to.
+A report reaches the viewer in one status and leaves in another, **moved once**: a report that takes several people
+is opened again for each, and the host keeps it between times. After a move the form usually closes (its lock), so
+the buttons go and the next person loads it.
 
 Clicking one, in order:
 
@@ -218,8 +240,9 @@ is that a bundle-only host's bundle does not hold this transition's audit record
 `saved` today -- though `data.workflow.history` has the transition in it.
 
 A guard the transition names is checked in the button before it can be clicked: `hasOpenComments` disables it, with a
-tooltip saying to add a comment, until the review controller counts one open (the button follows the count through
-`useReviewComments`). Without a `user` every button is disabled, and says why, the way commenting is. The tooltip
+tooltip saying to add a comment, until the review controller counts one open; `noOpenComments` (crash's `submit`, once
+rejected) disables it until every comment is resolved. Both follow the count through `useReviewComments`. Without a
+`user` every button is disabled, and says why, the way commenting is. The tooltip
 sits on a wrapper because a disabled button raises no mouse events, and is keyed on its reason, since bootstrap reads a
 title once.
 
@@ -306,8 +329,9 @@ is a component; mount it wherever the host's router puts it.
 
 ## Gotchas
 
-- `IReportViewerOptionProps.user` is `settings.user`, threaded `ReportViewerForm` → `ReportViewerOptions` → each option.
-  An option that acts in the user's name (today, the workflow option) reads it there rather than from a controller.
+- `IReportViewerOptionProps.user` is `settings.user`, threaded `ReportViewerForm` → `ReportViewerOptions` → each option,
+  though no built-in option reads it today. `WorkflowActions` -- not an option -- is handed `user` the same way, since
+  it is what acts in the user's name now.
 - `ReportViewerForm` creates its own `ControllerManager` unless one is passed in. **Pass one in** when something
   outside the form (a panel of draggable items) needs the same controllers.
 - Any mode but `"editable"` is applied by `form.setMode(mode)` (disables every field and stamps `mode` on the model).

@@ -17,7 +17,8 @@ export interface ICrashForm extends IForm {
 
 /**
  * The rules a crash report moves by: the officer submits it for review, and the reviewer approves it or sends it back
- * with comments to be fixed, which the officer then submits again. Once submitted, and once approved, it is closed.
+ * with comments to be fixed. Once submitted, and once approved, it is closed. A report sent back cannot be
+ * resubmitted while any comment is still open -- the officer must resolve them first.
  */
 export const crashWorkflow: IWorkflow = defineWorkflow({
     id: "crash",
@@ -28,7 +29,7 @@ export const crashWorkflow: IWorkflow = defineWorkflow({
     transitions: {
         approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
         reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
-        submit: { from: ["draft", "inProgress", "rejected"], mode: "editable", title: "Submit for review", to: "inReview" }
+        submit: { from: ["draft", "inProgress", "rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit for review", to: "inReview" }
     },
     version: "1"
 });

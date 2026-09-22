@@ -1,38 +1,31 @@
 import React from "react";
 import { useService } from "@common/react";
 import { getAuditController } from "@forms/audit";
-import { useForm, IActor, IAvailableTransition, IWorkflowTransition, WorkflowGuard, FButton, FFormStackPanel, FormModel, FTooltip, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
+import { useForm, IActor, IAvailableTransition, IControllerManager, FFormHeader, FormModel, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import { getReviewController, useReviewComments } from "@forms/review";
 
-import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
+import { IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../../services";
 import { IValidationService } from "../../services/validation";
 
-/** What each guard needs of the report, and what to tell the user while it is not so. */
-const guards: Record<WorkflowGuard, { readonly isMet: (openComments: number) => boolean; readonly message: string }> = {
-    hasOpenComments: { isMet: openComments => openComments > 0, message: "Add a comment first, so the author knows what to fix." }
-};
-
-/** Says why the transition cannot be made yet, or nothing when it can. */
-function getBlocker(transition: IWorkflowTransition, openComments: number, user?: IActor): string | undefined {
-    if (!user) {
-        return "Say who is using the report before making this change.";
-    }
-
-    return transition.guards?.map(guard => guards[guard]).find(guard => !guard.isMet(openComments))?.message;
-}
-
 /** Spells a status out for the user: "inReview" reads "in review". */
-function toWords(status: string): string {
+export function toWords(status: string): string {
     return status.replace(/([A-Z])/g, " $1").toLowerCase();
 }
 
+interface IWorkflowActionsProps {
+    /** The controllers belonging to the form this workflow actions is for. */
+    readonly controllers: IControllerManager;
+    /** Where the form's data goes when it is saved; the save option is offered only with one. */
+    readonly dataManager?: IReportViewerDataManager<any>;
+    /** The user who is acting upon this form, whether it is an officer, or reviewer. */
+    readonly user?: IActor;
+}
+
 /**
- * Defines the option for making the transitions the report's workflow offers: a button for each that can be made
- * now, which follows the report as it moves. Making one validates the report first, asks the user to confirm, saves
- * the report as the transition leaves it, and only then applies it to the form on screen, so a save that fails leaves
- * neither the form nor its audit history claiming a change that was never kept.
+ * The action bar every form with a workflow gets, above the form itself: a header naming the form and its current
+ * status, and a button for each transition the form can make now. Nothing is rendered for a form with no workflow.
  */
-export const WorkflowOption = ({ controllers, dataManager, user }: IReportViewerOptionProps): React.JSX.Element => {
+export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowActionsProps): React.JSX.Element | null => {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -41,7 +34,7 @@ export const WorkflowOption = ({ controllers, dataManager, user }: IReportViewer
     const formController = controllers.getFormController();
     const review = getReviewController(controllers);
 
-    // the buttons follow the form as it moves, and the comments a guard counts as they are added and resolved
+    // the header and the buttons follow the form as it moves, and the comments a guard counts as they are added and resolved
     const form = useForm(formController);
     useReviewComments(review);
 
@@ -82,7 +75,7 @@ export const WorkflowOption = ({ controllers, dataManager, user }: IReportViewer
         notificationService.showNotification({ type: "success", message: `${transition.title} complete.` });
     };
 
-    const handleClick = (available: IAvailableTransition, by: IActor): void => {
+    const handleSelect = (available: IAvailableTransition, by: IActor): void => {
         const issues = validationService.validate(controllers);
         const errors = issues.getIssues().filter(issue => issue.severity === RuleIssueSeverity.error);
 
@@ -100,29 +93,13 @@ export const WorkflowOption = ({ controllers, dataManager, user }: IReportViewer
         });
     };
 
-    return (
-        <FFormStackPanel direction="horizontal">
-            {form.getTransitions().map((available, index) => {
-                const blocker = getBlocker(available.transition, review.openCount, user);
-                const button = (
-                    <FButton
-                        id={`workflow-${available.id}-button`}
-                        variant="primary"
-                        type="button"
-                        text={available.transition.title}
-                        disabled={!!blocker}
-                        onClick={() => user && handleClick(available, user)}
-                    />
-                );
+    if (!form.workflow) {
+        return null;
+    }
 
-                return (
-                    <div key={available.id} className={index === 0 ? undefined : "ms-2"}>
-                        {/* a disabled button raises no mouse events, so its tooltip sits on a wrapper; bootstrap reads
-                            a tooltip's title once, when it is built, so a new reason needs a new tooltip */}
-                        {blocker ? <FTooltip key={blocker} title={blocker} placement="top"><span className="d-inline-block">{button}</span></FTooltip> : button}
-                    </div>
-                );
-            })}
-        </FFormStackPanel>
+    return (
+        <FFormHeader title={form.name} subtitle={toWords(form.status)}>
+            <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />
+        </FFormHeader>
     );
 }

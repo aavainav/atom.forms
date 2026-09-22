@@ -16,6 +16,7 @@ export { FFieldTextArea } from "./components/field-textarea";
 
 export { FForm } from "./components/form";
 export { FFieldInput } from "./components/field-input";
+export { FFormHeader } from "./components/form-header";
 export { FGrid } from "./components/grid";
 export { FIcon } from "./components/icon";
 export { FLabel } from "./components/form-label";
@@ -36,6 +37,7 @@ export { FSection } from "./components/section";
 export { FTooltip } from "./components/tooltip";
 export { FSpinner } from "./components/spinner";
 export { getStatusWatermark, FWatermark } from "./components/watermark";
+export { FWorkflowActions } from "./components/workflow-actions";
 
 export type { IAsyncOperation, IAsyncLoaderController } from "./components/async-loader";
 export type { FBorderEdge, FBorderEdges, FBorderVisibility } from "./components/border";
@@ -58,7 +60,8 @@ export type {
     FInputType
 } from "./components/field-input";
 export type { IFModal, IModalAction, IModalCloseAction, IModalOptions, IModalResult, FModalSize } from "./components/modal";
-export type { StackPanelDirection } from "./components/form-stackpanel";
+export type { FFormHeaderBorderVisibility } from "./components/form-header";
+export type { FStackPanelDirection } from "./components/form-stackpanel";
 
 export type { IDraggableItem, DraggableItemType } from "./models/import/draggable-item";
 export type { IDropzone, DropzoneConstructor } from "./models/import/dropzone";

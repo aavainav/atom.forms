@@ -125,7 +125,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     /**
      * Makes a transition, returning the form it leaves: its effect run, its status set, the entry kept in its history,
      * and the lock its new status carries applied. Throws unless the transition can be made now, and unless the form
-     * has no validation error and, for a transition that needs one, an open comment.
+     * has no validation error and satisfies whatever guard its transition names -- an open comment for one that needs
+     * one, none open for one that needs the opposite.
      */
     transition(id: string, by: IActor, options: ITransitionOptions): this;
     /** Applies the given issue collection, setting the has error state for every field on the form. */
@@ -397,6 +398,10 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
         if (step.guards?.includes("hasOpenComments") && !options.openComments) {
             throw new Error(`"${id}" needs at least one open comment.`);
+        }
+
+        if (step.guards?.includes("noOpenComments") && options.openComments) {
+            throw new Error(`"${id}" cannot be made while a comment is open.`);
         }
 
         const entry: IWorkflowEntry = {

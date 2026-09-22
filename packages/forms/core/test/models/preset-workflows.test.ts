@@ -102,4 +102,12 @@ describe("the crash workflow", () => {
         expect(resubmitted.status).toBe("inReview");
         expect(resubmitted.history.map(entry => `${entry.transition}:${entry.by.id}`)).toEqual(["submit:officer-1", "reject:reviewer-1", "submit:officer-1"]);
     });
+
+    it("cannot be submitted again while a comment is still open, since the officer must address it first", () => {
+        const submitted = new PresetCrashForm().transition("submit", officer, { issues: noIssues });
+        const rejected = submitted.setMode("reviewable").transition("reject", reviewer, { issues: noIssues, openComments: 1 }).setMode("editable");
+
+        expect(() => rejected.transition("submit", officer, { issues: noIssues, openComments: 1 })).toThrowError('"submit" cannot be made while a comment is open.');
+        expect(rejected.transition("submit", officer, { issues: noIssues, openComments: 0 }).status).toBe("inReview");
+    });
 });

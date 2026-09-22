@@ -9,7 +9,7 @@ import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import type { IServiceCollection } from "@shrub/core";
 
-import { WorkflowOption } from "../../src/components/options/workflow-option";
+import { WorkflowActions } from "../../src/components/workflow/workflow-actions";
 import { IModalService } from "../../src/services/modal";
 import type { IConfirmOptions } from "../../src/services/modal";
 import { INotificationService } from "../../src/services/notification";
@@ -27,7 +27,7 @@ class WorkflowStubForm extends FormModel<any> {
         transitions: {
             approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
             reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
-            submit: { from: ["draft"], mode: "editable", title: "Submit for review", to: "inReview" }
+            submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit for review", to: "inReview" }
         },
         version: "1"
     });
@@ -71,7 +71,7 @@ async function mount(options: IMountOptions = {}) {
     document.body.append(container);
     const root = createRoot(container);
 
-    act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(WorkflowOption, { catalogItem: {} as never, controllers, dataManager: {} as never, onError: vi.fn(), showModal: vi.fn(), title: "Workflow", user: user ?? undefined }))));
+    act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(WorkflowActions, { controllers, dataManager: {} as never, user: user ?? undefined }))));
     mounted.push(() => { act(() => root.unmount()); container.remove(); });
 
     return {
@@ -81,9 +81,11 @@ async function mount(options: IMountOptions = {}) {
         confirm: async () => act(async () => showConfirmModal.mock.calls[0][0].onConfirm()),
         controllers,
         form: () => controllers.getFormController().form,
+        header: () => container.querySelector(".f-form-header"),
         saveForm,
         showConfirmModal,
         showNotification,
+        subtitle: () => container.querySelector(".f-form-header__subtitle")?.textContent,
         tooltip: (id: string) => container.querySelector<HTMLElement>(`#workflow-${id}-button`)!.closest("[data-bs-toggle=tooltip]")?.getAttribute("data-bs-original-title") ?? undefined,
         validate
     };
@@ -92,6 +94,11 @@ async function mount(options: IMountOptions = {}) {
 /** A form as a reviewer finds it: submitted, and open to review. */
 async function inReview(): Promise<FormModel<any>> {
     return (await new WorkflowStubForm().initialize()).setStatus("inReview").setMode("reviewable");
+}
+
+/** A form as the officer finds it after rejection: editable again, with the report still marked rejected. */
+async function rejected(): Promise<FormModel<any>> {
+    return (await new WorkflowStubForm().initialize()).setStatus("rejected").setMode("editable");
 }
 
 beforeEach(() => {
@@ -103,7 +110,28 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-describe("WorkflowOption", () => {
+describe("WorkflowActions", () => {
+    describe("the header", () => {
+        it("is not rendered for a form that has no workflow", async () => {
+            const form = Object.assign(Object.create(Object.getPrototypeOf(await new WorkflowStubForm().initialize())), { workflow: undefined });
+
+            expect((await mount({ form })).header()).toBeNull();
+        });
+
+        it("shows the form's status in words", async () => {
+            expect((await mount()).subtitle()).toBe("draft");
+            expect((await mount({ form: await inReview() })).subtitle()).toBe("in review");
+        });
+
+        it("follows the form as it moves, without being remounted", async () => {
+            const { controllers, subtitle } = await mount();
+
+            act(() => controllers.getFormController().update(form => form.setStatus("inReview")));
+
+            expect(subtitle()).toBe("in review");
+        });
+    });
+
     describe("the buttons", () => {
         it("has one for each transition the form can make now, called by its title", async () => {
             expect((await mount()).buttons()).toEqual(["Submit for review"]);
@@ -112,12 +140,6 @@ describe("WorkflowOption", () => {
 
         it("has none when the form can make none, as a form that is only being viewed cannot", async () => {
             const form = (await new WorkflowStubForm().initialize()).setMode("viewable");
-
-            expect((await mount({ form })).buttons()).toEqual([]);
-        });
-
-        it("has none for a form that has no workflow", async () => {
-            const form = Object.assign(Object.create(Object.getPrototypeOf(await new WorkflowStubForm().initialize())), { workflow: undefined });
 
             expect((await mount({ form })).buttons()).toEqual([]);
         });
@@ -321,6 +343,31 @@ describe("WorkflowOption", () => {
                 expect(saveForm).not.toHaveBeenCalled();
                 expect(form().status).toBe("inReview");
                 expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: '"reject" needs at least one open comment.' });
+            });
+
+            it("says why, and saves nothing, when a comment is still open", async () => {
+                // the button is only disabled by a comment that is already open, so it is clicked before one appears
+                const { click, confirm, controllers, form, saveForm, showNotification } = await mount({ form: await rejected() });
+                click("submit");
+
+                // a comment appeared while the modal was open
+                act(() => getReviewController(controllers).load([comment]));
+                await confirm();
+
+                expect(saveForm).not.toHaveBeenCalled();
+                expect(form().status).toBe("rejected");
+                expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: '"submit" cannot be made while a comment is open.' });
+            });
+
+            it("succeeds once the open comment is resolved", async () => {
+                const { click, confirm, controllers, form, saveForm } = await mount({ form: await rejected() });
+                act(() => getReviewController(controllers).load([{ ...comment, isResolved: true }]));
+                click("submit");
+
+                await confirm();
+
+                expect(saveForm).toHaveBeenCalled();
+                expect(form().status).toBe("inReview");
             });
         });
     });

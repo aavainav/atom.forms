@@ -158,11 +158,13 @@ form of its family, and refuses a transition made from no status.
 
 A transition names the statuses it is made `from`, the `mode` the form must be in (the capacity the user acts in --
 roles are deliberately not modelled, so the host still picks the mode), the `to` status, an optional `effect` run on the
-form as it moves, and optional `guards` (today one: `"hasOpenComments"`). `form.getTransitions()` lists what can be made
-now, and `form.transition(id, by, { issues, note?, openComments?, at? })` makes one, returning the new form. It
-**throws** unless the transition exists, the form is in a `from` status and the right mode, **the validation result holds
-no error** (warnings do not count, and there is no exception for Reject), and, for `hasOpenComments`, at least one
-comment is open. The model is *told* the validation result and the open-comment count rather than finding them itself --
+form as it moves, and optional `guards` (today two, opposites of each other: `"hasOpenComments"` and `"noOpenComments"`).
+`form.getTransitions()` lists what can be made now, and `form.transition(id, by, { issues, note?, openComments?, at? })`
+makes one, returning the new form. It **throws** unless the transition exists, the form is in a `from` status and the
+right mode, **the validation result holds no error** (warnings do not count, and there is no exception for Reject), and
+whatever guard the transition names holds -- `hasOpenComments` needs at least one comment open (Reject), `noOpenComments`
+needs none (resubmitting a rejected crash report, so the officer must resolve every comment first). The model is *told*
+the validation result and the open-comment count rather than finding them itself --
 it cannot see the rules controller or the review controller -- so a caller has to validate first. Each transition
 appends `{ transition, from, to, at, by, note? }` to `form.history`, and `extractData` stamps `{ id, version, history }`
 into the record as `workflow`.
@@ -257,7 +259,13 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 
 - Structure: `FForm`, `FPageCollection`, `FPage`, `FSection`, `FFormStackPanel`, `FBorder`, `FAccordion`,
   `FWatermark` (+ `getStatusWatermark`), `FNavTab` (tabs and panes; a pane's `content` is a component, lazy or not,
-  and `onSelect` reports each tab selected -- `FPageCollection` composes its `Tab` and `Pane` parts directly).
+  and `onSelect` reports each tab selected -- `FPageCollection` composes its `Tab` and `Pane` parts directly),
+  `FFormHeader` (title, optional subtitle, optional `borderVisibility`, and `children` as an actions slot -- no
+  knowledge of what fills it).
+- `FWorkflowActions` renders a button for each `IAvailableTransition` it is given (`transitions`, `openComments`,
+  `user`), disabled and tooltipped off a blocker it computes itself, and reports a click as `onSelect(transition,
+  user)`. Purely presentational, like everything else here -- `@forms/report-viewer`'s `WorkflowActions` (not this
+  one) owns validating, confirming, saving and applying a transition, since none of that is reachable from core.
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.

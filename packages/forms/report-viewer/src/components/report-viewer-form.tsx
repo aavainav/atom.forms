@@ -10,6 +10,7 @@ import { PanelManager } from "./panel";
 import { ReportViewerOptions } from "./report-viewer-options";
 import { ReviewManager } from "./review";
 import { ValidationManager } from "./validation";
+import { WorkflowActions } from "./workflow";
 import { useAuditWriter } from "../hooks";
 import { IInitialForm, IModalService, INotificationService, IReportBundle, IReportViewerDataManager, IReportViewerService } from "../services";
 
@@ -118,6 +119,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             {reportViewerService.canReview(initialState, dataManager) && (
                 <ReviewManager controllers={formControllers} dataManager={dataManager} onError={onError} />
             )}
+            <WorkflowActions controllers={formControllers} dataManager={dataManager} user={user} />
             <initialForm.Component controllers={formControllers} />
             {showOptions && (
                 <ReportViewerOptions

@@ -1,10 +1,10 @@
 import React from "react";
 import { buildClasses } from "../../utils/class-names";
 
-export type StackPanelDirection = "vertical" | "horizontal";
+export type FStackPanelDirection = "vertical" | "horizontal";
 
 interface IFFormStackPanelProps {
-    readonly direction?: StackPanelDirection;
+    readonly direction?: FStackPanelDirection;
     /** Exact height in pixels. The children are stretched to fill this height rather than overflowing it. */
     readonly height?: number;
 }

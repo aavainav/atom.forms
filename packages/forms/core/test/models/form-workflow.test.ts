@@ -186,6 +186,15 @@ describe("FormModel workflow", () => {
             expect(inReview(form).transition("approve", reviewer, { issues: noIssues }).status).toBe("approved");
         });
 
+        it("throws for a transition that needs no open comment when one is open", () => {
+            expect(() => form.transition("submit", officer, { issues: noIssues, openComments: 1 })).toThrowError('"submit" cannot be made while a comment is open.');
+        });
+
+        it("is made when there is no open comment", () => {
+            expect(form.transition("submit", officer, { issues: noIssues, openComments: 0 }).status).toBe("inReview");
+            expect(form.transition("submit", officer, { issues: noIssues }).status).toBe("inReview");
+        });
+
         it("closes the whole form when the workflow says the status does", () => {
             const approved = inReview(form).transition("approve", reviewer, { issues: noIssues });
 
