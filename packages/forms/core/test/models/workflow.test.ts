@@ -7,8 +7,8 @@ const definition: IWorkflowDefinition = {
     id: "citation",
     locks: { issued: form => form.setMode("viewable") },
     transitions: {
-        issue: { from: ["draft", "inProgress"], mode: "editable", title: "Issue", to: "issued" },
-        void: { from: ["issued"], mode: "editable", title: "Void", to: "voided" }
+        issue: { from: ["draft", "inProgress"], icon: "check2-circle", mode: "editable", title: "Issue", to: "issued" },
+        void: { from: ["issued"], icon: "x-circle", mode: "editable", title: "Void", to: "voided" }
     },
     version: "1"
 };
@@ -24,7 +24,7 @@ describe("defineWorkflow", () => {
     });
 
     it("refuses a transition that is made from no status, which could never be made", () => {
-        expect(() => defineWorkflow({ ...definition, transitions: { stuck: { from: [], mode: "editable", title: "Stuck", to: "issued" } } }))
+        expect(() => defineWorkflow({ ...definition, transitions: { stuck: { from: [], icon: "flag", mode: "editable", title: "Stuck", to: "issued" } } }))
             .toThrowError('The transition "stuck" of the workflow "citation" must be made from at least one status.');
     });
 
@@ -58,7 +58,7 @@ describe("defineWorkflow", () => {
         });
 
         it("replaces a transition it is given a new one for, and keeps the others", () => {
-            const replacement = { from: ["draft"], mode: "editable", title: "Issue now", to: "issued" } as const;
+            const replacement = { from: ["draft"], icon: "check2-circle", mode: "editable", title: "Issue now", to: "issued" } as const;
 
             const changed = preset.with({ transitions: { issue: replacement } });
 
@@ -67,14 +67,14 @@ describe("defineWorkflow", () => {
         });
 
         it("adds a transition or a lock the workflow did not have", () => {
-            const added = preset.with({ locks: { voided: form => form.setMode("viewable") }, transitions: { cancel: { from: ["draft"], mode: "editable", title: "Cancel", to: "canceled" } } });
+            const added = preset.with({ locks: { voided: form => form.setMode("viewable") }, transitions: { cancel: { from: ["draft"], icon: "x-circle", mode: "editable", title: "Cancel", to: "canceled" } } });
 
             expect(Object.keys(added.transitions)).toEqual(["issue", "void", "cancel"]);
             expect(Object.keys(added.locks!)).toEqual(["issued", "voided"]);
         });
 
         it("leaves the workflow it is called on as it was", () => {
-            preset.with({ id: "sc-citation", locks: { issued: form => form }, transitions: { issue: { from: ["draft"], mode: "editable", title: "Issue", to: "issued" } } });
+            preset.with({ id: "sc-citation", locks: { issued: form => form }, transitions: { issue: { from: ["draft"], icon: "check2-circle", mode: "editable", title: "Issue", to: "issued" } } });
 
             expect(preset.id).toBe("citation");
             expect(preset.locks?.issued).toBe(definition.locks!.issued);
@@ -86,7 +86,7 @@ describe("defineWorkflow", () => {
 
             expect(changed.id).toBe("second");
             expect(Object.isFrozen(changed)).toBe(true);
-            expect(() => preset.with({ transitions: { stuck: { from: [], mode: "editable", title: "Stuck", to: "issued" } } })).toThrow("must be made from at least one status");
+            expect(() => preset.with({ transitions: { stuck: { from: [], icon: "flag", mode: "editable", title: "Stuck", to: "issued" } } })).toThrow("must be made from at least one status");
         });
     });
 });

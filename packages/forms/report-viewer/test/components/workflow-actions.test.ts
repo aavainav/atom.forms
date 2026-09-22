@@ -25,9 +25,9 @@ class WorkflowStubForm extends FormModel<any> {
     public readonly workflow = defineWorkflow({
         id: "stub-workflow",
         transitions: {
-            approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
-            reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
-            submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit for review", to: "inReview" }
+            approve: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
+            reject: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" },
+            submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" }
         },
         version: "1"
     });
@@ -76,12 +76,13 @@ async function mount(options: IMountOptions = {}) {
 
     return {
         button: (id: string) => container.querySelector<HTMLButtonElement>(`#workflow-${id}-button`),
-        buttons: () => Array.from(container.querySelectorAll("button")).map(button => button.textContent),
+        buttonIds: () => Array.from(container.querySelectorAll("button[id^='workflow-']")).map(button => button.id),
         click: (id: string) => act(() => container.querySelector<HTMLButtonElement>(`#workflow-${id}-button`)!.click()),
         confirm: async () => act(async () => showConfirmModal.mock.calls[0][0].onConfirm()),
         controllers,
         form: () => controllers.getFormController().form,
         header: () => container.querySelector(".f-form-header"),
+        save: () => container.querySelector<HTMLButtonElement>("#save-button"),
         saveForm,
         showConfirmModal,
         showNotification,
@@ -101,6 +102,11 @@ async function rejected(): Promise<FormModel<any>> {
     return (await new WorkflowStubForm().initialize()).setStatus("rejected").setMode("editable");
 }
 
+/** The same form, with no workflow -- as a form family that never declared one would be. */
+function withoutWorkflow(form: FormModel<any>): FormModel<any> {
+    return Object.assign(Object.create(Object.getPrototypeOf(form)), form, { workflow: undefined });
+}
+
 beforeEach(() => {
     vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
 });
@@ -112,10 +118,16 @@ afterEach(() => {
 
 describe("WorkflowActions", () => {
     describe("the header", () => {
-        it("is not rendered for a form that has no workflow", async () => {
-            const form = Object.assign(Object.create(Object.getPrototypeOf(await new WorkflowStubForm().initialize())), { workflow: undefined });
+        it("is not rendered for a form that has no workflow and cannot be saved", async () => {
+            const form = withoutWorkflow(await new WorkflowStubForm().initialize());
 
-            expect((await mount({ form })).header()).toBeNull();
+            expect((await mount({ canSave: false, form })).header()).toBeNull();
+        });
+
+        it("is rendered for a saveable form even without a workflow", async () => {
+            const form = withoutWorkflow(await new WorkflowStubForm().initialize());
+
+            expect((await mount({ form })).header()).not.toBeNull();
         });
 
         it("shows the form's status in words", async () => {
@@ -133,23 +145,60 @@ describe("WorkflowActions", () => {
     });
 
     describe("the buttons", () => {
-        it("has one for each transition the form can make now, called by its title", async () => {
-            expect((await mount()).buttons()).toEqual(["Submit for review"]);
-            expect((await mount({ form: await inReview(), user: officer })).buttons()).toEqual(["Approve", "Reject"]);
+        it("has one for each transition the form can make now", async () => {
+            expect((await mount()).buttonIds()).toEqual(["workflow-submit-button"]);
+            expect((await mount({ form: await inReview(), user: officer })).buttonIds()).toEqual(["workflow-approve-button", "workflow-reject-button"]);
         });
 
         it("has none when the form can make none, as a form that is only being viewed cannot", async () => {
             const form = (await new WorkflowStubForm().initialize()).setMode("viewable");
 
-            expect((await mount({ form })).buttons()).toEqual([]);
+            expect((await mount({ form })).buttonIds()).toEqual([]);
         });
 
         it("follows the form as it moves, without being remounted", async () => {
-            const { buttons, controllers } = await mount();
+            const { buttonIds, controllers } = await mount();
 
             act(() => controllers.getFormController().update(form => form.setStatus("inReview").setMode("reviewable")));
 
-            expect(buttons()).toEqual(["Approve", "Reject"]);
+            expect(buttonIds()).toEqual(["workflow-approve-button", "workflow-reject-button"]);
+        });
+    });
+
+    describe("the save button", () => {
+        it("is shown for a form that can be saved", async () => {
+            expect((await mount()).save()).not.toBeNull();
+        });
+
+        it("is not shown for a form that cannot be saved", async () => {
+            expect((await mount({ canSave: false })).save()).toBeNull();
+        });
+
+        it("saves the form and tells the user", async () => {
+            const { save, saveForm, showNotification } = await mount();
+
+            await act(async () => save()!.click());
+
+            expect(saveForm).toHaveBeenCalledTimes(1);
+            expect(showNotification).toHaveBeenCalledWith({ type: "success", message: "Report saved." });
+        });
+
+        it("records it in the audit history", async () => {
+            const { controllers, save } = await mount();
+
+            await act(async () => save()!.click());
+
+            expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "saved"]);
+        });
+
+        it("says why, and records the failure, when it fails", async () => {
+            const { controllers, save, saveForm, showNotification } = await mount();
+            saveForm.mockRejectedValueOnce(new Error("The server is down."));
+
+            await act(async () => save()!.click());
+
+            expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: "The server is down." });
+            expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "save-failed"]);
         });
     });
 

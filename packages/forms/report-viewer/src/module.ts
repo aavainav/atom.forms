@@ -77,13 +77,6 @@ export class ReportViewerModule implements IModule {
         });
 
         options.registerOption({
-            id: "save",
-            title: "Save",
-            Component: lazy(() => import("./components/options").then(module => ({ default: module.SaveOption }))),
-            canShow: (form, dataManager) => reportViewerService.canSaveForm(form, dataManager)
-        });
-
-        options.registerOption({
             id: "new-form",
             title: "Start a new form",
             Component: lazy(() => import("./components/options").then(module => ({ default: module.NewFormOption })))

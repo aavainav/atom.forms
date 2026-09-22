@@ -26,6 +26,7 @@ export const citationWorkflow: IWorkflow = defineWorkflow({
         issue: {
             effect: form => (form as CitationForm<any>).setIssuedDate().setIssuedTime(),
             from: ["draft", "inProgress"],
+            icon: "check2-circle",
             mode: "editable",
             title: "Issue",
             to: "issued"

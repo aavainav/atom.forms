@@ -157,8 +157,10 @@ replacing the preset's under the same key. `defineWorkflow` freezes what it make
 form of its family, and refuses a transition made from no status.
 
 A transition names the statuses it is made `from`, the `mode` the form must be in (the capacity the user acts in --
-roles are deliberately not modelled, so the host still picks the mode), the `to` status, an optional `effect` run on the
-form as it moves, and optional `guards` (today two, opposites of each other: `"hasOpenComments"` and `"noOpenComments"`).
+roles are deliberately not modelled, so the host still picks the mode), the `to` status, the bootstrap `icon` its
+button shows (required -- its button carries no text, so a transition has to pick one), an optional `effect` run on
+the form as it moves, and optional `guards` (today two, opposites of each other: `"hasOpenComments"` and
+`"noOpenComments"`).
 `form.getTransitions()` lists what can be made now, and `form.transition(id, by, { issues, note?, openComments?, at? })`
 makes one, returning the new form. It **throws** unless the transition exists, the form is in a `from` status and the
 right mode, **the validation result holds no error** (warnings do not count, and there is no exception for Reject), and
@@ -262,10 +264,11 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   and `onSelect` reports each tab selected -- `FPageCollection` composes its `Tab` and `Pane` parts directly),
   `FFormHeader` (title, optional subtitle, optional `borderVisibility`, and `children` as an actions slot -- no
   knowledge of what fills it).
-- `FWorkflowActions` renders a button for each `IAvailableTransition` it is given (`transitions`, `openComments`,
-  `user`), disabled and tooltipped off a blocker it computes itself, and reports a click as `onSelect(transition,
-  user)`. Purely presentational, like everything else here -- `@forms/report-viewer`'s `WorkflowActions` (not this
-  one) owns validating, confirming, saving and applying a transition, since none of that is reachable from core.
+- `FWorkflowActions` renders an icon button (its `transition.icon`, no text) for each `IAvailableTransition` it is
+  given (`transitions`, `openComments`, `user`), always tooltipped -- with its title while enabled, with a blocker
+  it computes itself while not -- and reports a click as `onSelect(transition, user)`. Purely presentational, like
+  everything else here -- `@forms/report-viewer`'s `WorkflowActions` (not this one) owns validating, confirming,
+  saving and applying a transition, since none of that is reachable from core.
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.

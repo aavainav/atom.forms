@@ -27,9 +27,9 @@ export const crashWorkflow: IWorkflow = defineWorkflow({
         inReview: form => form.setMode("viewable")
     },
     transitions: {
-        approve: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" },
-        reject: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" },
-        submit: { from: ["draft", "inProgress", "rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit for review", to: "inReview" }
+        approve: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
+        reject: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" },
+        submit: { from: ["draft", "inProgress", "rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" }
     },
     version: "1"
 });

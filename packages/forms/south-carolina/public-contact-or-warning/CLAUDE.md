@@ -1,10 +1,13 @@
 # `@forms/public-contact-or-warning` — SC Form 432 (Public Contact / Warning)
 
 Catalog identity: **name `"SC Form 432 - Public Contact / Warning"`, version `"1.0"`**. Sandbox route `sc/432`, which the host owns. Module name
-`public-contact-or-warning`. Form type **`"none"`** (extends `FormModel` directly — it is neither a citation nor a
+`public-contact-or-warning`. Form type **`"warning"`** (extends `WarningForm` — it is neither a citation nor a
 crash). Form factory version string `"v2025"`.
 
-The record completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A).
+The record completed when a stop results in no citation and no arrest, per SC Code 56-5-6560(A). It carries the base
+`warningWorkflow` unmodified (id `"warning"`): the one `issue` transition stamps the issued date and time and closes
+the whole form (`setMode("viewable")`), unlike S438's citation workflow which only closes what it charges. It has no
+ticket number of its own, so `setTicketNumber()` is a no-op.
 
 The **middle-sized** form package: one page, fixed (no repeating pages), a synchronous mapper, but with option
 fields and its own value lists. Reach for this one as the template for a single-page form with code lists.

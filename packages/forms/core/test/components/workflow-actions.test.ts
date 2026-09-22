@@ -11,10 +11,10 @@ import type { IAvailableTransition } from "../../src/models/workflow";
 
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 
-const submit: IAvailableTransition = { id: "submit", transition: { from: ["draft"], mode: "editable", title: "Submit for review", to: "inReview" } };
-const approve: IAvailableTransition = { id: "approve", transition: { from: ["inReview"], mode: "reviewable", title: "Approve", to: "approved" } };
-const reject: IAvailableTransition = { id: "reject", transition: { from: ["inReview"], guards: ["hasOpenComments"], mode: "reviewable", title: "Reject", to: "rejected" } };
-const resubmit: IAvailableTransition = { id: "submit", transition: { from: ["rejected"], guards: ["noOpenComments"], mode: "editable", title: "Submit for review", to: "inReview" } };
+const submit: IAvailableTransition = { id: "submit", transition: { from: ["draft"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" } };
+const approve: IAvailableTransition = { id: "approve", transition: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" } };
+const reject: IAvailableTransition = { id: "reject", transition: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" } };
+const resubmit: IAvailableTransition = { id: "submit", transition: { from: ["rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" } };
 
 type Props = Parameters<typeof FWorkflowActions>[0];
 
@@ -33,7 +33,8 @@ function mount(props: Partial<Props> = {}) {
 
     return {
         button: (id: string) => container.querySelector<HTMLButtonElement>(`#workflow-${id}-button`),
-        buttons: () => Array.from(container.querySelectorAll("button")).map(button => button.textContent),
+        buttonIds: () => Array.from(container.querySelectorAll("button")).map(button => button.id),
+        icon: (id: string) => container.querySelector<HTMLElement>(`#workflow-${id}-button i`)?.className,
         click: (id: string) => act(() => container.querySelector<HTMLButtonElement>(`#workflow-${id}-button`)!.click()),
         onSelect,
         tooltip: (id: string) => container.querySelector<HTMLElement>(`#workflow-${id}-button`)!.closest("[data-bs-toggle=tooltip]")?.getAttribute("data-bs-original-title") ?? undefined,
@@ -46,12 +47,20 @@ afterEach(() => {
 });
 
 describe("FWorkflowActions", () => {
-    it("has one button for each transition, labeled by its title", () => {
-        expect(mount({ transitions: [approve, reject] }).buttons()).toEqual(["Approve", "Reject"]);
+    it("has one button for each transition", () => {
+        expect(mount({ transitions: [approve, reject] }).buttonIds()).toEqual(["workflow-approve-button", "workflow-reject-button"]);
     });
 
     it("has none when it is given none", () => {
-        expect(mount({ transitions: [] }).buttons()).toEqual([]);
+        expect(mount({ transitions: [] }).buttonIds()).toEqual([]);
+    });
+
+    it("shows the transition's icon, since the button carries no text", () => {
+        expect(mount({ transitions: [approve] }).icon("approve")).toContain("bi-check2-circle");
+    });
+
+    it("is tooltipped with the transition's title while it is enabled", () => {
+        expect(mount({ transitions: [submit] }).tooltip("submit")).toBe("Submit for review");
     });
 
     it("reports which transition was chosen, and by whom, when an enabled button is clicked", () => {

@@ -16,6 +16,8 @@ export interface IWorkflowTransition {
     readonly from: ReadonlyArray<FormStatus>;
     /** What it needs besides a form with no validation errors, which every transition needs. */
     readonly guards?: ReadonlyArray<WorkflowGuard>;
+    /** The bootstrap icon shown on its button; the button carries no text. */
+    readonly icon: string;
     /** The mode the form must be in, which is the capacity the user acts in: an author edits, a reviewer reviews. */
     readonly mode: FormMode;
     /** What it is called, for the user. */

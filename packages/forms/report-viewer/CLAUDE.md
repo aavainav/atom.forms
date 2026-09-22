@@ -53,7 +53,7 @@ the previously loaded form on screen.
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService`: `showIssues` (event only, same shape as notification; `ValidationManager` listens) and `validate(controllers)`, which runs the rules, shows what they found, marks the failing fields on the form and answers with the `RuleIssueCollection`. The Validate button and the workflow option both go through it. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, calls `useAuditRecorder`, and renders `WorkflowActions` above the form. |
-| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
+| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own five. |
 | [src/components/workflow/workflow-actions.tsx](src/components/workflow/workflow-actions.tsx) | `WorkflowActions` — **not** an options-bar entry; see *Workflow* below. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments, and Workflow (the record's `workflow` stamp, only when the form has one) -- as formatted JSON, with a Copy action that copies the tab showing. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/hooks/use-audit-writer.ts](src/hooks/use-audit-writer.ts) | `useAuditWriter`: hands the audit controller's session records to the data manager's `writeAudit`, only the ones it has not yet handed over. |
@@ -159,7 +159,6 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | `validate` | always |
 | `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager can keep comments (`writeComments` or `writeBundle`) |
 | `violations` | `!!form.violationListId` |
-| `save` | `!!form.mapper && !!dataManager?.write` |
 | `report-data` | `!!form.mapper` |
 | `print` | always |
 | `day-night-mode` | always |
@@ -192,29 +191,42 @@ something before the form is even constructed (the catalog listing, say) only ha
 `IFormCatalogItem` to work with -- `type` is there for exactly that; nothing else about the form's own behavior is
 knowable without loading and constructing it.
 
-## Workflow
+## Workflow, and the action bar above the form
 
-**Not an options-bar entry.** Every form with a workflow gets this, above the form itself, regardless of
-`showOptions` -- `ReportViewerForm` renders `WorkflowActions` unconditionally, right before `initialForm.Component`,
-and the component itself answers `null` for a form with no `workflow`. It used to be `WorkflowOption`, one more
-entry in the floating options bar; it moved because the workflow buttons are primary "move the report forward"
-actions, not a utility alongside Print and the day/night toggle, and hiding them behind `showOptions={false}` meant
-a host could suppress the one affordance a workflowed report actually needs.
+**Not an options-bar entry.** `ReportViewerForm` renders `WorkflowActions` unconditionally, right before
+`initialForm.Component`, regardless of `showOptions`. It used to be two separate options-bar entries --
+`WorkflowOption` and `SaveOption`, floating icons alongside Print and the day/night toggle -- but both are primary
+"do something to this report" actions rather than utilities, and hiding them behind `showOptions={false}` meant a
+host could suppress the one affordance a report actually needs. They are now one header above the form: its title,
+its status, a Save button, and a button for each transition it can make now. The component renders nothing for a
+form that has neither a workflow nor anything to save.
 
 The split follows the dependency graph: `@forms/core` depends on nothing above it, so the presentational half lives
-there and the orchestration stays here.
+there and the orchestration -- including Save's -- stays here.
 
 - **`FFormHeader`** (`@forms/core`) is a plain, prop-driven header -- `title`, `subtitle?`, `borderVisibility?`,
-  and `children` as an actions slot. No workflow knowledge at all.
-- **`FWorkflowActions`** (`@forms/core`) is a button for each `IAvailableTransition` it is given, disabled and
-  tooltipped off a blocker computed from `openComments` and `user` (both plain props -- core can reach neither a
-  review controller nor a service). A click just calls `onSelect(transition, user)`; it validates, confirms, saves
-  and applies nothing itself.
+  and `children` as an actions slot. No workflow or save knowledge at all.
+- **`FWorkflowActions`** (`@forms/core`) is an icon button (no text -- see *Icons, not text* below) for each
+  `IAvailableTransition` it is given, disabled and tooltipped off a blocker computed from `openComments` and `user`
+  (both plain props -- core can reach neither a review controller nor a service). A click just calls
+  `onSelect(transition, user)`; it validates, confirms, saves and applies nothing itself.
 - **`WorkflowActions`** (here, `src/components/workflow/`) is what `ReportViewerForm` actually renders. It reads
-  the live form (`useForm(formController)`) and the review controller's open-comment count, renders
-  `<FFormHeader title={form.name} subtitle={toWords(form.status)}><FWorkflowActions ... /></FFormHeader>`, and
-  supplies `onSelect` with the whole orchestration described below. `IValidationService`, `IModalService`,
-  `INotificationService` and `@forms/audit`/`@forms/review` all stay here, one level above core.
+  the live form (`useForm(formController)`) and the review controller's open-comment count, and renders
+  `<FFormHeader title={form.name} subtitle={toWords(form.status)}>` around a Save button (own markup, gated on
+  `reportViewerService.canSaveForm(form, dataManager)`, independent of `form.workflow`) and
+  `<FWorkflowActions ... />` (gated on `form.workflow`, and supplied `onSelect` with the orchestration below).
+  `IValidationService`, `IModalService`, `INotificationService` and `@forms/audit`/`@forms/review` all stay here,
+  one level above core.
+
+### Icons, not text
+
+Every button in the header -- Save and every transition -- is icon-only, tooltipped with its label since it carries
+no visible text (`FWorkflowActions` always wraps its button in an `FTooltip`, not only while disabled). A transition
+names its icon on itself: `IWorkflowTransition.icon` (`@forms/core`) is a required bootstrap icon name, so a
+workflow that adds a transition has to pick one rather than the button silently falling back to something generic.
+Save keeps the `"floppy"` icon it always had.
+
+### Making a transition
 
 `FWorkflowActions` follows the form as it moves (`form.getTransitions()`: its status and its mode both match).
 **Who acts is the host's to say, through the mode** -- the officer's session is `"editable"`, the reviewer's
@@ -317,9 +329,9 @@ what is recorded and how. The history a host handed back through `read()` is loa
 report data dialog and the bundle show it ahead of this session's records. **The viewer never writes the loaded
 history back**: `writeAudit` is given only the session's records, for the host to append by `id`.
 
-**Saving is the one thing the audit cannot observe**, so `SaveOption` and the save path of `NewFormOption` tell it
-(`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`). A dirty→clean transition is ambiguous, since
-starting a new form calls `clean()` too. Anything new that saves must do the same.
+**Saving is the one thing the audit cannot observe**, so `WorkflowActions`' Save button and the save path of
+`NewFormOption` tell it (`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`). A dirty→clean
+transition is ambiguous, since starting a new form calls `clean()` too. Anything new that saves must do the same.
 
 ## Routing — there is none
 

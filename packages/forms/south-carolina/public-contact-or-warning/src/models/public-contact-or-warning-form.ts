@@ -1,4 +1,4 @@
-import { IForm, FormModel, PageCollection, PageDefinition } from "@forms/core";
+import { IForm, FormModel, PageCollection, PageDefinition, WarningForm } from "@forms/core";
 
 import { CATALOG_IDENTITY } from "../module";
 import type { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
@@ -15,7 +15,7 @@ export interface IPublicContactOrWarningFormModel extends IPublicContactOrWarnin
 }
 
 /** Represents the model for South Carolina Form 432 - Public Contact / Warning. */
-export class PublicContactOrWarningFormModel extends FormModel<IPublicContactOrWarningData> implements IPublicContactOrWarningFormModel {
+export class PublicContactOrWarningFormModel extends WarningForm<IPublicContactOrWarningData> implements IPublicContactOrWarningFormModel {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
     public readonly version: string = CATALOG_IDENTITY.version;
@@ -34,5 +34,18 @@ export class PublicContactOrWarningFormModel extends FormModel<IPublicContactOrW
     /** Retrieves the collection of record pages for the form. */
     public getRecordPageCollection(): PageCollection {
         return this.get<PageCollection>(this.recordPage);
+    }
+
+    public setIssuedDate(): this {
+        return this;
+    }
+
+    public setIssuedTime(): this {
+        return this;
+    }
+
+    /** Returns the form unchanged; Form 432 carries no ticket number of its own. */
+    public setTicketNumber(): this {
+        return this;
     }
 }

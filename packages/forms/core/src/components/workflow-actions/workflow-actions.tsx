@@ -4,6 +4,7 @@ import { IActor } from "../../models/actor";
 import { IAvailableTransition, IWorkflowTransition, WorkflowGuard } from "../../models/workflow";
 import { FButton } from "../button";
 import { FFormStackPanel } from "../form-stackpanel";
+import { FIcon } from "../icon";
 import { FTooltip } from "../tooltip";
 
 /** What each guard needs before its transition can be made, and what to tell the user while it is not so. */
@@ -30,10 +31,10 @@ interface IFWorkflowActionsProps {
 }
 
 /**
- * A button for each transition given, disabled and tooltipped with why while it can't be made. Purely
- * presentational -- which transitions there are, how many comments are open and who is acting are all given as
- * props, and a click just reports which transition was chosen. Validating, confirming, saving and applying it
- * belong to whoever renders this.
+ * An icon button for each transition given, disabled and tooltipped with why while it can't be made -- tooltipped
+ * with its title otherwise, since the button itself carries no text. Purely presentational -- which transitions
+ * there are, how many comments are open and who is acting are all given as props, and a click just reports which
+ * transition was chosen. Validating, confirming, saving and applying it belong to whoever renders this.
  */
 export default function FWorkflowActions({ onSelect, openComments, transitions, user }: IFWorkflowActionsProps): React.JSX.Element {
     return (
@@ -43,19 +44,22 @@ export default function FWorkflowActions({ onSelect, openComments, transitions, 
                 const button = (
                     <FButton
                         id={`workflow-${available.id}-button`}
-                        variant="primary"
+                        variant="light"
                         type="button"
-                        text={available.transition.title}
                         disabled={!!blocker}
                         onClick={() => user && onSelect(available, user)}
-                    />
+                    >
+                        <FIcon icon={available.transition.icon} />
+                    </FButton>
                 );
 
                 return (
                     <div key={available.id} className={index === 0 ? undefined : "ms-2"}>
-                        {/* a disabled button raises no mouse events, so its tooltip sits on a wrapper; bootstrap reads
-                            a tooltip's title once, when it is built, so a new reason needs a new tooltip */}
-                        {blocker ? <FTooltip key={blocker} title={blocker} placement="top"><span className="d-inline-block">{button}</span></FTooltip> : button}
+                        {/* a disabled button raises no mouse events, so its tooltip sits on a wrapper when blocked;
+                            bootstrap reads a tooltip's title once, when it is built, so a new reason needs a new tooltip */}
+                        {blocker
+                            ? <FTooltip key={blocker} title={blocker} placement="top"><span className="d-inline-block">{button}</span></FTooltip>
+                            : <FTooltip title={available.transition.title} placement="top">{button}</FTooltip>}
                     </div>
                 );
             })}

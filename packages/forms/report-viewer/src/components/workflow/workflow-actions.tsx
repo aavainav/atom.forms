@@ -1,7 +1,7 @@
 import React from "react";
 import { useService } from "@common/react";
 import { getAuditController } from "@forms/audit";
-import { useForm, IActor, IAvailableTransition, IControllerManager, FGrid, FFormHeader, FormModel, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
+import { useForm, IActor, IAvailableTransition, IControllerManager, FButton, FFormHeader, FGrid, FIcon, FormModel, FTooltip, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import { getReviewController, useReviewComments } from "@forms/review";
 
 import { IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../../services";
@@ -22,8 +22,9 @@ interface IWorkflowActionsProps {
 }
 
 /**
- * The action bar every form with a workflow gets, above the form itself: a header naming the form and its current
- * status, and a button for each transition the form can make now. Nothing is rendered for a form with no workflow.
+ * The action bar above the form itself: a header naming the form and its current status, a Save button for a form
+ * that can be saved, and a button for each transition a form with a workflow can make now. Nothing is rendered for
+ * a form that can do neither.
  */
 export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowActionsProps): React.JSX.Element | null => {
     const modalService = useService<IModalService>(IModalService);
@@ -39,6 +40,24 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
     useReviewComments(review);
 
     const notifyFailure = (message: string): void => notificationService.showNotification({ type: "danger", message });
+
+    const canSave = reportViewerService.canSaveForm(form, dataManager);
+
+    const handleSave = async (): Promise<void> => {
+        // the form controller owns the current model and replaces it on every edit, so it is read at click time
+        const current = formController.form;
+
+        try {
+            await reportViewerService.saveForm(current, dataManager, controllers);
+            getAuditController(controllers).recordSaved();
+            formController.update(next => next.clean());
+            notificationService.showNotification({ type: "success", message: "Report saved." });
+        }
+        catch (error) {
+            getAuditController(controllers).recordSaveFailed();
+            notifyFailure(error instanceof Error ? error.message : "The report could not be saved.");
+        }
+    };
 
     const apply = async ({ id, transition }: IAvailableTransition, by: IActor, issues: RuleIssueCollection): Promise<void> => {
         // the form controller owns the current model and replaces it on every edit, so it is read at confirm time
@@ -93,14 +112,23 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
         });
     };
 
-    if (!form.workflow) {
+    if (!form.workflow && !canSave) {
         return null;
     }
 
     return (
         <FGrid>
             <FFormHeader title={form.name} subtitle={toWords(form.status)}>
-                <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />
+                {canSave && (
+                    <div className={form.workflow ? "me-2" : undefined}>
+                        <FTooltip title="Save" placement="top">
+                            <FButton id="save-button" variant="light" type="button" onClick={handleSave}>
+                                <FIcon icon="floppy" />
+                            </FButton>
+                        </FTooltip>
+                    </div>
+                )}
+                {form.workflow && <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />}
             </FFormHeader>
         </FGrid>
     );

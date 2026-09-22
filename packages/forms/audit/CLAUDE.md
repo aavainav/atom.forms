@@ -111,8 +111,9 @@ records none of it, since it only compares what came after it was opened.
 ## Saves are pushed, not inferred
 
 The save flow lives in the report viewer, above this package, and a dirty→clean transition is ambiguous: starting a
-new form calls `clean()` too. So the report viewer's `SaveOption` and the save path of `NewFormOption` call
-`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`. **Anything else that saves must do the same.**
+new form calls `clean()` too. So the report viewer's `WorkflowActions` (its Save button) and the save path of
+`NewFormOption` call `getAuditController(controllers).recordSaved()` / `recordSaveFailed()`. **Anything else that
+saves must do the same.**
 
 ## Gotchas
 

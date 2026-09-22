@@ -1,16 +1,54 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
+import { RuleIssueCollection } from "@forms/core";
+import type { IActor } from "@forms/core";
 
+import { PublicContactOrWarningFormModel } from "../../src/models/public-contact-or-warning-form";
 import { createForm } from "../fixtures/form";
 
-describe("the public contact or warning form", () => {
-    it("has no workflow, since a contact record is neither issued nor reviewed", async () => {
-        const form = await createForm();
+const officer: IActor = { id: "officer-1", name: "Officer One" };
+const noIssues = new RuleIssueCollection();
 
-        expect(form.workflow).toBeUndefined();
-        expect(form.getTransitions()).toEqual([]);
+describe("the public contact or warning form", () => {
+    let form: PublicContactOrWarningFormModel;
+
+    beforeEach(async () => {
+        form = await createForm();
     });
 
-    it("leaves the workflow out of its record", async () => {
-        expect((await createForm()).extractData()).not.toHaveProperty("workflow");
+    it("carries the warning workflow", () => {
+        expect(form.workflow.id).toBe("warning");
+    });
+
+    it("lets an officer issue it", () => {
+        expect(form.getTransitions().map(available => available.id)).toEqual(["issue"]);
+    });
+
+    it("keeps the workflow in its record", () => {
+        expect(form.extractData()).toHaveProperty("workflow");
+    });
+
+    describe("once it is issued", () => {
+        let issued: PublicContactOrWarningFormModel;
+
+        beforeEach(() => {
+            issued = form.transition("issue", officer, { issues: noIssues });
+        });
+
+        it("is in the issued status, and closed to further editing", () => {
+            expect(issued.status).toBe("issued");
+            expect(issued.mode).toBe("viewable");
+        });
+
+        it("has no transition left to make", () => {
+            expect(issued.getTransitions()).toEqual([]);
+        });
+
+        it("records who issued it in the history the record carries", () => {
+            const { workflow } = issued.extractData();
+
+            expect(workflow?.id).toBe("warning");
+            expect(workflow?.history).toHaveLength(1);
+            expect(workflow?.history[0]).toMatchObject({ by: officer, from: "draft", to: "issued", transition: "issue" });
+        });
     });
 });
