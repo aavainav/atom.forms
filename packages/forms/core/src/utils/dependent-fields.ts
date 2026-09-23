@@ -13,16 +13,18 @@ import { SectionModel } from "../models/section";
  * stale, and re-picking the same option leaves the dependents alone.
  */
 export function setOptionWithDependents<TSection extends SectionModel>(binding: ISectionBinding<TSection>, field: FieldDefinition<OptionFieldModel>, dependents: ReadonlyArray<FieldDefinition<FieldModel<TValueType>>>): (value: IOptionValue) => void {
-    return value => binding.update(current => {
-        const previous = current.get<OptionFieldModel>(field).getValue();
-        const updated = current.set(field, current.get<OptionFieldModel>(field).setValue(value));
+    return value => binding.update({
+        update: current => {
+            const previous = current.get<OptionFieldModel>(field).getValue();
+            const updated = current.set(field, current.get<OptionFieldModel>(field).setValue(value));
 
-        if (value.value === previous.value) {
-            return updated;
+            if (value.value === previous.value) {
+                return updated;
+            }
+
+            return dependents.reduce(
+                (section, dependent) => section.set(dependent, section.get<FieldModel<TValueType>>(dependent).setDefaultValue()),
+                updated);
         }
-
-        return dependents.reduce(
-            (section, dependent) => section.set(dependent, section.get<FieldModel<TValueType>>(dependent).setDefaultValue()),
-            updated);
     });
 }

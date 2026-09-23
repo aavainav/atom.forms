@@ -22,6 +22,7 @@
         "@forms/printing": "1.0.0",
         "@forms/violations": "1.0.0",
         "@forms/value-lists": "1.0.0",
-        "@forms/workbench": "1.0.0"
+        "@forms/workbench": "1.0.0",
+        "@forms/workflow": "1.0.0"
     }
 }

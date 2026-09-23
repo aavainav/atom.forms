@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { citationWorkflow, FormModel, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import type { FieldDefinition, FieldModel, IActor, IRuleIssue, SectionDefinition, SectionModel, TValueType } from "@forms/core";
+import { WorkflowService } from "@forms/workflow";
 
 import { S438FormModel } from "../../src/models/s438-form";
 import { S438FormSchema } from "../../src/models/s438-form-schema";
@@ -9,6 +10,7 @@ import { createForm } from "../fixtures/form";
 const schema = FormModel.getSchema<S438FormSchema>(S438FormModel);
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 const noIssues = new RuleIssueCollection();
+const service = new WorkflowService();
 
 /** Whether a field, on the front page at the given index, is open to editing. */
 function isEnabled(form: S438FormModel, pageIndex: number, sectionDefinition: SectionDefinition<SectionModel>, fieldDefinition: FieldDefinition<FieldModel<TValueType>>): boolean {
@@ -32,14 +34,14 @@ describe("the S438 workflow", () => {
     });
 
     it("lets an officer issue a citation", () => {
-        expect(form.getTransitions().map(available => available.id)).toEqual(["issue"]);
+        expect(service.getTransitions(form).map(available => available.id)).toEqual(["issue"]);
     });
 
     describe("once the citation is issued", () => {
         let issued: S438FormModel;
 
         beforeEach(() => {
-            issued = form.transition("issue", officer, { issues: noIssues });
+            issued = service.transition(form, "issue", officer, { issues: noIssues });
         });
 
         it("is in the issued status, and still editable rather than closed", () => {
@@ -78,7 +80,7 @@ describe("the S438 workflow", () => {
         });
 
         it("has no transition left to make, since the court's taking it is the host's to say", () => {
-            expect(issued.getTransitions()).toEqual([]);
+            expect(service.getTransitions(issued)).toEqual([]);
         });
 
         it("records who issued it in the history the record carries", () => {
@@ -93,7 +95,7 @@ describe("the S438 workflow", () => {
     it("closes the violations on every front page of a citation that has more than one", async () => {
         const two = form.addPage(await schema.frontPage.createPage(form).initialize(), schema.frontPage);
 
-        const issued = two.transition("issue", officer, { issues: noIssues });
+        const issued = service.transition(two, "issue", officer, { issues: noIssues });
 
         expect(isEnabled(issued, 0, schema.violationSection, schema.violationFields.violationDescription)).toBe(false);
         expect(isEnabled(issued, 1, schema.violationSection, schema.violationFields.violationDescription)).toBe(false);
@@ -103,14 +105,15 @@ describe("the S438 workflow", () => {
     it("cannot be issued while it has a validation error", () => {
         const issue: IRuleIssue = { field: form.getFirstField(schema.violatorFields.violatorFirstName), message: "Required.", section: schema.violatorSection, severity: RuleIssueSeverity.error };
 
-        expect(() => form.transition("issue", officer, { issues: new RuleIssueCollection([issue]) })).toThrowError("validation errors");
+        expect(() => service.transition(form, "issue", officer, { issues: new RuleIssueCollection([issue]) })).toThrowError("validation errors");
     });
 
     describe("loading an issued citation", () => {
         it("closes the same parts again, so a saved record is no more open than the one that was issued", async () => {
-            const record = form.transition("issue", officer, { at: 9, issues: noIssues }).extractData();
+            const record = service.transition(form, "issue", officer, { at: 9, issues: noIssues }).extractData();
 
-            const loaded = await (await createForm()).populate({ data: record, status: record.status, workflow: record.workflow }) as S438FormModel;
+            const populated = await (await createForm()).populate({ data: record }) as S438FormModel;
+            const loaded = service.restoreWorkflow(populated, record.status, record.workflow);
 
             expect(loaded.status).toBe("issued");
             expect(loaded.history).toHaveLength(1);
@@ -123,7 +126,8 @@ describe("the S438 workflow", () => {
         it("leaves a citation that was not issued as open as it was", async () => {
             const record = form.extractData();
 
-            const loaded = await (await createForm()).populate({ data: record, status: record.status, workflow: record.workflow }) as S438FormModel;
+            const populated = await (await createForm()).populate({ data: record }) as S438FormModel;
+            const loaded = service.restoreWorkflow(populated, record.status, record.workflow);
 
             expect(loaded.status).toBe("draft");
             expect(loaded.isSectionLocked(schema.violationSection)).toBe(false);

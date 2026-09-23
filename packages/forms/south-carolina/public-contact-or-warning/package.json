@@ -20,6 +20,7 @@
         "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
         "@forms/value-lists": "1.0.0",
-        "@forms/workbench": "1.0.0"
+        "@forms/workbench": "1.0.0",
+        "@forms/workflow": "1.0.0"
     }
 }

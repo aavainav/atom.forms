@@ -21,7 +21,8 @@ const packageSources: Readonly<Record<string, string>> = {
     "@forms/tr310": "south-carolina/tr310/src/index.ts",
     "@forms/value-lists": "value-lists/src/index.ts",
     "@forms/violations": "violations/src/index.ts",
-    "@forms/workbench": "workbench/src/index.ts"
+    "@forms/workbench": "workbench/src/index.ts",
+    "@forms/workflow": "workflow/src/index.ts"
 };
 
 /** Specifiers a test never wants the real thing for, matched ahead of the package aliases below. */

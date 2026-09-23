@@ -8,6 +8,7 @@ import { ControllerManager } from "@forms/core";
 import type { IActor, FormMode, FormModel } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
+import { IWorkflowService, WorkflowService } from "@forms/workflow";
 import type { IServiceCollection } from "@shrub/core";
 
 import { ReportViewerForm } from "../../src/components/report-viewer-form";
@@ -61,7 +62,7 @@ interface IMountOptions {
 function mount(options: IMountOptions = {}) {
     const { mode = "editable" } = options;
     const controllers = new ControllerManager();
-    const reportViewerService = new ReportViewerService({} as never);
+    const reportViewerService = new ReportViewerService({} as never, new WorkflowService());
 
     if (options.option) {
         reportViewerService.registerOption(options.option);
@@ -73,7 +74,8 @@ function mount(options: IMountOptions = {}) {
         [INotificationService, new NotificationService()],
         [IReportViewerService, reportViewerService],
         [IReviewService, new ReviewService()],
-        [IValidationService, new ValidationService()]
+        [IValidationService, new ValidationService()],
+        [IWorkflowService, new WorkflowService()]
     ]);
     const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
     const container = document.createElement("div");

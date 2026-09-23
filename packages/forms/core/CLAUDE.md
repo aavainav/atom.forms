@@ -41,7 +41,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/schema.ts](src/models/schema.ts) | `Schema` base — an empty constructor; a schema is found through the definition tree it builds, not by registering itself. |
 | [src/models/entity.ts](src/models/entity.ts) | `Entity` base and the definition registry. |
 | [src/models/actor.ts](src/models/actor.ts) | `IActor`: who did something to a report, as the host identifies them -- an `id` and a `name`, and optionally a `badgeId`, a `rank` and an `agency`. It is a **snapshot**, copied onto what the user does rather than looked up later, so a change of rank afterwards does not rewrite a report. Roles are deliberately not part of it. Audit records, review comments and workflow history carry one. |
-| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`, and the workflow surface: `workflow`, `history`, `getTransitions`, `canTransition`, `transition`, `lockSection`, `lockPageSet`, `isSectionLocked`, `isPageSetLocked`, `restoreWorkflow`. `FormStatus` is a plain closed union. |
+| [src/models/form.ts](src/models/form.ts) | `FormModel`. `initialize()`, `addPage`/`removePage`, `getFirstField`, `getFields`, `getPages`, `getPagesFor`, `setMode`, `setStatus`, `validate`, and the workflow data/primitives: `workflow`, `history`, `lockSection`, `lockPageSet`, `isSectionLocked`, `isPageSetLocked`. `FormStatus` is a plain closed union; `knownStatuses` is its runtime witness, exported for `@forms/workflow` to validate a loaded status against. Interpreting `workflow` (`getTransitions`/`canTransition`/`transition`/`restoreWorkflow`) is [`@forms/workflow`](../workflow/CLAUDE.md) now, not a method here. |
 | [src/models/workflow.ts](src/models/workflow.ts) | `IWorkflow`, `defineWorkflow`, and the types around them: `IWorkflowTransition`, `ITransitionOptions`, `IWorkflowEntry` (one line of history), `IWorkflowStamp` (a record's history), `WorkflowGuard`, `WorkflowStep`. See Workflow below. |
 | [src/models/page.ts](src/models/page.ts) · [page-collection.ts](src/models/page-collection.ts) · [section.ts](src/models/section.ts) | `PageModel` (also holds dropzones), the immutable `PageCollection`, `SectionModel`. |
 | [src/models/field.ts](src/models/field.ts) + [boolean-](src/models/boolean-field.ts)/[number-](src/models/number-field.ts)/[string-](src/models/string-field.ts)/[option-field.ts](src/models/option-field.ts) | `FieldModel` and its four concrete types. |
@@ -147,33 +147,44 @@ is set to an absolute value rather than by a delta.
 A mapper does **not** get this for free: a page it creates goes through `pageDefinition.createPage` rather than the
 form controller, so `populate` has to write the shared sections onto every page itself.
 
-## Workflow
+## Workflow -- the model half; [`@forms/workflow`](../workflow/CLAUDE.md) is the other half
 
-A form declares the rules its reports move by as an `IWorkflow` on the form model: `transitions` keyed by id, and `locks`
-keyed by status. It works off the closed `FormStatus` union -- a workflow does not invent statuses -- and `CitationForm`
-and `CrashForm` each carry a preset (`citationWorkflow`, `crashWorkflow`) that a jurisdiction overrides with
-`preset.with({ id, locks, transitions })`: the same as the preset except for what it is given, a lock or a transition
-replacing the preset's under the same key. `defineWorkflow` freezes what it makes, since one workflow is shared by every
-form of its family, and refuses a transition made from no status.
+This package owns only the **data** and the generic primitives a workflow's `locks` call into; **interpreting** a
+workflow -- which transitions a form can make now, and what making one changes -- is `@forms/workflow`'s
+`WorkflowService`, one level above core. `FormModel` used to do both (`getTransitions`, `transition`,
+`restoreWorkflow`, a private `applyLocks`), but that bloated the model with logic that only ever mattered to a form
+that had a workflow, so it moved out. Nothing here calls into `@forms/workflow` -- core has no dependency the other
+way -- the service is simply handed a form and reads its `workflow` off it.
+
+A form declares the rules its reports move by as an `IWorkflow` on the form model: `transitions` keyed by id, and
+`locks` keyed by status. It works off the closed `FormStatus` union -- a workflow does not invent statuses -- and
+`citationWorkflow`/`crashWorkflow`/`warningWorkflow` are presets a concrete form assigns to its own `workflow`
+directly (**not** inherited from `CitationForm`/`CrashForm`/`WarningForm` -- see `packages/forms/CLAUDE.md`'s
+"Conventions that hold everywhere"), as-is or overridden with `preset.with({ id, locks, transitions })`: the same as
+the preset except for what it is given, a lock or a transition replacing the preset's under the same key.
+`defineWorkflow` freezes what it makes, since one workflow can be shared by more than one form, and refuses a
+transition made from no status.
 
 A transition names the statuses it is made `from`, the `mode` the form must be in (the capacity the user acts in --
 roles are deliberately not modelled, so the host still picks the mode), the `to` status, the bootstrap `icon` its
 button shows (required -- its button carries no text, so a transition has to pick one), an optional `effect` run on
 the form as it moves, and optional `guards` (today two, opposites of each other: `"hasOpenComments"` and
-`"noOpenComments"`).
-`form.getTransitions()` lists what can be made now, and `form.transition(id, by, { issues, note?, openComments?, at? })`
-makes one, returning the new form. It **throws** unless the transition exists, the form is in a `from` status and the
-right mode, **the validation result holds no error** (warnings do not count, and there is no exception for Reject), and
-whatever guard the transition names holds -- `hasOpenComments` needs at least one comment open (Reject), `noOpenComments`
-needs none (resubmitting a rejected crash report, so the officer must resolve every comment first). The model is *told*
-the validation result and the open-comment count rather than finding them itself --
-it cannot see the rules controller or the review controller -- so a caller has to validate first. Each transition
-appends `{ transition, from, to, at, by, note? }` to `form.history`, and `extractData` stamps `{ id, version, history }`
-into the record as `workflow`.
+`"noOpenComments"`). `WorkflowService.getTransitions(form)` lists what can be made now, and
+`WorkflowService.transition(form, id, by, { issues, note?, openComments?, at? })` makes one, returning the new form.
+It **throws** unless the transition exists, the form is in a `from` status and the right mode, **the validation
+result holds no error** (warnings do not count, and there is no exception for Reject), and whatever guard the
+transition names holds -- `hasOpenComments` needs at least one comment open (Reject), `noOpenComments` needs none
+(resubmitting a rejected crash report, so the officer must resolve every comment first). The service is *told* the
+validation result and the open-comment count rather than finding them itself -- it cannot see the rules controller
+or the review controller -- so a caller has to validate first. Each transition appends `{ transition, from, to, at,
+by, note? }` to `form.history`, and `FormModel.extractData` stamps `{ id, version, history }` into the record as
+`workflow` -- that stamping stays here, since it only reads `form.history`/`form.workflow`, both plain data.
 
 A `lock` is a function `(form) => form` run when a form takes the status **and again when a record in that status is
-loaded** -- `populate` restores `status` and `workflow` from `IPopulateData` after the mapper, and a status that is not
-in the union throws. Three primitives close things without a mode change:
+loaded**. Loading is `WorkflowService.restoreWorkflow(form, status, stamp)` now, called as an explicit step after
+`populate` -- `populate` itself no longer restores `status`/`workflow` or applies any lock, since that is
+interpretation, not mapping. Three primitives close things without a mode change, and stay here since they are
+generic form capabilities a lock function calls into rather than workflow-specific themselves:
 
 - `lockSection(definition)` disables the section's fields on every page, and on any page added later.
 - `lockPageSet(definition)` closes the structure only: `addPage` and `removePage` throw, and the fields are untouched.
@@ -397,8 +408,8 @@ as `yarn test`.
   back: a rejected report is edited again by *loading* it (the fresh form is editable, and its status is restored).
 - `form.addPage` / `removePage` throw for a locked page set, so a caller gates on `isPageSetLocked` before offering the
   affordance rather than relying on the throw. `FormController.addPage` therefore rejects for one.
-- `transition` does not save, validate or comment anything; it is a pure function of the form and what it is told. The
-  ordering of validate, save the candidate, then apply belongs to the caller.
+- `WorkflowService.transition` does not save, validate or comment anything; it is a pure function of the form and
+  what it is told. The ordering of validate, save the candidate, then apply belongs to the caller.
 - `FormController.addPage` copies `isEnabled` only for a page definition's **shared** sections, so after
   `setMode("viewable")` (or `"reviewable"`) a newly added page arrives with its non-shared sections enabled.
 - `CompositeRule.getPageDefinition()` answers with its *first* rule's page definition, so a group spanning two page

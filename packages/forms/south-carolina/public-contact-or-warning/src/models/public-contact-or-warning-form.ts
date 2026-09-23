@@ -1,4 +1,4 @@
-import { IForm, FormModel, PageCollection, PageDefinition, WarningForm } from "@forms/core";
+import { warningWorkflow, IForm, IWorkflow, FormModel, PageCollection, PageDefinition, WarningForm } from "@forms/core";
 
 import { CATALOG_IDENTITY } from "../module";
 import type { PublicContactOrWarningFormSchema } from "./public-contact-or-warning-form-schema";
@@ -22,6 +22,7 @@ export class PublicContactOrWarningFormModel extends WarningForm<IPublicContactO
 
     public readonly mapper: PublicContactOrWarningMapper = new PublicContactOrWarningMapper();
     public readonly valueListIds: ReadonlyArray<string> = publicContactOrWarningValueLists.map(definition => definition.id);
+    public readonly workflow: IWorkflow = warningWorkflow;
 
     private schema: PublicContactOrWarningFormSchema = FormModel.getSchema<PublicContactOrWarningFormSchema>(PublicContactOrWarningFormModel);
     public readonly recordPage: PageDefinition<RecordPageModel> = this.schema.recordPage;

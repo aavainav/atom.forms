@@ -7,6 +7,7 @@ import { ControllerManager, defineWorkflow, FormDefinition, FormModel, RuleIssue
 import type { IActor, IReportData, IRuleIssue } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
+import { IWorkflowService, WorkflowService } from "@forms/workflow";
 import type { IServiceCollection } from "@shrub/core";
 
 import { WorkflowActions } from "../../src/components/workflow/workflow-actions";
@@ -64,7 +65,8 @@ async function mount(options: IMountOptions = {}) {
         [IModalService, { showConfirmModal }],
         [INotificationService, { showNotification }],
         [IReportViewerService, { canSaveForm: () => canSave, saveForm }],
-        [IValidationService, { validate }]
+        [IValidationService, { validate }],
+        [IWorkflowService, new WorkflowService()]
     ]);
     const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
     const container = document.createElement("div");

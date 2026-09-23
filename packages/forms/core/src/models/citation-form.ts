@@ -43,7 +43,6 @@ export const citationWorkflow: IWorkflow = defineWorkflow({
  */
 export abstract class CitationForm<TData extends object> extends FormModel<TData> implements ICitationForm {
     readonly type: FormType = "citation";
-    readonly workflow: IWorkflow = citationWorkflow;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();

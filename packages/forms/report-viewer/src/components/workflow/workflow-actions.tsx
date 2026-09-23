@@ -3,6 +3,7 @@ import { useService } from "@common/react";
 import { getAuditController } from "@forms/audit";
 import { useForm, IActor, IAvailableTransition, IControllerManager, FButton, FFormHeader, FGrid, FIcon, FormModel, FTooltip, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import { getReviewController, useReviewComments } from "@forms/review";
+import { IWorkflowService } from "@forms/workflow";
 
 import { IModalService, INotificationService, IReportViewerDataManager, IReportViewerService } from "../../services";
 import { IValidationService } from "../../services/validation";
@@ -31,6 +32,7 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
     const validationService = useService<IValidationService>(IValidationService);
+    const workflowService = useService<IWorkflowService>(IWorkflowService);
 
     const formController = controllers.getFormController();
     const review = getReviewController(controllers);
@@ -64,7 +66,7 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
         let next: FormModel<any>;
 
         try {
-            next = formController.form.transition(id, by, { issues, openComments: review.openCount });
+            next = workflowService.transition(formController.form, id, by, { issues, openComments: review.openCount });
         }
         catch (error) {
             notifyFailure(error instanceof Error ? error.message : `${transition.title} could not be made.`);
@@ -128,7 +130,7 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
                         </FTooltip>
                     </div>
                 )}
-                {form.workflow && <FWorkflowActions transitions={form.getTransitions()} openComments={review.openCount} user={user} onSelect={handleSelect} />}
+                {form.workflow && <FWorkflowActions transitions={workflowService.getTransitions(form)} openComments={review.openCount} user={user} onSelect={handleSelect} />}
             </FFormHeader>
         </FGrid>
     );

@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { RuleIssueCollection } from "@forms/core";
 import type { IActor } from "@forms/core";
+import { WorkflowService } from "@forms/workflow";
 
 import { PublicContactOrWarningFormModel } from "../../src/models/public-contact-or-warning-form";
 import { createForm } from "../fixtures/form";
 
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 const noIssues = new RuleIssueCollection();
+const service = new WorkflowService();
 
 describe("the public contact or warning form", () => {
     let form: PublicContactOrWarningFormModel;
@@ -20,7 +22,7 @@ describe("the public contact or warning form", () => {
     });
 
     it("lets an officer issue it", () => {
-        expect(form.getTransitions().map(available => available.id)).toEqual(["issue"]);
+        expect(service.getTransitions(form).map(available => available.id)).toEqual(["issue"]);
     });
 
     it("keeps the workflow in its record", () => {
@@ -31,7 +33,7 @@ describe("the public contact or warning form", () => {
         let issued: PublicContactOrWarningFormModel;
 
         beforeEach(() => {
-            issued = form.transition("issue", officer, { issues: noIssues });
+            issued = service.transition(form, "issue", officer, { issues: noIssues });
         });
 
         it("is in the issued status, and closed to further editing", () => {
@@ -40,7 +42,7 @@ describe("the public contact or warning form", () => {
         });
 
         it("has no transition left to make", () => {
-            expect(issued.getTransitions()).toEqual([]);
+            expect(service.getTransitions(issued)).toEqual([]);
         });
 
         it("records who issued it in the history the record carries", () => {

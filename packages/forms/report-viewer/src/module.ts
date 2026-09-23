@@ -4,6 +4,7 @@ import { FormCatalogModule } from "@forms/catalog";
 import { PrintingModule } from "@forms/printing";
 import { ValueListsModule } from "@forms/value-lists";
 import { ViolationsModule } from "@forms/violations";
+import { WorkflowModule } from "@forms/workflow";
 import { IModule, IModuleConfigurator, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
 import {
@@ -33,7 +34,7 @@ import {
  */
 export class ReportViewerModule implements IModule {
     readonly name = "report-viewer";
-    readonly dependencies = [AuditModule, FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule];
+    readonly dependencies = [AuditModule, FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule, WorkflowModule];
 
     configureServices(registration: IServiceRegistration): void {
         registration.register<IModalService, ModalService>(IModalService, ModalService);

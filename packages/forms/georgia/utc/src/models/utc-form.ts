@@ -1,4 +1,4 @@
-import { BooleanFieldModel, CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { citationWorkflow, IForm, IWorkflow, BooleanFieldModel, CitationForm, FieldDefinition, FormModel, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { CATALOG_IDENTITY } from "../module";
 import { IGAUTCData, GAUTCMapper } from "../mapping";
 import { gaUtcValueLists } from "../value-lists";
@@ -39,6 +39,7 @@ export class GAUTCFormModel extends CitationForm<IGAUTCData> implements IGAUTCFo
     public readonly mapper: GAUTCMapper = new GAUTCMapper();
     public readonly valueListIds: ReadonlyArray<string> = gaUtcValueLists.map(definition => definition.id);
     public readonly violationListId: string = GAUTCValueViolationListId.violation;
+    public readonly workflow: IWorkflow = citationWorkflow;
 
     private schema: GAUTCFormSchema = FormModel.getSchema<GAUTCFormSchema>(GAUTCFormModel);
 

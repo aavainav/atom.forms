@@ -39,7 +39,6 @@ export const warningWorkflow: IWorkflow = defineWorkflow({
  */
 export abstract class WarningForm<TData extends object> extends FormModel<TData> implements IWarningForm {
     readonly type: FormType = "warning";
-    readonly workflow: IWorkflow = warningWorkflow;
 
     public async initialize(): Promise<this> {
         const form = await super.initialize();

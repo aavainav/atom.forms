@@ -1,4 +1,4 @@
-import { CrashForm, FieldDefinition, FormModel, ICrash, IForm, NumberFieldModel, PageCollection, PageDefinition, StringFieldModel } from "@forms/core";
+import { crashWorkflow, ICrash, IForm, IWorkflow, CrashForm, FieldDefinition, FormModel, NumberFieldModel, PageCollection, PageDefinition, StringFieldModel } from "@forms/core";
 import { CATALOG_IDENTITY } from "../module";
 import { ITR310Data, TR310Mapper } from "../mapping";
 import { tr310ValueLists } from "../value-lists";
@@ -51,6 +51,7 @@ export class TR310FormModel extends CrashForm<ITR310Data> implements ITR310FormM
 
     public readonly mapper: TR310Mapper = new TR310Mapper();
     public readonly valueListIds: ReadonlyArray<string> = tr310ValueLists.map(definition => definition.id);
+    public readonly workflow: IWorkflow = crashWorkflow;
 
     private schema: TR310FormSchema = FormModel.getSchema<TR310FormSchema>(TR310FormModel);
 

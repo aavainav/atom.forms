@@ -15,6 +15,7 @@ task recipes; open that one rather than reading the package's source to orient.
 | [printing/](printing/) | `@forms/printing` | Printing a form as one of the copies it publishes. Owns the print copies, the print dialog and the `@page` rules; no PDF library. |
 | [audit/](audit/) | `@forms/audit` | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never values. |
 | [review/](review/) | `@forms/review` | A reviewer's comments on a report -- on the form, a page, a section or a field -- and where in a form each belongs. A controller and its types, plus the markers, thread modal and panel that show them, which the report viewer mounts. |
+| [workflow/](workflow/) | `@forms/workflow` | Interprets a form's `workflow`: which transitions it can make now, and what making one changes (validating, applying an effect, appending history, applying the lock its new status carries). One `WorkflowService`, no controller -- everything is a pure function of the form it is given. The workflow *data* (`IWorkflow`, `defineWorkflow`, the family presets) stays in `@forms/core`; this package is only the logic that interprets it. |
 | [workbench/](workbench/) | `@forms/workbench` | Standalone app host: react root, router creation, the root and not-found routes, bootstrapper. Knows nothing about forms. |
 | [south-carolina/s438/](south-carolina/s438/) | `@forms/s438` | SC S438 UTT citation form. |
 | [south-carolina/public-contact-or-warning/](south-carolina/public-contact-or-warning/) | `@forms/public-contact-or-warning` | SC Form 432 public contact / warning. |
@@ -28,10 +29,10 @@ and nothing in this repo depends on it except a host:
 
 ```
                        report-viewer
-                    ↙   ↓      ↓    ↘      ↘
-          catalog  value-lists  violations  printing  audit  review
-              ↑         ↑           ↑          ↑
-              └─────────┴───────────┴──────────┴──── form packages (south-carolina/*, oklahoma/*, georgia/*)
+                    ↙   ↓      ↓    ↘      ↘      ↘
+          catalog  value-lists  violations  printing  audit  review  workflow
+              ↑         ↑           ↑          ↑                        ↑
+              └─────────┴───────────┴──────────┴────────────────────────┴─ form packages (south-carolina/*, oklahoma/*, georgia/*)
                                   ↓
                                 core                        workbench → (react, react-router) only
 ```
@@ -47,6 +48,13 @@ controller that registers itself with core. No form package depends on it.
 
 `review` is the same again, but exports components rather than a hook: the markers over a form and the panel beside
 it, which the report viewer mounts. Like `audit`, it depends on core alone and no form package depends on it.
+
+`workflow` depends on core alone too, but is reached from two directions rather than one: `report-viewer` depends on
+it for real, calling `WorkflowService` to interpret whatever `IWorkflow` a loaded form carries, while every
+citation/crash/warning form package depends on it only in its own tests, to exercise its `workflow` constant
+(`citationWorkflow`, `crashWorkflow`, `warningWorkflow` -- all `@forms/core` data) through the real service rather
+than each test file reimplementing transition logic. No form package's `src/` reaches for it: a form only declares
+*which* workflow it carries (`readonly workflow: IWorkflow = citationWorkflow;`, say), never how to interpret one.
 
 `workbench` is off to the side: it hosts a react app, owns the router and the root/not-found routes, and knows
 nothing about forms at all. A host that already has a router skips it and renders `<ReportViewer />` directly.
@@ -79,6 +87,12 @@ in one is a change in all three in the same places.
   assigns it to its own `name`/`description`/`version`. `module.ts` registers the catalog item (mapper inline) from
   that same constant — so the identity `extractData` stamps a saved report with is the same one the catalog resolves
   it by. Never write a form's name or version as a literal anywhere else.
+- **A form's `workflow` is declared directly on the concrete model**, not inherited from `CitationForm`/`CrashForm`/
+  `WarningForm` — those family base classes contribute behavior (`setDateOfViolation` and the like) and a `type`,
+  but not a workflow. Assign the family preset (`citationWorkflow`, `crashWorkflow`, `warningWorkflow`, all from
+  `@forms/core`) as-is, or `.with({...})` it for a jurisdiction that closes differently, the way `S438FormModel`
+  does. Interpreting a workflow — which transitions it offers now, what making one changes — is
+  [`@forms/workflow`](workflow/)'s job, not the model's.
 - **A form package registers a catalog item and nothing else.** No route, no loader component, no data
   reader/writer. Routing is the host's, and so is the record: the host renders
   `<ReportViewer identity={…} dataManager={…} />` from whatever route it likes.

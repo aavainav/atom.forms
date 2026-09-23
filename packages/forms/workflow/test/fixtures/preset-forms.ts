@@ -1,8 +1,5 @@
-import type { ICrash } from "../../src/mapping/data/crash";
-import { CitationForm } from "../../src/models/citation-form";
-import { CrashForm } from "../../src/models/crash-form";
-import { DefinitionFactory } from "../../src/models/definition-factory";
-import { withChanges } from "../../src/utils/clone";
+import { citationWorkflow, crashWorkflow, withChanges, CitationForm, CrashForm, DefinitionFactory } from "@forms/core";
+import type { ICrash, IWorkflow } from "@forms/core";
 
 /**
  * The two abstract families a jurisdiction's form is built from, each made concrete over no pages at all, since what
@@ -12,6 +9,7 @@ import { withChanges } from "../../src/utils/clone";
  * As with every fixture, each form is its own class and its definition is built once, here, at module scope.
  */
 export class PresetCitationForm extends CitationForm<any> {
+    public readonly workflow: IWorkflow = citationWorkflow;
     public readonly stamped: ReadonlyArray<string> = [];
 
     public setDateOfViolation(): this { return this; }
@@ -22,6 +20,8 @@ export class PresetCitationForm extends CitationForm<any> {
 }
 
 export class PresetCrashForm extends CrashForm<any> {
+    public readonly workflow: IWorkflow = crashWorkflow;
+
     public getCrashData(): ICrash { return {} as ICrash; }
     public setCrashNumber(): this { return this; }
     public setDateOfCrash(): this { return this; }

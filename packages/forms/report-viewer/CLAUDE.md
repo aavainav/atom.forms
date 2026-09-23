@@ -3,9 +3,10 @@
 **The top of the stack and the only part of it a host app renders.** A host names a form and hands over its data;
 this package resolves the catalog item, builds the form model, populates it, mounts the options and panels the form
 offers, and renders it. Depends on `@forms/audit`, `@forms/catalog`, `@forms/core`, `@forms/value-lists`,
-`@forms/violations`, `@forms/printing`, `@forms/review`.
+`@forms/violations`, `@forms/printing`, `@forms/review`, `@forms/workflow`.
 
-Module dependencies: `AuditModule`, `FormCatalogModule`, `ValueListsModule`, `ViolationsModule`, `PrintingModule`.
+Module dependencies: `AuditModule`, `FormCatalogModule`, `ValueListsModule`, `ViolationsModule`, `PrintingModule`,
+`WorkflowModule`.
 
 It depends on every package whose capability it offers rather than letting them register into it. That direction is
 the point: a form package, a violation list and a print copy all exist without a viewer, while a viewer is not much
@@ -14,8 +15,8 @@ even the workbench.
 
 ```
                 report-viewer          ← what a host app renders
-                 ↙   ↓   ↓   ↘   ↘
-      catalog  value-lists  violations  printing  audit  review
+                 ↙   ↓   ↓   ↘   ↘   ↘
+      catalog  value-lists  violations  printing  audit  review  workflow
 ```
 
 ## The whole API
@@ -92,12 +93,13 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
   down to `FormModel.populate`, rather than being split into separate parameters partway through. A field the
   mapper has not wired up for locking (see `FormMapper.write` in `@forms/core`) stays editable regardless of being
   marked.
-- **`status` and `workflow` come back with the record too, and take effect when the form is populated.** `status` is the
-  status the record was stored with and `workflow` its `{ id, version, history }` stamp -- both are already in what
-  `write` was given (`extractData` stamps them), so a host that stores the whole record can hand `saved.status` and
-  `saved.workflow` straight back. `populate` restores them after the mapper, so the lock the status carries (an issued
-  citation's, a submitted crash report's) is applied again on load, and a status a form cannot have rejects the load.
-  Without them the form keeps the status it was built with, `draft`.
+- **`status` and `workflow` come back with the record too, and take effect after the form is populated.** `status` is
+  the status the record was stored with and `workflow` its `{ id, version, history }` stamp -- both are already in
+  what `write` was given (`extractData` stamps them), so a host that stores the whole record can hand `saved.status`
+  and `saved.workflow` straight back. `FormModel.populate` no longer restores them itself -- see *Workflow* below --
+  `loadForm` calls `IWorkflowService.restoreWorkflow(form, result.status, result.workflow)` right after populating,
+  so the lock the status carries (an issued citation's, a submitted crash report's) is applied again on load, and a
+  status a form cannot have rejects the load. Without them the form keeps the status it was built with, `draft`.
 - **The audit history and the comments come in with the record, in the one `read()` object, and go out through
   separate writes.** They are the host's to keep beside the record and never part of `write`'s data, and each changes
   on its own clock: the record on Save, the comments on every change, the audit as records are raised. So each has its
@@ -125,7 +127,10 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
 2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages.
 3. `await dataManager?.read(reason)`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
    decides for itself whether it has a mapper to run (awaited either way, since a repeating-page mapper must create
-   pages, which is async; a form with no mapper just returns itself unchanged).
+   pages, which is async; a form with no mapper just returns itself unchanged) -- then
+   `form = workflowService.restoreWorkflow(form, result.status, result.workflow)`, the explicit second step that
+   restores the record's status and workflow history and applies the lock its status carries. Safe to call
+   unconditionally, even for a form with no workflow: see [`@forms/workflow`](../workflow/CLAUDE.md#restoreworkflow--the-two-step-load).
 4. → `IInitialForm { audit?, catalogItem, comments?, form, Component }`: the audit history and the comments the read
    returned ride along, and `ReportViewerForm` loads them onto the controllers.
 
@@ -214,9 +219,9 @@ there and the orchestration -- including Save's -- stays here.
   the live form (`useForm(formController)`) and the review controller's open-comment count, and renders
   `<FFormHeader title={form.name} subtitle={toWords(form.status)}>` around a Save button (own markup, gated on
   `reportViewerService.canSaveForm(form, dataManager)`, independent of `form.workflow`) and
-  `<FWorkflowActions ... />` (gated on `form.workflow`, and supplied `onSelect` with the orchestration below).
-  `IValidationService`, `IModalService`, `INotificationService` and `@forms/audit`/`@forms/review` all stay here,
-  one level above core.
+  `<FWorkflowActions ... />` (gated on `form.workflow`, its `transitions` prop from `IWorkflowService.getTransitions`,
+  and supplied `onSelect` with the orchestration below). `IValidationService`, `IModalService`, `INotificationService`,
+  `IWorkflowService` (`@forms/workflow`) and `@forms/audit`/`@forms/review` all stay here, one level above core.
 
 ### Icons, not text
 
@@ -228,8 +233,8 @@ Save keeps the `"floppy"` icon it always had.
 
 ### Making a transition
 
-`FWorkflowActions` follows the form as it moves (`form.getTransitions()`: its status and its mode both match).
-**Who acts is the host's to say, through the mode** -- the officer's session is `"editable"`, the reviewer's
+`FWorkflowActions` follows the form as it moves (`workflowService.getTransitions(form)`: its status and its mode
+both match). **Who acts is the host's to say, through the mode** -- the officer's session is `"editable"`, the reviewer's
 `"reviewable"` -- and `WorkflowActions` is handed `settings.user` as `user`, which is who a change is attributed to.
 A report reaches the viewer in one status and leaves in another, **moved once**: a report that takes several people
 is opened again for each, and the host keeps it between times. After a move the form usually closes (its lock), so
@@ -240,8 +245,8 @@ Clicking one, in order:
 1. **validate**, through `IValidationService.validate` -- an error stops it with a notification and the issues panel open;
    a warning does not.
 2. **confirm** in a modal saying where the status is going.
-3. **build the candidate**, `form.transition(id, user, { issues, openComments })`, which is pure. The model throws if it
-   cannot be made; that is shown as a notification and nothing is saved.
+3. **build the candidate**, `workflowService.transition(form, id, user, { issues, openComments })`, which is pure.
+   It throws if the transition cannot be made; that is shown as a notification and nothing is saved.
 4. **save the candidate**, through `saveForm`, when the form can be saved at all. A failure records `save-failed`,
    notifies, and leaves the form on screen untouched.
 5. **apply it**, `update(() => candidate.clean())`, and only then record `saved`.

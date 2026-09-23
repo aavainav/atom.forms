@@ -6,6 +6,7 @@ import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData,
 import type { IWorkflowStamp } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
+import { WorkflowService } from "@forms/workflow";
 
 import { IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
 
@@ -72,7 +73,7 @@ function createService(catalogItem: IFormCatalogItem): ReportViewerService {
         getLatestVersions: async () => new Map([[catalogItem.name, catalogItem]])
     };
 
-    return new ReportViewerService(formCatalogService);
+    return new ReportViewerService(formCatalogService, new WorkflowService());
 }
 
 describe("ReportViewerService", () => {

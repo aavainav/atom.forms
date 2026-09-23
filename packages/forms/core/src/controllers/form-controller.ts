@@ -9,11 +9,40 @@ import { PageDefinition } from "../models/page-definition";
 import { PageModel } from "../models/page";
 import { SectionDefinition } from "../models/section-definition";
 import { SectionModel } from "../models/section";
+import type { UpdateReason } from "../models/update-reason";
 
 import { Mutable } from "../utils/mutable";
 
 /** Asked before a page is removed; resolve false to cancel the removal. */
 export type ConfirmPageDelete = (page: PageModel) => Promise<boolean>;
+
+/**
+ * What a section update needs: how to compute the new section, and optionally why. `update` is declared with method
+ * shorthand rather than as an arrow-typed property, so it keeps the bivariant parameter checking a plain method gets --
+ * without it, a binding for a specific section subclass would stop being assignable to the general SectionModel one.
+ */
+export interface ISectionUpdateOptions<TSection extends SectionModel> {
+    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
+    readonly reason?: UpdateReason;
+    /** Computes the new section from its current state. Compute from the argument, not a section captured during render -- that snapshot may already be stale. */
+    update(section: TSection): TSection;
+}
+
+/** What a page update needs: how to compute the new page, and optionally why. See `ISectionUpdateOptions` for why `update` uses method shorthand. */
+export interface IPageUpdateOptions<TPage extends PageModel> {
+    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
+    readonly reason?: UpdateReason;
+    /** Computes the new page from its current state. */
+    update(page: TPage): TPage;
+}
+
+/** What a form update needs: how to compute the new form, and optionally why. See `ISectionUpdateOptions` for why `update` uses method shorthand. */
+export interface IFormUpdateOptions<TForm extends FormModel<any>> {
+    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
+    readonly reason?: UpdateReason;
+    /** Computes the new form from its current state; returning the form unchanged raises nothing. */
+    update(form: TForm): TForm;
+}
 
 /** Binds a single section within a page, so its values can be read and written without knowing where it sits in the form. */
 export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
@@ -24,7 +53,7 @@ export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
     /** Sets a single field's value. */
     setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void;
     /** Applies a change computed from the section's current state. Compute from the argument, not a section captured during render -- that snapshot may already be stale. */
-    update(update: (section: TSection) => TSection): void;
+    update(options: ISectionUpdateOptions<TSection>): void;
 }
 
 /** Binds a single page instance, identified by its id so it survives other pages being added or removed. */
@@ -43,7 +72,7 @@ export interface IPageBinding<TPage extends PageModel = PageModel> {
     /** Whether the form has locked the section, closing its fields and anything that would write to them. */
     isSectionLocked(sectionDefinition: SectionDefinition): boolean;
     /** Applies a change computed from the page's current state. */
-    update(update: (page: TPage) => TPage): void;
+    update(options: IPageUpdateOptions<TPage>): void;
 }
 
 /** Defines the controller that owns the current form model and is the single path through which every edit is applied. */
@@ -51,7 +80,7 @@ export interface IFormController<TForm extends FormModel<any> = FormModel<any>> 
     /** The form as it currently stands. A new instance replaces it on every edit, after which `onChanged` is raised. */
     readonly form: TForm;
 
-    
+
     /** Creates, initializes and appends a page for the given definition. */
     addPage(pageDefinition: PageDefinition): Promise<void>;
     /** Gets the binding for a single page instance. */
@@ -63,7 +92,7 @@ export interface IFormController<TForm extends FormModel<any> = FormModel<any>> 
     /** Replaces the form outright. Prefer `update` so the change is computed from the current form rather than a captured one. */
     setForm(form: TForm): void;
     /** Replaces the form with the result of the update; returning the form unchanged raises nothing. */
-    update(update: (form: TForm) => TForm): void;
+    update(options: IFormUpdateOptions<TForm>): void;
 }
 
 /**
@@ -111,11 +140,11 @@ class SectionBinding<TSection extends SectionModel> implements ISectionBinding<T
     }
 
     public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
-        this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
+        this.update({ update: section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)) });
     }
 
-    public update(update: (section: TSection) => TSection): void {
-        this.page.update(page => page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
+    public update({ reason, update }: ISectionUpdateOptions<TSection>): void {
+        this.page.update({ update: page => page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))), reason });
     }
 }
 
@@ -133,20 +162,23 @@ class SharedSectionBinding<TSection extends SectionModel> implements ISectionBin
     }
 
     public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
-        this.update(section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)));
+        this.update({ update: section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)) });
     }
 
-    public update(update: (section: TSection) => TSection): void {
-        this.controller.update(form => {
-            const pageDefinition = this.page.pageDefinition;
-            let pageCollection = form.get<PageCollection>(pageDefinition);
+    public update({ reason, update }: ISectionUpdateOptions<TSection>): void {
+        this.controller.update({
+            update: form => {
+                const pageDefinition = this.page.pageDefinition;
+                let pageCollection = form.get<PageCollection>(pageDefinition);
 
-            for (let index = 0; index < pageCollection.pages.length; index++) {
-                const page = pageCollection.pages[index];
-                pageCollection = pageCollection.replace(index, page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
-            }
+                for (let index = 0; index < pageCollection.pages.length; index++) {
+                    const page = pageCollection.pages[index];
+                    pageCollection = pageCollection.replace(index, page.set(this.sectionDefinition, update(page.get<TSection>(this.sectionDefinition))));
+                }
 
-            return form.set(pageDefinition, pageCollection);
+                return form.set(pageDefinition, pageCollection);
+            },
+            reason
         });
     }
 }
@@ -193,17 +225,20 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
         return this.controller.form.isSectionLocked(sectionDefinition);
     }
 
-    public update(update: (page: TPage) => TPage): void {
-        this.controller.update(form => {
-            const pageCollection = form.get<PageCollection>(this.pageDefinition);
-            const index = pageCollection.indexOfPage(this.pageId);
+    public update({ reason, update }: IPageUpdateOptions<TPage>): void {
+        this.controller.update({
+            update: form => {
+                const pageCollection = form.get<PageCollection>(this.pageDefinition);
+                const index = pageCollection.indexOfPage(this.pageId);
 
-            // the page can be removed while a handler is still in flight, such as an async drop; dropping the edit is correct
-            if (index < 0) {
-                return form;
-            }
+                // the page can be removed while a handler is still in flight, such as an async drop; dropping the edit is correct
+                if (index < 0) {
+                    return form;
+                }
 
-            return form.set(this.pageDefinition, pageCollection.replace(index, update(pageCollection.pages[index] as TPage)));
+                return form.set(this.pageDefinition, pageCollection.replace(index, update(pageCollection.pages[index] as TPage)));
+            },
+            reason
         });
     }
 }
@@ -214,6 +249,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
 
     private readonly confirmDeletePage?: ConfirmPageDelete;
     private _form?: TForm;
+    private notify?: (payload: { form: TForm; reason?: UpdateReason }) => void;
 
     get form(): TForm {
         if (!this._form) {
@@ -231,7 +267,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     public async addPage(pageDefinition: PageDefinition): Promise<void> {
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         const page = await pageDefinition.createPage(this.form).initialize();
-        this.update(form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition));
+        this.update({ update: form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition) });
     }
 
     public getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage> {
@@ -267,10 +303,12 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
             return false;
         }
 
-        this.update(form => {
-            // the collection is resolved again because it may have changed while the confirmation was open
-            const index = form.get<PageCollection>(pageDefinition).indexOfPage(pageId);
-            return index < 0 ? form : form.removePage(index, pageDefinition);
+        this.update({
+            update: form => {
+                // the collection is resolved again because it may have changed while the confirmation was open
+                const index = form.get<PageCollection>(pageDefinition).indexOfPage(pageId);
+                return index < 0 ? form : form.removePage(index, pageDefinition);
+            }
         });
 
         this.bindings.delete(this.getBindingKey(pageDefinition, pageId));
@@ -283,10 +321,15 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     }
 
     public setForm(form: TForm): void {
-        this.update(() => form);
+        this.update({ update: () => form });
     }
 
-    public update(update: (form: TForm) => TForm): void {
+    /** Wired by the manager once, right after this controller is created -- not part of the public interface. */
+    public setNotifier(notify: (payload: { form: TForm; reason?: UpdateReason }) => void): void {
+        this.notify = notify;
+    }
+
+    public update({ reason, update }: IFormUpdateOptions<TForm>): void {
         const current = this.form;
         const form = update(current);
 
@@ -296,6 +339,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
         }
 
         this._form = form;
+        this.notify?.({ form, reason });
         this.emitChanged();
     }
 

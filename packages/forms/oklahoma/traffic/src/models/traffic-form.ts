@@ -1,4 +1,4 @@
-import { CitationForm, FieldDefinition, FormModel, IForm, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
+import { citationWorkflow, IForm, IWorkflow, CitationForm, FieldDefinition, FormModel, PageCollection, PageDefinition, SectionDefinition, SectionModel, StringFieldModel } from "@forms/core";
 import { CATALOG_IDENTITY } from "../module";
 import { IOKTrafficData, OKTrafficMapper } from "../mapping";
 import { okTrafficValueLists } from "../value-lists";
@@ -38,6 +38,7 @@ export class OKTrafficFormModel extends CitationForm<IOKTrafficData> implements 
     public readonly mapper: OKTrafficMapper = new OKTrafficMapper();
     public readonly valueListIds: ReadonlyArray<string> = okTrafficValueLists.map(definition => definition.id);
     public readonly violationListId: string = OKTrafficViolationListId.violation;
+    public readonly workflow: IWorkflow = citationWorkflow;
 
     private schema: OKTrafficFormSchema = FormModel.getSchema<OKTrafficFormSchema>(OKTrafficFormModel);
 

@@ -3,6 +3,7 @@ import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
 import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
 import { getReviewController, IReviewComment } from "@forms/review";
+import { IWorkflowService } from "@forms/workflow";
 import { createService, Singleton } from "@shrub/core";
 
 export type ReadReason = "open" | "new";
@@ -141,7 +142,9 @@ export interface IReportViewerOptionProps extends IReportViewerPanelProps {
 export class ReportViewerService implements IReportViewerService, IReportViewerOptionRegistrationService {
     private readonly options = new Map<string, IReportViewerOption>();
 
-    constructor(@IFormCatalogService private readonly formCatalogService: IFormCatalogService) {
+    constructor(
+        @IFormCatalogService private readonly formCatalogService: IFormCatalogService,
+        @IWorkflowService private readonly workflowService: IWorkflowService) {
     }
 
     canExtractData(form: FormModel<any>): boolean {
@@ -182,6 +185,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
 
         if (result) {
             form = await form.populate(<IPopulateData<IReportData>>result);
+
+            // populate no longer restores a record's status or workflow history itself -- that's the workflow
+            // service's job, run here as an explicit second step so a loaded record arrives with the lock its
+            // status carries already applied. Safe for a form with no workflow too: the service only sets the
+            // status (which the watermark reads regardless) and applies no lock when there is none to apply.
+            form = this.workflowService.restoreWorkflow(form, result.status, result.workflow);
         }
 
         return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), Component: catalogItem.component };

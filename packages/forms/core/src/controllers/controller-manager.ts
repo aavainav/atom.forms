@@ -8,6 +8,7 @@ import { INavigationController } from "./navigation-controller";
 import { IPrintController } from "./print-controller";
 
 import { FormModel } from "../models/form";
+import type { UpdateReason } from "../models/update-reason";
 import { RuleCollection } from "../models/validation/rule-collection";
 import { IRulesController, RulesController } from "../models/validation/rules-controller";
 
@@ -31,6 +32,11 @@ export interface IControllerChangedEventArgs {
 export interface IControllerManager {
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
+    /**
+     * An event raised after any update to the form, naming why it was made when the caller said. Unlike
+     * `onControllerChanged`, this survives the form controller itself being replaced when a different form is loaded.
+     */
+    readonly onFormUpdated: IEvent<{ readonly form: FormModel<any>; readonly reason?: UpdateReason }>;
 
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */
     getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm>;
@@ -66,10 +72,15 @@ export interface IControllerManager {
 
 export class ControllerManager implements IControllerManager {
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
+    private readonly _formUpdated = new EventEmitter<{ form: FormModel<any>; reason?: UpdateReason }>("controller-manager:form-updated");
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
         return this._controllerChanged.event;
+    }
+
+    get onFormUpdated(): IEvent<{ readonly form: FormModel<any>; readonly reason?: UpdateReason }> {
+        return this._formUpdated.event;
     }
 
     public loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm> {
@@ -85,6 +96,11 @@ export class ControllerManager implements IControllerManager {
         }
 
         const controller = this.getController<FormController<TForm>>(ControllerKey.form);
+
+        if (isNewForm) {
+            controller.setNotifier(payload => this._formUpdated.emit(payload));
+        }
+
         controller.load(form);
 
         // created only now, with the form controller in place, so a controller that observes the others can read it

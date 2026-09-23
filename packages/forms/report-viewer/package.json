@@ -25,6 +25,7 @@
         "@forms/review": "1.0.0",
         "@forms/value-lists": "1.0.0",
         "@forms/violations": "1.0.0",
+        "@forms/workflow": "1.0.0",
         "@shrub/core": "0.5.91"
     }
 }

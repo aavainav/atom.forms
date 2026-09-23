@@ -1,6 +1,6 @@
 {
-    "name": "@forms/s438",
-    "description": "The South Carolina S438 UTT citation form.",
+    "name": "@forms/workflow",
+    "description": "The workflow package interprets a form's workflow: which transitions it can make now, and what making one changes.",
     "version": "1.0.0",
     "private": true,
     "main": "dist/index.js",
@@ -11,16 +11,12 @@
         "build": "yarn run build-ts",
         "build-ts": "tsc -b .",
         "clean": "rimraf ./dist && rimraf tsconfig.tsbuildinfo",
-        "generate": "generate-violation-lists --data ./data --out ./src/generated",
         "test": "vitest run",
         "test-types": "tsc -p test/tsconfig.json",
         "test-watch": "vitest"
     },
     "dependencies": {
-        "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
-        "@forms/violations": "1.0.0",
-        "@forms/workbench": "1.0.0",
-        "@forms/workflow": "1.0.0"
+        "@shrub/core": "0.5.91"
     }
 }

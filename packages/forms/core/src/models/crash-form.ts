@@ -42,7 +42,6 @@ export const crashWorkflow: IWorkflow = defineWorkflow({
  */
 export abstract class CrashForm<TData extends object> extends FormModel<TData> implements ICrashForm {
     readonly type: FormType = "crash";
-    readonly workflow: IWorkflow = crashWorkflow;
 
     abstract getCrashData(): ICrash;
     abstract setCrashNumber(): this;
