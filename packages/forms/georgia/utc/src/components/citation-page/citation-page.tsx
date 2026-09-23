@@ -42,7 +42,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolatorDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => gaUtcService.applyViolatorDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => gaUtcService.applyViolatorDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <ViolatorSection binding={binding.getSection(citationPage.violatorSection)} />
             </FDropzone>
@@ -55,7 +55,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
                 // applied rather than inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     gaUtcService.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update({ update: (page) => gaUtcService.applyVehicleDropzone(page, resolved) }));
+                        .then((resolved) => binding.update({ update: (page) => gaUtcService.applyVehicleDropzone(page, resolved), reason: { kind: "drop", type: dropzone.type } }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} />
@@ -67,7 +67,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => gaUtcService.applyViolationDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => gaUtcService.applyViolationDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <OffenseSection binding={binding.getSection(citationPage.offenseSection)} />
             </FDropzone>

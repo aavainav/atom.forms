@@ -20,6 +20,8 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | --- | --- | --- |
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
+| `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming why, comparing before/after -- see below |
+| `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped` |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
 | `workflow-transition` | The form makes a transition of its workflow: `{ transition, from, to, note? }` | Form controller changes, comparing `form.history` |
 | `validated` | The form is validated | Rules controller changing |
@@ -61,6 +63,11 @@ during render, after the form controller. `start()` opens the form and subscribe
   when the form is new to it, and `setForm` raises it on the controller. The audit sees the id change, flushes the old
   form's edits under the old identity, and opens the new one from the state it arrived in. Without the announcement
   it would take the first edit to the new form as its baseline and swallow it.
+- **A drop or a violation names why it happened**, through core's `UpdateReason` -- a dropzone's `onDrop` and a
+  violations service's `apply` pass `reason: { kind: "drop"|"violation", ... }` to `update()`. The manager relays this
+  as `onFormUpdated`, which survives the form controller itself being replaced (`onControllerChanged` alone would not).
+  A named reason skips the quiet period: it is one atomic change, not a burst to coalesce, so it is diffed and raised
+  immediately as `dropped`/`violations-added`, and `fields-edited` finds nothing left to report for it.
 
 ## Getting the records out
 

@@ -37,7 +37,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okParkingService.applyViolationDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okParkingService.applyViolationDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
             </FDropzone>
@@ -52,7 +52,7 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
                 // inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     okParkingService.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update({ update: (page) => okParkingService.applyVehicleDropzone(page, resolved) }));
+                        .then((resolved) => binding.update({ update: (page) => okParkingService.applyVehicleDropzone(page, resolved), reason: { kind: "drop", type: dropzone.type } }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(citationPage.vehicleSection)} />

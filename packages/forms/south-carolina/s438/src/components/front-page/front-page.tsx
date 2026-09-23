@@ -38,28 +38,28 @@ export default function FrontPage({ controllers, binding }: IFrontPageProps): Re
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageViolatorDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyViolatorDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyViolatorDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <ViolatorSection binding={binding.getSection(frontPage.violatorSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" || binding.isSectionLocked(frontPage.violationSection) ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyViolationDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" || binding.isSectionLocked(frontPage.violationSection) ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyViolationDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <ViolationSection binding={binding.getSection(frontPage.violationSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageVehicleDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyVehicleDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyVehicleDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <VehicleSection binding={binding.getSection(frontPage.vehicleSection)} />
             </FDropzone>
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={frontPage.getDropzone(FrontPageOwnerDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyOwnerDropzone(page, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyOwnerDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <OwnerSection binding={binding.getSection(frontPage.ownerSection)} />
             </FDropzone>

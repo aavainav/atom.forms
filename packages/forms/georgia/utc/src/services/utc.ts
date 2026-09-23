@@ -143,7 +143,7 @@ export class GAUTCService implements IGAUTCService {
             });
 
             return form.set(formSchema.citationPage, collection);
-        } });
+        }, reason: { kind: "violation", codes: violations.map(violation => violation.statute ?? violation.code) } });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

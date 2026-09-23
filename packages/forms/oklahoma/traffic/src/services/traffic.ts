@@ -158,7 +158,7 @@ export class OKTrafficService implements IOKTrafficService {
             });
 
             return form.set(formSchema.complaintPage, collection);
-        } });
+        }, reason: { kind: "violation", codes: violations.map(violation => violation.statute ?? violation.code) } });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

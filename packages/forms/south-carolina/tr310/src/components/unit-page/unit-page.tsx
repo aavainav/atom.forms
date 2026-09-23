@@ -44,7 +44,7 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
                 // applied rather than inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     tr310Service.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update({ update: (current) => tr310Service.applyVehicleDropzone(current, resolved) }));
+                        .then((resolved) => binding.update({ update: (current) => tr310Service.applyVehicleDropzone(current, resolved), reason: { kind: "drop", type: dropzone.type } }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(page.vehicleSection)} />
@@ -53,7 +53,7 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageOwnerDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (current) => tr310Service.applyOwnerDropzone(current, dropzone) })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (current) => tr310Service.applyOwnerDropzone(current, dropzone), reason: { kind: "drop", type: dropzone.type } })}
             >
                 <OwnerSection binding={binding.getSection(page.ownerSection)} />
             </FDropzone>

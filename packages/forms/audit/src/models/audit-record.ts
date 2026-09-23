@@ -1,4 +1,4 @@
-import type { IActor, FormMode, FormStatus, PrintLayout } from "@forms/core";
+import type { IActor, DraggableItemType, FormMode, FormStatus, PrintLayout } from "@forms/core";
 
 /** Identifies the form a record is about. */
 export interface IAuditFormIdentity {
@@ -12,6 +12,8 @@ export interface IAuditFormIdentity {
 
 /** Every kind of record and what it carries beyond `at` and `form`. Records name the fields touched, never what they held. */
 export interface IAuditRecordMap {
+    /** A drag-and-drop populated fields, naming what changed. */
+    "dropped": { readonly type: DraggableItemType; readonly fields: ReadonlyArray<string> };
     /** Edits settled. `fields` are data-contract paths, such as `violatorSex` or `additionalViolations[1].violationDescription`. */
     "fields-edited": { readonly fields: ReadonlyArray<string> };
     /** The form was shown, freshly loaded or swapped in. */
@@ -28,6 +30,8 @@ export interface IAuditRecordMap {
     "status-changed": { readonly from: FormStatus; readonly to: FormStatus };
     /** The form was validated. `fields` are the names of the failing fields, without repeats. */
     "validated": { readonly issueCount: number; readonly fields: ReadonlyArray<string> };
+    /** Violations were added from the panel rather than dragged, naming which and what changed. */
+    "violations-added": { readonly codes: ReadonlyArray<string>; readonly fields: ReadonlyArray<string> };
     /** The form made a transition of its workflow. `transition` is the id it is made by, and `note` is what was kept with it. */
     "workflow-transition": { readonly transition: string; readonly from: FormStatus; readonly to: FormStatus; readonly note?: string };
 }

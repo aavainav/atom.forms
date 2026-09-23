@@ -16,11 +16,7 @@ import { Mutable } from "../utils/mutable";
 /** Asked before a page is removed; resolve false to cancel the removal. */
 export type ConfirmPageDelete = (page: PageModel) => Promise<boolean>;
 
-/**
- * What a section update needs: how to compute the new section, and optionally why. `update` is declared with method
- * shorthand rather than as an arrow-typed property, so it keeps the bivariant parameter checking a plain method gets --
- * without it, a binding for a specific section subclass would stop being assignable to the general SectionModel one.
- */
+/** What a section update needs: how to compute the new section, and optionally why. Method shorthand keeps `update` bivariant, so a subclass binding stays assignable to the SectionModel base. */
 export interface ISectionUpdateOptions<TSection extends SectionModel> {
     /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
     readonly reason?: UpdateReason;

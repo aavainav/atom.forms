@@ -32,10 +32,7 @@ export interface IControllerChangedEventArgs {
 export interface IControllerManager {
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
-    /**
-     * An event raised after any update to the form, naming why it was made when the caller said. Unlike
-     * `onControllerChanged`, this survives the form controller itself being replaced when a different form is loaded.
-     */
+    /** Raised after any form update, naming why when the caller said. Unlike `onControllerChanged`, survives the form controller itself being replaced. */
     readonly onFormUpdated: IEvent<{ readonly form: FormModel<any>; readonly reason?: UpdateReason }>;
 
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */

@@ -1,5 +1,6 @@
 import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
 import { IActor, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
+import type { UpdateReason } from "@forms/core";
 
 import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
@@ -58,6 +59,7 @@ export class AuditController extends Controller implements IAuditController {
     private isPrinting = false;
     private listener?: IEventListener;
     private pending: Array<AuditRecord> = [];
+    private updatedListener?: IEventListener;
     private user?: IActor;
     private watched?: IWatchedForm;
 
@@ -78,6 +80,8 @@ export class AuditController extends Controller implements IAuditController {
 
         this.listener?.remove();
         this.listener = undefined;
+        this.updatedListener?.remove();
+        this.updatedListener = undefined;
         this.pending = [];
         this._history = [];
         this._loaded = [];
@@ -124,6 +128,7 @@ export class AuditController extends Controller implements IAuditController {
 
     public start(): void {
         this.listener = this.manager.onControllerChanged(event => this.observe(event));
+        this.updatedListener = this.manager.onFormUpdated(({ form, reason }) => this.observeReason(form, reason));
         this.open(this.manager.getFormController().form);
     }
 
@@ -194,6 +199,29 @@ export class AuditController extends Controller implements IAuditController {
 
         if (form.mapper) {
             this.scheduleEdit();
+        }
+    }
+
+    /** A reasoned update is one atomic change, not a burst to coalesce -- diffed and recorded now, ahead of observeForm for the same change. */
+    private observeReason(form: FormModel<any>, reason: UpdateReason | undefined): void {
+        if (!reason || !this.watched || !form.mapper) {
+            return;
+        }
+
+        // edits made before this one are a separate, unrelated episode
+        this.flush();
+
+        const after = form.mapper.extract(form);
+        const fields = getChangedPaths(this.baseline, after);
+        this.baseline = after;
+
+        switch (reason.kind) {
+            case "drop":
+                this.raise({ kind: "dropped", type: reason.type, fields });
+                break;
+            case "violation":
+                this.raise({ kind: "violations-added", codes: reason.codes, fields });
+                break;
         }
     }
 

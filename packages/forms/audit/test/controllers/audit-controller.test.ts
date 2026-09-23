@@ -3,7 +3,7 @@ import { ControllerManager, RuleCollection } from "@forms/core";
 
 import { AuditController, editQuietPeriod, getAuditController, maxPendingRecords } from "../../src/controllers/audit-controller";
 import type { IAuditController } from "../../src/controllers/audit-controller";
-import type { IWorkflowEntry } from "@forms/core";
+import type { IWorkflowEntry, UpdateReason } from "@forms/core";
 
 import type { AuditRecord } from "../../src/models/audit-record";
 import { failingRule, stubForm } from "../fixtures/stub-form";
@@ -31,6 +31,11 @@ function watch(data: object = { name: "Dana" }, options?: IStubFormOptions): IWa
 
 function edit(manager: ControllerManager, data: object, options?: IStubFormOptions): void {
     manager.getFormController().setForm(stubForm(data, options));
+}
+
+/** Makes an update naming why, the way a drop or the violations panel does. */
+function reasonedEdit(manager: ControllerManager, data: object, reason: UpdateReason, options?: IStubFormOptions): void {
+    manager.getFormController().update({ update: () => stubForm(data, options), reason });
 }
 
 function kinds(records: ReadonlyArray<AuditRecord>): Array<string> {
@@ -355,6 +360,65 @@ describe("AuditController", () => {
                 ["fields-edited", "form-1"],
                 ["form-opened", "form-2"]
             ]);
+        });
+    });
+
+    describe("dropped", () => {
+        it("records what changed immediately, naming what was dropped", () => {
+            const { manager, records } = watch({ city: "Aiken", name: "Dana" });
+
+            reasonedEdit(manager, { city: "Aiken", name: "Riley" }, { kind: "drop", type: "person" });
+
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "dropped", type: "person" });
+        });
+
+        it("does not wait out the quiet period", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            reasonedEdit(manager, { name: "Riley" }, { kind: "drop", type: "vehicle" });
+
+            expect(kinds(records)).toEqual(["form-opened", "dropped"]);
+        });
+
+        it("records edits made before it first", () => {
+            const { manager, records } = watch({ city: "Aiken", name: "Dana" });
+
+            edit(manager, { city: "Columbia", name: "Dana" });
+            reasonedEdit(manager, { city: "Columbia", name: "Riley" }, { kind: "drop", type: "violation" });
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "dropped"]);
+            expect(records[1]).toMatchObject({ fields: ["city"] });
+            expect(records[2]).toMatchObject({ fields: ["name"] });
+        });
+
+        it("leaves nothing pending for the edit it caused, so the next one measures from here", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            reasonedEdit(manager, { name: "Riley" }, { kind: "drop", type: "person" });
+            settle();
+            edit(manager, { name: "Sam" });
+            settle();
+
+            expect(kinds(records)).toEqual(["form-opened", "dropped", "fields-edited"]);
+            expect(records[2]).toMatchObject({ fields: ["name"] });
+        });
+
+        it("records nothing for a form with no mapper", () => {
+            const { manager, records } = watch({}, { hasMapper: false });
+
+            reasonedEdit(manager, {}, { kind: "drop", type: "person" }, { hasMapper: false });
+
+            expect(kinds(records)).toEqual(["form-opened"]);
+        });
+    });
+
+    describe("violations-added", () => {
+        it("records what changed immediately, naming the codes added", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            reasonedEdit(manager, { name: "Riley" }, { kind: "violation", codes: ["56-5-1520"] });
+
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "violations-added", codes: ["56-5-1520"] });
         });
     });
 
