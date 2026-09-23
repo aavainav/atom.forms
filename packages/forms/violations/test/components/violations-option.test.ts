@@ -73,7 +73,7 @@ describe("ViolationsOption", () => {
 
         expect(button().disabled).toBe(false);
 
-        act(() => controllers.getFormController().update(() => createStubForm({ lockedPageSets: ["citation"] })));
+        act(() => controllers.getFormController().update({ update: () => createStubForm({ lockedPageSets: ["citation"] }) }));
 
         expect(button().disabled).toBe(true);
     });

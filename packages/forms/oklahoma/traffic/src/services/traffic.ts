@@ -127,7 +127,7 @@ export class OKTrafficService implements IOKTrafficService {
         const county = source.getCounty().getValue();
         const location = source.getLocation().getValue();
 
-        controller.update(form => {
+        controller.update({ update: form => {
             let collection = form.get<PageCollection>(formSchema.complaintPage);
 
             violations.forEach((violation, offset) => {
@@ -158,7 +158,7 @@ export class OKTrafficService implements IOKTrafficService {
             });
 
             return form.set(formSchema.complaintPage, collection);
-        });
+        } });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

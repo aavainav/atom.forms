@@ -70,7 +70,7 @@ describe("ValidationService", () => {
             new ValidationService().validate(controllers);
 
             const form = { validate: vi.fn(() => "validated") };
-            expect(update.mock.calls[0][0](form)).toBe("validated");
+            expect(update.mock.calls[0][0].update(form)).toBe("validated");
             expect(form.validate).toHaveBeenCalledWith(issues);
         });
     });

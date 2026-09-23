@@ -41,7 +41,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyDefendantDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyDefendantDropzone(page, dropzone) })}
             >
                 <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
@@ -57,7 +57,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
                 // rather than inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     okTrafficService.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update((page) => okTrafficService.applyVehicleDropzone(page, resolved)));
+                        .then((resolved) => binding.update({ update: (page) => okTrafficService.applyVehicleDropzone(page, resolved) }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(complaintPage.vehicleSection)} />
@@ -66,7 +66,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((page) => okTrafficService.applyViolationDropzone(page, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyViolationDropzone(page, dropzone) })}
             >
                 <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>

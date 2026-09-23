@@ -26,10 +26,10 @@ export const DuiSection = ({ binding }: IDuiSectionProps): React.JSX.Element => 
                 <div className="p-2">
                     <CheckBox field={charged} onChange={(checked) => binding.setValue(section.charged, checked)} />
                     <span className="small ms-2 me-2">Test Administered:</span>
-                    <OptionBox field={testBlood} onSelect={() => binding.update((current) => current.selectTestAdministered(current.testBlood))} />
-                    <OptionBox field={testBreath} onSelect={() => binding.update((current) => current.selectTestAdministered(current.testBreath))} />
-                    <OptionBox field={testUrine} onSelect={() => binding.update((current) => current.selectTestAdministered(current.testUrine))} />
-                    <OptionBox field={testOther} onSelect={() => binding.update((current) => current.selectTestAdministered(current.testOther))} />
+                    <OptionBox field={testBlood} onSelect={() => binding.update({ update: (current) => current.selectTestAdministered(current.testBlood) })} />
+                    <OptionBox field={testBreath} onSelect={() => binding.update({ update: (current) => current.selectTestAdministered(current.testBreath) })} />
+                    <OptionBox field={testUrine} onSelect={() => binding.update({ update: (current) => current.selectTestAdministered(current.testUrine) })} />
+                    <OptionBox field={testOther} onSelect={() => binding.update({ update: (current) => current.selectTestAdministered(current.testOther) })} />
                 </div>
             </FBorder>
             <FFormStackPanel direction="horizontal">

@@ -39,8 +39,8 @@ export const SummonsSection = ({ binding }: ISummonsSectionProps): React.JSX.Ele
                 <TextBox field={hour} label="At" width={twoDigitBoxWidth} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.hour, value)} />
                 <TextBox field={minute} width={twoDigitBoxWidth} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.minute, value)} />
                 <div className="p-2">
-                    <OptionBox field={am} onSelect={() => binding.update((current) => current.selectMeridiem(current.am))} />
-                    <OptionBox field={pm} onSelect={() => binding.update((current) => current.selectMeridiem(current.pm))} />
+                    <OptionBox field={am} onSelect={() => binding.update({ update: (current) => current.selectMeridiem(current.am) })} />
+                    <OptionBox field={pm} onSelect={() => binding.update({ update: (current) => current.selectMeridiem(current.pm) })} />
                 </div>
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
@@ -49,8 +49,8 @@ export const SummonsSection = ({ binding }: ISummonsSectionProps): React.JSX.Ele
             </FFormStackPanel>
             <FBorder border="visible">
                 <div className="p-2">
-                    <OptionBox field={copy} onSelect={() => binding.update((current) => current.selectDisposition(current.copy))} />
-                    <OptionBox field={jail} onSelect={() => binding.update((current) => current.selectDisposition(current.jail))} />
+                    <OptionBox field={copy} onSelect={() => binding.update({ update: (current) => current.selectDisposition(current.copy) })} />
+                    <OptionBox field={jail} onSelect={() => binding.update({ update: (current) => current.selectDisposition(current.jail) })} />
                 </div>
             </FBorder>
             <FBorder border="visible">
@@ -65,8 +65,8 @@ export const SummonsSection = ({ binding }: ISummonsSectionProps): React.JSX.Ele
             <FBorder border="visible">
                 <div className="p-2">
                     <span className="small fw-bold me-2">LICENSE DISPLAYED IN LIEU OF BAIL</span>
-                    <OptionBox field={licenseDisplayedYes} onSelect={() => binding.update((current) => current.selectLicenseDisplayed(current.licenseDisplayedYes))} />
-                    <OptionBox field={licenseDisplayedNo} onSelect={() => binding.update((current) => current.selectLicenseDisplayed(current.licenseDisplayedNo))} />
+                    <OptionBox field={licenseDisplayedYes} onSelect={() => binding.update({ update: (current) => current.selectLicenseDisplayed(current.licenseDisplayedYes) })} />
+                    <OptionBox field={licenseDisplayedNo} onSelect={() => binding.update({ update: (current) => current.selectLicenseDisplayed(current.licenseDisplayedNo) })} />
                 </div>
             </FBorder>
             <FFormStackPanel direction="horizontal">

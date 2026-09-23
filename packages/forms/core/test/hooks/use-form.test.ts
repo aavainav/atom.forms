@@ -30,7 +30,7 @@ describe("useForm", () => {
         const hook = renderHook(() => useForm(controller));
         const rendersBefore = hook.renders();
 
-        act(() => controller.update(form => form.setStatus("issued")));
+        act(() => controller.update({ update: form => form.setStatus("issued") }));
 
         expect(hook.result.current.status).toBe("issued");
         expect(hook.result.current).toBe(controller.form);
@@ -52,7 +52,7 @@ describe("useForm", () => {
         const hook = renderHook(() => useForm(controller));
         const rendersBefore = hook.renders();
 
-        act(() => controller.update(form => form));
+        act(() => controller.update({ update: form => form }));
 
         expect(hook.renders()).toBe(rendersBefore);
     });
@@ -73,7 +73,7 @@ describe("useForm", () => {
         hook.unmount();
         const rendersBefore = hook.renders();
 
-        act(() => controller.update(form => form.setStatus("issued")));
+        act(() => controller.update({ update: form => form.setStatus("issued") }));
 
         expect(hook.renders()).toBe(rendersBefore);
     });
@@ -88,10 +88,10 @@ describe("useForm", () => {
         hook.rerender();
         const rendersBefore = hook.renders();
 
-        act(() => first.controller.update(form => form.setStatus("issued")));
+        act(() => first.controller.update({ update: form => form.setStatus("issued") }));
         expect(hook.renders()).toBe(rendersBefore);
 
-        act(() => second.controller.update(form => form.setStatus("voided")));
+        act(() => second.controller.update({ update: form => form.setStatus("voided") }));
         expect(hook.result.current.status).toBe("voided");
     });
 });
@@ -137,7 +137,7 @@ describe("useFormController", () => {
         const controllers = new ControllerManager();
         const hook = renderHook(() => useFormController(controllers, form));
 
-        act(() => hook.result.current.update(current => current.setStatus("issued")));
+        act(() => hook.result.current.update({ update: current => current.setStatus("issued") }));
         hook.rerender();
 
         expect(hook.result.current.form.status).toBe("issued");

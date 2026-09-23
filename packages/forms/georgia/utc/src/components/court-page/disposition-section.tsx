@@ -23,22 +23,22 @@ export const DispositionSection = ({ binding }: IDispositionSectionProps): React
                 <FFormStackPanel direction="horizontal">
                     <div className="w-100 p-2">
                         <div className="small fw-bold">DEFENDANT PLEADS</div>
-                        <OptionBox field={section.getPleadsGuilty()} onSelect={() => binding.update((current) => current.selectPleads(current.pleadsGuilty))} />
-                        <OptionBox field={section.getPleadsNotGuilty()} onSelect={() => binding.update((current) => current.selectPleads(current.pleadsNotGuilty))} />
-                        <OptionBox field={section.getPleadsNoloContendere()} onSelect={() => binding.update((current) => current.selectPleads(current.pleadsNoloContendere))} />
+                        <OptionBox field={section.getPleadsGuilty()} onSelect={() => binding.update({ update: (current) => current.selectPleads(current.pleadsGuilty) })} />
+                        <OptionBox field={section.getPleadsNotGuilty()} onSelect={() => binding.update({ update: (current) => current.selectPleads(current.pleadsNotGuilty) })} />
+                        <OptionBox field={section.getPleadsNoloContendere()} onSelect={() => binding.update({ update: (current) => current.selectPleads(current.pleadsNoloContendere) })} />
                     </div>
                     <div className="w-100 p-2">
                         <div className="small fw-bold">TRIAL</div>
-                        <OptionBox field={section.getTrialJury()} onSelect={() => binding.update((current) => current.selectTrial(current.trialJury))} />
-                        <OptionBox field={section.getTrialCourtAdjudicated()} onSelect={() => binding.update((current) => current.selectTrial(current.trialCourtAdjudicated))} />
-                        <OptionBox field={section.getTrialGuilty()} onSelect={() => binding.update((current) => current.selectTrial(current.trialGuilty))} />
-                        <OptionBox field={section.getTrialNotGuilty()} onSelect={() => binding.update((current) => current.selectTrial(current.trialNotGuilty))} />
+                        <OptionBox field={section.getTrialJury()} onSelect={() => binding.update({ update: (current) => current.selectTrial(current.trialJury) })} />
+                        <OptionBox field={section.getTrialCourtAdjudicated()} onSelect={() => binding.update({ update: (current) => current.selectTrial(current.trialCourtAdjudicated) })} />
+                        <OptionBox field={section.getTrialGuilty()} onSelect={() => binding.update({ update: (current) => current.selectTrial(current.trialGuilty) })} />
+                        <OptionBox field={section.getTrialNotGuilty()} onSelect={() => binding.update({ update: (current) => current.selectTrial(current.trialNotGuilty) })} />
                     </div>
                     <div className="w-100 p-2">
                         <div className="small fw-bold">OTHER ACTION</div>
-                        <OptionBox field={section.getBondForfeiture()} onSelect={() => binding.update((current) => current.selectOtherAction(current.bondForfeiture))} />
-                        <OptionBox field={section.getNolleProssed()} onSelect={() => binding.update((current) => current.selectOtherAction(current.nolleProssed))} />
-                        <OptionBox field={section.getDeadDocket()} onSelect={() => binding.update((current) => current.selectOtherAction(current.deadDocket))} />
+                        <OptionBox field={section.getBondForfeiture()} onSelect={() => binding.update({ update: (current) => current.selectOtherAction(current.bondForfeiture) })} />
+                        <OptionBox field={section.getNolleProssed()} onSelect={() => binding.update({ update: (current) => current.selectOtherAction(current.nolleProssed) })} />
+                        <OptionBox field={section.getDeadDocket()} onSelect={() => binding.update({ update: (current) => current.selectOtherAction(current.deadDocket) })} />
                     </div>
                 </FFormStackPanel>
             </FBorder>

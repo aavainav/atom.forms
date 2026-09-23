@@ -38,7 +38,7 @@ export default function PersonPage({ controllers, binding }: IPersonPageProps): 
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(PersonPagePersonDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update((current) => tr310Service.applyPersonDropzone(current, dropzone))}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (current) => tr310Service.applyPersonDropzone(current, dropzone) })}
             >
                 <PersonSection binding={binding.getSection(page.personSection)} />
             </FDropzone>

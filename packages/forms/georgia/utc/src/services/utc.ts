@@ -120,7 +120,7 @@ export class GAUTCService implements IGAUTCService {
             await controller.addPage(formSchema.citationPage);
         }
 
-        controller.update(form => {
+        controller.update({ update: form => {
             let collection = form.get<PageCollection>(formSchema.citationPage);
 
             violations.forEach((violation, offset) => {
@@ -143,7 +143,7 @@ export class GAUTCService implements IGAUTCService {
             });
 
             return form.set(formSchema.citationPage, collection);
-        });
+        } });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

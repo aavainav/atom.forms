@@ -42,8 +42,8 @@ export const HeaderSection = ({ binding }: IHeaderSectionProps): React.JSX.Eleme
                 <TextBox field={hour} label="At" width={twoDigitBoxWidth} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.hour, value)} />
                 <TextBox field={minute} width={twoDigitBoxWidth} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.minute, value)} />
                 <div className="p-2">
-                    <OptionBox field={am} onSelect={() => binding.update((current) => current.selectMeridiem(current.am))} />
-                    <OptionBox field={pm} onSelect={() => binding.update((current) => current.selectMeridiem(current.pm))} />
+                    <OptionBox field={am} onSelect={() => binding.update({ update: (current) => current.selectMeridiem(current.am) })} />
+                    <OptionBox field={pm} onSelect={() => binding.update({ update: (current) => current.selectMeridiem(current.pm) })} />
                 </div>
             </FFormStackPanel>
         </FSection>

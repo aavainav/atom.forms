@@ -98,7 +98,7 @@ export class S438CitationService implements IS438CitationService {
         const date = first.getViolationSection().getDateOfViolation().getValue();
         const time = first.getViolationSection().getTimeOfViolation().getValue();
 
-        controller.update(form => {
+        controller.update({ update: form => {
             let collection = form.get<PageCollection>(formSchema.frontPage);
 
             violations.forEach((violation, offset) => {
@@ -122,7 +122,7 @@ export class S438CitationService implements IS438CitationService {
             });
 
             return form.set(formSchema.frontPage, collection);
-        });
+        } });
     }
 
     getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation> {

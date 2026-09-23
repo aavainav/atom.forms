@@ -118,7 +118,7 @@ export class OKParkingService implements IOKParkingService {
         const time = first.getViolationSection().getTime().getValue();
         const location = first.getViolationSection().getLocation().getValue();
 
-        controller.update(form => {
+        controller.update({ update: form => {
             let collection = form.get<PageCollection>(formSchema.citationPage);
 
             violations.forEach((violation, offset) => {
@@ -146,7 +146,7 @@ export class OKParkingService implements IOKParkingService {
             });
 
             return form.set(formSchema.citationPage, collection);
-        });
+        } });
     }
 
     async getCountyOptions(): Promise<Array<IOptionValue>> {

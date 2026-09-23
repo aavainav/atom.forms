@@ -140,7 +140,7 @@ describe("WorkflowActions", () => {
         it("follows the form as it moves, without being remounted", async () => {
             const { controllers, subtitle } = await mount();
 
-            act(() => controllers.getFormController().update(form => form.setStatus("inReview")));
+            act(() => controllers.getFormController().update({ update: form => form.setStatus("inReview") }));
 
             expect(subtitle()).toBe("in review");
         });
@@ -161,7 +161,7 @@ describe("WorkflowActions", () => {
         it("follows the form as it moves, without being remounted", async () => {
             const { buttonIds, controllers } = await mount();
 
-            act(() => controllers.getFormController().update(form => form.setStatus("inReview").setMode("reviewable")));
+            act(() => controllers.getFormController().update({ update: form => form.setStatus("inReview").setMode("reviewable") }));
 
             expect(buttonIds()).toEqual(["workflow-approve-button", "workflow-reject-button"]);
         });

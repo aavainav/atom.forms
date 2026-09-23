@@ -31,16 +31,16 @@ export const ViolationSection = ({ binding }: IViolationSectionProps): React.JSX
                 <div className="p-2">
                     <CheckBox field={twoLaneRoad} onChange={(checked) => binding.setValue(section.twoLaneRoad, checked)} />
                     <CheckBox field={driverRequestedAccuracyCheck} onChange={(checked) => binding.setValue(section.driverRequestedAccuracyCheck, checked)} />
-                    <OptionBox field={vascar} onSelect={() => binding.update((current) => current.selectSpeedDetection(current.vascar))} />
-                    <OptionBox field={laser} onSelect={() => binding.update((current) => current.selectSpeedDetection(current.laser))} />
-                    <OptionBox field={radar} onSelect={() => binding.update((current) => current.selectSpeedDetection(current.radar))} />
+                    <OptionBox field={vascar} onSelect={() => binding.update({ update: (current) => current.selectSpeedDetection(current.vascar) })} />
+                    <OptionBox field={laser} onSelect={() => binding.update({ update: (current) => current.selectSpeedDetection(current.laser) })} />
+                    <OptionBox field={radar} onSelect={() => binding.update({ update: (current) => current.selectSpeedDetection(current.radar) })} />
                 </div>
             </FBorder>
             <FBorder border="visible">
                 <p className="small m-3 mb-1">Within the State of Georgia, did commit the following offense: SPEEDING - Clocked by</p>
                 <div className="p-2 pt-0">
-                    <OptionBox field={clockedByPatrolVehicle} onSelect={() => binding.update((current) => current.selectClockedBy(current.clockedByPatrolVehicle))} />
-                    <OptionBox field={clockedByOther} onSelect={() => binding.update((current) => current.selectClockedBy(current.clockedByOther))} />
+                    <OptionBox field={clockedByPatrolVehicle} onSelect={() => binding.update({ update: (current) => current.selectClockedBy(current.clockedByPatrolVehicle) })} />
+                    <OptionBox field={clockedByOther} onSelect={() => binding.update({ update: (current) => current.selectClockedBy(current.clockedByOther) })} />
                 </div>
             </FBorder>
             <FFormStackPanel direction="horizontal">

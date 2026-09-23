@@ -29,15 +29,15 @@ export const OffenseSection = ({ binding }: IOffenseSectionProps): React.JSX.Ele
             </FFormStackPanel>
             <FBorder border="visible">
                 <div className="p-2">
-                    <OptionBox field={stateLaw} onSelect={() => binding.update((current) => current.selectAuthority(current.stateLaw))} />
-                    <OptionBox field={localOrdinance} onSelect={() => binding.update((current) => current.selectAuthority(current.localOrdinance))} />
+                    <OptionBox field={stateLaw} onSelect={() => binding.update({ update: (current) => current.selectAuthority(current.stateLaw) })} />
+                    <OptionBox field={localOrdinance} onSelect={() => binding.update({ update: (current) => current.selectAuthority(current.localOrdinance) })} />
                 </div>
             </FBorder>
             <FBorder border="visible">
                 <div className="p-2">
                     <span className="small fw-bold me-2">COMPANION CASE</span>
-                    <OptionBox field={companionCaseYes} onSelect={() => binding.update((current) => current.selectCompanionCase(current.companionCaseYes))} />
-                    <OptionBox field={companionCaseNo} onSelect={() => binding.update((current) => current.selectCompanionCase(current.companionCaseNo))} />
+                    <OptionBox field={companionCaseYes} onSelect={() => binding.update({ update: (current) => current.selectCompanionCase(current.companionCaseYes) })} />
+                    <OptionBox field={companionCaseNo} onSelect={() => binding.update({ update: (current) => current.selectCompanionCase(current.companionCaseNo) })} />
                 </div>
             </FBorder>
             <FFormStackPanel direction="horizontal">

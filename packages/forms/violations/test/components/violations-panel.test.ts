@@ -67,7 +67,7 @@ describe("ViolationsPanel", () => {
     it("refuses to add once the form has closed its violations while the panel was open, and says so", async () => {
         const { add, apply, controllers, onError } = await mountWithATick(createStubForm());
 
-        act(() => controllers.getFormController().update(() => createStubForm({ lockedPageSets: ["citation"] })));
+        act(() => controllers.getFormController().update({ update: () => createStubForm({ lockedPageSets: ["citation"] }) }));
         await act(async () => add().click());
 
         expect(apply).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe("ViolationsPanel", () => {
     it("refuses once the form is no longer editable, as it does for a locked page set", async () => {
         const { add, apply, controllers, onError } = await mountWithATick(createStubForm());
 
-        act(() => controllers.getFormController().update(() => createStubForm({ mode: "viewable" })));
+        act(() => controllers.getFormController().update({ update: () => createStubForm({ mode: "viewable" }) }));
         await act(async () => add().click());
 
         expect(apply).not.toHaveBeenCalled();

@@ -35,7 +35,7 @@ export class ValidationService implements IValidationService {
         const issueCollection = rulesController.getIssueCollection();
         this.showIssues(issueCollection.getIssues());
 
-        controllers.getFormController().update(form => form.validate(issueCollection));
+        controllers.getFormController().update({ update: form => form.validate(issueCollection) });
 
         return issueCollection;
     }

@@ -48,9 +48,9 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                             </div>
                         </FFormStackPanel>
                         <FFieldCheckbox id={consentSearchRequested.id} checked={consentSearchRequested.getValue() as boolean} disabled={!consentSearchRequested.getIsEnabled()} invalid={consentSearchRequested.getHasError()} label={consentSearchRequested.label}
-                            onChange={(checked) => binding.update((current) => current.setConsentSearchRequested(checked))} />
+                            onChange={(checked) => binding.update({ update: (current) => current.setConsentSearchRequested(checked) })} />
                         <FFieldCheckbox checked={consentGiven.getValue() as boolean} disabled={!consentGiven.getIsEnabled()} id={consentGiven.id} invalid={consentGiven.getHasError()} label={consentGiven.label}
-                            onChange={(checked) => binding.update((current) => current.setConsentGiven(checked))} />
+                            onChange={(checked) => binding.update({ update: (current) => current.setConsentGiven(checked) })} />
                         <FFieldCheckbox checked={madeByConsent.getValue() as boolean} disabled={!madeByConsent.getIsEnabled()} id={madeByConsent.id} invalid={madeByConsent.getHasError()} label={madeByConsent.label}
                             onChange={(checked) => binding.setValue(section.madeByConsent, checked)} />
                         <FFieldCheckbox checked={incidentToArrest.getValue() as boolean} disabled={!incidentToArrest.getIsEnabled()} id={incidentToArrest.id} invalid={incidentToArrest.getHasError()} label={incidentToArrest.label}
@@ -66,15 +66,15 @@ export const SearchesSection = ({ binding }: ISearchesSectionProps): React.JSX.E
                     </FFormStackPanel>
                     <FFormStackPanel direction="horizontal">
                         <FFieldCheckbox id={consentSearchRequestedYes.id} checked={consentSearchRequestedYes.getValue() as boolean} disabled={!consentSearchRequestedYes.getIsEnabled()} invalid={consentSearchRequestedYes.getHasError()} label={consentSearchRequestedYes.label} type="radio"
-                            onChange={() => binding.update((current) => current.selectConsentRequested(current.consentSearchRequestedYes))} />
+                            onChange={() => binding.update({ update: (current) => current.selectConsentRequested(current.consentSearchRequestedYes) })} />
                         <FFieldCheckbox checked={consentSearchRequestedNo.getValue() as boolean} disabled={!consentSearchRequestedNo.getIsEnabled()} id={consentSearchRequestedNo.id} invalid={consentSearchRequestedNo.getHasError()} label={consentSearchRequestedNo.label} type="radio"
-                            onChange={() => binding.update((current) => current.selectConsentRequested(current.consentSearchRequestedNo))} />
+                            onChange={() => binding.update({ update: (current) => current.selectConsentRequested(current.consentSearchRequestedNo) })} />
                     </FFormStackPanel>
                     <FFormStackPanel direction="horizontal">
                         <FFieldCheckbox checked={consentGivenYes.getValue() as boolean} disabled={!consentGivenYes.getIsEnabled()} id={consentGivenYes.id} invalid={consentGivenYes.getHasError()} label={consentGivenYes.label} type="radio"
-                            onChange={() => binding.update((current) => current.selectConsentGiven(current.consentGivenYes))} />
+                            onChange={() => binding.update({ update: (current) => current.selectConsentGiven(current.consentGivenYes) })} />
                         <FFieldCheckbox checked={consentGivenNo.getValue() as boolean} disabled={!consentGivenNo.getIsEnabled()} id={consentGivenNo.id} invalid={consentGivenNo.getHasError()} label={consentGivenNo.label} type="radio"
-                            onChange={() => binding.update((current) => current.selectConsentGiven(current.consentGivenNo))} />
+                            onChange={() => binding.update({ update: (current) => current.selectConsentGiven(current.consentGivenNo) })} />
                     </FFormStackPanel>
                     <FFieldCheckbox checked={inventoryVehicleTowed.getValue() as boolean} disabled={!inventoryVehicleTowed.getIsEnabled()} id={inventoryVehicleTowed.id} invalid={inventoryVehicleTowed.getHasError()} label={inventoryVehicleTowed.label}
                         onChange={(checked) => binding.setValue(section.inventoryVehicleTowed, checked)} />

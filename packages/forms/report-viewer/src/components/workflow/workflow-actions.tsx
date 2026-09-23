@@ -52,7 +52,7 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
         try {
             await reportViewerService.saveForm(current, dataManager, controllers);
             getAuditController(controllers).recordSaved();
-            formController.update(next => next.clean());
+            formController.update({ update: next => next.clean() });
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {
@@ -87,7 +87,7 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
         }
 
         // the audit records the transition as the form is replaced, and then the save that kept it
-        formController.update(() => next.clean());
+        formController.update({ update: () => next.clean() });
 
         if (isSaved) {
             getAuditController(controllers).recordSaved();

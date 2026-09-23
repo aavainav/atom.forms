@@ -27,23 +27,23 @@ export const StatusSection = ({ binding }: IStatusSectionProps): React.JSX.Eleme
                 <FFormStackPanel direction="horizontal">
                     <div className="p-2">
                         <span className="small fw-bold me-2">CDL</span>
-                        <OptionBox field={cdlYes} onSelect={() => binding.update((current) => current.selectCdl(current.cdlYes))} />
-                        <OptionBox field={cdlNo} onSelect={() => binding.update((current) => current.selectCdl(current.cdlNo))} />
+                        <OptionBox field={cdlYes} onSelect={() => binding.update({ update: (current) => current.selectCdl(current.cdlYes) })} />
+                        <OptionBox field={cdlNo} onSelect={() => binding.update({ update: (current) => current.selectCdl(current.cdlNo) })} />
                     </div>
                     <div className="p-2">
                         <span className="small fw-bold me-2">ACCIDENT</span>
-                        <OptionBox field={accidentYes} onSelect={() => binding.update((current) => current.selectAccident(current.accidentYes))} />
-                        <OptionBox field={accidentNo} onSelect={() => binding.update((current) => current.selectAccident(current.accidentNo))} />
+                        <OptionBox field={accidentYes} onSelect={() => binding.update({ update: (current) => current.selectAccident(current.accidentYes) })} />
+                        <OptionBox field={accidentNo} onSelect={() => binding.update({ update: (current) => current.selectAccident(current.accidentNo) })} />
                     </div>
                     <div className="p-2">
                         <span className="small fw-bold me-2">INJURIES</span>
-                        <OptionBox field={injuriesYes} onSelect={() => binding.update((current) => current.selectInjuries(current.injuriesYes))} />
-                        <OptionBox field={injuriesNo} onSelect={() => binding.update((current) => current.selectInjuries(current.injuriesNo))} />
+                        <OptionBox field={injuriesYes} onSelect={() => binding.update({ update: (current) => current.selectInjuries(current.injuriesYes) })} />
+                        <OptionBox field={injuriesNo} onSelect={() => binding.update({ update: (current) => current.selectInjuries(current.injuriesNo) })} />
                     </div>
                     <div className="p-2">
                         <span className="small fw-bold me-2">FATALITIES</span>
-                        <OptionBox field={fatalitiesYes} onSelect={() => binding.update((current) => current.selectFatalities(current.fatalitiesYes))} />
-                        <OptionBox field={fatalitiesNo} onSelect={() => binding.update((current) => current.selectFatalities(current.fatalitiesNo))} />
+                        <OptionBox field={fatalitiesYes} onSelect={() => binding.update({ update: (current) => current.selectFatalities(current.fatalitiesYes) })} />
+                        <OptionBox field={fatalitiesNo} onSelect={() => binding.update({ update: (current) => current.selectFatalities(current.fatalitiesNo) })} />
                     </div>
                 </FFormStackPanel>
             </FBorder>

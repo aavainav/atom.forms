@@ -61,7 +61,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
                 }
 
                 getAuditController(controllers).recordSaved();
-                controllers.getFormController().update(current => current.clean());
+                controllers.getFormController().update({ update: current => current.clean() });
                 await startNew();
             }
         });

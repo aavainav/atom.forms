@@ -177,7 +177,7 @@ describe("FormController", () => {
             let raised = 0;
             controller.onChanged(() => { raised += 1; });
 
-            controller.update(form => form);
+            controller.update({ update: form => form });
 
             expect(raised).toBe(0);
         });
@@ -185,7 +185,7 @@ describe("FormController", () => {
 
     describe("a page binding's isSectionLocked", () => {
         it("says whether the form has locked the section", () => {
-            controller.update(form => form.lockSection(chargeSection));
+            controller.update({ update: form => form.lockSection(chargeSection) });
             const binding = controller.getPageBinding(citationPage, firstPageId());
 
             expect(binding.isSectionLocked(chargeSection)).toBe(true);
@@ -197,7 +197,7 @@ describe("FormController", () => {
 
             expect(binding.isSectionLocked(chargeSection)).toBe(false);
 
-            controller.update(form => form.lockSection(chargeSection));
+            controller.update({ update: form => form.lockSection(chargeSection) });
 
             expect(binding.isSectionLocked(chargeSection)).toBe(true);
         });
@@ -205,7 +205,7 @@ describe("FormController", () => {
 
     describe("a locked set of pages", () => {
         it("refuses a page to be added", async () => {
-            controller.update(form => form.lockPageSet(citationPage));
+            controller.update({ update: form => form.lockPageSet(citationPage) });
 
             await expect(controller.addPage(citationPage)).rejects.toThrowError("cannot be added while they are locked");
             expect(controller.form.getPages()).toHaveLength(1);
@@ -213,7 +213,7 @@ describe("FormController", () => {
 
         it("refuses a page to be removed", async () => {
             await controller.addPage(citationPage);
-            controller.update(form => form.lockPageSet(citationPage));
+            controller.update({ update: form => form.lockPageSet(citationPage) });
 
             await expect(controller.removePage(citationPage, firstPageId())).rejects.toThrowError("cannot be removed while they are locked");
             expect(controller.form.getPages()).toHaveLength(2);
