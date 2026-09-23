@@ -21,10 +21,13 @@ import type { IReportViewerDataManager } from "../../src/services/report-viewer"
 const mounted: Array<() => void> = [];
 
 function stubForm(id: string, isDirty: boolean): FormModel<any> {
-    return { id, mode: "editable", name: "Stub Form", status: "draft", version: "1.0", clean() { return this; }, getIsDirty: () => isDirty } as unknown as FormModel<any>;
+    return {
+        id, mode: "editable", name: "Stub Form", status: "draft", version: "1.0",
+        clean() { return this; }, getIsDirty: () => isDirty, incrementRevision() { return this; }
+    } as unknown as FormModel<any>;
 }
 
-const previousAudit: AuditRecord = { at: 1, form: { id: "form-2", name: "Stub Form", version: "1.0" }, id: "old-1", kind: "saved" };
+const previousAudit: AuditRecord = { at: 1, form: { id: "form-2", name: "Stub Form", revision: 0, version: "1.0" }, id: "old-1", kind: "saved" };
 const previousComment: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "old-c", isResolved: false, target: { level: "form" }, text: "Left over." };
 
 interface IMountOptions {

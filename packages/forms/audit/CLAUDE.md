@@ -28,9 +28,11 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
 
-Every record is `{ at, by?, form: { id, name, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped when
-the record is raised, so a host handed one twice can tell. `by` is the `IActor` the controller was told is using the
-report (`setUser`), and is absent when the host did not say.
+Every record is `{ at, by?, form: { id, name, revision, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped
+when the record is raised, so a host handed one twice can tell. `by` is the `IActor` the controller was told is using
+the report (`setUser`), and is absent when the host did not say. `form.revision` is whatever the report's own
+revision was at that moment -- it moves independently of `id`, so it is refreshed on every observed change, not just
+when a different form replaces the watched one.
 
 ## Files
 

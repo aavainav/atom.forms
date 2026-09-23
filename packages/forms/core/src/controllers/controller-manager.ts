@@ -28,12 +28,20 @@ export interface IControllerChangedEventArgs {
     readonly controller: IController;
 }
 
+/** Describes a form update. */
+export interface IFormUpdatedEventArgs<TForm extends FormModel<any> = FormModel<any>> {
+    /** The form the update produced. */
+    readonly form: TForm;
+    /** Why the update was made, when the caller said. */
+    readonly reason?: UpdateReason;
+}
+
 /** Defines the manager that creates and caches the controllers belonging to a single form. */
 export interface IControllerManager {
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
     /** Raised after any form update, naming why when the caller said. Unlike `onControllerChanged`, survives the form controller itself being replaced. */
-    readonly onFormUpdated: IEvent<{ readonly form: FormModel<any>; readonly reason?: UpdateReason }>;
+    readonly onFormUpdated: IEvent<IFormUpdatedEventArgs>;
 
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */
     getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm>;
@@ -69,14 +77,14 @@ export interface IControllerManager {
 
 export class ControllerManager implements IControllerManager {
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
-    private readonly _formUpdated = new EventEmitter<{ form: FormModel<any>; reason?: UpdateReason }>("controller-manager:form-updated");
+    private readonly _formUpdated = new EventEmitter<IFormUpdatedEventArgs>("controller-manager:form-updated");
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
         return this._controllerChanged.event;
     }
 
-    get onFormUpdated(): IEvent<{ readonly form: FormModel<any>; readonly reason?: UpdateReason }> {
+    get onFormUpdated(): IEvent<IFormUpdatedEventArgs> {
         return this._formUpdated.event;
     }
 

@@ -13,7 +13,7 @@ import type { IReportViewerDataManager } from "../../src/services/report-viewer"
 
 const mounted: Array<() => void> = [];
 
-const loaded: AuditRecord = { at: 1, form: { id: "form-0", name: "Stub Form", version: "1.0" }, id: "loaded-1", kind: "saved" };
+const loaded: AuditRecord = { at: 1, form: { id: "form-0", name: "Stub Form", revision: 0, version: "1.0" }, id: "loaded-1", kind: "saved" };
 
 /** A component whose only job is to call the hook, since no testing library is installed to render a bare hook. */
 function Harness({ controllers, dataManager, onError }: { readonly controllers: ControllerManager; readonly dataManager?: Partial<IReportViewerDataManager<any>>; readonly onError: (message: string) => void }): null {

@@ -85,6 +85,7 @@ export default function AuditLog(): React.JSX.Element {
                                     {new Date(record.at).toLocaleTimeString()} · {record.form.id.slice(0, 8)}
                                 </span>
                             </div>
+                            <div className="small fw-semibold">{record.form.name}</div>
                             <div className="small text-break">{summarize(record)}</div>
                             <details className="small">
                                 <summary className="text-muted">Raw record</summary>

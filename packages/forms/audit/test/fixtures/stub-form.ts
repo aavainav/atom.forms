@@ -7,19 +7,21 @@ export interface IStubFormOptions {
     readonly id?: string;
     readonly mode?: FormMode;
     readonly name?: string;
+    readonly revision?: number;
     readonly status?: FormStatus;
     readonly version?: string;
 }
 
 /** Stands in for a form: the audit reads only its identity, its status, its history, its mode and what its mapper extracts. */
 export function stubForm(data: object = {}, options: IStubFormOptions = {}): FormModel<any> {
-    const { hasMapper = true, history = [], id = "form-1", mode = "editable", name = "Stub Form", status = "draft", version = "1.0" } = options;
+    const { hasMapper = true, history = [], id = "form-1", mode = "editable", name = "Stub Form", revision = 0, status = "draft", version = "1.0" } = options;
 
     return {
         history,
         id,
         mode,
         name,
+        revision,
         status,
         version,
         mapper: hasMapper ? { extract: () => data, populate: () => { throw new Error("not used"); } } : undefined,

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { AuditRecord } from "../../src/models/audit-record";
 import { AuditService } from "../../src/services/audit";
 
-const record: AuditRecord = { at: 1, form: { id: "form-1", name: "Stub Form", version: "1.0" }, id: "record-1", kind: "saved" };
+const record: AuditRecord = { at: 1, form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, id: "record-1", kind: "saved" };
 
 describe("AuditService", () => {
     it("hands a record to everyone listening", () => {

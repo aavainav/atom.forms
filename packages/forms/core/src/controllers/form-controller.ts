@@ -1,4 +1,5 @@
 import { Controller, ControllerKey, IController } from "./controller";
+import type { IFormUpdatedEventArgs } from "./controller-manager";
 import { RegisterController } from "./controller-registry";
 
 import { FieldModel, TValueType } from "../models/field";
@@ -245,7 +246,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
 
     private readonly confirmDeletePage?: ConfirmPageDelete;
     private _form?: TForm;
-    private notify?: (payload: { form: TForm; reason?: UpdateReason }) => void;
+    private notify?: (payload: IFormUpdatedEventArgs<TForm>) => void;
 
     get form(): TForm {
         if (!this._form) {
@@ -321,7 +322,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     }
 
     /** Wired by the manager once, right after this controller is created -- not part of the public interface. */
-    public setNotifier(notify: (payload: { form: TForm; reason?: UpdateReason }) => void): void {
+    public setNotifier(notify: (payload: IFormUpdatedEventArgs<TForm>) => void): void {
         this.notify = notify;
     }
 

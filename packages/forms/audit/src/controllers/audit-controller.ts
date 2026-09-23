@@ -195,7 +195,8 @@ export class AuditController extends Controller implements IAuditController {
             this.raise({ kind: "status-changed", from: explained, to: form.status });
         }
 
-        this.watched = { ...this.watched, form };
+        // revision moves independently of id -- a save between two observations must not leave it stale
+        this.watched = { ...this.watched, form, identity: { ...this.watched.identity, revision: form.revision ?? 0 } };
 
         if (form.mapper) {
             this.scheduleEdit();
@@ -250,7 +251,7 @@ export class AuditController extends Controller implements IAuditController {
     private open(form: FormModel<any>): void {
         // what was loaded is the history of the report the last form was, which this one is not
         this._loaded = [];
-        this.watched = { form, identity: { id: form.id ?? "", name: form.name, version: form.version } };
+        this.watched = { form, identity: { id: form.id ?? "", revision: form.revision ?? 0, name: form.name, version: form.version } };
         this.baseline = form.mapper?.extract(form);
 
         this.raise({ kind: "form-opened", status: form.status, mode: form.mode });

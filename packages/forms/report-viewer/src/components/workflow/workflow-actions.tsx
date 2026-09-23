@@ -47,12 +47,12 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
 
     const handleSave = async (): Promise<void> => {
         // the form controller owns the current model and replaces it on every edit, so it is read at click time
-        const current = formController.form;
+        const current = formController.form.incrementRevision();
 
         try {
             await reportViewerService.saveForm(current, dataManager, controllers);
             getAuditController(controllers).recordSaved();
-            formController.update({ update: next => next.clean() });
+            formController.update({ update: () => current.clean() });
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {
@@ -74,6 +74,10 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
         }
 
         const isSaved = reportViewerService.canSaveForm(next, dataManager);
+
+        if (isSaved) {
+            next = next.incrementRevision();
+        }
 
         try {
             if (isSaved) {

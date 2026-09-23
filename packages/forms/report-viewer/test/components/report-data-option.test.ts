@@ -16,7 +16,7 @@ import type { IReportBundle } from "../../src/services/report-viewer";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const bundle: IReportBundle = {
-    audit: [{ at: 1, form: { id: "form-1", name: "Stub Form", version: "1.0" }, id: "a-1", kind: "saved" }],
+    audit: [{ at: 1, form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, id: "a-1", kind: "saved" }],
     comments: [{ at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." }],
     data: { name: "Stub Form", status: "draft", type: "none", version: "1.0" },
     exportedAt: 2,

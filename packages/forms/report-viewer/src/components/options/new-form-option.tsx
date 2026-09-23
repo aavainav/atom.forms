@@ -52,8 +52,10 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
             onCancel: async () => {},
             onDiscard: startNew,
             onSave: async () => {
+                const toSave = form.incrementRevision();
+
                 try {
-                    await reportViewerService.saveForm(form, dataManager, controllers);
+                    await reportViewerService.saveForm(toSave, dataManager, controllers);
                 }
                 catch (error) {
                     getAuditController(controllers).recordSaveFailed();
@@ -61,7 +63,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
                 }
 
                 getAuditController(controllers).recordSaved();
-                controllers.getFormController().update({ update: current => current.clean() });
+                controllers.getFormController().update({ update: () => toSave.clean() });
                 await startNew();
             }
         });

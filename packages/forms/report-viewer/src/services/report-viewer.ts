@@ -179,9 +179,9 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
 
     async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open"): Promise<IInitialForm> {
         const catalogItem = await this.formCatalogService.get(identity);
-        let form = await new catalogItem.ctor().initialize();
-
         const result = await dataManager?.read(reason);
+        const record = result?.data as IReportData | undefined;
+        let form = await new catalogItem.ctor(record?.id, record?.revision).initialize();
 
         if (result) {
             form = await form.populate(<IPopulateData<IReportData>>result);

@@ -4,6 +4,8 @@ import type { IActor, DraggableItemType, FormMode, FormStatus, PrintLayout } fro
 export interface IAuditFormIdentity {
     /** The form instance's id, stable while it is worked on. */
     readonly id: string;
+    /** How many times the report had been saved when this happened. */
+    readonly revision: number;
     /** The name the form is registered under. */
     readonly name: string;
     /** The form's version. */

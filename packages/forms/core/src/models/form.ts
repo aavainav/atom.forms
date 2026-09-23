@@ -21,7 +21,7 @@ import { withChanges } from "../utils/clone";
 
 /** How a form renders: "editable" allows edits and the add/delete/import affordances; "viewable" is a locked snapshot, styled like a printed record; "reviewable" is viewable that a reviewer can also comment on. */
 export type FormMode = "editable" | "reviewable" | "viewable";
-export type FormModelConstructor<TForm extends FormModel<any>> = new () => TForm;
+export type FormModelConstructor<TForm extends FormModel<any>> = new (id?: string, revision?: number) => TForm;
 export type FormStatus = "approved" | "canceled" | "draft" | "inProgress" | "inReview" | "issued" | "rejected" | "voided";
 export type FormType = "crash" | "citation" | "tow" | "warning" | "none";
 
@@ -36,10 +36,19 @@ export interface IFormIdentity {
 
 /** Defines the model properties of a form. */
 export interface IForm {
+    /** The report's own identity, distinct from the catalog identity (name/version) -- undefined until it is first saved. */
+    readonly id?: string;
+    /** How many times the report has been saved. Restored from storage, advanced by `incrementRevision`. */
+    readonly revision?: number;
+    /** The display name of the form. */
     readonly name: string;
+    /** A human-readable description of the form. */
     readonly description?: string;
+    /** The status of the form. This will also determine if a watermark is needed to be displayed. */
     readonly status: FormStatus;
+    /** The type of the form. */
     readonly type: FormType;
+    /** The version of the form definition. */
     readonly version: string;
 }
 
@@ -96,6 +105,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     getPagesFor(pageDefinition: PageDefinition): Array<PageModel>;
     /** Gets the rule collection used to validate the form. */
     getRuleCollection(): RuleCollection;
+    /** Returns a form with its revision advanced by one, for the record an actual save produces. */
+    incrementRevision(): this;
     /** Whether pages of the definition are locked, so that none can be added or removed. */
     isPageSetLocked(pageDefinition: PageDefinition): boolean;
     /** Whether the section is locked, so that its fields, and anything that would write to them, are closed. */
@@ -180,6 +191,8 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         // IForm comes off the form; without it, saved data could not be resolved back to a form by loadForm.
         return {
             ...values,
+            id: this.id,
+            revision: this.revision,
             name: this.name,
             description: this.description,
             status: this.status,
@@ -293,6 +306,10 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
     public getRuleCollection(): RuleCollection {
         return this.ruleCollection;
+    }
+
+    public incrementRevision(): this {
+        return withChanges(this, { revision: (this.revision ?? 0) + 1 });
     }
 
     public isPageSetLocked(pageDefinition: PageDefinition): boolean {

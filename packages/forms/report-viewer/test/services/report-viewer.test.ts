@@ -167,7 +167,7 @@ describe("ReportViewerService", () => {
         });
 
         it("hands the audit history and the comments the data manager read along with the form", async () => {
-            const audit: ReadonlyArray<AuditRecord> = [{ at: 1, form: { id: "form-0", name: "Stub", version: "1.0" }, id: "a-1", kind: "saved" }];
+            const audit: ReadonlyArray<AuditRecord> = [{ at: 1, form: { id: "form-0", name: "Stub", revision: 0, version: "1.0" }, id: "a-1", kind: "saved" }];
             const comments: ReadonlyArray<IReviewComment> = [{ at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." }];
             const service = createService(catalogItem);
 

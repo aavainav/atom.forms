@@ -74,7 +74,7 @@ describe("AuditController", () => {
         it("records the form being opened, stamped with its identity and the time", () => {
             const { records } = watch();
 
-            expect(records).toEqual([{ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "form-opened", mode: "editable", status: "draft" }]);
+            expect(records).toEqual([{ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "form-opened", mode: "editable", status: "draft" }]);
         });
 
         it("records the status the form arrived with", () => {
@@ -168,7 +168,7 @@ describe("AuditController", () => {
 
             edit(manager, { name: "Dana" }, { status: "issued" });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "status-changed", to: "issued" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, from: "draft", kind: "status-changed", to: "issued" });
         });
 
         it("records the edits made before it first", () => {
@@ -198,7 +198,7 @@ describe("AuditController", () => {
 
             edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, from: "draft", kind: "workflow-transition", to: "inReview", transition: "submit" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, from: "draft", kind: "workflow-transition", to: "inReview", transition: "submit" });
         });
 
         it("records it instead of a change of status, since the transition is what changed it", () => {
@@ -283,7 +283,7 @@ describe("AuditController", () => {
 
             vi.advanceTimersByTime(1);
 
-            expect(records[1]).toEqual({ at: now + editQuietPeriod, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "fields-edited" });
+            expect(records[1]).toEqual({ at: now + editQuietPeriod, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "fields-edited" });
         });
 
         it("records a burst of edits as one", () => {
@@ -369,7 +369,7 @@ describe("AuditController", () => {
 
             reasonedEdit(manager, { city: "Aiken", name: "Riley" }, { kind: "drop", type: "person" });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "dropped", type: "person" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "dropped", type: "person" });
         });
 
         it("does not wait out the quiet period", () => {
@@ -418,7 +418,7 @@ describe("AuditController", () => {
 
             reasonedEdit(manager, { name: "Riley" }, { kind: "violation", codes: ["56-5-1520"] });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "violations-added", codes: ["56-5-1520"] });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "violations-added", codes: ["56-5-1520"] });
         });
     });
 
@@ -466,7 +466,7 @@ describe("AuditController", () => {
 
             manager.getPrintController().begin({ layout: "side-by-side" });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", version: "1.0" }, kind: "print-started", layout: "side-by-side" });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "print-started", layout: "side-by-side" });
         });
 
         it("records nothing for ending a print that never began", () => {
@@ -573,7 +573,7 @@ describe("AuditController", () => {
     });
 
     describe("history", () => {
-        const loaded: AuditRecord = { at: 1, by: { id: "9", name: "Lt. Osei" }, form: { id: "form-0", name: "Stub Form", version: "1.0" }, id: "loaded-1", kind: "saved" };
+        const loaded: AuditRecord = { at: 1, by: { id: "9", name: "Lt. Osei" }, form: { id: "form-0", name: "Stub Form", revision: 0, version: "1.0" }, id: "loaded-1", kind: "saved" };
 
         it("holds what has been raised, in order", () => {
             const { audit } = watch();
