@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import FPageCollection from "../../src/components/page-collection/page-collection";
+import { ActivityEventArgs } from "../../src/controllers/controller-activity";
 import { ControllerManager } from "../../src/controllers/controller-manager";
 import type { IControllerManager } from "../../src/controllers/controller-manager";
 import type { FormMode, FormStatus } from "../../src/models/form";
@@ -203,6 +204,31 @@ describe("FPageCollection", () => {
             act(() => tab("Page 2").click());
 
             expect(navigation.activePageId).toBe(pageIds()[1]);
+        });
+
+        it("reports a page coming into view, naming it, as another tab is selected", async () => {
+            const { controllers, tab } = await mount({ form: await addCitationPage(await createTestForm()) });
+            const reported: Array<ActivityEventArgs> = [];
+            controllers.onActivity(args => reported.push(args));
+
+            act(() => tab("Page 2").click());
+            act(() => tab("Page 1").click());
+
+            expect(reported).toEqual([
+                { activity: { kind: "page-focused", page: "citation", pageOrdinal: 1 } },
+                { activity: { kind: "page-focused", page: "citation", pageOrdinal: 0 } }
+            ]);
+        });
+
+        it("reports nothing as a print takes the tabs away and gives them back", async () => {
+            const { controllers } = await mount({ form: await addCitationPage(await createTestForm()) });
+            const reported: Array<ActivityEventArgs> = [];
+            controllers.onActivity(args => reported.push(args));
+
+            act(() => controllers.getPrintController().begin({ layout: "top-down" }));
+            act(() => controllers.getPrintController().end());
+
+            expect(reported).toEqual([]);
         });
 
         it("says no page is showing while the form is printing", async () => {

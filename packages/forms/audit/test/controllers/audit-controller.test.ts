@@ -277,8 +277,8 @@ describe("AuditController", () => {
         });
 
         it("is attributed to the user, as every record is", () => {
-            const { audit, manager, records } = watch({ name: "Dana" });
-            audit.setUser({ id: "u-1", name: "Officer One" });
+            const { manager, records } = watch({ name: "Dana" });
+            manager.setUser({ id: "u-1", name: "Officer One" });
 
             edit(manager, { name: "Dana" }, { history: [submit], status: "inReview" });
 
@@ -472,8 +472,8 @@ describe("AuditController", () => {
         });
 
         it("attributes it to the user", () => {
-            const { audit, manager, records } = watch();
-            audit.setUser({ id: "9", name: "Lt. Osei" });
+            const { manager, records } = watch();
+            manager.setUser({ id: "9", name: "Lt. Osei" });
 
             reporter(manager).report("hello");
 
@@ -621,29 +621,39 @@ describe("AuditController", () => {
         const rivera = { agency: "Riverside Police Department", badgeId: "4471", id: "4471", name: "Sgt. Rivera", rank: "Sergeant" };
 
         it("attributes the records raised after a user is set to that user, and not the ones before", () => {
-            const { audit, records } = watch();
+            const { audit, manager, records } = watch();
 
-            audit.setUser(rivera);
+            manager.setUser(rivera);
             audit.recordSaved();
 
             expect(records[0].by).toBeUndefined();
             expect(records[1].by).toEqual(rivera);
         });
 
-        it("attributes a record to the whole of the user, not only their name", () => {
-            const { audit, records } = watch();
+        it("attributes the form being opened when the user was set before the form was loaded", () => {
+            const manager = new ControllerManager();
+            manager.setUser(rivera);
+            manager.loadForm(stubForm());
+            const records: Array<AuditRecord> = [];
+            getAuditController(manager).onRecord(record => records.push(record));
 
-            audit.setUser(rivera);
+            expect(records[0]).toMatchObject({ kind: "form-opened", by: rivera });
+        });
+
+        it("attributes a record to the whole of the user, not only their name", () => {
+            const { audit, manager, records } = watch();
+
+            manager.setUser(rivera);
             audit.recordSaved();
 
             expect(records[1].by).toMatchObject({ agency: "Riverside Police Department", badgeId: "4471", rank: "Sergeant" });
         });
 
         it("stops attributing records once the user is cleared", () => {
-            const { audit, records } = watch();
+            const { audit, manager, records } = watch();
 
-            audit.setUser(rivera);
-            audit.setUser(undefined);
+            manager.setUser(rivera);
+            manager.setUser(undefined);
             audit.recordSaved();
 
             expect(records[1].by).toBeUndefined();

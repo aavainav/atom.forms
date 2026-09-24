@@ -65,13 +65,14 @@ export function review(options: IReviewOptions = {}) {
     } as unknown as FormModel<any>;
 
     const manager = new ControllerManager();
+
+    if (user) {
+        manager.setUser(user);
+    }
+
     manager.loadForm(form);
 
     const controller = getReviewController(manager);
-
-    if (user) {
-        controller.setUser(user);
-    }
 
     let changes = 0;
     controller.onChanged(() => { changes += 1; });

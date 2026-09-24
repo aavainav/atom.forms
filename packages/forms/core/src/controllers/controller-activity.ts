@@ -1,8 +1,10 @@
 import { FormModel } from "../models/form";
 import { DraggableItemType } from "../models/import/draggable-item";
 
-/** Every kind of activity a controller reports on its own, and what each carries. Empty here: a package adds its own kinds by declaration merging. */
+/** Every kind of activity a controller reports on its own, and what each carries. A package adds its own kinds by declaration merging. */
 export interface IControllerActivityMap {
+    /** A different page came into view. `page` is the page definition's name and `pageOrdinal` which of its pages, counting from zero. */
+    "page-focused": { readonly page: string; readonly pageOrdinal: number };
 }
 
 /** Every kind of activity that comes with a change to the form, and what each carries. A package adds its own kinds by declaration merging. */

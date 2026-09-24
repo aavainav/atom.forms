@@ -9,6 +9,12 @@ export interface INavigationTarget {
     readonly fieldId: string;
 }
 
+/** Says what the page showing is, the way a review target does: the name of its definition, and which of that definition's pages it is, counting from zero. */
+export interface IActivePage {
+    readonly page: string;
+    readonly pageOrdinal: number;
+}
+
 /**
  * Defines the controller that carries a one-shot instruction to show a specific page and focus a specific field on
  * it, and remembers which page is showing. It carries no notion of why -- a validation entry decides that -- and only
@@ -24,13 +30,14 @@ export interface INavigationController extends IController {
     goTo(target: INavigationTarget): void;
     /** Clears the pending target once it has been acted on. */
     clear(): void;
-    /** Records which page is showing, raising a change only when it differs. */
-    setActivePage(pageId: string | undefined): void;
+    /** Records which page is showing, raising a change only when it differs. `active` says what the page is, so that a different page coming into view can be reported. */
+    setActivePage(pageId: string | undefined, active?: IActivePage): void;
 }
 
 @RegisterController(ControllerKey.navigation)
 export class NavigationController extends Controller implements INavigationController {
     private _activePageId?: string;
+    private _shownPageId?: string;
     private _target?: INavigationTarget;
 
     get activePageId(): string | undefined {
@@ -53,15 +60,27 @@ export class NavigationController extends Controller implements INavigationContr
         }
     }
 
-    public setActivePage(pageId: string | undefined): void {
+    public setActivePage(pageId: string | undefined, active?: IActivePage): void {
         if (pageId !== this._activePageId) {
             this._activePageId = pageId;
             this.emitChanged();
+        }
+
+        // a print takes the tabs away and gives them back, so it is the last page shown that a page has to differ from
+        if (pageId !== undefined && pageId !== this._shownPageId) {
+            const isFirst = this._shownPageId === undefined;
+            this._shownPageId = pageId;
+
+            // the first page is the one the form opened on, which `form-opened` already says
+            if (!isFirst && active) {
+                this.emitActivity({ kind: "page-focused", page: active.page, pageOrdinal: active.pageOrdinal });
+            }
         }
     }
 
     public dispose(): void {
         this._activePageId = undefined;
+        this._shownPageId = undefined;
         this._target = undefined;
     }
 }

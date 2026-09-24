@@ -8,6 +8,7 @@ import { FormController, IFormController } from "./form-controller";
 import { INavigationController } from "./navigation-controller";
 import { IPrintController } from "./print-controller";
 
+import { IActor } from "../models/actor";
 import { FormModel } from "../models/form";
 import { RuleCollection } from "../models/validation/rule-collection";
 import { IRulesController, RulesController } from "../models/validation/rules-controller";
@@ -34,6 +35,8 @@ export interface IControllerManager {
     readonly onActivity: IEvent<ActivityEventArgs>;
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
+    /** Who is using the report, as the host said, or undefined when it did not. Controllers read it when they act, so set it before a form is loaded for what the load records to carry it. */
+    readonly user: IActor | undefined;
 
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */
     getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm>;
@@ -60,6 +63,8 @@ export interface IControllerManager {
      * raises `onControllerChanged` for the form controller when the form is new to the manager.
      */
     loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm>;
+    /** Sets who is using the report. */
+    setUser(user: IActor | undefined): void;
 
     /** Disposes every controller owned by this manager. */
     dispose(): void;
@@ -71,6 +76,7 @@ export class ControllerManager implements IControllerManager {
     private readonly _activity = new EventEmitter<ActivityEventArgs>("controller-manager:activity");
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
+    private _user?: IActor;
 
     get onActivity(): IEvent<ActivityEventArgs> {
         return this._activity.event;
@@ -78,6 +84,10 @@ export class ControllerManager implements IControllerManager {
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
         return this._controllerChanged.event;
+    }
+
+    get user(): IActor | undefined {
+        return this._user;
     }
 
     public loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm> {
@@ -170,6 +180,10 @@ export class ControllerManager implements IControllerManager {
         }
 
         return controller;
+    }
+
+    public setUser(user: IActor | undefined): void {
+        this._user = user;
     }
 
     public dispose(): void {

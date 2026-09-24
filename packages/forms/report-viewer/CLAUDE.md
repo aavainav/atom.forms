@@ -281,8 +281,9 @@ form always, an `"editable"` one only when the host can keep comments for the of
 never -- and the `review` option is gated on the same call.
 
 **`ReportViewerForm` does the setting up, during render, before anything below subscribes:** it hands the user
-(`settings.user`) to the audit and review controllers, and loads what the host held -- `initialForm.audit` into the
-audit controller, `initialForm.comments` into the review controller -- once for each form it is given. That is during
+(`settings.user`) to the manager -- **before the form is loaded**, since the audit records `form-opened` as the load
+creates it and reads the user then -- and loads what the host held -- `initialForm.audit` into the audit controller,
+`initialForm.comments` into the review controller -- once for each form it is given. That is during
 render, not in an effect, for two reasons: the layer decides from the user whether to offer commenting on its first
 pass, and the manager's writer subscribes in an effect that runs *before* the parent's, so loading in an effect would be
 written straight back. Without a user a `"reviewable"` form shows its comments but cannot add any.

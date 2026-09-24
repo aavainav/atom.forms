@@ -62,7 +62,7 @@ export default function ReviewDemoPage(): React.JSX.Element {
     const [role, setRole] = useState<DemoRole>("reviewer");
     const [savedAudit, setSavedAudit] = useState(0);
     const [savedComments, setSavedComments] = useState(0);
-    const [user, setUser] = useState<IUserFields>({ agency: "Riverside Police Department", badgeId: "4471", name: "Sgt. Rivera", rank: "Sergeant" });
+    const [user, setUser] = useState<IUserFields>({ agency: "Central Bureaucracy", badgeId: "36", name: "Hermes Conrad", rank: "Grade 36 Bureaucrat" });
 
     // stand in for the host's database: they outlive a change of role, so what the reviewer writes is what the officer reads
     const audit = useRef<ReadonlyArray<AuditRecord>>([]);

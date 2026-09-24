@@ -26,11 +26,11 @@ describe("ReviewController", () => {
         });
 
         it("is false until a user has been set, even on a reviewable form", () => {
-            const { controller } = review({ user: null });
+            const { controller, controllers } = review({ user: null });
 
             expect(controller.canComment).toBe(false);
 
-            controller.setUser(rivera);
+            controllers.setUser(rivera);
 
             expect(controller.canComment).toBe(true);
         });

@@ -12,14 +12,10 @@ new FormDefinition("comment-stub-form", CommentStubForm, {});
 
 async function mount() {
     const controllers = new ControllerManager();
+    controllers.setUser(reviewer);
     controllers.loadForm((await new CommentStubForm().initialize()).setMode("reviewable"));
 
-    const audit = getAuditController(controllers);
-    const review = getReviewController(controllers);
-    audit.setUser(reviewer);
-    review.setUser(reviewer);
-
-    return { audit, review };
+    return { audit: getAuditController(controllers), review: getReviewController(controllers) };
 }
 
 describe("comments in the audit", () => {

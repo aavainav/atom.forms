@@ -59,19 +59,19 @@ const forms: Record<DemoForm, IDemoForm> = {
 /** Who opens the report in each role, the mode the report viewer shows it in, and what that lets them do. */
 const roles: Record<DemoRole, { readonly actor: IActor; readonly description: string; readonly label: string; readonly mode: FormMode }> = {
     officer: {
-        actor: { agency: "Riverside Police Department", badgeId: "4471", id: "ofc-rivera", name: "Ofc. Rivera", rank: "Officer" },
+        actor: { agency: "Planet Express", badgeId: "2999", id: "fry", name: "Philip J. Fry", rank: "Delivery Boy" },
         description: "Editable: the officer writes the report and makes the moves an author makes -- submitting a report, issuing a citation.",
         label: "Officer",
         mode: "editable"
     },
     reviewer: {
-        actor: { agency: "Riverside Police Department", badgeId: "1207", id: "sgt-okafor", name: "Sgt. Okafor", rank: "Sergeant" },
+        actor: { agency: "Central Bureaucracy", badgeId: "36", id: "bureaucrat-conrad", name: "Hermes Conrad", rank: "Grade 36 Bureaucrat" },
         description: "Reviewable: the reviewer comments, and makes the moves a reviewer makes -- approving, or rejecting once there is a comment to fix.",
         label: "Reviewer",
         mode: "reviewable"
     },
     viewer: {
-        actor: { agency: "Riverside Municipal Court", id: "clerk-lee", name: "Clerk Lee" },
+        actor: { agency: "New New York Municipal Court", id: "judge-whitey", name: "Judge Whitey" },
         description: "Viewable: the report as a printed copy shows it, with nothing to change.",
         label: "Viewer",
         mode: "viewable"

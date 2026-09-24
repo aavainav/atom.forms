@@ -41,8 +41,8 @@ function mount(options: IMountOptions = {}) {
     } as unknown as FormModel<any>);
 
     // the report viewer form holds the user and the comments on the controller before this mounts
+    controllers.setUser(rivera);
     const review = getReviewController(controllers);
-    review.setUser(rivera);
     review.load(options.comments ?? []);
 
     const reviewService = new ReviewService();

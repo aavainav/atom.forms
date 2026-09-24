@@ -70,7 +70,10 @@ Every field also carries `hasError`, `isEnabled`, and a uuid `id` used as the DO
 ## Controllers — where mutable state lives
 
 `ControllerManager` is created by the React layer (`ReportViewerForm`), one per form. It caches controllers by key
-and re-broadcasts each one's `onChanged` through `onControllerChanged`.
+and re-broadcasts each one's `onChanged` through `onControllerChanged`. It also holds **who is using the report** as
+`user` (an `IActor`, set with `setUser`), which the controllers that attribute what happens -- `@forms/audit` and
+`@forms/review` -- read when they act rather than keeping a copy. Set it before `loadForm`, so that what the load
+itself records, such as the audit's `form-opened`, carries it.
 
 Every controller extends the abstract `Controller` and is declared with `@RegisterController(key, { eager? })`, which
 puts a **descriptor** — the key and the class — in the static `ControllerRegistry` when the class's module loads. The
@@ -99,7 +102,8 @@ as its one `onActivity` (which survives the form controller being replaced):
   which `addPage` and `removePage` pass themselves (`{ page, pageOrdinal }`, counting from zero); a package above it
   merges in its own (`@forms/violations` declares `violations-added`).
 
-Core's maps are otherwise empty and nothing in core reads an activity. `@forms/audit` records each one as it comes.
+Core also declares `page-focused` in `IControllerActivityMap`, which `NavigationController` reports itself. Nothing in
+core reads an activity. `@forms/audit` records each one as it comes.
 
 - **`FormController`** owns the current `FormModel` and is the single path for every edit. It is constructed empty
   like every other controller; `loadForm` seeds it through `load(form)` (which raises nothing and is a no-op once a
@@ -127,6 +131,10 @@ Core's maps are otherwise empty and nothing in core reads an activity. `@forms/a
   (`@forms/review`'s comment markers) reads it through `useActivePageId`, because `FPane` renders an empty `<div>` for
   a tab that is not active, so only the active page's controls exist to be found. The controls are found by the
   `data-field-id` attribute `FFieldControl` and `FFieldCheckbox` carry on their root, through `getFieldControl`.
+  `setActivePage` also takes an optional `{ page, pageOrdinal }` saying what the page is (the page collection knows the
+  definition's name and where the page sits), and reports a **`page-focused`** activity when a page other than the
+  last one shown comes into view, in any mode. The first page shown is silent, since `form-opened` says it, and so is
+  the same page coming back after a print, which sets `undefined` in between.
 - **`RulesController`** (in `models/validation/`) runs the rule collection and holds the resulting
   `RuleIssueCollection`. It reads `form` through the manager each time it is needed, so it can never be validating a
   stale model; its rules are the form's own unless `getRulesController(ruleCollection)` sets one or

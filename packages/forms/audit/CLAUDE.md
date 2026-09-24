@@ -21,6 +21,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
+| `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since `form-opened` says it, and neither is a page returning after a print | Reported by core's `NavigationController` through the manager's `onActivity` |
 | `page-added` / `page-removed` | A page was added to, or removed from, a set of pages: `{ page, pageOrdinal, fields }`, the page definition's name and where the page sits, counting from zero | Same as `dropped`, from `FormController.addPage` / `removePage`. Declared by core |
 | `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped`. Declared by `@forms/violations` |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
@@ -32,8 +33,10 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | Whatever a package reports | A controller calls `emitActivity({ kind, ... })` | The manager's `onActivity`; the package declares the kind by merging into core's `IControllerActivityMap` |
 
 Every record is `{ at, by?, form: { id, name, revision, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped
-when the record is raised, so a host handed one twice can tell. `by` is the `IActor` the controller was told is using
-the report (`setUser`), and is absent when the host did not say. `form.revision` is whatever the report's own
+when the record is raised, so a host handed one twice can tell. `by` is the `IActor` the manager was told is using
+the report (`manager.setUser`), and is absent when the host did not say. It is read when a record is raised, so the
+manager is told **before the form is loaded** for `form-opened`, which is raised as the load creates this controller,
+to carry it. `form.revision` is whatever the report's own
 revision was at that moment -- it moves independently of `id`, so it is refreshed on every observed change, not just
 when a different form replaces the watched one.
 
@@ -109,7 +112,6 @@ be carried from one session to the next:
 - `load(records)` takes the history the host held. The report viewer calls it with what the host's `read()` returned
   as `audit`, and again for a new form, since a new form is a new report. A different form replacing the watched one
   drops what was loaded, but leaves the old form's records in the session, so a write in flight still finds them.
-- `setUser(actor)` sets who `by` is on every record raised from then on.
 
 The report viewer writes the session back through the data manager's `writeAudit`, **only the records not yet given**,
 so the host is appended to. A host **merges by `id`** and never overwrites what it holds with what arrives: the history

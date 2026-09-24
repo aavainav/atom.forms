@@ -1,5 +1,5 @@
 import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
-import { IActor, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, ActivityEventArgs, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
+import { IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, ActivityEventArgs, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
 
 import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
@@ -33,8 +33,6 @@ export interface IAuditController extends IController {
     recordSaved(): void;
     /** Records that saving the form failed. */
     recordSaveFailed(): void;
-    /** Sets who the records raised from now on are attributed to. */
-    setUser(user: IActor | undefined): void;
 }
 
 /** Gets the audit controller, which core's manager has no accessor for. */
@@ -60,7 +58,6 @@ export class AuditController extends Controller implements IAuditController {
     private isPrinting = false;
     private listener?: IEventListener;
     private pending: Array<AuditRecord> = [];
-    private user?: IActor;
     private watched?: IWatchedForm;
 
     get history(): ReadonlyArray<AuditRecord> {
@@ -120,10 +117,6 @@ export class AuditController extends Controller implements IAuditController {
     public recordSaveFailed(): void {
         this.flush();
         this.raise({ kind: "save-failed" });
-    }
-
-    public setUser(user: IActor | undefined): void {
-        this.user = user;
     }
 
     public start(): void {
@@ -268,7 +261,7 @@ export class AuditController extends Controller implements IAuditController {
             return;
         }
 
-        const record: AuditRecord = { ...detail, at: Date.now(), by: this.user, form: this.watched.identity, id: crypto.randomUUID() };
+        const record: AuditRecord = { ...detail, at: Date.now(), by: this.manager.user, form: this.watched.identity, id: crypto.randomUUID() };
 
         this._session = [...this._session, record];
         this.refresh();

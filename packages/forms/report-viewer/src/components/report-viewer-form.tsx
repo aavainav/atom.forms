@@ -60,14 +60,15 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
 
     const initialState = useMemo(() => mode === "editable" ? initialForm.form : initialForm.form.setMode(mode), [initialForm, mode]);
 
+    // set before the form loads, since the audit records the form being opened as it is loaded
+    formControllers.setUser(user);
+
     const controller = useFormController(formControllers, initialState);
 
-    // handed to the controllers during render, like the form itself, so they hold them before anything below reads or
-    // subscribes to them: who records and comments are attributed to, and what the host held for the report
+    // handed to the controllers during render, like the form itself, so they hold it before anything below reads or
+    // subscribes to them: what the host held for the report
     const audit = getAuditController(formControllers);
     const review = getReviewController(formControllers);
-    audit.setUser(user);
-    review.setUser(user);
 
     const loaded = useRef<{ readonly controllers: IControllerManager; readonly initialForm: IInitialForm }>(undefined);
 

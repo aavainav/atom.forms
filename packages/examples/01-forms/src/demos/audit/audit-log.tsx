@@ -15,6 +15,7 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "fields-edited": "primary",
     "form-opened": "secondary",
     "page-added": "secondary",
+    "page-focused": "light",
     "page-removed": "danger",
     "print-ended": "info",
     "print-started": "info",
@@ -45,6 +46,8 @@ function summarize(record: AuditRecord): string {
         case "page-added":
         case "page-removed":
             return `${record.page} ${record.pageOrdinal + 1}: ${record.fields.join(", ")}`;
+        case "page-focused":
+            return `${record.page} ${record.pageOrdinal + 1}`;
         case "violations-added":
             return `${record.codes.join(", ")}: ${record.fields.join(", ")}`;
         case "form-opened":
@@ -97,7 +100,10 @@ export default function AuditLog(): React.JSX.Element {
                                     {new Date(record.at).toLocaleTimeString()} · {record.form.id.slice(0, 8)}
                                 </span>
                             </div>
-                            <div className="small fw-semibold">{record.form.name}</div>
+                            <div className="small fw-semibold">
+                                {record.form.name}
+                                {record.by && <span className="fw-normal text-muted"> · {record.by.name}</span>}
+                            </div>
                             <div className="small text-break">{summarize(record)}</div>
                             <details className="small">
                                 <summary className="text-muted">Raw record</summary>

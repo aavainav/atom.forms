@@ -1,4 +1,4 @@
-import { IActor, IController, IControllerManager, IFieldPlacement, INavigationTarget, Controller, FormModel, RegisterController } from "@forms/core";
+import { IController, IControllerManager, IFieldPlacement, INavigationTarget, Controller, FormModel, RegisterController } from "@forms/core";
 
 import { IReviewComment, ReviewTarget, getTargetKey } from "../models/review-comment";
 import { getPlacementTargets } from "../utils/placement-targets";
@@ -43,8 +43,6 @@ export interface IReviewController extends IController {
     locateField(fieldId: string): ReviewTarget | undefined;
     /** Sets whether a comment has been dealt with, throwing while the form is viewable. */
     setResolved(id: string, isResolved: boolean): void;
-    /** Sets who comments are attributed to. */
-    setUser(user: IActor | undefined): void;
 }
 
 /** Gets the review controller, which core's manager has no accessor for. */
@@ -69,10 +67,9 @@ function getTargetNames(target: Exclude<ReviewTarget, { readonly level: "form" }
 export class ReviewController extends Controller implements IReviewController {
     private _comments: ReadonlyArray<IReviewComment> = [];
     private placements?: { readonly placements: ReadonlyMap<string, IFieldPlacement>; readonly signature: string };
-    private user?: IActor;
 
     get canComment(): boolean {
-        return this.form.mode === "reviewable" && !!this.user;
+        return this.form.mode === "reviewable" && !!this.manager.user;
     }
 
     get canResolve(): boolean {
@@ -96,7 +93,9 @@ export class ReviewController extends Controller implements IReviewController {
             throw new Error("Comments can only be added while the form is reviewable.");
         }
 
-        if (!this.user) {
+        const user = this.manager.user;
+
+        if (!user) {
             throw new Error("A user must be set before comments can be added.");
         }
 
@@ -104,7 +103,7 @@ export class ReviewController extends Controller implements IReviewController {
             throw new Error("A comment needs some text.");
         }
 
-        const comment: IReviewComment = { at: Date.now(), author: this.user, id: crypto.randomUUID(), isResolved: false, target, text: text.trim() };
+        const comment: IReviewComment = { at: Date.now(), author: user, id: crypto.randomUUID(), isResolved: false, target, text: text.trim() };
 
         this.replace([...this._comments, comment]);
         this.emitActivity({ kind: "comment-added", commentId: comment.id, target: this.describeTarget(target) });
@@ -192,10 +191,6 @@ export class ReviewController extends Controller implements IReviewController {
                 this.emitActivity({ kind: isResolved ? "comment-resolved" : "comment-reopened", commentId: id, target: this.describeTarget(before.target) });
             }
         }
-    }
-
-    public setUser(user: IActor | undefined): void {
-        this.user = user;
     }
 
     private findPlacement(target: ReviewTarget): { readonly fieldId: string; readonly placement: IFieldPlacement } | undefined {

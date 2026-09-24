@@ -190,6 +190,12 @@ describe("ReportViewerForm", () => {
             expect(audit.session.at(-1)!.by).toEqual(rivera);
         });
 
+        it("attributes the form being opened to them, since they are known before it loads", () => {
+            const { audit } = mount({ user: rivera });
+
+            expect(audit.session[0]).toMatchObject({ kind: "form-opened", by: rivera });
+        });
+
         it("attributes the comments a reviewer makes to the whole of them", () => {
             const { review } = mount({ mode: "reviewable", user: rivera });
 
