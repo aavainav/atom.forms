@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { Controller, ControllerKey } from "../../src/controllers/controller";
 import type { ControllerConstructor } from "../../src/controllers/controller";
+import { ActivityEventArgs, ControllerActivity } from "../../src/controllers/controller-activity";
 import { ControllerManager } from "../../src/controllers/controller-manager";
 import type { IControllerChangedEventArgs, IControllerManager } from "../../src/controllers/controller-manager";
 import { ControllerRegistry, RegisterController } from "../../src/controllers/controller-registry";
@@ -14,6 +15,13 @@ import { createTestForm } from "../fixtures/citation-form";
  */
 const log: Array<string> = [];
 
+declare module "../../src/controllers/controller-activity" {
+    interface IControllerActivityMap {
+        /** A kind only these tests report. */
+        "test-reported": { readonly note: string };
+    }
+}
+
 @RegisterController("test-echo")
 class EchoController extends Controller {
     /** Hands back the manager the controller was created with, which the base class keeps protected. */
@@ -23,6 +31,10 @@ class EchoController extends Controller {
 
     notify(): void {
         this.emitChanged();
+    }
+
+    report(note: string): void {
+        this.emitActivity({ kind: "test-reported", note });
     }
 
     start(): void {
@@ -143,6 +155,16 @@ describe("Controller", () => {
         expect(raised).toBe(1);
     });
 
+    it("raises onActivity when it reports something", () => {
+        const controller = new ControllerManager().getController<EchoController>("test-echo");
+        const reported: Array<ControllerActivity> = [];
+        controller.onActivity(activity => reported.push(activity));
+
+        controller.report("hello");
+
+        expect(reported).toEqual([{ kind: "test-reported", note: "hello" }]);
+    });
+
     it("refuses to be created without a key", () => {
         class Unregistered extends Controller { }
 
@@ -189,6 +211,30 @@ describe("ControllerManager", () => {
 
         it("throws for a key nothing is registered under", () => {
             expect(() => new ControllerManager().getController("test-nothing")).toThrowError(/No controller is registered under the key 'test-nothing'/);
+        });
+    });
+
+    describe("onActivity", () => {
+        it("relays what any of its controllers reports", () => {
+            const manager = new ControllerManager();
+            const relayed: Array<ActivityEventArgs> = [];
+            manager.onActivity(args => relayed.push(args));
+
+            manager.getController<EchoController>("test-echo").report("hello");
+
+            expect(relayed).toEqual([{ activity: { kind: "test-reported", note: "hello" } }]);
+        });
+
+        it("stops relaying a controller once it is disposed", () => {
+            const manager = new ControllerManager();
+            const controller = manager.getController<EchoController>("test-echo");
+            const relayed: Array<ActivityEventArgs> = [];
+            manager.onActivity(args => relayed.push(args));
+
+            manager.disposeController("test-echo");
+            controller.report("hello");
+
+            expect(relayed).toEqual([]);
         });
     });
 

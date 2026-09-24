@@ -41,7 +41,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyDefendantDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyDefendantDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
@@ -57,7 +57,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
                 // rather than inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     okTrafficService.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update({ update: (page) => okTrafficService.applyVehicleDropzone(page, resolved), reason: { kind: "drop", type: dropzone.type } }));
+                        .then((resolved) => binding.update({ update: (page) => okTrafficService.applyVehicleDropzone(page, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(complaintPage.vehicleSection)} />
@@ -66,7 +66,7 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyViolationDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>

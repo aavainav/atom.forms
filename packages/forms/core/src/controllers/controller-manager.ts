@@ -1,6 +1,7 @@
 import { EventEmitter, IEvent, IEventListener } from "@common/event-emitter";
 
 import { ControllerKey, IController } from "./controller";
+import { ActivityEventArgs } from "./controller-activity";
 import { ControllerRegistry } from "./controller-registry";
 import { IDragAndDropController } from "./drag-and-drop-controller";
 import { FormController, IFormController } from "./form-controller";
@@ -8,7 +9,6 @@ import { INavigationController } from "./navigation-controller";
 import { IPrintController } from "./print-controller";
 
 import { FormModel } from "../models/form";
-import type { UpdateReason } from "../models/update-reason";
 import { RuleCollection } from "../models/validation/rule-collection";
 import { IRulesController, RulesController } from "../models/validation/rules-controller";
 
@@ -28,20 +28,12 @@ export interface IControllerChangedEventArgs {
     readonly controller: IController;
 }
 
-/** Describes a form update. */
-export interface IFormUpdatedEventArgs<TForm extends FormModel<any> = FormModel<any>> {
-    /** The form the update produced. */
-    readonly form: TForm;
-    /** Why the update was made, when the caller said. */
-    readonly reason?: UpdateReason;
-}
-
 /** Defines the manager that creates and caches the controllers belonging to a single form. */
 export interface IControllerManager {
+    /** Raised when a controller owned by this manager reports something that happened, or an update names what it was. Unlike `onControllerChanged`, it survives the form controller itself being replaced. */
+    readonly onActivity: IEvent<ActivityEventArgs>;
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
-    /** Raised after any form update, naming why when the caller said. Unlike `onControllerChanged`, survives the form controller itself being replaced. */
-    readonly onFormUpdated: IEvent<IFormUpdatedEventArgs>;
 
     /** Gets the form controller, which owns the form model. The caller asserts the form type. */
     getFormController<TForm extends FormModel<any> = FormModel<any>>(): IFormController<TForm>;
@@ -76,16 +68,16 @@ export interface IControllerManager {
 }
 
 export class ControllerManager implements IControllerManager {
+    private readonly _activity = new EventEmitter<ActivityEventArgs>("controller-manager:activity");
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
-    private readonly _formUpdated = new EventEmitter<IFormUpdatedEventArgs>("controller-manager:form-updated");
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
+
+    get onActivity(): IEvent<ActivityEventArgs> {
+        return this._activity.event;
+    }
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
         return this._controllerChanged.event;
-    }
-
-    get onFormUpdated(): IEvent<IFormUpdatedEventArgs> {
-        return this._formUpdated.event;
     }
 
     public loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm> {
@@ -103,7 +95,7 @@ export class ControllerManager implements IControllerManager {
         const controller = this.getController<FormController<TForm>>(ControllerKey.form);
 
         if (isNewForm) {
-            controller.setNotifier(payload => this._formUpdated.emit(payload));
+            controller.setNotifier(args => this._activity.emit(args));
         }
 
         controller.load(form);
@@ -141,7 +133,9 @@ export class ControllerManager implements IControllerManager {
             }
 
             const controller = new registration.ctor(this);
-            const listener = controller.onChanged(() => this._controllerChanged.emit({ key, controller }));
+            const changed = controller.onChanged(() => this._controllerChanged.emit({ key, controller }));
+            const activity = controller.onActivity(reported => this._activity.emit({ activity: reported }));
+            const listener: IEventListener = { remove: () => { changed.remove(); activity.remove(); } };
 
             item = [controller, listener];
             this.controllers.set(key, item);

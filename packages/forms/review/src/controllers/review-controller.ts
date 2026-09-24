@@ -3,6 +3,17 @@ import { IActor, IController, IControllerManager, IFieldPlacement, INavigationTa
 import { IReviewComment, ReviewTarget, getTargetKey } from "../models/review-comment";
 import { getPlacementTargets } from "../utils/placement-targets";
 
+declare module "@forms/core" {
+    interface IControllerActivityMap {
+        /** A comment was made on the report. `target` says where, in words -- never what the comment says. */
+        "comment-added": { readonly commentId: string; readonly target: string };
+        /** A resolved comment was reopened. */
+        "comment-reopened": { readonly commentId: string; readonly target: string };
+        /** A comment was resolved. */
+        "comment-resolved": { readonly commentId: string; readonly target: string };
+    }
+}
+
 /** Defines the controller that holds a report's review comments. It reads the form, so it throws until one is loaded. */
 export interface IReviewController extends IController {
     /** Whether comments can be added, which they can only while the form is reviewable and a user has been set. */
@@ -96,6 +107,7 @@ export class ReviewController extends Controller implements IReviewController {
         const comment: IReviewComment = { at: Date.now(), author: this.user, id: crypto.randomUUID(), isResolved: false, target, text: text.trim() };
 
         this.replace([...this._comments, comment]);
+        this.emitActivity({ kind: "comment-added", commentId: comment.id, target: this.describeTarget(target) });
 
         return comment;
     }
@@ -171,8 +183,14 @@ export class ReviewController extends Controller implements IReviewController {
             throw new Error("Comments cannot be resolved or reopened while the form is viewable.");
         }
 
-        if (this._comments.some(comment => comment.id === id)) {
+        const before = this._comments.find(comment => comment.id === id);
+
+        if (before) {
             this.replace(this._comments.map(comment => comment.id === id ? { ...comment, isResolved } : comment));
+
+            if (before.isResolved !== isResolved) {
+                this.emitActivity({ kind: isResolved ? "comment-resolved" : "comment-reopened", commentId: id, target: this.describeTarget(before.target) });
+            }
         }
     }
 

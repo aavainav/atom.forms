@@ -77,7 +77,6 @@ export type { IReportData } from "./mapping/data/report-data";
 export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./mapping/form-mapper";
 
 export type { IActor } from "./models/actor";
-export type { IDropUpdateReason, UpdateReason } from "./models/update-reason";
 export type { IAvailableTransition, ITransitionOptions, IWorkflow, IWorkflowDefinition, IWorkflowEntry, IWorkflowStamp, IWorkflowTransition, WorkflowGuard, WorkflowStep } from "./models/workflow";
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";
@@ -134,7 +133,7 @@ export { VehicleDropzone, VehicleDropzoneFields } from "./models/import/vehicle-
 export { ViolationDropzone, ViolationDropzoneFields } from "./models/import/violation-dropzone";
 
 export { Controller, ControllerKey, ControllerManager, DragAndDropController, FormController, NavigationController, PrintController, RegisterController } from "./controllers";
-export type { ConfirmPageDelete, ControllerConstructor, IController, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormController, IFormUpdatedEventArgs, IFormUpdateOptions, INavigationController, INavigationTarget, IPageBinding, IPageUpdateOptions, IPrintController, IPrintState, IRegisterControllerOptions, ISectionBinding, ISectionUpdateOptions, PrintLayout } from "./controllers";
+export type { ActivityEventArgs, ConfirmPageDelete, ControllerActivity, ControllerConstructor, FormActivity, IController, IControllerActivityMap, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormActivityEventArgs, IFormActivityMap, IFormController, IFormUpdateOptions, INavigationController, INavigationTarget, IPageBinding, IPageUpdateOptions, IPrintController, IPrintState, IRegisterControllerOptions, ISectionBinding, ISectionUpdateOptions, PrintLayout } from "./controllers";
 
 export { useActivePageId, useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 

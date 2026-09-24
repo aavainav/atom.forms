@@ -1,5 +1,5 @@
 import { Controller, ControllerKey, IController } from "./controller";
-import type { IFormUpdatedEventArgs } from "./controller-manager";
+import { IFormActivityEventArgs, FormActivity } from "./controller-activity";
 import { RegisterController } from "./controller-registry";
 
 import { FieldModel, TValueType } from "../models/field";
@@ -10,7 +10,6 @@ import { PageDefinition } from "../models/page-definition";
 import { PageModel } from "../models/page";
 import { SectionDefinition } from "../models/section-definition";
 import { SectionModel } from "../models/section";
-import type { UpdateReason } from "../models/update-reason";
 
 import { Mutable } from "../utils/mutable";
 
@@ -19,24 +18,24 @@ export type ConfirmPageDelete = (page: PageModel) => Promise<boolean>;
 
 /** What a section update needs: how to compute the new section, and optionally why. Method shorthand keeps `update` bivariant, so a subclass binding stays assignable to the SectionModel base. */
 export interface ISectionUpdateOptions<TSection extends SectionModel> {
-    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
-    readonly reason?: UpdateReason;
+    /** What the update was, for whatever observes the change to record -- core never interprets it itself. */
+    readonly reason?: FormActivity;
     /** Computes the new section from its current state. Compute from the argument, not a section captured during render -- that snapshot may already be stale. */
     update(section: TSection): TSection;
 }
 
 /** What a page update needs: how to compute the new page, and optionally why. See `ISectionUpdateOptions` for why `update` uses method shorthand. */
 export interface IPageUpdateOptions<TPage extends PageModel> {
-    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
-    readonly reason?: UpdateReason;
+    /** What the update was, for whatever observes the change to record -- core never interprets it itself. */
+    readonly reason?: FormActivity;
     /** Computes the new page from its current state. */
     update(page: TPage): TPage;
 }
 
 /** What a form update needs: how to compute the new form, and optionally why. See `ISectionUpdateOptions` for why `update` uses method shorthand. */
 export interface IFormUpdateOptions<TForm extends FormModel<any>> {
-    /** Why the update was made, for anything observing the change to use -- core never interprets it itself. */
-    readonly reason?: UpdateReason;
+    /** What the update was, for whatever observes the change to record -- core never interprets it itself. */
+    readonly reason?: FormActivity;
     /** Computes the new form from its current state; returning the form unchanged raises nothing. */
     update(form: TForm): TForm;
 }
@@ -95,10 +94,6 @@ export interface IFormController<TForm extends FormModel<any> = FormModel<any>> 
 /**
  * Copies the shared sections' values from the collection's first page onto a page about to be added -- a page
  * arrives from `createPage` empty, so without this its shared sections would stay blank until an edit converged them.
- *
- * Copied field by field rather than by carrying the whole section, so the new page keeps the field uuids
- * `initialize` gave it -- the ids inputs and labels are addressed by, which must stay distinct across pages that
- * print together.
  */
 function copySharedSections<TPage extends PageModel>(form: FormModel<any>, pageDefinition: PageDefinition<TPage>, page: TPage): TPage {
     const shared = pageDefinition.children.filter((child): child is SectionDefinition => child instanceof SectionDefinition && child.isShared);
@@ -246,7 +241,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
 
     private readonly confirmDeletePage?: ConfirmPageDelete;
     private _form?: TForm;
-    private notify?: (payload: IFormUpdatedEventArgs<TForm>) => void;
+    private notify?: (args: IFormActivityEventArgs<TForm>) => void;
 
     get form(): TForm {
         if (!this._form) {
@@ -264,7 +259,12 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     public async addPage(pageDefinition: PageDefinition): Promise<void> {
         // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
         const page = await pageDefinition.createPage(this.form).initialize();
-        this.update({ update: form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition) });
+        const pageOrdinal = this.form.get<PageCollection>(pageDefinition).pages.length;
+
+        this.update({
+            update: form => form.addPage(copySharedSections(form, pageDefinition, page), pageDefinition),
+            reason: { kind: "page-added", page: pageDefinition.name, pageOrdinal }
+        });
     }
 
     public getPageBinding<TPage extends PageModel>(pageDefinition: PageDefinition<TPage>, pageId: string): IPageBinding<TPage> {
@@ -300,12 +300,12 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
             return false;
         }
 
+        // resolved again because the collection may have changed while the confirmation was open
+        const pageOrdinal = this.form.get<PageCollection>(pageDefinition).indexOfPage(pageId);
+
         this.update({
-            update: form => {
-                // the collection is resolved again because it may have changed while the confirmation was open
-                const index = form.get<PageCollection>(pageDefinition).indexOfPage(pageId);
-                return index < 0 ? form : form.removePage(index, pageDefinition);
-            }
+            update: form => pageOrdinal < 0 ? form : form.removePage(pageOrdinal, pageDefinition),
+            reason: { kind: "page-removed", page: pageDefinition.name, pageOrdinal }
         });
 
         this.bindings.delete(this.getBindingKey(pageDefinition, pageId));
@@ -322,7 +322,7 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
     }
 
     /** Wired by the manager once, right after this controller is created -- not part of the public interface. */
-    public setNotifier(notify: (payload: IFormUpdatedEventArgs<TForm>) => void): void {
+    public setNotifier(notify: (args: IFormActivityEventArgs<TForm>) => void): void {
         this.notify = notify;
     }
 
@@ -336,7 +336,11 @@ export class FormController<TForm extends FormModel<any> = FormModel<any>> exten
         }
 
         this._form = form;
-        this.notify?.({ form, reason });
+
+        if (reason) {
+            this.notify?.({ activity: reason, form });
+        }
+
         this.emitChanged();
     }
 

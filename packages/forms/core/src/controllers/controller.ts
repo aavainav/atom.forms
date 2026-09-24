@@ -1,5 +1,6 @@
 import { EventEmitter, IEvent } from "@common/event-emitter";
 
+import { ControllerActivity } from "./controller-activity";
 import type { IControllerManager } from "./controller-manager";
 
 /** The keys identifying the controllers this package registers; a controller from another package brings a key of its own. */
@@ -37,6 +38,7 @@ export abstract class Controller implements IController {
     /** The key the class was registered under. Defined on the class itself by `RegisterController`, so a subclass never inherits its parent's. */
     declare static readonly key: string;
 
+    private readonly _activity: EventEmitter<ControllerActivity>;
     private readonly _changed: EventEmitter<void>;
 
     readonly key: string;
@@ -50,6 +52,12 @@ export abstract class Controller implements IController {
 
         this.key = ctor.key;
         this._changed = new EventEmitter<void>(`${this.key}:changed`);
+        this._activity = new EventEmitter<ControllerActivity>(`${this.key}:activity`);
+    }
+
+    /** Raised when the controller reports something that happened, which its manager relays as `onActivity`. */
+    get onActivity(): IEvent<ControllerActivity> {
+        return this._activity.event;
     }
 
     get onChanged(): IEvent<void> {
@@ -65,6 +73,11 @@ export abstract class Controller implements IController {
      * which happens during render, so this should observe rather than raise changes of its own.
      */
     public start(): void {
+    }
+
+    /** Reports something that happened, for whatever observes the manager to record. */
+    protected emitActivity(activity: ControllerActivity): void {
+        this._activity.emit(activity);
     }
 
     /** Raises `onChanged`. */

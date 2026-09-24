@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ControllerManager, RuleCollection } from "@forms/core";
+import { IWorkflowEntry, Controller, ControllerManager, FormActivity, RegisterController, RuleCollection } from "@forms/core";
 
 import { AuditController, editQuietPeriod, getAuditController, maxPendingRecords } from "../../src/controllers/audit-controller";
 import type { IAuditController } from "../../src/controllers/audit-controller";
-import type { IWorkflowEntry, UpdateReason } from "@forms/core";
 
 import type { AuditRecord } from "../../src/models/audit-record";
 import { failingRule, stubForm } from "../fixtures/stub-form";
@@ -33,13 +32,36 @@ function edit(manager: ControllerManager, data: object, options?: IStubFormOptio
     manager.getFormController().setForm(stubForm(data, options));
 }
 
-/** Makes an update naming why, the way a drop or the violations panel does. */
-function reasonedEdit(manager: ControllerManager, data: object, reason: UpdateReason, options?: IStubFormOptions): void {
+/** Makes an update naming what it was, the way a drop or the violations panel does. */
+function reasonedEdit(manager: ControllerManager, data: object, reason: FormActivity, options?: IStubFormOptions): void {
     manager.getFormController().update({ update: () => stubForm(data, options), reason });
 }
 
 function kinds(records: ReadonlyArray<AuditRecord>): Array<string> {
     return records.map(record => record.kind);
+}
+
+declare module "@forms/core" {
+    interface IFormActivityMap {
+        /** A kind only these tests report with a change, standing in for one a package above core declares. */
+        "test-changed": { readonly note: string };
+    }
+
+    interface IControllerActivityMap {
+        /** A kind only these tests report, standing in for one a package above core declares. */
+        "test-reported": { readonly note: string };
+    }
+}
+
+@RegisterController("audit-test-reporter")
+class ReporterController extends Controller {
+    public report(note: string): void {
+        this.emitActivity({ kind: "test-reported", note });
+    }
+}
+
+function reporter(manager: ControllerManager): ReporterController {
+    return manager.getController<ReporterController>("audit-test-reporter");
 }
 
 /** Lets the quiet period pass. */
@@ -367,7 +389,7 @@ describe("AuditController", () => {
         it("records what changed immediately, naming what was dropped", () => {
             const { manager, records } = watch({ city: "Aiken", name: "Dana" });
 
-            reasonedEdit(manager, { city: "Aiken", name: "Riley" }, { kind: "drop", type: "person" });
+            reasonedEdit(manager, { city: "Aiken", name: "Riley" }, { kind: "dropped", type: "person" });
 
             expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "dropped", type: "person" });
         });
@@ -375,7 +397,7 @@ describe("AuditController", () => {
         it("does not wait out the quiet period", () => {
             const { manager, records } = watch({ name: "Dana" });
 
-            reasonedEdit(manager, { name: "Riley" }, { kind: "drop", type: "vehicle" });
+            reasonedEdit(manager, { name: "Riley" }, { kind: "dropped", type: "vehicle" });
 
             expect(kinds(records)).toEqual(["form-opened", "dropped"]);
         });
@@ -384,7 +406,7 @@ describe("AuditController", () => {
             const { manager, records } = watch({ city: "Aiken", name: "Dana" });
 
             edit(manager, { city: "Columbia", name: "Dana" });
-            reasonedEdit(manager, { city: "Columbia", name: "Riley" }, { kind: "drop", type: "violation" });
+            reasonedEdit(manager, { city: "Columbia", name: "Riley" }, { kind: "dropped", type: "violation" });
 
             expect(kinds(records)).toEqual(["form-opened", "fields-edited", "dropped"]);
             expect(records[1]).toMatchObject({ fields: ["city"] });
@@ -394,7 +416,7 @@ describe("AuditController", () => {
         it("leaves nothing pending for the edit it caused, so the next one measures from here", () => {
             const { manager, records } = watch({ name: "Dana" });
 
-            reasonedEdit(manager, { name: "Riley" }, { kind: "drop", type: "person" });
+            reasonedEdit(manager, { name: "Riley" }, { kind: "dropped", type: "person" });
             settle();
             edit(manager, { name: "Sam" });
             settle();
@@ -406,19 +428,65 @@ describe("AuditController", () => {
         it("records nothing for a form with no mapper", () => {
             const { manager, records } = watch({}, { hasMapper: false });
 
-            reasonedEdit(manager, {}, { kind: "drop", type: "person" }, { hasMapper: false });
+            reasonedEdit(manager, {}, { kind: "dropped", type: "person" }, { hasMapper: false });
 
             expect(kinds(records)).toEqual(["form-opened"]);
         });
     });
 
-    describe("violations-added", () => {
-        it("records what changed immediately, naming the codes added", () => {
+    /** The audit has no code of its own for a kind a package declares: it records the activity as reported, with the fields the change touched. */
+    describe("an activity another package reports with a change", () => {
+        it("records what changed immediately, as the package reported it", () => {
             const { manager, records } = watch({ name: "Dana" });
 
-            reasonedEdit(manager, { name: "Riley" }, { kind: "violation", codes: ["56-5-1520"] });
+            reasonedEdit(manager, { name: "Riley" }, { kind: "test-changed", note: "hello" });
 
-            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "violations-added", codes: ["56-5-1520"] });
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), fields: ["name"], form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "test-changed", note: "hello" });
+        });
+
+        it("records edits made before it first", () => {
+            const { manager, records } = watch({ city: "Aiken", name: "Dana" });
+
+            edit(manager, { city: "Columbia", name: "Dana" });
+            reasonedEdit(manager, { city: "Columbia", name: "Riley" }, { kind: "test-changed", note: "hello" });
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "test-changed"]);
+        });
+
+        it("records nothing for an update that names nothing", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            manager.getFormController().update({ update: () => stubForm({ name: "Riley" }) });
+
+            expect(kinds(records)).toEqual(["form-opened"]);
+        });
+    });
+
+    describe("reported activity", () => {
+        it("records what a controller reports, as it reported it", () => {
+            const { manager, records } = watch();
+
+            reporter(manager).report("hello");
+
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, kind: "test-reported", note: "hello" });
+        });
+
+        it("attributes it to the user", () => {
+            const { audit, manager, records } = watch();
+            audit.setUser({ id: "9", name: "Lt. Osei" });
+
+            reporter(manager).report("hello");
+
+            expect(records[1].by).toEqual({ id: "9", name: "Lt. Osei" });
+        });
+
+        it("records edits made before it first", () => {
+            const { manager, records } = watch({ name: "Dana" });
+
+            edit(manager, { name: "Riley" });
+            reporter(manager).report("hello");
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "test-reported"]);
         });
     });
 
@@ -523,6 +591,16 @@ describe("AuditController", () => {
             edit(manager, { name: "Riley" });
             manager.getPrintController().begin({ layout: "top-down" });
             settle();
+
+            expect(kinds(records)).toEqual(["form-opened"]);
+        });
+
+        it("stops recording what controllers report once disposed", () => {
+            const { manager, records } = watch();
+            const source = reporter(manager);
+
+            manager.disposeController("audit");
+            source.report("hello");
 
             expect(kinds(records)).toEqual(["form-opened"]);
         });

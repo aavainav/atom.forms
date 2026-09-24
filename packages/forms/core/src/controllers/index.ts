@@ -7,7 +7,8 @@ export { NavigationController } from "./navigation-controller";
 export { PrintController } from "./print-controller";
 
 export type { ControllerConstructor, IController } from "./controller";
-export type { IControllerChangedEventArgs, IControllerManager, IFormUpdatedEventArgs } from "./controller-manager";
+export type { ActivityEventArgs, ControllerActivity, FormActivity, IControllerActivityMap, IFormActivityEventArgs, IFormActivityMap } from "./controller-activity";
+export type { IControllerChangedEventArgs, IControllerManager } from "./controller-manager";
 export type { IRegisterControllerOptions } from "./controller-registry";
 export type { IDragAndDropController } from "./drag-and-drop-controller";
 export type { ConfirmPageDelete, IFormController, IFormUpdateOptions, IPageBinding, IPageUpdateOptions, ISectionBinding, ISectionUpdateOptions } from "./form-controller";

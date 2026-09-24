@@ -20,7 +20,11 @@ function collect(before: unknown, after: unknown, path: string, paths: Array<str
 
     // records in an array compare by position; an array of plain values is one value
     if (Array.isArray(before) && Array.isArray(after) && (before.some(isRecord) || after.some(isRecord))) {
-        for (let index = 0; index < Math.max(before.length, after.length); index++) {
+        // when the length changed a record was added or removed, and which of the others moved up or down cannot be told
+        // from an edit, so only the positions past the shorter side are reported
+        const start = before.length === after.length ? 0 : Math.min(before.length, after.length);
+
+        for (let index = start; index < Math.max(before.length, after.length); index++) {
             collect(before[index], after[index], `${path}[${index}]`, paths);
         }
 

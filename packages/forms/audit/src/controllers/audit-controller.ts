@@ -1,6 +1,5 @@
 import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
-import { IActor, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
-import type { UpdateReason } from "@forms/core";
+import { IActor, IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, ActivityEventArgs, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
 
 import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
@@ -44,7 +43,8 @@ export function getAuditController(controllers: IControllerManager): IAuditContr
 }
 
 /**
- * Watches the form, rules and print controllers and records what they report. Eager, so it misses nothing.
+ * Watches the form, rules and print controllers and records what they report, and whatever other controllers report
+ * through the manager. Eager, so it misses nothing.
  * Edits are found by diffing the mapper's extract, so a form with no mapper goes unrecorded.
  */
 @RegisterController("audit", { eager: true })
@@ -54,12 +54,12 @@ export class AuditController extends Controller implements IAuditController {
     private readonly _record = new EventEmitter<AuditRecord>(`${this.key}:record`, { onFirstListenerAdd: () => this.deliverPending() });
 
     private _session: ReadonlyArray<AuditRecord> = [];
+    private activityListener?: IEventListener;
     private baseline?: unknown;
     private editTimer?: ReturnType<typeof setTimeout>;
     private isPrinting = false;
     private listener?: IEventListener;
     private pending: Array<AuditRecord> = [];
-    private updatedListener?: IEventListener;
     private user?: IActor;
     private watched?: IWatchedForm;
 
@@ -78,10 +78,10 @@ export class AuditController extends Controller implements IAuditController {
     public dispose(): void {
         this.flush();
 
+        this.activityListener?.remove();
+        this.activityListener = undefined;
         this.listener?.remove();
         this.listener = undefined;
-        this.updatedListener?.remove();
-        this.updatedListener = undefined;
         this.pending = [];
         this._history = [];
         this._loaded = [];
@@ -128,7 +128,7 @@ export class AuditController extends Controller implements IAuditController {
 
     public start(): void {
         this.listener = this.manager.onControllerChanged(event => this.observe(event));
-        this.updatedListener = this.manager.onFormUpdated(({ form, reason }) => this.observeReason(form, reason));
+        this.activityListener = this.manager.onActivity(args => this.observeActivity(args));
         this.open(this.manager.getFormController().form);
     }
 
@@ -203,27 +203,33 @@ export class AuditController extends Controller implements IAuditController {
         }
     }
 
-    /** A reasoned update is one atomic change, not a burst to coalesce -- diffed and recorded now, ahead of observeForm for the same change. */
-    private observeReason(form: FormModel<any>, reason: UpdateReason | undefined): void {
-        if (!reason || !this.watched || !form.mapper) {
+    /** Something reported through the manager, recorded as it came and after the edits that preceded it. One that came with a change to the form also names the fields the change touched. */
+    private observeActivity(args: ActivityEventArgs): void {
+        if (!this.watched) {
             return;
         }
 
-        // edits made before this one are a separate, unrelated episode
+        if (!("form" in args)) {
+            this.flush();
+            this.raise(args.activity);
+            return;
+        }
+
+        const { activity, form } = args;
+
+        // with no mapper there is nothing to diff, so nothing to say about what changed
+        if (!form.mapper) {
+            return;
+        }
+
+        // one atomic change, not a burst to coalesce: edits before it are a separate episode, and it is diffed and recorded now, ahead of observe for the same change
         this.flush();
 
         const after = form.mapper.extract(form);
         const fields = getChangedPaths(this.baseline, after);
         this.baseline = after;
 
-        switch (reason.kind) {
-            case "drop":
-                this.raise({ kind: "dropped", type: reason.type, fields });
-                break;
-            case "violation":
-                this.raise({ kind: "violations-added", codes: reason.codes, fields });
-                break;
-        }
+        this.raise({ ...activity, fields });
     }
 
     private observePrint(controller: IPrintController): void {

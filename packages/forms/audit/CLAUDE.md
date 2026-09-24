@@ -20,13 +20,16 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | --- | --- | --- |
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
-| `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming why, comparing before/after -- see below |
-| `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped` |
+| `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
+| `page-added` / `page-removed` | A page was added to, or removed from, a set of pages: `{ page, pageOrdinal, fields }`, the page definition's name and where the page sits, counting from zero | Same as `dropped`, from `FormController.addPage` / `removePage`. Declared by core |
+| `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped`. Declared by `@forms/violations` |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
 | `workflow-transition` | The form makes a transition of its workflow: `{ transition, from, to, note? }` | Form controller changes, comparing `form.history` |
 | `validated` | The form is validated | Rules controller changing |
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
+| `comment-added` / `comment-resolved` / `comment-reopened` | A reviewer comments on the report, or a comment is resolved or reopened: `{ commentId, target }`, the comment's id and where it is, never what it says | Reported by `@forms/review`, through the manager's `onActivity` |
+| Whatever a package reports | A controller calls `emitActivity({ kind, ... })` | The manager's `onActivity`; the package declares the kind by merging into core's `IControllerActivityMap` |
 
 Every record is `{ at, by?, form: { id, name, revision, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped
 when the record is raised, so a host handed one twice can tell. `by` is the `IActor` the controller was told is using
@@ -55,7 +58,9 @@ during render, after the form controller. `start()` opens the form and subscribe
   the last edits were recorded. Each form change resets a quiet-period timer; when it fires, `getChangedPaths` names
   the paths whose values differ, and the baseline moves up. Paths are the form's own data-contract paths
   (`violatorSex`, `additionalViolations[1].violationDescription`). An option box's `{ value, description }` pair is one
-  field, an array of plain values is one value, and an array of records compares by position.
+  field, an array of plain values is one value, and an array of records compares by position -- unless its length
+  changed, when a record was added or removed and which of the others moved cannot be told from an edit, so only the
+  positions past the shorter side are reported (`list[2]`, not the records that shifted).
 - **Order is causal.** Validating, printing and saving all `flush()` first, so the edits come before what followed them.
 - **Records raised while nothing listens are held** for the next listener, the latest `maxPendingRecords` (100). The
   controller starts during render and `useAuditRecorder` subscribes in an effect, so `form-opened` is always raised
@@ -65,11 +70,18 @@ during render, after the form controller. `start()` opens the form and subscribe
   when the form is new to it, and `setForm` raises it on the controller. The audit sees the id change, flushes the old
   form's edits under the old identity, and opens the new one from the state it arrived in. Without the announcement
   it would take the first edit to the new form as its baseline and swallow it.
-- **A drop or a violation names why it happened**, through core's `UpdateReason` -- a dropzone's `onDrop` and a
-  violations service's `apply` pass `reason: { kind: "drop"|"violation", ... }` to `update()`. The manager relays this
-  as `onFormUpdated`, which survives the form controller itself being replaced (`onControllerChanged` alone would not).
-  A named reason skips the quiet period: it is one atomic change, not a burst to coalesce, so it is diffed and raised
-  immediately as `dropped`/`violations-added`, and `fields-edited` finds nothing left to report for it.
+- **Everything a package reports arrives through one channel, the manager's `onActivity`**, and the audit has no code of
+  its own per kind: `IAuditRecordMap` extends core's `IControllerActivityMap` and `IFormActivityMap`, so it takes on
+  every kind a package declares by merging into them. It flushes pending edits, stamps `at`, `by`, `form` and `id`, and
+  appends. Two ways in, one handler (`observeActivity`):
+  - **A controller reports something itself**, with core's protected `emitActivity` (`comment-added` and the rest from
+    `@forms/review`). The record is the activity as reported.
+  - **An update names what it was**, with `reason` on `update()` -- a dropzone's `onDrop` passes `dropped`, a
+    violations service's `apply` passes `violations-added`. The manager relays it with the form the update produced,
+    which survives the form controller itself being replaced (`onControllerChanged` alone would not). It is one atomic
+    change, not a burst to coalesce, so it skips the quiet period: the audit diffs the form against its baseline and
+    raises the record now, with `fields` added, and `fields-edited` finds nothing left to report for it. An update with
+    no `reason` sends nothing here; it is found through `onControllerChanged` like any edit.
 
 ## Getting the records out
 

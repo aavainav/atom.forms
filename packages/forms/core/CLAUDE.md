@@ -87,6 +87,20 @@ its module. The manager imports the ones in this package for exactly that reason
 `key` (from the decorator, on the class itself — a subclass that skips the decorator throws rather than sharing its
 parent's), `onChanged`, a protected `emitChanged()`, and no-op `start()`/`dispose()` to override.
 
+Something that happened can be **reported** to whatever observes the manager, in two ways, and the manager relays both
+as its one `onActivity` (which survives the form controller being replaced):
+
+- **A controller reports it itself** with the protected `emitActivity({ kind, ... })`, which raises its `onActivity`;
+  the manager relays it as `{ activity }`. The kinds are declared by whoever reports them, by merging into
+  `IControllerActivityMap` (`declare module "@forms/core" { interface IControllerActivityMap { "kind": { ... } } }`).
+- **An update names what it was**, with `reason` on `update()` (and on a binding's `update`), a kind from
+  `IFormActivityMap`. The form controller relays it as `{ activity, form }`, with the form the update produced -- only
+  when the form actually changed and a `reason` was given. Core declares `dropped`, and `page-added` / `page-removed`,
+  which `addPage` and `removePage` pass themselves (`{ page, pageOrdinal }`, counting from zero); a package above it
+  merges in its own (`@forms/violations` declares `violations-added`).
+
+Core's maps are otherwise empty and nothing in core reads an activity. `@forms/audit` records each one as it comes.
+
 - **`FormController`** owns the current `FormModel` and is the single path for every edit. It is constructed empty
   like every other controller; `loadForm` seeds it through `load(form)` (which raises nothing and is a no-op once a
   form is held), and `form` throws until then. `update(fn)` computes a new form and, if the identity changed, emits

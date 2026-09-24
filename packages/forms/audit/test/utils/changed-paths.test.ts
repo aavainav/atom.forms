@@ -51,6 +51,14 @@ describe("getChangedPaths", () => {
         expect(getChangedPaths(two, one)).toEqual(["list[1]"]);
     });
 
+    it("does not blame the records that moved when one in the middle is added or removed", () => {
+        const two = { list: [{ a: "1" }, { a: "3" }] };
+        const three = { list: [{ a: "1" }, { a: "2" }, { a: "3" }] };
+
+        expect(getChangedPaths(three, two)).toEqual(["list[2]"]);
+        expect(getChangedPaths(two, three)).toEqual(["list[2]"]);
+    });
+
     it("tells a value that was never answered from one that was", () => {
         expect(getChangedPaths({ a: undefined }, { a: "" })).toEqual(["a"]);
     });

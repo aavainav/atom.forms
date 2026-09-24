@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { IControllerManager, ControllerActivity } from "@forms/core";
 
 import type { IReviewComment } from "../../src/models/review-comment";
 import { firstName, lastName, osei, person, personPage, placement, report, review, rivera, vehicle } from "../fixtures/review-form";
@@ -129,6 +130,70 @@ describe("ReviewController", () => {
 
             expect(() => controller.setResolved("held-1", true)).toThrowError("Comments cannot be resolved or reopened while the form is viewable.");
             expect(controller.openCount).toBe(1);
+        });
+    });
+
+    describe("activity", () => {
+        function collect(controllers: IControllerManager): Array<ControllerActivity> {
+            const reported: Array<ControllerActivity> = [];
+            controllers.onActivity(args => {
+                if (!("form" in args)) {
+                    reported.push(args.activity);
+                }
+            });
+
+            return reported;
+        }
+
+        it("reports a comment added, naming where", () => {
+            const { controller, controllers } = review();
+            const reported = collect(controllers);
+
+            const { id } = controller.add(firstName, "Wrong date.");
+
+            expect(reported).toEqual([{ kind: "comment-added", commentId: id, target: "Person > Person details > First name" }]);
+        });
+
+        it("reports a comment resolved, and then reopened", () => {
+            const { controller, controllers } = review();
+            const { id } = controller.add(person, "Section.");
+            const reported = collect(controllers);
+
+            controller.setResolved(id, true);
+            controller.setResolved(id, false);
+
+            expect(reported).toEqual([
+                { kind: "comment-resolved", commentId: id, target: "Person > Person details" },
+                { kind: "comment-reopened", commentId: id, target: "Person > Person details" }
+            ]);
+        });
+
+        it("reports nothing when a comment is already as asked", () => {
+            const { controller, controllers } = review();
+            const { id } = controller.add(firstName, "Wrong date.");
+            const reported = collect(controllers);
+
+            controller.setResolved(id, false);
+
+            expect(reported).toEqual([]);
+        });
+
+        it("reports nothing for a comment it does not hold", () => {
+            const { controller, controllers } = review();
+            const reported = collect(controllers);
+
+            controller.setResolved("missing", true);
+
+            expect(reported).toEqual([]);
+        });
+
+        it("reports nothing when the host loads its comments", () => {
+            const { controller, controllers } = review();
+            const reported = collect(controllers);
+
+            controller.load([{ at: 1, author: osei, id: "held-1", isResolved: false, target: firstName, text: "Wrong date." }]);
+
+            expect(reported).toEqual([]);
         });
     });
 

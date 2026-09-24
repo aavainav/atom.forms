@@ -8,9 +8,14 @@ const maxLoggedRecords = 200;
 
 /** The badge colour each kind of record is shown in. */
 const kindColours: Record<AuditRecord["kind"], string> = {
+    "comment-added": "info",
+    "comment-reopened": "warning",
+    "comment-resolved": "success",
     "dropped": "primary",
     "fields-edited": "primary",
     "form-opened": "secondary",
+    "page-added": "secondary",
+    "page-removed": "danger",
     "print-ended": "info",
     "print-started": "info",
     "save-failed": "danger",
@@ -29,10 +34,17 @@ interface ILoggedRecord {
 /** Describes what a record is about, in a line. */
 function summarize(record: AuditRecord): string {
     switch (record.kind) {
+        case "comment-added":
+        case "comment-reopened":
+        case "comment-resolved":
+            return record.target;
         case "dropped":
             return `${record.type}: ${record.fields.join(", ")}`;
         case "fields-edited":
             return record.fields.join(", ");
+        case "page-added":
+        case "page-removed":
+            return `${record.page} ${record.pageOrdinal + 1}: ${record.fields.join(", ")}`;
         case "violations-added":
             return `${record.codes.join(", ")}: ${record.fields.join(", ")}`;
         case "form-opened":

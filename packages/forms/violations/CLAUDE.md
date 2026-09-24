@@ -137,6 +137,11 @@ The cap counts applied and newly ticked together, so a citation already carrying
 `apply` is handed only the newly ticked ones — applying one already on the form would write a second page for a
 charge it already has.
 
+**An `apply` names what it did.** Its `update()` on the form controller passes
+`reason: { kind: "violations-added", codes }`, so `@forms/audit` can record the charges that were added. This package
+declares that kind by merging into core's `IFormActivityMap` (at the top of `violation-binding.ts`), so a form package
+that passes it must import something from here -- which every one already does for `IViolation`.
+
 ## Categories
 
 `IViolation.category` is optional free text, not an enum: the grouping belongs to the agency publishing the code

@@ -122,7 +122,7 @@ export class S438CitationService implements IS438CitationService {
             });
 
             return form.set(formSchema.frontPage, collection);
-        }, reason: { kind: "violation", codes: violations.map(violation => violation.statute ?? violation.code) } });
+        }, reason: { kind: "violations-added", codes: violations.map(violation => violation.statute ?? violation.code) } });
     }
 
     getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation> {

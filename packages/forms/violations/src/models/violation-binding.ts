@@ -2,6 +2,13 @@ import { IControllerManager, FormModel } from "@forms/core";
 
 import { IViolation } from "./violation";
 
+declare module "@forms/core" {
+    interface IFormActivityMap {
+        /** Violations were added from the panel rather than dragged. `codes` are the ones added. */
+        "violations-added": { readonly codes: ReadonlyArray<string> };
+    }
+}
+
 /** Describes how a form takes the violations chosen in the selector. */
 export interface IViolationBinding {
     /** The id of the violation list this form draws its charges from. */

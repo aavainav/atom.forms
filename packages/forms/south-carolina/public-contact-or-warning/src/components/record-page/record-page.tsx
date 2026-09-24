@@ -39,7 +39,7 @@ export default function RecordPage({ controllers, binding }: IRecordPageProps): 
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPagePersonDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone), reason: { kind: "drop", type: dropzone.type } })}
+                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <PersonSection binding={binding.getSection(recordPage.personSection)} />
             </FDropzone>
@@ -59,7 +59,7 @@ export default function RecordPage({ controllers, binding }: IRecordPageProps): 
                 // applied rather than inside the update
                 onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
                     publicContactOrWarningService.resolveVehicleDropzone(dropzone)
-                        .then((resolved) => binding.update({ update: (page) => publicContactOrWarningService.applyVehicleDropzone(page, resolved), reason: { kind: "drop", type: dropzone.type } }));
+                        .then((resolved) => binding.update({ update: (page) => publicContactOrWarningService.applyVehicleDropzone(page, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >
                 <VehicleSection binding={binding.getSection(recordPage.vehicleSection)} />

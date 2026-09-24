@@ -57,6 +57,12 @@ be a `useSyncExternalStore` snapshot. `getComments(target)` builds a new array o
 - **`setResolved` works in any mode but `"viewable"`, and throws there.** The officer whose report is reviewed
   resolves comments as they deal with them, so an editable form can resolve and reopen; it cannot add. The components
   hide the button when `canResolve` is false rather than relying on the throw.
+- **It reports what the user does, for the audit.** `add` and `setResolved` call core's `emitActivity` with
+  `comment-added`, `comment-resolved` or `comment-reopened` -- `{ commentId, target }`, the comment's id and
+  `describeTarget`'s words, never its text. It declares those kinds by merging into `IControllerActivityMap` at the top
+  of `review-controller.ts`. `load` reports nothing, since what a host hands over is not the user's doing, and neither
+  does a `setResolved` that leaves a comment as it was. This package knows nothing of `@forms/audit`; the manager relays
+  it, and `@forms/audit` records it.
 
 ### The components
 

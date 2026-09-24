@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { ActivityEventArgs } from "../../src/controllers/controller-activity";
 import { ControllerManager } from "../../src/controllers/controller-manager";
 import type { IFormController } from "../../src/controllers/form-controller";
 import type { OptionFieldModel } from "../../src/models/option-field";
@@ -41,6 +42,16 @@ describe("FormController", () => {
             .getPageBinding(citationPage, firstPageId())
             .getSection(violatorSection)
             .setValue(violatorFields.firstName, value);
+    }
+
+    /** Loads a form into a manager of its own, so what the manager relays can be watched. */
+    async function watched() {
+        const manager = new ControllerManager();
+        const formController = manager.loadForm(await createTestForm());
+        const relayed: Array<ActivityEventArgs> = [];
+        manager.onActivity(args => relayed.push(args));
+
+        return { formController, relayed };
     }
 
     describe("a shared section's binding", () => {
@@ -160,6 +171,45 @@ describe("FormController", () => {
         });
     });
 
+    describe("page changes", () => {
+        it("reports a page added, naming where it sits", async () => {
+            const { formController, relayed } = await watched();
+
+            await formController.addPage(citationPage);
+
+            expect(relayed).toEqual([{ activity: { kind: "page-added", page: "citation", pageOrdinal: 1 }, form: formController.form }]);
+        });
+
+        it("reports a page removed, naming where it sat", async () => {
+            const { formController, relayed } = await watched();
+            await formController.addPage(citationPage);
+            relayed.length = 0;
+
+            await formController.removePage(citationPage, formController.form.getPages()[0].id!);
+
+            expect(relayed).toEqual([{ activity: { kind: "page-removed", page: "citation", pageOrdinal: 0 }, form: formController.form }]);
+        });
+
+        it("reports nothing when the confirm policy declines the removal", async () => {
+            const { formController, relayed } = await watched();
+            await formController.addPage(citationPage);
+            relayed.length = 0;
+            formController.setConfirmDeletePage(async () => false);
+
+            await formController.removePage(citationPage, formController.form.getPages()[0].id!);
+
+            expect(relayed).toEqual([]);
+        });
+
+        it("reports nothing for a page it no longer holds", async () => {
+            const { formController, relayed } = await watched();
+
+            await formController.removePage(citationPage, "not-a-page");
+
+            expect(relayed).toEqual([]);
+        });
+    });
+
     describe("update", () => {
         it("publishes a new form and raises onChanged once", () => {
             const before = controller.form;
@@ -180,6 +230,45 @@ describe("FormController", () => {
             controller.update({ update: form => form });
 
             expect(raised).toBe(0);
+        });
+    });
+
+    describe("an update that names what it was", () => {
+        it("is relayed by the manager, with the form it produced", async () => {
+            const { formController, relayed } = await watched();
+
+            formController.update({ update: form => form.setStatus("issued"), reason: { kind: "dropped", type: "person" } });
+
+            expect(relayed).toEqual([{ activity: { kind: "dropped", type: "person" }, form: formController.form }]);
+        });
+
+        it("is relayed when a section binding names it, since every edit goes through the form controller", async () => {
+            const { formController, relayed } = await watched();
+            const pageId = formController.form.getPages()[0].id!;
+
+            formController.getPageBinding(citationPage, pageId).getSection(chargeSection).update({
+                update: section => section.set(chargeFields.offenseDescription, section.get<StringFieldModel>(chargeFields.offenseDescription).setValue("Speeding")),
+                reason: { kind: "dropped", type: "violation" }
+            });
+
+            expect(relayed).toHaveLength(1);
+            expect(relayed[0]).toMatchObject({ activity: { kind: "dropped", type: "violation" } });
+        });
+
+        it("relays nothing for an update that names nothing", async () => {
+            const { formController, relayed } = await watched();
+
+            formController.update({ update: form => form.setStatus("issued") });
+
+            expect(relayed).toEqual([]);
+        });
+
+        it("relays nothing when the update returns the form unchanged", async () => {
+            const { formController, relayed } = await watched();
+
+            formController.update({ update: form => form, reason: { kind: "dropped", type: "person" } });
+
+            expect(relayed).toEqual([]);
         });
     });
 
