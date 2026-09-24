@@ -258,7 +258,7 @@ is that a bundle-only host's bundle does not hold this transition's audit record
 
 A guard the transition names is checked in the button before it can be clicked: `hasOpenComments` disables it, with a
 tooltip saying to add a comment, until the review controller counts one open; `noOpenComments` (crash's `submit`, once
-rejected) disables it until every comment is resolved. Both follow the count through `useReviewComments`. Without a
+rejected, and its `approve`) disables it until every comment is resolved. Both follow the count through `useReviewComments`. Without a
 `user` every button is disabled, and says why, the way commenting is. The tooltip
 sits on a wrapper because a disabled button raises no mouse events, and is keyed on its reason, since bootstrap reads a
 title once.

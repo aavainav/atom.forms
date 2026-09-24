@@ -26,7 +26,7 @@ class WorkflowStubForm extends FormModel<any> {
     public readonly workflow = defineWorkflow({
         id: "stub-workflow",
         transitions: {
-            approve: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
+            approve: { from: ["inReview"], guards: ["noOpenComments"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
             reject: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" },
             submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" }
         },
@@ -267,6 +267,21 @@ describe("WorkflowActions", () => {
             act(() => getReviewController(controllers).load([{ ...comment, isResolved: true }]));
 
             expect(button("reject")!.disabled).toBe(true);
+        });
+    });
+
+    describe("approving", () => {
+        it("is disabled while a comment is open, and enabled once it is resolved, without being remounted", async () => {
+            const { button, controllers, tooltip } = await mount({ form: await inReview() });
+
+            act(() => getReviewController(controllers).load([comment]));
+
+            expect(button("approve")!.disabled).toBe(true);
+            expect(tooltip("approve")).toBe("Resolve every open comment first.");
+
+            act(() => getReviewController(controllers).load([{ ...comment, isResolved: true }]));
+
+            expect(button("approve")!.disabled).toBe(false);
         });
     });
 

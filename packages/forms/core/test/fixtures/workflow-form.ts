@@ -61,7 +61,7 @@ export const testWorkflow: IWorkflow = defineWorkflow({
         issued: form => form.lockPageSet(recordPage).lockSection(chargeSection)
     },
     transitions: {
-        approve: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
+        approve: { from: ["inReview"], guards: ["noOpenComments"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" },
         issue: { effect: form => setTitle(form as WorkflowForm, "Issued"), from: ["draft"], icon: "check2-circle", mode: "editable", title: "Issue", to: "issued" },
         reject: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" },
         submit: { from: ["draft", "rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit", to: "inReview" }

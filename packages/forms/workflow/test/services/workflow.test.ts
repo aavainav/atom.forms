@@ -165,6 +165,14 @@ describe("WorkflowService", () => {
             expect(service.transition(form, "submit", officer, { issues: noIssues }).status).toBe("inReview");
         });
 
+        it("throws for approving while a comment is open", () => {
+            expect(() => service.transition(inReview(form), "approve", reviewer, { issues: noIssues, openComments: 1 })).toThrowError('"approve" cannot be made while a comment is open.');
+        });
+
+        it("approves once no comment is open", () => {
+            expect(service.transition(inReview(form), "approve", reviewer, { issues: noIssues, openComments: 0 }).status).toBe("approved");
+        });
+
         it("closes the whole form when the workflow says the status does", () => {
             expect(service.transition(inReview(form), "approve", reviewer, { issues: noIssues }).mode).toBe("viewable");
         });

@@ -50,7 +50,7 @@ const forms: Record<DemoForm, IDemoForm> = {
             approved: "Approved. There is nothing more to do; open it as the Viewer to read it.",
             draft: "Open it as the Officer, and submit it for review.",
             inProgress: "Open it as the Officer, and submit it for review.",
-            inReview: "Open it as the Reviewer, and approve it -- or add a comment, and reject it.",
+            inReview: "Open it as the Reviewer, and approve it once every comment is resolved -- or add a comment, and reject it.",
             rejected: "Open it as the Officer, fix what the comments say, resolve each one, and submit it again -- resubmitting stays blocked while any comment is open."
         }
     }

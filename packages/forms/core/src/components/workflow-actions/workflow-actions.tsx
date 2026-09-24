@@ -10,7 +10,7 @@ import { FTooltip } from "../tooltip";
 /** What each guard needs before its transition can be made, and what to tell the user while it is not so. */
 const guards: Record<WorkflowGuard, { readonly isMet: (openComments: number) => boolean; readonly message: string }> = {
     hasOpenComments: { isMet: openComments => openComments > 0, message: "Add a comment first, so the author knows what to fix." },
-    noOpenComments: { isMet: openComments => openComments === 0, message: "Resolve every open comment before submitting again." }
+    noOpenComments: { isMet: openComments => openComments === 0, message: "Resolve every open comment first." }
 };
 
 /** Says why a transition cannot be made yet, or nothing when it can. */

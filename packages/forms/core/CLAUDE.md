@@ -208,7 +208,7 @@ the form as it moves, and optional `guards` (today two, opposites of each other:
 It **throws** unless the transition exists, the form is in a `from` status and the right mode, **the validation
 result holds no error** (warnings do not count, and there is no exception for Reject), and whatever guard the
 transition names holds -- `hasOpenComments` needs at least one comment open (Reject), `noOpenComments` needs none
-(resubmitting a rejected crash report, so the officer must resolve every comment first). The service is *told* the
+(resubmitting a rejected crash report, or approving one, so every comment must be resolved first). The service is *told* the
 validation result and the open-comment count rather than finding them itself -- it cannot see the rules controller
 or the review controller -- so a caller has to validate first. Each transition appends `{ transition, from, to, at,
 by, note? }` to `form.history`, and `FormModel.extractData` stamps `{ id, version, history }` into the record as

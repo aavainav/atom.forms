@@ -12,7 +12,7 @@ import type { IAvailableTransition } from "../../src/models/workflow";
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 
 const submit: IAvailableTransition = { id: "submit", transition: { from: ["draft"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" } };
-const approve: IAvailableTransition = { id: "approve", transition: { from: ["inReview"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" } };
+const approve: IAvailableTransition = { id: "approve", transition: { from: ["inReview"], guards: ["noOpenComments"], icon: "check2-circle", mode: "reviewable", title: "Approve", to: "approved" } };
 const reject: IAvailableTransition = { id: "reject", transition: { from: ["inReview"], guards: ["hasOpenComments"], icon: "x-circle", mode: "reviewable", title: "Reject", to: "rejected" } };
 const resubmit: IAvailableTransition = { id: "submit", transition: { from: ["rejected"], guards: ["noOpenComments"], icon: "send", mode: "editable", title: "Submit for review", to: "inReview" } };
 
@@ -107,7 +107,14 @@ describe("FWorkflowActions", () => {
             const { button, tooltip } = mount({ openComments: 1, transitions: [resubmit] });
 
             expect(button("submit")!.disabled).toBe(true);
-            expect(tooltip("submit")).toBe("Resolve every open comment before submitting again.");
+            expect(tooltip("submit")).toBe("Resolve every open comment first.");
+        });
+
+        it("blocks approving while one is open too", () => {
+            const { button, tooltip } = mount({ openComments: 1, transitions: [approve] });
+
+            expect(button("approve")!.disabled).toBe(true);
+            expect(tooltip("approve")).toBe("Resolve every open comment first.");
         });
 
         it("is enabled once none are open", () => {

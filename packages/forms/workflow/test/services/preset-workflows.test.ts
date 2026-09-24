@@ -101,6 +101,13 @@ describe("the crash workflow", () => {
         expect(service.getTransitions(approved)).toEqual([]);
     });
 
+    it("cannot be approved while a comment is still open, since it has not been addressed", () => {
+        const inReview = service.transition(new PresetCrashForm(), "submit", officer, { issues: noIssues }).setMode("reviewable");
+
+        expect(() => service.transition(inReview, "approve", reviewer, { issues: noIssues, openComments: 1 })).toThrowError('"approve" cannot be made while a comment is open.');
+        expect(service.transition(inReview, "approve", reviewer, { issues: noIssues, openComments: 0 }).status).toBe("approved");
+    });
+
     it("can be submitted again after it is rejected, and keeps the whole history", () => {
         const submitted = service.transition(new PresetCrashForm(), "submit", officer, { at: 1, issues: noIssues });
         const rejected = service.transition(submitted.setMode("reviewable"), "reject", reviewer, { at: 2, issues: noIssues, openComments: 1 });
