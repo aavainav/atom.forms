@@ -40,6 +40,11 @@ function tooltipTitle(container: HTMLElement): string | null {
     return container.querySelector("[data-bs-toggle=tooltip]")!.getAttribute("data-bs-original-title");
 }
 
+/** The badge on the button, where the number of open comments is shown. */
+function badge(container: HTMLElement): HTMLElement | null {
+    return container.querySelector<HTMLElement>("#review-button .badge");
+}
+
 afterEach(() => {
     mounted.splice(0).forEach(unmount => unmount());
     document.body.innerHTML = "";
@@ -56,20 +61,28 @@ describe("ReviewOption", () => {
         expect(toggled).toHaveBeenCalledTimes(1);
     });
 
-    it("is named for what it opens while every comment is resolved", () => {
-        expect(tooltipTitle(mount().container)).toBe("Review comments");
+    it("is named for what it opens, however many comments are open", () => {
+        const { container, review } = mount();
+        expect(tooltipTitle(container)).toBe("Review comments");
+
+        act(() => review.load([held]));
+        expect(tooltipTitle(container)).toBe("Review comments");
     });
 
-    it("says how many comments are open, following them as they are added and resolved", () => {
+    it("has no badge while every comment is resolved", () => {
+        expect(badge(mount().container)).toBeNull();
+    });
+
+    it("badges the button with how many comments are open, following them as they are added and resolved", () => {
         const { container, review } = mount();
 
         act(() => review.load([held, { ...held, id: "held-2" }]));
-        expect(tooltipTitle(container)).toBe("Review comments (2 open)");
+        expect(badge(container)!.textContent).toBe("2 open");
 
         act(() => review.setResolved("held-1", true));
-        expect(tooltipTitle(container)).toBe("Review comments (1 open)");
+        expect(badge(container)!.textContent).toBe("1 open");
 
         act(() => review.setResolved("held-2", true));
-        expect(tooltipTitle(container)).toBe("Review comments");
+        expect(badge(container)).toBeNull();
     });
 });

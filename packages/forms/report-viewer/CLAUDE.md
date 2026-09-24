@@ -296,9 +296,8 @@ The manager, beside the other managers at the viewer's root:
   at the viewer's root and not inside a report.
 
 The panel's open/closed state is the manager's own, toggled through `IReviewService` -- the same shape as the
-violations panel. `ReviewOption` raises that event, and its tooltip carries how many comments are open. `FTooltip`
-reads its title once, when bootstrap builds the tooltip, so the option **keys the tooltip on its label** to get a
-new one when the count changes.
+violations panel. `ReviewOption` raises that event, and badges its button with how many comments are open (an
+`FBadge`, gone at zero), following the count through `useReviewComments`.
 
 The review panel is on the end edge, and so is the violations panel. A form that offers both should not have them
 open together.

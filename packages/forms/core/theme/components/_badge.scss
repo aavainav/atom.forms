@@ -1,0 +1,12 @@
+// an overlaid badge sits on the button's corner, so the button has to be what it is positioned against
+.btn:has(> .f-badge--overlay) {
+    position: relative;
+}
+
+// two classes, to beat bootstrap's `.btn .badge`, which keeps a badge in the flow
+.badge.f-badge--overlay {
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translate(50%, -50%);
+}

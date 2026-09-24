@@ -1,5 +1,6 @@
 export { FAccordion } from "./components/accordion";
 export { FAsyncLoader } from "./components/async-loader";
+export { FBadge } from "./components/badge";
 export { FBorder } from "./components/border";
 export { FButton } from "./components/button";
 export { FCode } from "./components/code";
@@ -40,6 +41,7 @@ export { getStatusWatermark, FWatermark } from "./components/watermark";
 export { FWorkflowActions } from "./components/workflow-actions";
 
 export type { IAsyncOperation, IAsyncLoaderController } from "./components/async-loader";
+export type { FBadgeVariant } from "./components/badge";
 export type { FBorderEdge, FBorderEdges, FBorderVisibility } from "./components/border";
 export type { FButtonSize, FButtonStyle, FButtonType, FButtonVariant } from "./components/button";
 export type { FCheckboxType } from "./components/field-checkbox";

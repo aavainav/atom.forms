@@ -303,9 +303,11 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   does that for any `[data-field-id]` holding one. An empty marker is hidden until its control is hovered or focused,
   but stays a real button, since a disabled input swallows the pointer and a reviewer on a locked form still has to
   reach it by keyboard.
-- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FButton`, `FCode`, `FIcon`, `FModal`,
+- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FBadge`, `FButton`, `FCode`, `FIcon`, `FModal`,
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`. `FCode` is a `<pre><code>` panel whose
-  colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle.
+  colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle. `FBadge` is a bootstrap
+  badge with a prop for each concern -- `variant`, `pill`, `overlay` (on the corner of the `FButton` it is in, which
+  the theme positions) and a `label` read by assistive technology.
 - Import: `FDraggableItem`, `FDropzone`. `FDraggableItem` takes `disabled` for an item a panel is offering but
   cannot currently be dragged — it clears `draggable` and refuses `dragStart`, which is what stops a panel's
   locked row reaching the form by the one route a disabled checkbox does not cover.
