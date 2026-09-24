@@ -33,6 +33,8 @@ export interface IControllerChangedEventArgs {
 export interface IControllerManager {
     /** Raised when a controller owned by this manager reports something that happened, or an update names what it was. Unlike `onControllerChanged`, it survives the form controller itself being replaced. */
     readonly onActivity: IEvent<ActivityEventArgs>;
+    /** Raised once when the manager is really let go: everything that retained it has released it and nothing retained it again by the next microtask, or `close` was called. */
+    readonly onClosed: IEvent<void>;
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
     /** Who is using the report, as the host said, or undefined when it did not. Controllers read it when they act, so set it before a form is loaded for what the load records to carry it. */
@@ -63,6 +65,14 @@ export interface IControllerManager {
      * raises `onControllerChanged` for the form controller when the form is new to the manager.
      */
     loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm>;
+    /** Runs `setup` once for the key and its teardown when the manager closes, after `onClosed`. The same key again does nothing, so a remount does not attach twice. */
+    attach(key: string, setup: () => () => void): void;
+    /** Closes the manager now, as when the page is put away. It closes once, however many reasons there are. */
+    close(): void;
+    /** Says one thing is done with the manager. It closes a microtask later unless something retains it again by then, as React's development remount does. */
+    release(): void;
+    /** Says something is showing the manager, such as a mounted viewer. */
+    retain(): void;
     /** Sets who is using the report. */
     setUser(user: IActor | undefined): void;
 
@@ -74,12 +84,20 @@ export interface IControllerManager {
 
 export class ControllerManager implements IControllerManager {
     private readonly _activity = new EventEmitter<ActivityEventArgs>("controller-manager:activity");
+    private readonly _closed = new EventEmitter<void>("controller-manager:closed");
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
+    private readonly attachments = new Map<string, () => void>();
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
+    private isClosed = false;
+    private retained = 0;
     private _user?: IActor;
 
     get onActivity(): IEvent<ActivityEventArgs> {
         return this._activity.event;
+    }
+
+    get onClosed(): IEvent<void> {
+        return this._closed.event;
     }
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
@@ -180,6 +198,43 @@ export class ControllerManager implements IControllerManager {
         }
 
         return controller;
+    }
+
+    public attach(key: string, setup: () => () => void): void {
+        if (!this.attachments.has(key)) {
+            this.attachments.set(key, setup());
+        }
+    }
+
+    public close(): void {
+        if (this.isClosed) {
+            return;
+        }
+
+        this.isClosed = true;
+        this._closed.emit();
+
+        // after `onClosed`, last attached first, so what is said as it closes still reaches what it was attached for
+        for (const teardown of [...this.attachments.values()].reverse()) {
+            teardown();
+        }
+
+        this.attachments.clear();
+    }
+
+    public release(): void {
+        this.retained -= 1;
+
+        queueMicrotask(() => {
+            if (this.retained <= 0) {
+                this.close();
+            }
+        });
+    }
+
+    public retain(): void {
+        this.retained += 1;
+        this.isClosed = false;
     }
 
     public setUser(user: IActor | undefined): void {

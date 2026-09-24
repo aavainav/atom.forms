@@ -21,6 +21,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
+| `form-closed` | A form stops being shown, as `{ status, mode, isDirty }` -- `isDirty` says whether it still held changes that were never saved. Once for each form opened | The manager closing (the viewer unmounting, or `pagehide`), or another form replacing it in the same manager; see "Closing" below |
 | `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since `form-opened` says it, and neither is a page returning after a print, nor the first page of another form loaded into the same manager | Reported by core's `NavigationController` through the manager's `onActivity` |
 | `page-added` / `page-removed` | A page was added to, or removed from, a set of pages: `{ page, pageOrdinal, fields }`, the page definition's name and where the page sits, counting from zero | Same as `dropped`, from `FormController.addPage` / `removePage`. Declared by core |
 | `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped`. Declared by `@forms/violations` |
@@ -88,7 +89,7 @@ during render, after the form controller. `start()` opens the form and subscribe
 
 ## Getting the records out
 
-`useAuditRecorder` subscribes to the controller in an effect and calls `IAuditService.record`. A host subscribes to the
+`useAuditRecorder` attaches to the controller's manager in an effect and calls `IAuditService.record`. A host subscribes to the
 service once, at startup, before any form renders:
 
 ```ts
@@ -96,7 +97,26 @@ services.get<IAuditService>(IAuditService).onRecord(record => send(record));
 ```
 
 `IAuditService`, `AuditRecord` and `IAuditFormIdentity` are re-exported from `@forms/report-viewer`, so a host needs
-only that package. Whatever is still waiting out the quiet period is recorded on unmount and on `pagehide`.
+only that package. Whatever is still waiting out the quiet period is recorded when the viewer goes and on `pagehide`,
+followed by the form's `form-closed`.
+
+## Closing
+
+`recordClosed()` flushes pending edits and then raises `form-closed`, **once for each form opened** (`open` clears the
+flag), so a `pagehide` followed by an unmount records one close. Two things call it: the controller itself when its
+manager closes, and `observeForm` when a different form replaces the watched one -- recorded under the *old* form's
+identity, just before the new form's `form-opened`.
+
+The manager closes when the viewer really goes, or on `pagehide`; core's `useFormController` holds it while mounted
+(see `retain`, `release`, `close` and `attach` in [`@forms/core`](../core/)). The controller subscribes to `onClosed`
+in `start()`, so the close is raised while the recorder and the writer are still attached, and they let go only after
+it. That is why they attach to the manager rather than tear down with their component: React's development
+`StrictMode` (which `@forms/workbench` uses) sets an effect up, tears it down and sets it up again at once, and a
+close raised from a teardown would log a fake `form-closed` after every `form-opened`. The manager waits a microtask
+before it takes a release for the end, and `attach` ignores a key it already holds, so the remount changes nothing.
+`useAuditWriter` in `@forms/report-viewer` is attached the same way, and needs no particular order among the hooks.
+
+They last as long as the manager, not as long as the component that called them.
 
 To watch it live, open the sandbox's `/demo/audit` (`yarn dev-forms`), which lists each record beside a form.
 
@@ -155,6 +175,11 @@ from before it.
   is loaded is part of what `form-opened` reports.
 - **A form with no mapper has its edits unrecorded**: there is nothing to diff. Every shipped form has one.
 - **A hard crash loses up to `editQuietPeriod` of edits.** Unmount and `pagehide` flush; nothing else can.
+- **A tab restored from the browser's back/forward cache carries on after its `form-closed`,** with no new
+  `form-opened`: `pagehide` records the close whether or not the page comes back. `pagehide` also closes the manager,
+  which detaches the recorder and the writer, so nothing done after the restore is forwarded or written.
+- **A manager that closes and is then held again does not re-attach the recorder or the writer** unless their effects
+  run again, and the audit records no second `form-opened` or `form-closed` for it.
 - **A save the host performs itself is not audited.** On the plain `<ReportViewer />` path a host has no controller to
   call `recordSaved` on, so only the report viewer's own save paths produce `saved` / `save-failed`.
 - **Printing begins twice per print** (the second adds the measured scale), so only the change between not printing and
@@ -162,7 +187,7 @@ from before it.
 - **The controller registers when its module loads.** `src/index.ts` exports it so importing the package is enough;
   giving this package `"sideEffects": false` would silently break that.
 - **`getAuditController` throws if no form is loaded**, because `start()` reads the form controller.
-- **Only one component should call `useAuditRecorder` per manager**, or every record is forwarded once per call.
+- **`useAuditRecorder` attaches under a fixed key**, so calling it more than once for a manager forwards each record once.
 - **`by` is only as good as what the host says.** The viewer stamps it from `settings.user` on the client, so a host that
   needs it trusted must check it on the way in.
 

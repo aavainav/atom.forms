@@ -5,6 +5,7 @@ export interface IStubFormOptions {
     readonly hasMapper?: boolean;
     readonly history?: ReadonlyArray<IWorkflowEntry>;
     readonly id?: string;
+    readonly isDirty?: boolean;
     readonly mode?: FormMode;
     readonly name?: string;
     readonly revision?: number;
@@ -14,7 +15,7 @@ export interface IStubFormOptions {
 
 /** Stands in for a form: the audit reads only its identity, its status, its history, its mode and what its mapper extracts. */
 export function stubForm(data: object = {}, options: IStubFormOptions = {}): FormModel<any> {
-    const { hasMapper = true, history = [], id = "form-1", mode = "editable", name = "Stub Form", revision = 0, status = "draft", version = "1.0" } = options;
+    const { hasMapper = true, history = [], id = "form-1", isDirty = false, mode = "editable", name = "Stub Form", revision = 0, status = "draft", version = "1.0" } = options;
 
     return {
         history,
@@ -25,6 +26,7 @@ export function stubForm(data: object = {}, options: IStubFormOptions = {}): For
         status,
         version,
         mapper: hasMapper ? { extract: () => data, populate: () => { throw new Error("not used"); } } : undefined,
+        getIsDirty: () => isDirty,
         getRuleCollection: () => new RuleCollection([]),
         getPagesFor: () => [{}]
     } as unknown as FormModel<any>;

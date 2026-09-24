@@ -141,7 +141,7 @@ describe("AuditController", () => {
             const later: Array<AuditRecord> = [];
             audit.onRecord(record => later.push(record));
 
-            expect(later.map(record => [record.kind, record.form.id])).toEqual([["form-opened", "form-2"]]);
+            expect(later.map(record => [record.kind, record.form.id])).toEqual([["form-closed", "form-1"], ["form-opened", "form-2"]]);
         });
 
         it("holds no more than the latest few while nothing is listening", () => {
@@ -165,7 +165,7 @@ describe("AuditController", () => {
 
             manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
 
-            expect(records.map(record => [record.kind, record.form.id])).toEqual([["form-opened", "form-1"], ["form-opened", "form-2"]]);
+            expect(records.map(record => [record.kind, record.form.id])).toEqual([["form-opened", "form-1"], ["form-closed", "form-1"], ["form-opened", "form-2"]]);
         });
 
         it("records a new form set on the controller, and measures its edits from the state it arrived in", () => {
@@ -177,10 +177,82 @@ describe("AuditController", () => {
 
             expect(records.map(record => [record.kind, record.form.id])).toEqual([
                 ["form-opened", "form-1"],
+                ["form-closed", "form-1"],
                 ["form-opened", "form-2"],
                 ["fields-edited", "form-2"]
             ]);
-            expect(records[2]).toMatchObject({ fields: ["name"] });
+            expect(records[3]).toMatchObject({ fields: ["name"] });
+        });
+    });
+
+    describe("form-closed", () => {
+        it("records the form being closed, with where it stood", () => {
+            const { audit, records } = watch({ name: "Dana" }, { isDirty: true, mode: "reviewable", status: "inReview" });
+
+            audit.recordClosed();
+
+            expect(records[1]).toEqual({ at: now, id: expect.any(String), form: { id: "form-1", name: "Stub Form", revision: 0, version: "1.0" }, isDirty: true, kind: "form-closed", mode: "reviewable", status: "inReview" });
+        });
+
+        it("records edits still pending first", () => {
+            const { audit, manager, records } = watch({ name: "Dana" });
+            edit(manager, { name: "Riley" });
+
+            audit.recordClosed();
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "form-closed"]);
+        });
+
+        it("records it once for each form opened", () => {
+            const { audit, manager, records } = watch();
+
+            audit.recordClosed();
+            audit.recordClosed();
+            manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+            audit.recordClosed();
+
+            expect(records.map(record => [record.kind, record.form.id])).toEqual([
+                ["form-opened", "form-1"],
+                ["form-closed", "form-1"],
+                ["form-opened", "form-2"],
+                ["form-closed", "form-2"]
+            ]);
+        });
+
+        it("is attributed to the user, as every record is", () => {
+            const { audit, manager, records } = watch();
+            manager.setUser({ id: "u-1", name: "Officer One" });
+
+            audit.recordClosed();
+
+            expect(records[1].by).toEqual({ id: "u-1", name: "Officer One" });
+        });
+
+        it("is recorded when the manager closes, with edits still pending recorded first", () => {
+            const { manager, records } = watch({ name: "Dana" });
+            edit(manager, { name: "Riley" });
+
+            manager.close();
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "form-closed"]);
+        });
+
+        it("is recorded once when the manager closes more than once", () => {
+            const { manager, records } = watch();
+
+            manager.close();
+            manager.close();
+
+            expect(kinds(records)).toEqual(["form-opened", "form-closed"]);
+        });
+
+        it("is not recorded for a manager that closes after the controller is disposed", () => {
+            const { manager, records } = watch();
+
+            manager.disposeController(AuditController.key);
+            manager.close();
+
+            expect(kinds(records)).toEqual(["form-opened"]);
         });
     });
 
@@ -380,6 +452,7 @@ describe("AuditController", () => {
             expect(records.map(record => [record.kind, record.form.id])).toEqual([
                 ["form-opened", "form-1"],
                 ["fields-edited", "form-1"],
+                ["form-closed", "form-1"],
                 ["form-opened", "form-2"]
             ]);
         });
@@ -726,7 +799,7 @@ describe("AuditController", () => {
 
             manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
 
-            expect(audit.session.map(record => record.form.id)).toEqual(["form-1", "form-2"]);
+            expect(audit.session.map(record => record.form.id)).toEqual(["form-1", "form-1", "form-2"]);
             expect(audit.history.map(record => record.form.id)).toEqual(["form-2"]);
         });
 

@@ -19,6 +19,8 @@ export interface IAuditFormIdentity {
 export interface IAuditRecordMap extends IControllerActivityMap, WithChangedFields<IFormActivityMap> {
     /** Edits settled. `fields` are data-contract paths, such as `violatorSex` or `additionalViolations[1].violationDescription`. */
     "fields-edited": { readonly fields: ReadonlyArray<string> };
+    /** The form was closed: unmounted, put away with the page, or replaced by another. `isDirty` says whether it still held changes that were never saved. */
+    "form-closed": { readonly isDirty: boolean; readonly mode: FormMode; readonly status: FormStatus };
     /** The form was shown, freshly loaded or swapped in. */
     "form-opened": { readonly status: FormStatus; readonly mode: FormMode };
     /** The form left its print layout. */

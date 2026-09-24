@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { act } from "react";
+import { act, createElement, StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { ControllerManager } from "../../src/controllers/controller-manager";
@@ -156,5 +157,94 @@ describe("useFormController", () => {
 
         expect(hook.result.current).not.toBe(firstController);
         expect(hook.result.current.form).toBe(second);
+    });
+
+    describe("holding the manager", () => {
+        /** A form for the manager, and a count of how many times the manager has said it closed. */
+        async function watched() {
+            const form = await createTestForm();
+            const controllers = new ControllerManager();
+            const closed = { count: 0 };
+            controllers.onClosed(() => { closed.count += 1; });
+
+            return { closed, controllers, form };
+        }
+
+        it("keeps the manager open while it is mounted, and closes it a microtask after it unmounts", async () => {
+            const { closed, controllers, form } = await watched();
+            const hook = renderHook(() => useFormController(controllers, form));
+            await Promise.resolve();
+
+            expect(closed.count).toBe(0);
+
+            hook.unmount();
+
+            expect(closed.count).toBe(0);
+
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
+
+        it("closes the manager at once when the page is put away, and once only when it then unmounts", async () => {
+            const { closed, controllers, form } = await watched();
+            const hook = renderHook(() => useFormController(controllers, form));
+
+            window.dispatchEvent(new Event("pagehide"));
+
+            expect(closed.count).toBe(1);
+
+            hook.unmount();
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
+
+        it("stops listening for the page being put away once it unmounts", async () => {
+            const { closed, controllers, form } = await watched();
+            const hook = renderHook(() => useFormController(controllers, form));
+
+            hook.unmount();
+            await Promise.resolve();
+            controllers.retain();
+            window.dispatchEvent(new Event("pagehide"));
+
+            expect(closed.count).toBe(1);
+        });
+
+        it("lets go of the manager it held, and holds the one it is handed now", async () => {
+            const first = await watched();
+            const second = await watched();
+            let current = first;
+            const hook = renderHook(() => useFormController(current.controllers, current.form));
+
+            current = second;
+            hook.rerender();
+            await Promise.resolve();
+
+            expect(first.closed.count).toBe(1);
+            expect(second.closed.count).toBe(0);
+        });
+
+        /** In development React sets an effect up, cleans it up and sets it up again at once, which is not the viewer going. */
+        it("does not close the manager for the remount React's StrictMode does in development", async () => {
+            const { closed, controllers, form } = await watched();
+            const root = createRoot(document.createElement("div"));
+
+            function Probe(): null {
+                useFormController(controllers, form);
+                return null;
+            }
+
+            act(() => root.render(createElement(StrictMode, undefined, createElement(Probe))));
+            await Promise.resolve();
+
+            expect(closed.count).toBe(0);
+
+            act(() => root.unmount());
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
     });
 });

@@ -35,9 +35,11 @@ export interface IReportViewerComponent {
 interface IReportViewerFormProps {
     /** The controllers to use for the form; when omitted a set is created and owned here. Supply this when something rendered outside the form, such as a panel of draggable items, needs the same controllers. */
     readonly controllers?: IControllerManager;
-    readonly initialForm: IInitialForm;
     /** Where the form's data goes when it is saved. Without one the save option is not offered. */
     readonly dataManager?: IReportViewerDataManager<any>;
+    /** Describes a form resolved from the form catalog and ready to render. */
+    readonly initialForm: IInitialForm;
+    /** The mode with which the form is being viewed in. */
     readonly mode: FormMode;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;

@@ -24,20 +24,20 @@ function Harness({ controllers, dataManager, onError }: { readonly controllers: 
 /** Mounts the hook over a form the audit controller records, with the data manager given. */
 function mount(dataManager?: Partial<IReportViewerDataManager<any>>) {
     const controllers = new ControllerManager();
-    controllers.loadForm({ id: "form-1", mode: "editable", name: "Stub Form", status: "draft", version: "1.0", getRuleCollection: () => ({ getRules: () => [] }), getPagesFor: () => [{}] } as unknown as FormModel<any>);
+    controllers.loadForm({ id: "form-1", mode: "editable", name: "Stub Form", status: "draft", version: "1.0", getIsDirty: () => false, getRuleCollection: () => ({ getRules: () => [] }), getPagesFor: () => [{}] } as unknown as FormModel<any>);
 
     const audit = getAuditController(controllers);
     const onError = vi.fn();
     const root = createRoot(document.createElement("div"));
 
-    const render = (next = dataManager): void => {
-        act(() => root.render(createElement(Harness, { controllers, dataManager: next, onError })));
+    const render = (next = dataManager, handler: (message: string) => void = onError): void => {
+        act(() => root.render(createElement(Harness, { controllers, dataManager: next, onError: handler })));
     };
 
     render();
     mounted.push(() => act(() => root.unmount()));
 
-    return { audit, onError, render };
+    return { audit, controllers, onError, render };
 }
 
 /** Every record the data manager has been handed, in order. */
@@ -126,7 +126,30 @@ describe("useAuditWriter", () => {
         expect(written(writeAudit)).toEqual(["form-opened", "saved", "save-failed"]);
     });
 
-    it("stops writing once it is unmounted", async () => {
+    it("does not hand records over a second time when the host gives it a new error handler", async () => {
+        const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+        const { audit, render } = mount({ writeAudit });
+
+        await act(async () => { audit.recordSaved(); });
+        render({ writeAudit }, vi.fn());
+        await act(async () => { audit.recordSaveFailed(); });
+
+        expect(written(writeAudit)).toEqual(["form-opened", "saved", "save-failed"]);
+    });
+
+    it("hands over the form's close when the manager closes, and then stops writing", async () => {
+        const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+        const { audit, controllers } = mount({ writeAudit });
+        await act(async () => { await Promise.resolve(); });
+        writeAudit.mockClear();
+
+        await act(async () => { controllers.close(); });
+        await act(async () => { audit.recordSaved(); });
+
+        expect(written(writeAudit)).toEqual(["form-closed"]);
+    });
+
+    it("keeps writing after it unmounts, since it lasts as long as the manager does", async () => {
         const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
         const { audit } = mount({ writeAudit });
         await act(async () => { await Promise.resolve(); });
@@ -134,7 +157,8 @@ describe("useAuditWriter", () => {
 
         mounted.splice(0).forEach(unmount => unmount());
         audit.recordSaved();
+        await Promise.resolve();
 
-        expect(writeAudit).not.toHaveBeenCalled();
+        expect(written(writeAudit)).toEqual(["saved"]);
     });
 });

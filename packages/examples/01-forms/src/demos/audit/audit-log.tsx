@@ -13,6 +13,7 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "comment-resolved": "success",
     "dropped": "primary",
     "fields-edited": "primary",
+    "form-closed": "secondary",
     "form-opened": "secondary",
     "page-added": "secondary",
     "page-focused": "light",
@@ -50,6 +51,8 @@ function summarize(record: AuditRecord): string {
             return `${record.page} ${record.pageOrdinal + 1}`;
         case "violations-added":
             return `${record.codes.join(", ")}: ${record.fields.join(", ")}`;
+        case "form-closed":
+            return `${record.status}${record.isDirty ? ", unsaved changes" : ""}`;
         case "form-opened":
             return `${record.form.name} v${record.form.version}, ${record.status}${record.mode === "editable" ? "" : `, ${record.mode}`}`;
         case "print-started":

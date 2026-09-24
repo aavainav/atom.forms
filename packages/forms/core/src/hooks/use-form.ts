@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import { IControllerManager } from "../controllers/controller-manager";
 import { IFormController } from "../controllers/form-controller";
@@ -21,9 +21,23 @@ export function useForm<TForm extends FormModel<any>>(controller: IFormControlle
 
 /**
  * Resolves the form controller for the given manager, loading the form into it the first time that form is seen.
- * Only one component should call this for a given manager; everything below it reads the controller from the manager.
+ * Holds the manager while mounted: it closes when the page is put away, or a microtask after this goes unless
+ * something holds it again by then. Only one component should call this for a given manager; everything below it
+ * reads the controller from the manager.
  */
 export function useFormController<TForm extends FormModel<any>>(controllers: IControllerManager, form: TForm): IFormController<TForm> {
+    useEffect(() => {
+        const putAway = (): void => controllers.close();
+
+        controllers.retain();
+        window.addEventListener("pagehide", putAway);
+
+        return () => {
+            window.removeEventListener("pagehide", putAway);
+            controllers.release();
+        };
+    }, [controllers]);
+
     // resolved during render so the controller is available on the first pass; loading a form the manager already
     // drives is a no-op, so a repeated render is harmless
     return controllers.loadForm(form);

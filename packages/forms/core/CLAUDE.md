@@ -49,7 +49,7 @@ FormModel      ── PageCollection ── PageModel ── SectionModel ──
 | [src/models/validation/](src/models/validation/) | Rules, conditions, contexts, collections, `RulesController`. See below. |
 | [src/models/import/](src/models/import/) | Drag-and-drop import: `Dropzone`, `PersonDropzone`, `VehicleDropzone`, `ViolationDropzone`, `IDraggableItem`, and the zod-validated `IImportablePerson`/`IImportableVehicle`/`IImportableViolation`. A form registers a `ViolationDropzone` with only the fields it actually prints; a dropzone ignores a key it holds no field for. |
 | [src/controllers/](src/controllers/) | The `Controller` base class, `@RegisterController` and its registry, `ControllerManager`, and the four controllers. See below. |
-| [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) · [use-active-page-id.ts](src/hooks/use-active-page-id.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)`, `usePrintState(controller)`, and `useActivePageId(controller)`. |
+| [src/hooks/use-form.ts](src/hooks/use-form.ts) · [use-print-state.ts](src/hooks/use-print-state.ts) · [use-active-page-id.ts](src/hooks/use-active-page-id.ts) | `useForm(controller)` (via `useSyncExternalStore`), `useFormController(manager, form)` (which also holds the manager while mounted), `usePrintState(controller)`, and `useActivePageId(controller)`. |
 | [src/mapping/](src/mapping/) | `FormMapper` base, `IPopulateData` (`data`, `readOnlyFields?`, `status?`, `workflow?`)/`ReadOnlyFields`, and the common `ICrash` / `IReportData` contracts. `read` and `write` mirror each other — target first, key named once — so every field a mapper writes is lockable by threading `populate`'s optional `readOnlyFields` through its section methods. |
 | [src/components/](src/components/) | The `F*` components. See below. |
 | [src/utils/](src/utils/) | `withChanges`, `buildClasses`, `useDisposables`, `IFilterable`, `Mutable`, `setOptionWithDependents`. |
@@ -147,6 +147,16 @@ form disposes the form and rules controllers. It also creates every eager contro
 those survive a form swap. When the form is new to the manager it raises `onControllerChanged` for the form
 controller, since seeding raises nothing itself and that is how an observer (`@forms/audit`) learns of a swap. `dispose()` releases controllers last created first, so one that observes another goes
 before what it observes.
+
+**The manager also knows when it is let go.** `retain()` and `release()` count what is showing it, and
+`useFormController` retains it while mounted and closes it on `pagehide`. A release closes it a microtask later unless
+something retains it again by then, because React's development remount (`StrictMode`) lets go and holds again at once,
+which is not the viewer going. `close()` closes it now and is idempotent; `onClosed` fires once when it does.
+`attach(key, setup)` runs `setup` once for the key and runs its teardown when the manager closes -- after `onClosed`,
+last attached first, so what is said as it closes still reaches whatever it was attached for. Attaching a key it
+already holds does nothing, which is what makes a remount safe; `useAuditRecorder` and `useAuditWriter` are attached
+this way. Nothing re-attaches after a close unless the effect that attached it runs again. In a test, `StrictMode` only
+sets effects up twice when it is the **outermost** element rendered into the root; anything above it turns that off.
 
 ## Shared sections
 

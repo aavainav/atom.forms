@@ -29,6 +29,8 @@ export interface IAuditController extends IController {
     flush(): void;
     /** Loads the history the host holds for the report, ahead of the records raised since. */
     load(records: ReadonlyArray<AuditRecord>): void;
+    /** Records that the form was closed, once for each form opened. Edits still pending are recorded first. */
+    recordClosed(): void;
     /** Records that the form was saved. */
     recordSaved(): void;
     /** Records that saving the form failed. */
@@ -54,7 +56,9 @@ export class AuditController extends Controller implements IAuditController {
     private _session: ReadonlyArray<AuditRecord> = [];
     private activityListener?: IEventListener;
     private baseline?: unknown;
+    private closedListener?: IEventListener;
     private editTimer?: ReturnType<typeof setTimeout>;
+    private isClosed = false;
     private isPrinting = false;
     private listener?: IEventListener;
     private pending: Array<AuditRecord> = [];
@@ -77,6 +81,8 @@ export class AuditController extends Controller implements IAuditController {
 
         this.activityListener?.remove();
         this.activityListener = undefined;
+        this.closedListener?.remove();
+        this.closedListener = undefined;
         this.listener?.remove();
         this.listener = undefined;
         this.pending = [];
@@ -109,6 +115,19 @@ export class AuditController extends Controller implements IAuditController {
         this.refresh();
     }
 
+    public recordClosed(): void {
+        this.flush();
+
+        if (!this.watched || this.isClosed) {
+            return;
+        }
+
+        const { form } = this.watched;
+
+        this.isClosed = true;
+        this.raise({ kind: "form-closed", isDirty: form.getIsDirty(), mode: form.mode, status: form.status });
+    }
+
     public recordSaved(): void {
         this.flush();
         this.raise({ kind: "saved" });
@@ -122,6 +141,7 @@ export class AuditController extends Controller implements IAuditController {
     public start(): void {
         this.listener = this.manager.onControllerChanged(event => this.observe(event));
         this.activityListener = this.manager.onActivity(args => this.observeActivity(args));
+        this.closedListener = this.manager.onClosed(() => this.recordClosed());
         this.open(this.manager.getFormController().form);
     }
 
@@ -157,7 +177,7 @@ export class AuditController extends Controller implements IAuditController {
 
         // a different form replaced the watched one
         if (form.id !== this.watched.identity.id) {
-            this.flush();
+            this.recordClosed();
             this.open(form);
             return;
         }
@@ -248,6 +268,7 @@ export class AuditController extends Controller implements IAuditController {
     }
 
     private open(form: FormModel<any>): void {
+        this.isClosed = false;
         // what was loaded is the history of the report the last form was, which this one is not
         this._loaded = [];
         this.watched = { form, identity: { id: form.id ?? "", revision: form.revision ?? 0, name: form.name, version: form.version } };

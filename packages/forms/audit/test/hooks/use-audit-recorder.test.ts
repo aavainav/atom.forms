@@ -1,4 +1,4 @@
-import { act, createElement } from "react";
+import { act, createElement, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import { ServicesContext } from "@common/react";
@@ -19,6 +19,8 @@ const mounted: Array<() => void> = [];
 interface IMount {
     readonly manager: ControllerManager;
     readonly records: Array<AuditRecord>;
+    /** Hands the hook a different manager, as a host that opens another report does. */
+    render(controllers: ControllerManager): void;
     unmount(): void;
 }
 
@@ -28,8 +30,12 @@ function Harness({ controllers }: { controllers: ControllerManager }): null {
     return null;
 }
 
+function kinds(records: ReadonlyArray<AuditRecord>): Array<string> {
+    return records.map(record => record.kind);
+}
+
 /** Mounts the hook for a freshly loaded form, with the records it forwards collected off a real service. */
-function mount(options?: IStubFormOptions): IMount {
+function mount(options?: IStubFormOptions, isStrict = false): IMount {
     const manager = new ControllerManager();
     manager.loadForm(stubForm({ name: "Dana" }, options));
 
@@ -40,11 +46,17 @@ function mount(options?: IStubFormOptions): IMount {
     const services = { get: () => service } as unknown as IServiceCollection;
     const root = createRoot(document.createElement("div"));
     const unmount = (): void => act(() => root.unmount());
+    const render = (controllers: ControllerManager): void => {
+        const tree = createElement(ServicesContext.Provider, { value: services }, createElement(Harness, { controllers }));
 
-    act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(Harness, { controllers: manager }))));
+        // React only sets effects up twice for a StrictMode that is the outermost element
+        act(() => root.render(isStrict ? createElement(StrictMode, undefined, tree) : tree));
+    };
+
+    render(manager);
     mounted.push(unmount);
 
-    return { manager, records, unmount };
+    return { manager, records, render, unmount };
 }
 
 afterEach(() => {
@@ -55,7 +67,7 @@ describe("useAuditRecorder", () => {
     it("forwards what was recorded while the form loaded, before it mounted", () => {
         const { records } = mount();
 
-        expect(records.map(record => record.kind)).toEqual(["form-opened"]);
+        expect(kinds(records)).toEqual(["form-opened"]);
     });
 
     it("marks the opening with the form's mode, and no other record", () => {
@@ -73,35 +85,54 @@ describe("useAuditRecorder", () => {
 
         getAuditController(manager).recordSaved();
 
-        expect(records.map(record => record.kind)).toEqual(["form-opened", "saved"]);
+        expect(kinds(records)).toEqual(["form-opened", "saved"]);
     });
 
-    it("records pending edits when it unmounts, and forwards nothing after", () => {
-        const { manager, records, unmount } = mount();
+    it("forwards the pending edits and then the close when the manager closes, and nothing after", () => {
+        const { manager, records } = mount();
         manager.getFormController().setForm(stubForm({ name: "Riley" }));
+
+        manager.close();
+        getAuditController(manager).recordSaved();
+
+        expect(kinds(records)).toEqual(["form-opened", "fields-edited", "form-closed"]);
+    });
+
+    it("keeps forwarding after it unmounts, since it lasts as long as the manager does", () => {
+        const { manager, records, unmount } = mount();
 
         unmount();
         getAuditController(manager).recordSaved();
 
-        expect(records.map(record => record.kind)).toEqual(["form-opened", "fields-edited"]);
+        expect(kinds(records)).toEqual(["form-opened", "saved"]);
     });
 
-    it("records pending edits when the page is put away", () => {
-        const { manager, records } = mount();
-        manager.getFormController().setForm(stubForm({ name: "Riley" }));
+    /** In development React sets an effect up, cleans it up and sets it up again at once. */
+    it("forwards each record once for the remount React's StrictMode does in development", () => {
+        const { manager, records } = mount(undefined, true);
 
-        window.dispatchEvent(new Event("pagehide"));
+        getAuditController(manager).recordSaved();
 
-        expect(records.map(record => record.kind)).toEqual(["form-opened", "fields-edited"]);
+        expect(kinds(records)).toEqual(["form-opened", "saved"]);
     });
 
-    it("stops listening for the page being put away once unmounted", () => {
-        const { manager, records, unmount } = mount();
+    it("forwards each record once when it renders again", () => {
+        const { manager, records, render } = mount();
 
-        unmount();
-        manager.getFormController().setForm(stubForm({ name: "Riley" }));
-        window.dispatchEvent(new Event("pagehide"));
+        render(manager);
+        getAuditController(manager).recordSaved();
 
-        expect(records.map(record => record.kind)).toEqual(["form-opened"]);
+        expect(kinds(records)).toEqual(["form-opened", "saved"]);
+    });
+
+    it("forwards the records of a different manager when it is handed one", () => {
+        const { records, render } = mount();
+        const next = new ControllerManager();
+        next.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+
+        render(next);
+        getAuditController(next).recordSaved();
+
+        expect(records.map(record => [record.kind, record.form.id])).toEqual([["form-opened", "form-1"], ["form-opened", "form-2"], ["saved", "form-2"]]);
     });
 });

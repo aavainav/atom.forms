@@ -354,4 +354,132 @@ describe("ControllerManager", () => {
             expect(log).toEqual(["dispose lazy", "dispose echo"]);
         });
     });
+
+    describe("retain, release and close", () => {
+        /** A manager, and how many times it has said it closed. */
+        function watched() {
+            const manager = new ControllerManager();
+            const closed = { count: 0 };
+            manager.onClosed(() => { closed.count += 1; });
+
+            return { closed, manager };
+        }
+
+        it("closes a microtask after the last thing holding it lets go", async () => {
+            const { closed, manager } = watched();
+
+            manager.retain();
+            manager.release();
+
+            expect(closed.count).toBe(0);
+
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
+
+        it("does not close while something else still holds it", async () => {
+            const { closed, manager } = watched();
+
+            manager.retain();
+            manager.retain();
+            manager.release();
+            await Promise.resolve();
+
+            expect(closed.count).toBe(0);
+
+            manager.release();
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
+
+        /** React's development remount lets go and holds again at once, which is not the viewer going. */
+        it("does not close when something holds it again before the microtask", async () => {
+            const { closed, manager } = watched();
+
+            manager.retain();
+            manager.release();
+            manager.retain();
+            await Promise.resolve();
+
+            expect(closed.count).toBe(0);
+        });
+
+        it("closes at once when asked, and only once however many reasons there are", async () => {
+            const { closed, manager } = watched();
+
+            manager.retain();
+            manager.close();
+
+            expect(closed.count).toBe(1);
+
+            manager.close();
+            manager.release();
+            await Promise.resolve();
+
+            expect(closed.count).toBe(1);
+        });
+
+        it("closes again when it is held again after it closed", () => {
+            const { closed, manager } = watched();
+
+            manager.retain();
+            manager.close();
+            manager.retain();
+            manager.close();
+
+            expect(closed.count).toBe(2);
+        });
+    });
+
+    describe("attach", () => {
+        it("runs setup once for a key, however often it is attached", () => {
+            const manager = new ControllerManager();
+            let setups = 0;
+            const setup = (): (() => void) => { setups += 1; return () => undefined; };
+
+            manager.attach("test-key", setup);
+            manager.attach("test-key", setup);
+
+            expect(setups).toBe(1);
+        });
+
+        it("runs each teardown when the manager closes, after it says so, last attached first", () => {
+            const manager = new ControllerManager();
+            const order: Array<string> = [];
+            manager.onClosed(() => order.push("closed"));
+            manager.attach("first", () => () => order.push("first"));
+            manager.attach("second", () => () => order.push("second"));
+
+            expect(order).toEqual([]);
+
+            manager.close();
+
+            expect(order).toEqual(["closed", "second", "first"]);
+        });
+
+        it("runs a teardown once, however many times the manager is asked to close", () => {
+            const manager = new ControllerManager();
+            let teardowns = 0;
+            manager.attach("test-key", () => () => { teardowns += 1; });
+
+            manager.close();
+            manager.close();
+
+            expect(teardowns).toBe(1);
+        });
+
+        it("attaches a key again once the manager has closed", () => {
+            const manager = new ControllerManager();
+            let setups = 0;
+            const setup = (): (() => void) => { setups += 1; return () => undefined; };
+
+            manager.attach("test-key", setup);
+            manager.close();
+            manager.attach("test-key", setup);
+
+            expect(setups).toBe(2);
+        });
+    });
 });

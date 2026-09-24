@@ -1,4 +1,4 @@
-import { act, createElement, createRef } from "react";
+import { act, createElement, createRef, StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ServicesContext } from "@common/react";
@@ -39,6 +39,7 @@ function stubForm(mode: FormMode = "editable"): FormModel<any> {
         mapper: undefined,
         extractData: () => ({ name: "Stub Form", status: "draft", type: "none", version: "1.0" }),
         getFieldPlacements: () => new Map(),
+        getIsDirty: () => false,
         getPages: () => [],
         getPagesFor: () => [],
         setMode: (next: FormMode) => ({ ...form, mode: next })
@@ -51,6 +52,8 @@ interface IMountOptions {
     readonly audit?: ReadonlyArray<AuditRecord>;
     readonly comments?: ReadonlyArray<IReviewComment>;
     readonly dataManager?: Partial<IReportViewerDataManager<any>>;
+    /** Renders under `StrictMode`, which in development sets every effect up, cleans it up and sets it up again. */
+    readonly isStrict?: boolean;
     readonly mode?: FormMode;
     /** An option to register, which is rendered when the options bar is shown. */
     readonly option?: IReportViewerOption;
@@ -92,7 +95,7 @@ function mount(options: IMountOptions = {}) {
     });
 
     const render = (form: IInitialForm): void => {
-        act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(ReportViewerForm, {
+        const tree = createElement(ServicesContext.Provider, { value: services }, createElement(ReportViewerForm, {
             ref,
             controllers,
             dataManager: options.dataManager as IReportViewerDataManager<any>,
@@ -100,7 +103,10 @@ function mount(options: IMountOptions = {}) {
             mode,
             showOptions: options.showOptions,
             user: options.user
-        }))));
+        }));
+
+        // React only sets effects up twice for a StrictMode that is the outermost element
+        act(() => root.render(options.isStrict ? createElement(StrictMode, undefined, tree) : tree));
     };
 
     render(initialForm());
@@ -165,6 +171,50 @@ describe("ReportViewerForm", () => {
 
             expect(writeComments).not.toHaveBeenCalled();
             expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.id))).not.toContain("loaded-1");
+        });
+
+        it("hands the host the close when the viewer goes, which is raised as it goes", async () => {
+            const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+            mount({ dataManager: { writeAudit } });
+            await settle();
+
+            mounted.splice(0).forEach(unmount => unmount());
+            await Promise.resolve();
+
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
+        });
+
+        it("hands the host the close when the page is put away", async () => {
+            const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+            mount({ dataManager: { writeAudit } });
+            await settle();
+
+            window.dispatchEvent(new Event("pagehide"));
+            await settle();
+
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
+        });
+
+        /** The workbench renders under StrictMode, where the viewer is set up, cleaned up and set up again at once. */
+        it("hands the host no close for the remount React's StrictMode does in development, and each record once", async () => {
+            const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+            const { audit } = mount({ dataManager: { writeAudit }, isStrict: true });
+            await settle();
+
+            await act(async () => { audit.recordSaved(); });
+
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "saved"]);
+        });
+
+        it("hands the host the close under StrictMode when the viewer really goes", async () => {
+            const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+            mount({ dataManager: { writeAudit }, isStrict: true });
+            await settle();
+
+            mounted.splice(0).forEach(unmount => unmount());
+            await Promise.resolve();
+
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
         });
     });
 
