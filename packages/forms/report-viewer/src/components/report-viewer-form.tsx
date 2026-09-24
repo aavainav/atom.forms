@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo } from "react";
 import { useService } from "@common/react";
 import { useAuditRecorder, getAuditController } from "@forms/audit";
 import { useFormController, IActor, IControllerManager, IReportData, IRuleIssue, ControllerManager, FormMode } from "@forms/core";
@@ -65,18 +65,15 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
 
     const controller = useFormController(formControllers, initialState);
 
-    // handed to the controllers during render, like the form itself, so they hold it before anything below reads or
-    // subscribes to them: what the host held for the report
     const audit = getAuditController(formControllers);
     const review = getReviewController(formControllers);
 
-    const loaded = useRef<{ readonly controllers: IControllerManager; readonly initialForm: IInitialForm }>(undefined);
-
-    if (loaded.current?.controllers !== formControllers || loaded.current.initialForm !== initialForm) {
-        loaded.current = { controllers: formControllers, initialForm };
+    // what the host held for the report goes in before paint and before any writer subscribes, once for each form it
+    // is given; not during render, since a mounted component subscribed to the comments would be updated mid-render
+    useLayoutEffect(() => {
         audit.load(initialForm.audit ?? []);
         review.load(initialForm.comments ?? []);
-    }
+    }, [audit, review, initialForm]);
 
     useAuditRecorder(formControllers);
 

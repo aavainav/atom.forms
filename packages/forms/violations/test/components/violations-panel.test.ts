@@ -27,12 +27,14 @@ async function mountWithATick(form: FormModel<any>) {
     const controllers = new ControllerManager();
     controllers.loadForm(form);
 
+    // the list is loaded when the panel opens, so the request is held until the test resolves it inside an act
+    let release!: () => void;
     const apply = vi.fn((..._: Array<unknown>) => Promise.resolve());
     const onError = vi.fn();
     const selector = new ViolationSelectorService();
     const registry = new Map<unknown, unknown>([
         [IViolationSelectorService, selector],
-        [IViolationService, { getBinding: () => createBinding(apply), getViolations: () => Promise.resolve(violations) }]
+        [IViolationService, { getBinding: () => createBinding(apply), getViolations: () => new Promise<ReadonlyArray<IViolation>>(resolve => { release = () => resolve(violations); }) }]
     ]);
     const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
     const container = document.createElement("div");
@@ -42,8 +44,8 @@ async function mountWithATick(form: FormModel<any>) {
     act(() => root.render(createElement(ServicesContext.Provider, { value: services }, createElement(ViolationsPanel, { catalogItem: {} as never, controllers, onError }))));
     mounted.push(() => { act(() => root.unmount()); container.remove(); });
 
-    await act(async () => selector.openSelector());
-    await act(async () => { await Promise.resolve(); });
+    act(() => { selector.openSelector(); });
+    await act(async () => { release(); await Promise.resolve(); });
     act(() => container.querySelector<HTMLElement>("#violation-56-5-1520")!.click());
 
     return { add: () => container.querySelector<HTMLButtonElement>("#violations-add-button")!, apply, controllers, onError };

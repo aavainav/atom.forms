@@ -280,13 +280,15 @@ a service.
 form always, an `"editable"` one only when the host can keep comments for the officer to resolve, a `"viewable"` one
 never -- and the `review` option is gated on the same call.
 
-**`ReportViewerForm` does the setting up, during render, before anything below subscribes:** it hands the user
+**`ReportViewerForm` does the setting up, before anything below subscribes:** during render it hands the user
 (`settings.user`) to the manager -- **before the form is loaded**, since the audit records `form-opened` as the load
-creates it and reads the user then -- and loads what the host held -- `initialForm.audit` into the audit controller,
-`initialForm.comments` into the review controller -- once for each form it is given. That is during
-render, not in an effect, for two reasons: the layer decides from the user whether to offer commenting on its first
-pass, and the manager's writer subscribes in an effect that runs *before* the parent's, so loading in an effect would be
-written straight back. Without a user a `"reviewable"` form shows its comments but cannot add any.
+creates it and reads the user then -- and it loads what the host held -- `initialForm.audit` into the audit controller,
+`initialForm.comments` into the review controller -- once for each form it is given, in a **layout effect**. That is
+not during render, because a mounted component subscribed to the comments (the workflow actions count the open ones)
+would be updated while `ReportViewerForm` renders, which React warns about whenever a viewer is handed a different form.
+It is not in an ordinary effect either: the manager's writer subscribes in an effect that runs *before* the parent's,
+so loading there would be written straight back, and a layout effect runs before every such effect. Without a user a
+`"reviewable"` form shows its comments but cannot add any.
 
 The manager, beside the other managers at the viewer's root:
 

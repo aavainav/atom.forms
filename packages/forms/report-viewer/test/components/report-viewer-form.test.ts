@@ -142,6 +142,20 @@ describe("ReportViewerForm", () => {
             expect(review.comments).toEqual([]);
         });
 
+        it("does not update what is already mounted while it renders, when it is handed a different form", () => {
+            const { initialForm, render } = mount({ audit: [loadedRecord], comments: [heldComment] });
+            const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+            try {
+                render(initialForm([], []));
+
+                expect(error.mock.calls.map(([message]) => String(message))).not.toContainEqual(expect.stringContaining("Cannot update a component"));
+            }
+            finally {
+                error.mockRestore();
+            }
+        });
+
         it("does not write back the comments or the history it loaded", async () => {
             const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
             const writeComments = vi.fn(async () => undefined);
@@ -198,8 +212,12 @@ describe("ReportViewerForm", () => {
 
         it("attributes the comments a reviewer makes to the whole of them", () => {
             const { review } = mount({ mode: "reviewable", user: rivera });
+            let comment!: IReviewComment;
 
-            expect(review.add({ level: "form" }, "Wrong date.").author).toEqual(rivera);
+            // the layer draws the comments, so adding one updates it
+            act(() => { comment = review.add({ level: "form" }, "Wrong date."); });
+
+            expect(comment.author).toEqual(rivera);
         });
 
         it("lets a reviewer comment once there is a user, and not before", () => {
