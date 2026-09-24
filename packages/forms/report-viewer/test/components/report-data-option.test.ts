@@ -70,12 +70,12 @@ describe("ReportDataOption", () => {
         expect(getBundle).toHaveBeenCalledWith(form, controllers);
     });
 
-    it("opens a dialog with a tab for the report data, the audit history and the comments", () => {
+    it("opens a dialog with a tab for the report data, the audit history, the comments and all of it together", () => {
         const { options, tabs } = mount();
 
         expect(options.title).toBe("Report data");
         expect(options.size).toBe("xl");
-        expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments"]);
+        expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments", "All data"]);
     });
 
     describe("the workflow tab", () => {
@@ -86,15 +86,23 @@ describe("ReportDataOption", () => {
         };
         const withWorkflow: IReportBundle = { ...bundle, data: { ...bundle.data, workflow } as IReportBundle["data"] };
 
-        it("is offered last when the report has a workflow, with its id, version and history", () => {
+        it("is offered after the comments when the report has a workflow, with its id, version and history", () => {
             const { tabs } = mount(withWorkflow);
 
-            expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments", "Workflow"]);
+            expect(tabs.map(tab => tab.title)).toEqual(["Report data", "Audit history", "Comments", "Workflow", "All data"]);
             expect(tabs[3].json).toBe(JSON.stringify(workflow, null, 2));
         });
 
         it("is left out when the report has none, since it would only be empty", () => {
             expect(mount().tabs.map(tab => tab.title)).not.toContain("Workflow");
+        });
+    });
+
+    describe("the all data tab", () => {
+        it("is offered last, holding the whole bundle as a host is handed it by writeBundle", () => {
+            const { tabs } = mount();
+
+            expect(tabs.at(-1)).toMatchObject({ id: "all", title: "All data", json: JSON.stringify(bundle, null, 2) });
         });
     });
 
@@ -127,6 +135,16 @@ describe("ReportDataOption", () => {
 
             expect(writeText).toHaveBeenCalledWith(tabs[2].json);
             expect(showNotification).toHaveBeenCalledWith({ type: "success", message: "Comments copied." });
+        });
+
+        it("copies the all data tab like any other", async () => {
+            const { options, showNotification, tabs } = mount();
+
+            (options.contentProps!.onChange as (tab: IReportDataTab) => void)(tabs.at(-1)!);
+            await copyAction(options).invoke();
+
+            expect(writeText).toHaveBeenCalledWith(tabs.at(-1)!.json);
+            expect(showNotification).toHaveBeenCalledWith({ type: "success", message: "All data copied." });
         });
 
         it("says so when the browser refuses the copy", async () => {

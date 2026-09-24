@@ -5,7 +5,7 @@ import { FButton, FIcon, FTooltip } from "@forms/core";
 import { IReportDataTab, ReportDataDialog } from "./report-data-dialog";
 import { IModalService, INotificationService, IReportViewerOptionProps, IReportViewerService } from "../../services";
 
-/** Defines the option for viewing the data held about the current report: what it would be saved as, its audit history, its review comments, and its workflow history. */
+/** Defines the option for viewing the data held about the current report: what it would be saved as, its audit history, its review comments, its workflow history, and all of it together. */
 export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
@@ -33,7 +33,9 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
             { id: "audit", title: "Audit history", json: format(bundle.audit) },
             { id: "comments", title: "Comments", json: format(bundle.comments) },
             // a form with no workflow has no history to show, and the tab would only be empty
-            ...(bundle.data.workflow ? [{ id: "workflow", title: "Workflow", json: format(bundle.data.workflow) }] : [])
+            ...(bundle.data.workflow ? [{ id: "workflow", title: "Workflow", json: format(bundle.data.workflow) }] : []),
+            // the whole bundle, as a host is handed it by `writeBundle`
+            { id: "all", title: "All data", json: format(bundle) }
         ];
 
         // the modal's actions are handed over when it opens, so they cannot re-render with the dialog's state; the
