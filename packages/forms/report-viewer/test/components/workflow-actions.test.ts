@@ -193,6 +193,27 @@ describe("WorkflowActions", () => {
             expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "saved"]);
         });
 
+        it("records it under the revision it saved, not the one before", async () => {
+            const { controllers, save } = await mount();
+
+            await act(async () => save()!.click());
+
+            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "saved", form: { revision: 1 } });
+        });
+
+        it("keeps what was typed while the save was under way, at the revision that was saved", async () => {
+            const { controllers, form, save, saveForm } = await mount();
+            let finish!: () => void;
+            saveForm.mockImplementationOnce(() => new Promise<IReportData>(resolve => { finish = () => resolve({} as IReportData); }));
+
+            await act(async () => { save()!.click(); });
+            act(() => controllers.getFormController().update({ update: live => live.setStatus("inProgress") }));
+            await act(async () => { finish(); });
+
+            expect(form().status).toBe("inProgress");
+            expect(form().revision).toBe(1);
+        });
+
         it("says why, and records the failure, when it fails", async () => {
             const { controllers, save, saveForm, showNotification } = await mount();
             saveForm.mockRejectedValueOnce(new Error("The server is down."));
@@ -356,6 +377,15 @@ describe("WorkflowActions", () => {
                 await confirm();
 
                 expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "workflow-transition", "saved"]);
+            });
+
+            it("records the save that kept it under the revision it saved", async () => {
+                const { click, confirm, controllers } = await mount();
+                click("submit");
+
+                await confirm();
+
+                expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "saved", form: { revision: 1 } });
             });
 
             it("leaves the form as it was, and says why, when the save fails", async () => {

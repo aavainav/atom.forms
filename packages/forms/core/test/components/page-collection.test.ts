@@ -220,6 +220,17 @@ describe("FPageCollection", () => {
             ]);
         });
 
+        it("reports nothing for the first page of a different form loaded into the same manager", async () => {
+            const { controllers } = await mount({ form: await addCitationPage(await createTestForm()) });
+            const next = await createTestForm();
+            const reported: Array<ActivityEventArgs> = [];
+            controllers.onActivity(args => reported.push(args));
+
+            act(() => controllers.getFormController().setForm(next));
+
+            expect(reported).toEqual([]);
+        });
+
         it("reports nothing as a print takes the tabs away and gives them back", async () => {
             const { controllers } = await mount({ form: await addCitationPage(await createTestForm()) });
             const reported: Array<ActivityEventArgs> = [];

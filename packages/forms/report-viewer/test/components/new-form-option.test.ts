@@ -20,10 +20,10 @@ import type { IReportViewerDataManager } from "../../src/services/report-viewer"
 
 const mounted: Array<() => void> = [];
 
-function stubForm(id: string, isDirty: boolean): FormModel<any> {
+function stubForm(id: string, isDirty: boolean, revision = 0): FormModel<any> {
     return {
-        id, mode: "editable", name: "Stub Form", status: "draft", version: "1.0",
-        clean() { return this; }, getIsDirty: () => isDirty, incrementRevision() { return this; }
+        history: [], id, mode: "editable", name: "Stub Form", revision, status: "draft", version: "1.0",
+        clean() { return this; }, getIsDirty: () => isDirty, incrementRevision() { return stubForm(id, isDirty, revision + 1); }
     } as unknown as FormModel<any>;
 }
 
@@ -140,6 +140,15 @@ describe("NewFormOption", () => {
             expect(saveForm).toHaveBeenCalledWith(expect.anything(), dataManager, controllers);
             expect(getAuditController(controllers).session.map(record => record.kind)).toContain("saved");
             expect(loadForm).toHaveBeenCalledTimes(1);
+        });
+
+        it("records the save under the revision it saved", async () => {
+            const { click, controllers, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+
+            await click();
+            await act(async () => { await showSaveChangesModal.mock.calls[0][0].onSave(); });
+
+            expect(getAuditController(controllers).session.find(record => record.kind === "saved")).toMatchObject({ form: { id: "form-1", revision: 1 } });
         });
 
         it("records a save that failed, and does not start the new form", async () => {

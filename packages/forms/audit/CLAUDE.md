@@ -21,7 +21,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
-| `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since `form-opened` says it, and neither is a page returning after a print | Reported by core's `NavigationController` through the manager's `onActivity` |
+| `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since `form-opened` says it, and neither is a page returning after a print, nor the first page of another form loaded into the same manager | Reported by core's `NavigationController` through the manager's `onActivity` |
 | `page-added` / `page-removed` | A page was added to, or removed from, a set of pages: `{ page, pageOrdinal, fields }`, the page definition's name and where the page sits, counting from zero | Same as `dropped`, from `FormController.addPage` / `removePage`. Declared by core |
 | `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped`. Declared by `@forms/violations` |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
@@ -136,12 +136,19 @@ records none of it, since it only compares what came after it was opened.
 The save flow lives in the report viewer, above this package, and a dirty→clean transition is ambiguous: starting a
 new form calls `clean()` too. So the report viewer's `WorkflowActions` (its Save button) and the save path of
 `NewFormOption` call `getAuditController(controllers).recordSaved()` / `recordSaveFailed()`. **Anything else that
-saves must do the same.**
+saves must do the same.** Call `recordSaved` **after** the form controller holds the saved form: a record's
+`form.revision` is read off the form the audit is watching, so recording first would stamp the save with the revision
+from before it.
 
 ## Gotchas
 
-- **Adding a kind is one entry in `IAuditRecordMap`.** The union and `AuditRecordDetailKind` follow from it, and the
-  sandbox's `kindColours` stops compiling until it names the new kind.
+- **Adding a kind is one entry in a map.** In `IAuditRecordMap` for one this package detects itself, or in core's
+  `IControllerActivityMap` / `IFormActivityMap` (by declaration merging, from the package that reports it) for one a
+  package reports. The union and `AuditRecordDetailKind` follow from it, and the sandbox's `kindColours` stops
+  compiling until it names the new kind.
+- **One action can raise several records, on purpose.** Choosing several violations records a `page-added` for each
+  extra page, then one `violations-added`. Each is true and each is kept: the log is meant to hold every detail, not
+  a summary of what happened.
 - **`mode` is stamped by the controller itself**, straight off `form.mode`, the same way `status` is -- unlike the
   old `isReadOnly` field this replaced, which only the host knew and had to be added downstream by the recorder.
 - **`status-changed` and `workflow-transition` only fire for a change made through the form controller.** A status set on the model before it

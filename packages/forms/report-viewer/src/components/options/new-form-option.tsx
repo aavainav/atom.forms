@@ -62,8 +62,9 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
                     throw error;
                 }
 
-                getAuditController(controllers).recordSaved();
                 controllers.getFormController().update({ update: () => toSave.clean() });
+                // the saved form goes in first, so the audit records the save under the revision it saved
+                getAuditController(controllers).recordSaved();
                 await startNew();
             }
         });

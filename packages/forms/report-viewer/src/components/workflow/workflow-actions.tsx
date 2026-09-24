@@ -51,8 +51,10 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
 
         try {
             await reportViewerService.saveForm(current, dataManager, controllers);
+            // the form as it is now, so what was typed while the save was under way is kept
+            formController.update({ update: now => now.incrementRevision().clean() });
+            // the audit reads the revision off the form it watches, so the saved form goes in first
             getAuditController(controllers).recordSaved();
-            formController.update({ update: () => current.clean() });
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {

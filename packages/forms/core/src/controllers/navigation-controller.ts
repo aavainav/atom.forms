@@ -3,14 +3,16 @@ import { RegisterController } from "./controller-registry";
 
 /** Names the field a navigation is heading to; the page it's on is implied by the field, since a page instance -- not a field within it -- is the only thing ever ambiguous. */
 export interface INavigationTarget {
-    /** The id of the page instance to show, e.g. one violation page among several on a citation. */
-    readonly pageId: string;
     /** The DOM id of the field to focus once its page is showing -- a field's uuid is already the DOM id of the input rendered for it. */
     readonly fieldId: string;
+    /** The id of the page instance to show, e.g. one violation page among several on a citation. */
+    readonly pageId: string;
 }
 
 /** Says what the page showing is, the way a review target does: the name of its definition, and which of that definition's pages it is, counting from zero. */
 export interface IActivePage {
+    /** The id of the form the page belongs to, so that the first page shown for a different form is treated as the first, not as a change. */
+    readonly formId?: string;
     readonly page: string;
     readonly pageOrdinal: number;
 }
@@ -37,6 +39,7 @@ export interface INavigationController extends IController {
 @RegisterController(ControllerKey.navigation)
 export class NavigationController extends Controller implements INavigationController {
     private _activePageId?: string;
+    private _shownFormId?: string;
     private _shownPageId?: string;
     private _target?: INavigationTarget;
 
@@ -68,7 +71,9 @@ export class NavigationController extends Controller implements INavigationContr
 
         // a print takes the tabs away and gives them back, so it is the last page shown that a page has to differ from
         if (pageId !== undefined && pageId !== this._shownPageId) {
-            const isFirst = this._shownPageId === undefined;
+            // a different form starts over: its first page is the one it opened on, whatever was shown for the last
+            const isFirst = this._shownPageId === undefined || this._shownFormId !== active?.formId;
+            this._shownFormId = active?.formId;
             this._shownPageId = pageId;
 
             // the first page is the one the form opened on, which `form-opened` already says
@@ -80,6 +85,7 @@ export class NavigationController extends Controller implements INavigationContr
 
     public dispose(): void {
         this._activePageId = undefined;
+        this._shownFormId = undefined;
         this._shownPageId = undefined;
         this._target = undefined;
     }

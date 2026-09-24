@@ -103,6 +103,20 @@ describe("NavigationController", () => {
             expect(reported).toHaveLength(1);
         });
 
+        it("counts the first page shown for a different form as the first, and reports nothing for it", () => {
+            const { controller, reported } = navigation();
+
+            controller.setActivePage("page-1", { ...first, formId: "form-1" });
+            controller.setActivePage("page-2", { ...second, formId: "form-1" });
+            controller.setActivePage("page-3", { ...first, formId: "form-2" });
+            controller.setActivePage("page-4", { ...second, formId: "form-2" });
+
+            expect(reported).toEqual([
+                { activity: { kind: "page-focused", page: "citation", pageOrdinal: 1 } },
+                { activity: { kind: "page-focused", page: "citation", pageOrdinal: 1 } }
+            ]);
+        });
+
         it("reports nothing when it is not told what the page is", () => {
             const { controller, reported } = navigation();
 

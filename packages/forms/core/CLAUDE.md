@@ -134,7 +134,9 @@ core reads an activity. `@forms/audit` records each one as it comes.
   `setActivePage` also takes an optional `{ page, pageOrdinal }` saying what the page is (the page collection knows the
   definition's name and where the page sits), and reports a **`page-focused`** activity when a page other than the
   last one shown comes into view, in any mode. The first page shown is silent, since `form-opened` says it, and so is
-  the same page coming back after a print, which sets `undefined` in between.
+  the same page coming back after a print, which sets `undefined` in between. So is the first page of a different form
+  loaded into the same manager ("Start new form"): the page collection passes the form's id as `formId`, and a page
+  shown for a form other than the last one's counts as the first.
 - **`RulesController`** (in `models/validation/`) runs the rule collection and holds the resulting
   `RuleIssueCollection`. It reads `form` through the manager each time it is needed, so it can never be validating a
   stale model; its rules are the form's own unless `getRulesController(ruleCollection)` sets one or
