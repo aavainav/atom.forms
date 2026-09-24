@@ -51,7 +51,7 @@ function mount(options: IMountOptions = {}) {
         [INotificationService, { showNotification }],
         [IReportViewerService, { canSaveForm: () => canSave, loadForm, saveForm }]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const dataManager = { read: async () => undefined } as IReportViewerDataManager<any>;
     const container = document.createElement("div");
     const root = createRoot(container);

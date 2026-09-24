@@ -48,7 +48,7 @@ function mount(options: IMountOptions = {}) {
     const reviewService = new ReviewService();
     const showModal = vi.fn();
     const onError = vi.fn();
-    const services = { get: (service: unknown) => service === IModalService ? { showModal } : reviewService } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => service === IModalService ? { showModal } : reviewService } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);

@@ -30,7 +30,7 @@ function profile(id: string, pages: Array<string>, overrides: Partial<IPrintProf
 
 /** Stands in for a form: only `mode`/`setMode` matter here, since the service reads and switches nothing else. */
 function stubForm(mode: FormMode): FormModel<any> {
-    return { mode, setMode: (next: FormMode) => stubForm(next) } as unknown as FormModel<any>;
+    return { mode, setMode: (next: FormMode) => stubForm(next) } as FormModel<any>;
 }
 
 /** A controllers manager whose form and print controllers are plain, inspectable stubs. */

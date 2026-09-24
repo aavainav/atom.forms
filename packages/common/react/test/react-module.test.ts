@@ -37,7 +37,7 @@ function addRootElement(): HTMLElement {
 
 /** Runs the module's configure step, with what its dependencies configure done through `next`. */
 async function configure(module: ReactModule, next: () => Promise<void> = async () => undefined): Promise<void> {
-    await act(async () => { await module.configure({ next } as unknown as IModuleConfigurator); });
+    await act(async () => { await module.configure({ next } as IModuleConfigurator); });
 }
 
 afterEach(() => {
@@ -84,7 +84,7 @@ describe("ReactModule", () => {
 
     describe("configuring", () => {
         it("refuses when the page has nowhere to render the app", async () => {
-            await expect(new ReactModule().configure({ next: async () => undefined } as unknown as IModuleConfigurator))
+            await expect(new ReactModule().configure({ next: async () => undefined } as IModuleConfigurator))
                 .rejects.toThrow("An element with the id of 'root' must be defined in order for the react app to render.");
         });
 

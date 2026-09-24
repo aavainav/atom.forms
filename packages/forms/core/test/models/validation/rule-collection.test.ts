@@ -5,7 +5,7 @@ import { RuleCollection } from "../../../src/models/validation/rule-collection";
 
 /** The collection never evaluates a rule, so a stub keeps the test about the collection. */
 function rule(name: string): Rule {
-    return { name } as unknown as Rule;
+    return { name } as Rule;
 }
 
 describe("RuleCollection", () => {

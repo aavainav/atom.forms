@@ -60,7 +60,7 @@ function stubMapper(): ReturnType<typeof vi.fn> {
 /** A controller manager over a stub form, which is all the audit and review controllers the bundle is gathered from need. */
 function stubControllers(): ControllerManager {
     const controllers = new ControllerManager();
-    controllers.loadForm({ id: "form-1", mode: "editable", name: "Stub", status: "draft", version: "1.0" } as unknown as FormModel<any>);
+    controllers.loadForm({ id: "form-1", mode: "editable", name: "Stub", status: "draft", version: "1.0" } as FormModel<any>);
 
     return controllers;
 }

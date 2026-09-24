@@ -21,7 +21,7 @@ export function placement(fieldName: string, options: IPlacementOptions = {}): I
     const page = { name: "person-page", title: "Person" };
     const section = { getPageDefinition: () => page, isShared, name: sectionName, title: sectionTitles[sectionName] };
 
-    return { definition: { getSectionDefinition: () => section, label: fieldLabels[fieldName], name: fieldName }, pageId, pageOrdinal } as unknown as IFieldPlacement;
+    return { definition: { getSectionDefinition: () => section, label: fieldLabels[fieldName], name: fieldName }, pageId, pageOrdinal } as IFieldPlacement;
 }
 
 /** Three fields on one page: two in the person section and one in the vehicle section. */

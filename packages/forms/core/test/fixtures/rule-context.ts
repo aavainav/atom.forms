@@ -19,5 +19,5 @@ export function stubRuleContext(field: FieldModel<TValueType> | undefined): IRul
 export function stubRuleContextFor(fields: ReadonlyArray<readonly [AnyFieldDefinition, FieldModel<TValueType>]>): IRuleContext {
     const map = new Map<AnyFieldDefinition, FieldModel<TValueType>>(fields);
 
-    return { getField: (definition: AnyFieldDefinition) => map.get(definition) } as unknown as IRuleContext;
+    return { getField: (definition: AnyFieldDefinition) => map.get(definition) } as IRuleContext;
 }

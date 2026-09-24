@@ -438,7 +438,7 @@ describe("FFieldInput", () => {
 
             expect(target.applyFilter).toHaveBeenCalledTimes(1);
 
-            const predicate = (target.applyFilter.mock.calls[0] as unknown as Array<(row: string) => boolean>)[0];
+            const predicate = (target.applyFilter.mock.calls[0] as Array<(row: string) => boolean>)[0];
             predicate("row");
 
             expect(filter).toHaveBeenCalledWith("ab", "ab", "row");
@@ -460,7 +460,7 @@ describe("FFieldInput", () => {
 
             type(input(), "ab");
             act(() => { vi.advanceTimersByTime(0); });
-            (target.applyFilter.mock.calls[0] as unknown as Array<(row: string) => boolean>)[0]("row");
+            (target.applyFilter.mock.calls[0] as Array<(row: string) => boolean>)[0]("row");
 
             expect(filter).toHaveBeenCalledWith("AB", "ab", "row");
         });

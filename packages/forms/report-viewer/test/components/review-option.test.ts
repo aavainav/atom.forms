@@ -19,7 +19,7 @@ const mounted: Array<() => void> = [];
 
 function mount() {
     const controllers = new ControllerManager();
-    controllers.loadForm({ id: "form-1", mode: "reviewable" } as unknown as FormModel<any>);
+    controllers.loadForm({ id: "form-1", mode: "reviewable" } as FormModel<any>);
 
     const reviewService = new ReviewService();
     const services = { get: () => reviewService } as unknown as IServiceCollection;

@@ -40,7 +40,7 @@ new FormDefinition("workflow-stub-form", WorkflowStubForm, {});
 const comment: IReviewComment = { at: 1, author: { id: "reviewer-1", name: "Reviewer One" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
 
 function issueOf(severity: RuleIssueSeverity): RuleIssueCollection {
-    return new RuleIssueCollection([{ field: { name: "firstName" }, message: "Bad.", section: {}, severity } as unknown as IRuleIssue]);
+    return new RuleIssueCollection([{ field: { name: "firstName" }, message: "Bad.", section: {}, severity } as IRuleIssue]);
 }
 
 interface IMountOptions {
@@ -68,7 +68,7 @@ async function mount(options: IMountOptions = {}) {
         [IValidationService, { validate }],
         [IWorkflowService, new WorkflowService()]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);

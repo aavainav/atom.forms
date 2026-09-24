@@ -36,7 +36,7 @@ async function mountWithATick(form: FormModel<any>) {
         [IViolationSelectorService, selector],
         [IViolationService, { getBinding: () => createBinding(apply), getViolations: () => new Promise<ReadonlyArray<IViolation>>(resolve => { release = () => resolve(violations); }) }]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);

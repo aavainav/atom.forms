@@ -6,7 +6,7 @@ import FForm from "../../src/components/form/form";
 import type { FormModel } from "../../src/models/form";
 
 describe("FForm", () => {
-    const form = { id: "form-1" } as unknown as FormModel<any>;
+    const form = { id: "form-1" } as FormModel<any>;
 
     it("is identified by the form's id", () => {
         expect(renderToStaticMarkup(createElement(FForm, { form }))).toContain('id="form-1"');

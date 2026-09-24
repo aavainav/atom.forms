@@ -12,7 +12,7 @@ import { IValidationService } from "../../src/services/validation";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const issue = { field: { name: "firstName" }, message: "Required.", section: {}, severity: 0 } as unknown as IRuleIssue;
+const issue = { field: { name: "firstName" }, message: "Required.", section: {}, severity: 0 } as IRuleIssue;
 
 const mounted: Array<() => void> = [];
 
@@ -24,7 +24,7 @@ function mount(issues: RuleIssueCollection) {
         [INotificationService, { showNotification }],
         [IValidationService, { validate }]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     const root = createRoot(container);
 

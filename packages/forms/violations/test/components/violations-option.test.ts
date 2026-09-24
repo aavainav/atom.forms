@@ -25,7 +25,7 @@ function mount(form: FormModel<any>, binding: IViolationBinding | null = createB
         [IViolationSelectorService, { openSelector }],
         [IViolationService, { getBinding: () => binding ?? undefined }]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     const root = createRoot(container);
 

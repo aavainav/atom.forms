@@ -8,7 +8,7 @@ import { PageCollection } from "../../src/models/page-collection";
  * rather than about how a page is built.
  */
 function page(id: string): PageModel {
-    return { id } as unknown as PageModel;
+    return { id } as PageModel;
 }
 
 describe("PageCollection", () => {

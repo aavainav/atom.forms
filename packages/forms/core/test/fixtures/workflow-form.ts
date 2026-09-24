@@ -87,7 +87,7 @@ export function isFieldEnabled(form: FormModel<any>, pageIndex: number, sectionD
 /** What validating found nothing wrong looks like. */
 export const noIssues = new RuleIssueCollection();
 
-const field = { name: "title", label: "Title", value: "" } as unknown as IField;
+const field = { name: "title", label: "Title", value: "" } as IField;
 
 /** A validation result holding an error. */
 export const withError = new RuleIssueCollection([{ field, message: "Title is required.", section: headerSection, severity: RuleIssueSeverity.error }]);

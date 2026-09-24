@@ -77,7 +77,7 @@ function mount(options: IMountOptions = {}) {
         [IValidationService, new ValidationService()],
         [IWorkflowService, new WorkflowService()]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);

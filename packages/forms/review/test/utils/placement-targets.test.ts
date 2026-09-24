@@ -13,7 +13,7 @@ function placement(options: { readonly isShared?: boolean; readonly pageOrdinal?
         definition: { getSectionDefinition: () => section, name: "first-name" },
         pageId: "page-2",
         pageOrdinal: options.pageOrdinal ?? 1
-    } as unknown as IFieldPlacement;
+    } as IFieldPlacement;
 }
 
 describe("getPlacementTargets", () => {

@@ -4,7 +4,7 @@ import type { IControllerManager, IRuleIssue } from "@forms/core";
 
 import { ValidationService } from "../../src/services/validation";
 
-const issue = { field: { name: "firstName" }, message: "Required.", section: {}, severity: 0 } as unknown as IRuleIssue;
+const issue = { field: { name: "firstName" }, message: "Required.", section: {}, severity: 0 } as IRuleIssue;
 
 /** Controllers that answer only what validating asks of them, with the rules finding the given issues. */
 function stubControllers(issues: RuleIssueCollection) {

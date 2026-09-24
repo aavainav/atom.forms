@@ -8,10 +8,10 @@ import { createForm, WorkflowStubForm } from "../fixtures/workflow-form";
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 const reviewer: IActor = { id: "reviewer-1", name: "Reviewer One" };
 
-const field = { name: "title", label: "Title", value: "" } as unknown as IRuleIssue["field"];
+const field = { name: "title", label: "Title", value: "" } as IRuleIssue["field"];
 const noIssues = new RuleIssueCollection();
-const withError = new RuleIssueCollection([{ field, message: "Required.", section: {}, severity: RuleIssueSeverity.error } as unknown as IRuleIssue]);
-const withWarning = new RuleIssueCollection([{ field, message: "Short.", section: {}, severity: RuleIssueSeverity.warning } as unknown as IRuleIssue]);
+const withError = new RuleIssueCollection([{ field, message: "Required.", section: {}, severity: RuleIssueSeverity.error } as IRuleIssue]);
+const withWarning = new RuleIssueCollection([{ field, message: "Short.", section: {}, severity: RuleIssueSeverity.warning } as IRuleIssue]);
 
 /** A form as a reviewer finds it: submitted, and open to review rather than to editing. */
 function inReview(form: WorkflowStubForm): WorkflowStubForm {

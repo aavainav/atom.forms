@@ -27,7 +27,7 @@ const mounted: Array<() => void> = [];
 
 function mount(held: IReportBundle = bundle) {
     const controllers = new ControllerManager();
-    const form = { id: "form-1" } as unknown as FormModel<any>;
+    const form = { id: "form-1" } as FormModel<any>;
     controllers.loadForm(form);
 
     const getBundle = vi.fn(() => held);
@@ -38,7 +38,7 @@ function mount(held: IReportBundle = bundle) {
         [INotificationService, { showNotification }],
         [IReportViewerService, { getBundle }]
     ]);
-    const services = { get: (service: unknown) => registry.get(service) } as unknown as IServiceCollection;
+    const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     const root = createRoot(container);
 

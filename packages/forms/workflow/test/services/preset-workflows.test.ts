@@ -8,9 +8,9 @@ import { PresetCitationForm, PresetCrashForm } from "../fixtures/preset-forms";
 const officer: IActor = { id: "officer-1", name: "Officer One" };
 const reviewer: IActor = { id: "reviewer-1", name: "Reviewer One" };
 
-const field = { name: "title", label: "Title", value: "" } as unknown as IRuleIssue["field"];
+const field = { name: "title", label: "Title", value: "" } as IRuleIssue["field"];
 const noIssues = new RuleIssueCollection();
-const withError = new RuleIssueCollection([{ field, message: "Required.", section: {}, severity: RuleIssueSeverity.error } as unknown as IRuleIssue]);
+const withError = new RuleIssueCollection([{ field, message: "Required.", section: {}, severity: RuleIssueSeverity.error } as IRuleIssue]);
 
 describe("the citation workflow", () => {
     const service = new WorkflowService();
