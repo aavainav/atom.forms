@@ -44,6 +44,10 @@ function describeMode(status: FormStatus, mode: FormMode): string {
         return "Editable: fields are enabled, empty selects show their placeholder, and no watermark is stamped.";
     }
 
+    if (mode === "reviewable") {
+        return "Reviewable: fields are disabled and placeholders are hidden, and no watermark is stamped on screen, since it is being reviewed -- a printed copy still carries its status's.";
+    }
+
     const watermark = getStatusWatermark(status);
 
     return watermark

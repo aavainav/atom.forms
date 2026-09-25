@@ -195,6 +195,20 @@ describe("ReportViewerForm", () => {
             expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
         });
 
+        it("hands the host the opening again when the browser restores the page from its cache, and what happens after", async () => {
+            const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
+            const { audit } = mount({ dataManager: { writeAudit } });
+            await settle();
+
+            window.dispatchEvent(new Event("pagehide"));
+            await settle();
+            window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted: true }));
+            await settle();
+            await act(async () => { audit.recordSaved(); });
+
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed", "form-opened", "saved"]);
+        });
+
         /** The workbench renders under StrictMode, where the viewer is set up, cleaned up and set up again at once. */
         it("hands the host no close for the remount React's StrictMode does in development, and each record once", async () => {
             const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);

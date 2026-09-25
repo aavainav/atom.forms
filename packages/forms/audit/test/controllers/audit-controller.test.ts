@@ -246,6 +246,46 @@ describe("AuditController", () => {
             expect(kinds(records)).toEqual(["form-opened", "form-closed"]);
         });
 
+        it("is followed by the form being opened again when the manager is reopened, and a later close is recorded", () => {
+            const { manager, records } = watch({ name: "Dana" }, { mode: "reviewable", status: "inReview" });
+
+            manager.close();
+            manager.reopen();
+            manager.close();
+
+            expect(records.map(record => [record.kind, "mode" in record ? record.mode : undefined])).toEqual([
+                ["form-opened", "reviewable"],
+                ["form-closed", "reviewable"],
+                ["form-opened", "reviewable"],
+                ["form-closed", "reviewable"]
+            ]);
+        });
+
+        it("keeps the history that was loaded for the report when it is opened again", () => {
+            const { audit, manager } = watch();
+            const loaded: AuditRecord = { at: 1, form: { id: "form-0", name: "Stub Form", revision: 0, version: "1.0" }, id: "loaded-1", kind: "saved" };
+            audit.load([loaded]);
+
+            manager.close();
+            manager.reopen();
+
+            expect(audit.history[0]).toBe(loaded);
+        });
+
+        it("does not open the form again when a different form was opened in between", () => {
+            const { manager, records } = watch();
+
+            manager.close();
+            manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+            manager.reopen();
+
+            expect(records.map(record => [record.kind, record.form.id])).toEqual([
+                ["form-opened", "form-1"],
+                ["form-closed", "form-1"],
+                ["form-opened", "form-2"]
+            ]);
+        });
+
         it("is not recorded for a manager that closes after the controller is disposed", () => {
             const { manager, records } = watch();
 

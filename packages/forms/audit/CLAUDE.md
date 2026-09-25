@@ -18,7 +18,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 
 | `kind` | Raised when | Detected from |
 | --- | --- | --- |
-| `form-opened` | A form is shown, freshly loaded or swapped in. Carries the form's `status` and `mode` | `start()`, and the manager announcing a new form |
+| `form-opened` | A form is shown, freshly loaded or swapped in, or shown again when the browser restores its page from the cache. Carries the form's `status` and `mode` | `start()`, the manager announcing a new form, and the manager's `onOpened` |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
 | `form-closed` | A form stops being shown, as `{ status, mode, isDirty }` -- `isDirty` says whether it still held changes that were never saved. Once for each form opened | The manager closing (the viewer unmounting, or `pagehide`), or another form replacing it in the same manager; see "Closing" below |
@@ -109,15 +109,20 @@ manager closes, and `observeForm` when a different form replaces the watched one
 identity, just before the new form's `form-opened`.
 
 The manager closes when the viewer really goes, or on `pagehide`; core's `useFormController` holds it while mounted
-(see `retain`, `release`, `close` and `attach` in [`@forms/core`](../core/)). The controller subscribes to `onClosed`
-in `start()`, so the close is raised while the recorder and the writer are still attached, and they let go only after
-it. That is why they attach to the manager rather than tear down with their component: React's development
-`StrictMode` (which `@forms/workbench` uses) sets an effect up, tears it down and sets it up again at once, and a
-close raised from a teardown would log a fake `form-closed` after every `form-opened`. The manager waits a microtask
-before it takes a release for the end, and `attach` ignores a key it already holds, so the remount changes nothing.
-`useAuditWriter` in `@forms/report-viewer` is attached the same way, and needs no particular order among the hooks.
+(see `retain`, `release`, `close`, `reopen` and `attach` in [`@forms/core`](../core/)). The controller subscribes to
+`onClosed` in `start()`, so the close is raised while the recorder and the writer are still attached, and they let go
+only when the viewer really goes. That is why they attach to the manager rather than tear down with their component:
+React's development `StrictMode` (which `@forms/workbench` uses) sets an effect up, tears it down and sets it up again
+at once, and a close raised from a teardown would log a fake `form-closed` after every `form-opened`. The manager waits
+a microtask before it takes a release for the end, and `attach` ignores a key it already holds, so the remount changes
+nothing. `useAuditWriter` in `@forms/report-viewer` is attached the same way, and needs no particular order among the
+hooks.
 
-They last as long as the manager, not as long as the component that called them.
+They last as long as the manager, not as long as the component that called them, and **`pagehide` does not detach
+them**: a page the browser restores from its back/forward cache is not mounted again, so `pageshow` reopens the manager
+instead, and the controller (subscribed to `onOpened`) records a fresh `form-opened` for the same form. The history
+that was loaded for the report stays, and the next close is recorded again. If a different form was opened in between,
+nothing is added.
 
 To watch it live, open the sandbox's `/demo/audit` (`yarn dev-forms`), which lists each record beside a form.
 
@@ -176,10 +181,10 @@ from before it.
   is loaded is part of what `form-opened` reports.
 - **A form with no mapper has its edits unrecorded**: there is nothing to diff. Every shipped form has one.
 - **A hard crash loses up to `editQuietPeriod` of edits.** Unmount and `pagehide` flush; nothing else can.
-- **A tab restored from the browser's back/forward cache carries on after its `form-closed`,** with no new
-  `form-opened`: `pagehide` records the close whether or not the page comes back. `pagehide` also closes the manager,
-  which detaches the recorder and the writer, so nothing done after the restore is forwarded or written.
-- **A manager that closes and is then held again does not re-attach the recorder or the writer** unless their effects
+- **`pagehide` records the close whether or not the page comes back.** A tab restored from the browser's
+  back/forward cache records a fresh `form-opened`, so its log reads opened, closed, opened -- the close is real, and the
+  restore is a second opening.
+- **A manager that is let go and then held again does not re-attach the recorder or the writer** unless their effects
   run again, and the audit records no second `form-opened` or `form-closed` for it.
 - **A save the host performs itself is not audited.** On the plain `<ReportViewer />` path a host has no controller to
   call `recordSaved` on, so only the report viewer's own save paths produce `saved` / `save-failed`.

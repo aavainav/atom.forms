@@ -149,14 +149,17 @@ controller, since seeding raises nothing itself and that is how an observer (`@f
 before what it observes.
 
 **The manager also knows when it is let go.** `retain()` and `release()` count what is showing it, and
-`useFormController` retains it while mounted and closes it on `pagehide`. A release closes it a microtask later unless
-something retains it again by then, because React's development remount (`StrictMode`) lets go and holds again at once,
-which is not the viewer going. `close()` closes it now and is idempotent; `onClosed` fires once when it does.
-`attach(key, setup)` runs `setup` once for the key and runs its teardown when the manager closes -- after `onClosed`,
-last attached first, so what is said as it closes still reaches whatever it was attached for. Attaching a key it
-already holds does nothing, which is what makes a remount safe; `useAuditRecorder` and `useAuditWriter` are attached
-this way. Nothing re-attaches after a close unless the effect that attached it runs again. In a test, `StrictMode` only
-sets effects up twice when it is the **outermost** element rendered into the root; anything above it turns that off.
+`useFormController` retains it while mounted, closes it on `pagehide`, and reopens it on a `pageshow` that says the
+browser restored the page from its cache (`persisted`). A release closes it a microtask later unless something retains
+it again by then, because React's development remount (`StrictMode`) lets go and holds again at once, which is not the
+viewer going. `close()` closes it now and is idempotent; `onClosed` fires once when it does, and `reopen()` on a closed
+manager raises `onOpened`. **Closing detaches nothing**, since a page that is put away may come back; what is attached
+is let go only when a release settles. `attach(key, setup)` runs `setup` once for the key and runs its teardown then --
+after `onClosed`, last attached first, so what is said as it closes still reaches whatever it was attached for.
+Attaching a key it already holds does nothing, which is what makes a remount safe; `useAuditRecorder` and
+`useAuditWriter` are attached this way. Nothing re-attaches after that unless the effect that attached it runs again.
+In a test, `StrictMode` only sets effects up twice when it is the **outermost** element rendered into the root;
+anything above it turns that off.
 
 ## Shared sections
 
@@ -352,12 +355,13 @@ no portal, so it has to be rendered somewhere that is not itself a stacking cont
 
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab
-strip numbered across all groups combined**. It derives the watermark from `form.status` and wires the page
-add/delete buttons to the form controller, both only while `form.mode === "editable"`. `FormMode` has three
-values: `"editable"`, `"viewable"` (a locked snapshot, styled like a printed record) and `"reviewable"` (viewable that
-a reviewer can also comment on). Everything that locks a form -- `setMode`, the watermark, add/delete, the dropzone
-gates in the form packages' page components -- asks whether the mode is *not* `"editable"`, so a new locked mode
-needs no change to any of them.
+strip numbered across all groups combined**. It derives the watermark from `form.status`, stamping it only while
+`form.mode === "viewable"`, and wires the page add/delete buttons to the form controller, both only while
+`form.mode === "editable"`. `FormMode` has three values: `"editable"`, `"viewable"` (a locked snapshot, styled like a
+printed record) and `"reviewable"` (viewable that a reviewer can also comment on, and so without the watermark, since
+it is being worked on). Everything else that locks a form -- `setMode`, add/delete, the dropzone gates in the form
+packages' page components -- asks whether the mode is *not* `"editable"`, so a new locked mode needs no change to any
+of them; the watermark is the exception, and a new locked mode gets none until it is added there.
 
 While the print controller holds a state, it renders a second way instead: the pages the print is for, flat, inside
 `<div class="f-print f-print--{layout}">`, with the add and delete affordances omitted — neither belongs on paper.

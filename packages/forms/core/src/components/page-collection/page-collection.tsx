@@ -52,9 +52,10 @@ export default function FPageCollection({ controllers, groups, watermark }: IFPa
 
     const isEditable = form.mode === "editable";
 
-    // a read-only form is a record of something already settled, so its status is stamped across it; an editable form is
-    // still being written and carries none. an explicitly supplied watermark wins over the status-derived one.
-    const pageWatermark = watermark ?? (isEditable ? undefined : getStatusWatermark(form.status));
+    // a viewable form is a record of something already settled, so its status is stamped across it; an editable one is
+    // still being written and a reviewable one is being worked on, so neither carries one. an explicitly supplied
+    // watermark wins over the status-derived one.
+    const pageWatermark = watermark ?? (form.mode === "viewable" ? getStatusWatermark(form.status) : undefined);
 
     const toEntries = (source: ReadonlyArray<IPageCollectionGroup<any>>): Array<IPageEntry> => source.flatMap((group) => {
         const pageCollection = form.get<PageCollection>(group.pageDefinition);

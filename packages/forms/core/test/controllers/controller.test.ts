@@ -445,7 +445,14 @@ describe("ControllerManager", () => {
             expect(setups).toBe(1);
         });
 
-        it("runs each teardown when the manager closes, after it says so, last attached first", () => {
+        /** Lets go of the manager the way a viewer unmounting does. */
+        async function letGo(manager: ControllerManager): Promise<void> {
+            manager.retain();
+            manager.release();
+            await Promise.resolve();
+        }
+
+        it("runs each teardown when the manager is let go, after it says it closed, last attached first", async () => {
             const manager = new ControllerManager();
             const order: Array<string> = [];
             manager.onClosed(() => order.push("closed"));
@@ -454,32 +461,102 @@ describe("ControllerManager", () => {
 
             expect(order).toEqual([]);
 
-            manager.close();
+            await letGo(manager);
 
             expect(order).toEqual(["closed", "second", "first"]);
         });
 
-        it("runs a teardown once, however many times the manager is asked to close", () => {
+        it("keeps what is attached when the manager is closed, since a page put away may come back", async () => {
             const manager = new ControllerManager();
             let teardowns = 0;
             manager.attach("test-key", () => () => { teardowns += 1; });
 
+            manager.retain();
             manager.close();
-            manager.close();
+
+            expect(teardowns).toBe(0);
+
+            manager.release();
+            await Promise.resolve();
 
             expect(teardowns).toBe(1);
         });
 
-        it("attaches a key again once the manager has closed", () => {
+        it("runs a teardown once, however many times the manager is let go", async () => {
+            const manager = new ControllerManager();
+            let teardowns = 0;
+            manager.attach("test-key", () => () => { teardowns += 1; });
+
+            await letGo(manager);
+            await letGo(manager);
+
+            expect(teardowns).toBe(1);
+        });
+
+        it("attaches a key again once the manager has been let go", async () => {
             const manager = new ControllerManager();
             let setups = 0;
             const setup = (): (() => void) => { setups += 1; return () => undefined; };
 
             manager.attach("test-key", setup);
-            manager.close();
+            await letGo(manager);
             manager.attach("test-key", setup);
 
             expect(setups).toBe(2);
+        });
+    });
+
+    describe("reopen", () => {
+        /** A manager, and how many times it has said it was shown again. */
+        function watched() {
+            const manager = new ControllerManager();
+            const opened = { count: 0 };
+            manager.onOpened(() => { opened.count += 1; });
+
+            return { manager, opened };
+        }
+
+        it("says a manager that was closed is shown again", () => {
+            const { manager, opened } = watched();
+
+            manager.retain();
+            manager.close();
+            manager.reopen();
+
+            expect(opened.count).toBe(1);
+        });
+
+        it("says nothing for a manager that is not closed", () => {
+            const { manager, opened } = watched();
+
+            manager.retain();
+            manager.reopen();
+
+            expect(opened.count).toBe(0);
+        });
+
+        it("says it once, however many times it is asked", () => {
+            const { manager, opened } = watched();
+
+            manager.retain();
+            manager.close();
+            manager.reopen();
+            manager.reopen();
+
+            expect(opened.count).toBe(1);
+        });
+
+        it("lets the manager close again afterwards", () => {
+            const manager = new ControllerManager();
+            let closed = 0;
+            manager.onClosed(() => { closed += 1; });
+
+            manager.retain();
+            manager.close();
+            manager.reopen();
+            manager.close();
+
+            expect(closed).toBe(2);
         });
     });
 });

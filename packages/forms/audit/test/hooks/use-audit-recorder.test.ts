@@ -88,14 +88,34 @@ describe("useAuditRecorder", () => {
         expect(kinds(records)).toEqual(["form-opened", "saved"]);
     });
 
-    it("forwards the pending edits and then the close when the manager closes, and nothing after", () => {
+    it("forwards the pending edits and then the close when the manager closes", () => {
         const { manager, records } = mount();
         manager.getFormController().setForm(stubForm({ name: "Riley" }));
 
         manager.close();
-        getAuditController(manager).recordSaved();
 
         expect(kinds(records)).toEqual(["form-opened", "fields-edited", "form-closed"]);
+    });
+
+    it("keeps forwarding after the manager closes, so a page restored from the cache is still recorded", () => {
+        const { manager, records } = mount();
+
+        manager.close();
+        manager.reopen();
+        getAuditController(manager).recordSaved();
+
+        expect(kinds(records)).toEqual(["form-opened", "form-closed", "form-opened", "saved"]);
+    });
+
+    it("stops forwarding once the manager is let go", async () => {
+        const { manager, records } = mount();
+
+        manager.retain();
+        manager.release();
+        await Promise.resolve();
+        getAuditController(manager).recordSaved();
+
+        expect(kinds(records)).toEqual(["form-opened", "form-closed"]);
     });
 
     it("keeps forwarding after it unmounts, since it lasts as long as the manager does", () => {

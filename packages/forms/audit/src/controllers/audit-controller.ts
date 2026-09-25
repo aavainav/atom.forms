@@ -55,9 +55,10 @@ export function getAuditController(controllers: IControllerManager): IAuditContr
 export class AuditController extends Controller implements IAuditController {
     private _history: ReadonlyArray<AuditRecord> = [];
     private _loaded: ReadonlyArray<AuditRecord> = [];
+    private _session: ReadonlyArray<AuditRecord> = [];
+
     private readonly _record = new EventEmitter<AuditRecord>(`${this.key}:record`, { onFirstListenerAdd: () => this.deliverPending() });
 
-    private _session: ReadonlyArray<AuditRecord> = [];
     private activityListener?: IEventListener;
     private baseline?: unknown;
     private closedListener?: IEventListener;
@@ -65,6 +66,7 @@ export class AuditController extends Controller implements IAuditController {
     private isClosed = false;
     private isPrinting = false;
     private listener?: IEventListener;
+    private openedListener?: IEventListener;
     private pending: Array<AuditRecord> = [];
     private watched?: IWatchedForm;
 
@@ -89,6 +91,8 @@ export class AuditController extends Controller implements IAuditController {
         this.closedListener = undefined;
         this.listener?.remove();
         this.listener = undefined;
+        this.openedListener?.remove();
+        this.openedListener = undefined;
         this.pending = [];
         this._history = [];
         this._loaded = [];
@@ -156,6 +160,7 @@ export class AuditController extends Controller implements IAuditController {
         this.listener = this.manager.onControllerChanged(event => this.observe(event));
         this.activityListener = this.manager.onActivity(args => this.observeActivity(args));
         this.closedListener = this.manager.onClosed(() => this.recordClosed());
+        this.openedListener = this.manager.onOpened(() => this.reopen());
         this.open(this.manager.getFormController().form);
     }
 
@@ -320,6 +325,18 @@ export class AuditController extends Controller implements IAuditController {
 
         this._history = [...this._loaded, ...this._session.filter(record => record.form.id === current)];
         this.emitChanged();
+    }
+
+    private reopen(): void {
+        if (!this.watched || !this.isClosed) {
+            return;
+        }
+
+        const { form } = this.watched;
+
+        // the same report shown again, so what was loaded for it stays; `open` would drop it
+        this.isClosed = false;
+        this.raise({ kind: "form-opened", status: form.status, mode: form.mode });
     }
 
     private scheduleEdit(): void {

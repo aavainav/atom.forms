@@ -152,6 +152,10 @@ describe("FPageCollection", () => {
             expect((await mount({ status: "draft" })).container.querySelector(".f-watermark")).toBeNull();
         });
 
+        it("carries none while the form is being reviewed, whatever its status", async () => {
+            expect((await mount({ mode: "reviewable", status: "inReview" })).container.querySelector(".f-watermark")).toBeNull();
+        });
+
         it("stamps the status of a form that can no longer be edited across its pages", async () => {
             const { container } = await mount({ mode: "viewable", status: "voided" });
 

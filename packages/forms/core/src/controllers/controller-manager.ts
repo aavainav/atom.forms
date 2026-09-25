@@ -37,6 +37,8 @@ export interface IControllerManager {
     readonly onClosed: IEvent<void>;
     /** An event that is raised when any controller owned by this manager changes. */
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
+    /** Raised when a manager that was closed is shown again, as when the browser restores its page from the cache. */
+    readonly onOpened: IEvent<void>;
     /** Who is using the report, as the host said, or undefined when it did not. Controllers read it when they act, so set it before a form is loaded for what the load records to carry it. */
     readonly user: IActor | undefined;
 
@@ -65,12 +67,14 @@ export interface IControllerManager {
      * raises `onControllerChanged` for the form controller when the form is new to the manager.
      */
     loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm>;
-    /** Runs `setup` once for the key and its teardown when the manager closes, after `onClosed`. The same key again does nothing, so a remount does not attach twice. */
+    /** Runs `setup` once for the key and its teardown when the manager is let go for good, after `onClosed`. The same key again does nothing, so a remount does not attach twice. */
     attach(key: string, setup: () => () => void): void;
-    /** Closes the manager now, as when the page is put away. It closes once, however many reasons there are. */
+    /** Closes the manager now, as when the page is put away. It closes once, however many reasons there are. What is attached stays attached, since a page put away may come back. */
     close(): void;
-    /** Says one thing is done with the manager. It closes a microtask later unless something retains it again by then, as React's development remount does. */
+    /** Says one thing is done with the manager. It closes, and lets go of what is attached, a microtask later unless something retains it again by then, as React's development remount does. */
     release(): void;
+    /** Says a closed manager is being shown again, as when the browser restores its page from the cache. Does nothing for one that is not closed. */
+    reopen(): void;
     /** Says something is showing the manager, such as a mounted viewer. */
     retain(): void;
     /** Sets who is using the report. */
@@ -88,6 +92,7 @@ export class ControllerManager implements IControllerManager {
     private readonly _controllerChanged = new EventEmitter<IControllerChangedEventArgs>("controller-manager:controller-changed");
     private readonly attachments = new Map<string, () => void>();
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
+    private readonly _opened = new EventEmitter<void>("controller-manager:opened");
     private isClosed = false;
     private retained = 0;
     private _user?: IActor;
@@ -102,6 +107,10 @@ export class ControllerManager implements IControllerManager {
 
     get onControllerChanged(): IEvent<IControllerChangedEventArgs> {
         return this._controllerChanged.event;
+    }
+
+    get onOpened(): IEvent<void> {
+        return this._opened.event;
     }
 
     get user(): IActor | undefined {
@@ -213,13 +222,6 @@ export class ControllerManager implements IControllerManager {
 
         this.isClosed = true;
         this._closed.emit();
-
-        // after `onClosed`, last attached first, so what is said as it closes still reaches what it was attached for
-        for (const teardown of [...this.attachments.values()].reverse()) {
-            teardown();
-        }
-
-        this.attachments.clear();
     }
 
     public release(): void {
@@ -228,8 +230,18 @@ export class ControllerManager implements IControllerManager {
         queueMicrotask(() => {
             if (this.retained <= 0) {
                 this.close();
+                this.detach();
             }
         });
+    }
+
+    public reopen(): void {
+        if (!this.isClosed) {
+            return;
+        }
+
+        this.isClosed = false;
+        this._opened.emit();
     }
 
     public retain(): void {
@@ -259,5 +271,14 @@ export class ControllerManager implements IControllerManager {
             item[0].dispose();
             this.controllers.delete(key);
         }
+    }
+
+    private detach(): void {
+        // after `onClosed`, last attached first, so what is said as it closes still reaches what it was attached for
+        for (const teardown of [...this.attachments.values()].reverse()) {
+            teardown();
+        }
+
+        this.attachments.clear();
     }
 }

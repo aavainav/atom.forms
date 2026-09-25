@@ -212,6 +212,48 @@ describe("useFormController", () => {
             expect(closed.count).toBe(1);
         });
 
+        /** A page the browser restores from its cache is shown again without being mounted again. */
+        function pageShown(persisted: boolean): void {
+            window.dispatchEvent(Object.assign(new Event("pageshow"), { persisted }));
+        }
+
+        it("reopens the manager when the browser restores the page from its cache", async () => {
+            const { controllers, form } = await watched();
+            let opened = 0;
+            controllers.onOpened(() => { opened += 1; });
+            renderHook(() => useFormController(controllers, form));
+
+            window.dispatchEvent(new Event("pagehide"));
+            pageShown(true);
+
+            expect(opened).toBe(1);
+        });
+
+        it("does not reopen the manager for a page that was not restored from the cache", async () => {
+            const { controllers, form } = await watched();
+            let opened = 0;
+            controllers.onOpened(() => { opened += 1; });
+            renderHook(() => useFormController(controllers, form));
+
+            window.dispatchEvent(new Event("pagehide"));
+            pageShown(false);
+
+            expect(opened).toBe(0);
+        });
+
+        it("stops listening for the page being shown once it unmounts", async () => {
+            const { controllers, form } = await watched();
+            let opened = 0;
+            controllers.onOpened(() => { opened += 1; });
+            const hook = renderHook(() => useFormController(controllers, form));
+
+            hook.unmount();
+            await Promise.resolve();
+            pageShown(true);
+
+            expect(opened).toBe(0);
+        });
+
         it("lets go of the manager it held, and holds the one it is handed now", async () => {
             const first = await watched();
             const second = await watched();

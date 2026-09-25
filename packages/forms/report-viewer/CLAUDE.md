@@ -324,8 +324,9 @@ the app's runtime, but a reload starts light again.
 
 `ReportViewerForm` calls `useAuditRecorder` from `@forms/audit`, which forwards what the form's audit controller
 records to `IAuditService`, and `useAuditWriter` hands the same records to the data manager's `writeAudit`. Both
-attach to the controller manager and let go when it closes, which `useFormController` does when the viewer goes or the
-page is put away, so the `form-closed` the audit raises then is still forwarded and written. A host that
+attach to the controller manager and let go when the viewer really goes, which `useFormController` tells it, so the
+`form-closed` the audit raises then is still forwarded and written. A page put away (`pagehide`) closes the manager
+without letting go, so one the browser restores from its cache carries on and records a fresh `form-opened`. A host that
 wants them live subscribes once, at startup, and never renders anything:
 
 ```ts

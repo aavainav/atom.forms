@@ -28,12 +28,20 @@ export function useForm<TForm extends FormModel<any>>(controller: IFormControlle
 export function useFormController<TForm extends FormModel<any>>(controllers: IControllerManager, form: TForm): IFormController<TForm> {
     useEffect(() => {
         const putAway = (): void => controllers.close();
+        // a page the browser restores from its cache is not mounted again, so nothing else says it is back
+        const shownAgain = (event: PageTransitionEvent): void => {
+            if (event.persisted) {
+                controllers.reopen();
+            }
+        };
 
         controllers.retain();
         window.addEventListener("pagehide", putAway);
+        window.addEventListener("pageshow", shownAgain);
 
         return () => {
             window.removeEventListener("pagehide", putAway);
+            window.removeEventListener("pageshow", shownAgain);
             controllers.release();
         };
     }, [controllers]);
