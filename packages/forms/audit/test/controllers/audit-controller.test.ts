@@ -647,6 +647,35 @@ describe("AuditController", () => {
         });
     });
 
+    describe("report data", () => {
+        it("records report data being shown, naming the tab", () => {
+            const { audit, records } = watch();
+
+            audit.recordDataViewed("audit");
+
+            expect(records[1]).toMatchObject({ kind: "report-data-viewed", tab: "audit" });
+        });
+
+        it("records report data being copied, naming the tab", () => {
+            const { audit, records } = watch();
+
+            audit.recordDataCopied("all");
+
+            expect(records[1]).toMatchObject({ kind: "report-data-copied", tab: "all" });
+        });
+
+        it("records the edits made before it first", () => {
+            const { audit, manager, records } = watch({ name: "Dana" });
+            edit(manager, { name: "Riley" });
+
+            audit.recordDataViewed("data");
+            edit(manager, { name: "Sam" });
+            audit.recordDataCopied("data");
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "report-data-viewed", "fields-edited", "report-data-copied"]);
+        });
+    });
+
     describe("dispose", () => {
         it("records edits still pending when the manager is disposed", () => {
             const { manager, records } = watch({ name: "Dana" });

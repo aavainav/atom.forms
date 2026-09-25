@@ -1,5 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
+import { getAuditController } from "@forms/audit";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
 import { IReportDataTab, ReportDataDialog } from "./report-data-dialog";
@@ -14,6 +15,7 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
     const copy = async (tab: IReportDataTab): Promise<void> => {
         try {
             await navigator.clipboard.writeText(tab.json);
+            getAuditController(controllers).recordDataCopied(tab.id);
             notificationService.showNotification({ type: "success", message: `${tab.title} copied.` });
         }
         catch (error) {
@@ -48,7 +50,7 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
         modalService.showModal({
             title: "Report data",
             content: ReportDataDialog,
-            contentProps: { tabs, onChange: (tab: IReportDataTab) => { active = tab; } },
+            contentProps: { tabs, onChange: (tab: IReportDataTab) => { active = tab; getAuditController(controllers).recordDataViewed(tab.id); } },
             size: "xl",
             close: { invoke: async () => ({ result: true }) },
             actions: [
@@ -63,6 +65,9 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
                 { title: "Close", primary: true, invoke: async () => ({ result: true }) }
             ]
         });
+
+        // the dialog opens on the first tab
+        getAuditController(controllers).recordDataViewed(tabs[0].id);
     };
 
     return (

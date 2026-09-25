@@ -2,6 +2,7 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ServicesContext } from "@common/react";
+import { getAuditController } from "@forms/audit";
 import { ControllerManager } from "@forms/core";
 import type { FormModel, IModalOptions } from "@forms/core";
 import type { IServiceCollection } from "@shrub/core";
@@ -106,6 +107,22 @@ describe("ReportDataOption", () => {
         });
     });
 
+    describe("viewing", () => {
+        it("is recorded when the dialog opens, on the tab it opens on", () => {
+            const { controllers } = mount();
+
+            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "report-data-viewed", tab: "data" });
+        });
+
+        it("is recorded for each tab the dialog is moved to", () => {
+            const { controllers, options, tabs } = mount();
+
+            (options.contentProps!.onChange as (tab: IReportDataTab) => void)(tabs[2]);
+
+            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "report-data-viewed", tab: "comments" });
+        });
+    });
+
     it("formats each tab's data as indented json", () => {
         const { tabs } = mount();
 
@@ -145,6 +162,23 @@ describe("ReportDataOption", () => {
 
             expect(writeText).toHaveBeenCalledWith(tabs.at(-1)!.json);
             expect(showNotification).toHaveBeenCalledWith({ type: "success", message: "All data copied." });
+        });
+
+        it("records the tab copied, once the copy has succeeded", async () => {
+            const { controllers, options } = mount();
+
+            await copyAction(options).invoke();
+
+            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "report-data-copied", tab: "data" });
+        });
+
+        it("records no copy when the browser refuses it", async () => {
+            writeText.mockRejectedValue(new Error("Denied."));
+            const { controllers, options } = mount();
+
+            await copyAction(options).invoke();
+
+            expect(getAuditController(controllers).session.map(record => record.kind)).not.toContain("report-data-copied");
         });
 
         it("says so when the browser refuses the copy", async () => {

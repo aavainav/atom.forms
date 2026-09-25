@@ -31,6 +31,10 @@ export interface IAuditController extends IController {
     load(records: ReadonlyArray<AuditRecord>): void;
     /** Records that the form was closed, once for each form opened. Edits still pending are recorded first. */
     recordClosed(): void;
+    /** Records that report data was copied, naming the tab. */
+    recordDataCopied(tab: string): void;
+    /** Records that report data was shown, naming the tab. */
+    recordDataViewed(tab: string): void;
     /** Records that the form was saved. */
     recordSaved(): void;
     /** Records that saving the form failed. */
@@ -126,6 +130,16 @@ export class AuditController extends Controller implements IAuditController {
 
         this.isClosed = true;
         this.raise({ kind: "form-closed", isDirty: form.getIsDirty(), mode: form.mode, status: form.status });
+    }
+
+    public recordDataCopied(tab: string): void {
+        this.flush();
+        this.raise({ kind: "report-data-copied", tab });
+    }
+
+    public recordDataViewed(tab: string): void {
+        this.flush();
+        this.raise({ kind: "report-data-viewed", tab });
     }
 
     public recordSaved(): void {

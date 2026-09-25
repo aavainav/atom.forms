@@ -20,6 +20,8 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "page-removed": "danger",
     "print-ended": "info",
     "print-started": "info",
+    "report-data-copied": "warning",
+    "report-data-viewed": "light",
     "save-failed": "danger",
     "saved": "success",
     "status-changed": "dark",
@@ -57,6 +59,9 @@ function summarize(record: AuditRecord): string {
             return `${record.form.name} v${record.form.version}, ${record.status}${record.mode === "editable" ? "" : `, ${record.mode}`}`;
         case "print-started":
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
+        case "report-data-copied":
+        case "report-data-viewed":
+            return record.tab;
         case "status-changed":
             return `${record.from} → ${record.to}`;
         case "workflow-transition":

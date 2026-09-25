@@ -27,6 +27,10 @@ export interface IAuditRecordMap extends IControllerActivityMap, WithChangedFiel
     "print-ended": Record<never, never>;
     /** The form went into its print layout. `pageNames` is undefined when every page prints. */
     "print-started": { readonly layout: PrintLayout; readonly pageNames?: ReadonlyArray<string> };
+    /** Report data was copied to the clipboard. `tab` is the id of the tab copied, such as `data` or `all`. */
+    "report-data-copied": { readonly tab: string };
+    /** Report data was shown. `tab` is the id of the tab that came into view, such as `data` or `audit`. */
+    "report-data-viewed": { readonly tab: string };
     /** Saving the form failed. */
     "save-failed": Record<never, never>;
     /** The form was saved. */

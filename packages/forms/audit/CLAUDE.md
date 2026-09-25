@@ -30,6 +30,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `validated` | The form is validated | Rules controller changing |
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
+| `report-data-viewed` / `report-data-copied` | The report data dialog opens or moves to another tab, or a tab of it is copied: `{ tab }`, the id of the tab (`data`, `audit`, `comments`, `workflow` or `all`), never what it holds. A copy the browser refuses is not recorded | **Pushed** by the report viewer's report data option, through `recordDataViewed(tab)` / `recordDataCopied(tab)` |
 | `comment-added` / `comment-resolved` / `comment-reopened` | A reviewer comments on the report, or a comment is resolved or reopened: `{ commentId, target }`, the comment's id and where it is, never what it says | Reported by `@forms/review`, through the manager's `onActivity` |
 | Whatever a package reports | A controller calls `emitActivity({ kind, ... })` | The manager's `onActivity`; the package declares the kind by merging into core's `IControllerActivityMap` |
 
