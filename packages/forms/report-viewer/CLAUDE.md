@@ -131,8 +131,11 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
    `form = workflowService.restoreWorkflow(form, result.status, result.workflow)`, the explicit second step that
    restores the record's status and workflow history and applies the lock its status carries. Safe to call
    unconditionally, even for a form with no workflow: see [`@forms/workflow`](../workflow/CLAUDE.md#restoreworkflow--the-two-step-load).
-4. → `IInitialForm { audit?, catalogItem, comments?, form, Component }`: the audit history and the comments the read
-   returned ride along, and `ReportViewerForm` loads them onto the controllers.
+4. → `IInitialForm { audit?, catalogItem, comments?, form, hasRecord, reason, Component }`: the audit history and the
+   comments the read returned ride along, and `ReportViewerForm` loads them onto the controllers. `hasRecord` (the read
+   answered) and `reason` (`open` or `new`) say how the form came to be, which `getArrival(initialForm)` turns into the
+   `FormArrival` the audit reports: loaded, with the counts of what came with the record, or started. A new form is
+   started even when the host gave it defaults.
 
 **The form is self-describing -- its own `mapper`, `valueListIds` and `violationListId` travel with it.** Nothing
 here reaches into the catalog item to decide what the form can do; it asks the constructed `form` instead.
@@ -281,14 +284,15 @@ form always, an `"editable"` one only when the host can keep comments for the of
 never -- and the `review` option is gated on the same call.
 
 **`ReportViewerForm` does the setting up, before anything below subscribes:** during render it hands the user
-(`settings.user`) to the manager -- **before the form is loaded**, since the audit records `form-opened` as the load
-creates it and reads the user then -- and it loads what the host held -- `initialForm.audit` into the audit controller,
+(`settings.user`) to the manager, and how the form arrived (`getArrival`) -- **before the form is loaded**, since the
+audit records `form-loaded` or `form-started` as the load creates it and reads both then. `NewFormOption` sets the
+arrival the same way before it swaps a new form in. It also loads what the host held -- `initialForm.audit` into the audit controller,
 `initialForm.comments` into the review controller -- once for each form it is given, in a **layout effect**. That is
 not during render, because a mounted component subscribed to the comments (the workflow actions count the open ones)
 would be updated while `ReportViewerForm` renders, which React warns about whenever a viewer is handed a different form.
 It is not in an ordinary effect either: the manager's writer subscribes in an effect that runs *before* the parent's,
-so loading there would be written straight back, and a layout effect runs before every such effect. Without a user a
-`"reviewable"` form shows its comments but cannot add any.
+so loading there would be written straight back, and a layout effect runs before every such effect. Without a user, or
+once the report is out of review, a `"reviewable"` form shows its comments but cannot add any.
 
 The manager, beside the other managers at the viewer's root:
 
@@ -326,7 +330,7 @@ the app's runtime, but a reload starts light again.
 records to `IAuditService`, and `useAuditWriter` hands the same records to the data manager's `writeAudit`. Both
 attach to the controller manager and let go when the viewer really goes, which `useFormController` tells it, so the
 `form-closed` the audit raises then is still forwarded and written. A page put away (`pagehide`) closes the manager
-without letting go, so one the browser restores from its cache carries on and records a fresh `form-opened`. A host that
+without letting go, so one the browser restores from its cache carries on and records a `form-restored`. A host that
 wants them live subscribes once, at startup, and never renders anything:
 
 ```ts

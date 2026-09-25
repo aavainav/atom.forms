@@ -173,6 +173,20 @@ export class AuditController extends Controller implements IAuditController {
         }
     }
 
+    /** Says how the form arrived when whoever loaded it said so for this form, and only that it was opened when nobody did. */
+    private getOpening(form: FormModel<any>): AuditRecordDetail {
+        const { arrival } = this.manager;
+        const shown = { mode: form.mode, status: form.status };
+
+        if (!arrival || arrival.formId !== (form.id ?? "")) {
+            return { kind: "form-opened", ...shown };
+        }
+
+        return arrival.kind === "loaded"
+            ? { kind: "form-loaded", ...shown, auditRecords: arrival.auditRecords, comments: arrival.comments, transitions: arrival.transitions }
+            : { kind: "form-started", ...shown, reason: arrival.reason };
+    }
+
     private observe(event: IControllerChangedEventArgs): void {
         switch (event.key) {
             case ControllerKey.form:
@@ -293,7 +307,7 @@ export class AuditController extends Controller implements IAuditController {
         this.watched = { form, identity: { id: form.id ?? "", revision: form.revision ?? 0, name: form.name, version: form.version } };
         this.baseline = form.mapper?.extract(form);
 
-        this.raise({ kind: "form-opened", status: form.status, mode: form.mode });
+        this.raise(this.getOpening(form));
     }
 
     private raise(detail: AuditRecordDetail): void {
@@ -336,7 +350,7 @@ export class AuditController extends Controller implements IAuditController {
 
         // the same report shown again, so what was loaded for it stays; `open` would drop it
         this.isClosed = false;
-        this.raise({ kind: "form-opened", status: form.status, mode: form.mode });
+        this.raise({ kind: "form-restored", mode: form.mode, status: form.status });
     }
 
     private scheduleEdit(): void {

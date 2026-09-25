@@ -79,6 +79,7 @@ export type { IReportData } from "./mapping/data/report-data";
 export type { IFormMapper, IPopulateData, FormValues, ReadOnlyFields } from "./mapping/form-mapper";
 
 export type { IActor } from "./models/actor";
+export type { FormArrival } from "./models/form-arrival";
 export type { IAvailableTransition, ITransitionOptions, IWorkflow, IWorkflowDefinition, IWorkflowEntry, IWorkflowStamp, IWorkflowTransition, WorkflowGuard, WorkflowStep } from "./models/workflow";
 export type { IEntity, EntityConstructor } from "./models/entity";
 export type { IFieldModel, IField, IOptionValue, TValueType } from "./models/field";

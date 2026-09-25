@@ -35,6 +35,7 @@ function mount(options: IMountOptions = {}) {
     controllers.loadForm({
         id: "form-1",
         mode,
+        status: "inReview",
         getFieldPlacements: () => new Map(),
         getPages: () => [],
         getPagesFor: () => []

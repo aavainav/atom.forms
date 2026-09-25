@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { IControllerManager, ControllerActivity } from "@forms/core";
+import { IControllerManager, ControllerActivity, FormModel } from "@forms/core";
 
 import type { IReviewComment } from "../../src/models/review-comment";
 import { firstName, lastName, osei, person, personPage, placement, report, review, rivera, vehicle } from "../fixtures/review-form";
@@ -21,11 +21,29 @@ describe("ReviewController", () => {
             ["editable", false],
             ["reviewable", true],
             ["viewable", false]
-        ] as const)("is decided by the form's mode: %s is %s", (mode, expected) => {
+        ] as const)("is decided by the form's mode while it is in review: %s is %s", (mode, expected) => {
             expect(review({ mode }).controller.canComment).toBe(expected);
         });
 
-        it("is false until a user has been set, even on a reviewable form", () => {
+        it.each([
+            ["draft", false],
+            ["inProgress", false],
+            ["inReview", true],
+            ["rejected", false],
+            ["approved", false]
+        ] as const)("is decided by the form's status while it is reviewable: %s is %s", (status, expected) => {
+            expect(review({ status }).controller.canComment).toBe(expected);
+        });
+
+        it("follows the report out of review", () => {
+            const { controller, controllers } = review();
+
+            controllers.getFormController().setForm({ ...controllers.getFormController().form, status: "rejected" } as FormModel<any>);
+
+            expect(controller.canComment).toBe(false);
+        });
+
+        it("is false until a user has been set, even on a reviewable form in review", () => {
             const { controller, controllers } = review({ user: null });
 
             expect(controller.canComment).toBe(false);
@@ -66,7 +84,12 @@ describe("ReviewController", () => {
 
         it("refuses while the form is not reviewable", () => {
             expect(() => review({ mode: "editable" }).controller.add(firstName, "Wrong date."))
-                .toThrowError("Comments can only be added while the form is reviewable.");
+                .toThrowError("Comments can only be added while the form is reviewable and in review.");
+        });
+
+        it("refuses while the form is not in review", () => {
+            expect(() => review({ status: "draft" }).controller.add(firstName, "Wrong date."))
+                .toThrowError("Comments can only be added while the form is reviewable and in review.");
         });
 
         it("refuses until a user has been set", () => {

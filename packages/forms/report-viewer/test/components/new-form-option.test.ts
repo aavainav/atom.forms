@@ -42,6 +42,7 @@ function mount(options: IMountOptions = {}) {
 
     const newForm = stubForm("form-2", false);
     const loadForm = vi.fn(async () => ({ audit: [previousAudit], comments: [previousComment], form: newForm }));
+    const getArrival = vi.fn(() => ({ kind: "started" as const, formId: "form-2", reason: "new" as const }));
     const saveForm = vi.fn(async () => undefined);
     const showConfirmModal = vi.fn();
     const showSaveChangesModal = vi.fn();
@@ -49,7 +50,7 @@ function mount(options: IMountOptions = {}) {
     const registry = new Map<unknown, unknown>([
         [IModalService, { showConfirmModal, showSaveChangesModal }],
         [INotificationService, { showNotification }],
-        [IReportViewerService, { canSaveForm: () => canSave, loadForm, saveForm }]
+        [IReportViewerService, { canSaveForm: () => canSave, getArrival, loadForm, saveForm }]
     ]);
     const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const dataManager = { read: async () => undefined } as IReportViewerDataManager<any>;
@@ -61,7 +62,7 @@ function mount(options: IMountOptions = {}) {
 
     const click = async (): Promise<void> => { await act(async () => { container.querySelector<HTMLElement>("#new-form-button")!.click(); }); };
 
-    return { click, controllers, dataManager, loadForm, newForm, saveForm, showConfirmModal, showNotification, showSaveChangesModal };
+    return { click, controllers, dataManager, getArrival, loadForm, newForm, saveForm, showConfirmModal, showNotification, showSaveChangesModal };
 }
 
 afterEach(() => {
@@ -94,6 +95,16 @@ describe("NewFormOption", () => {
 
             expect(getReviewController(controllers).comments).toEqual([previousComment]);
             expect(getAuditController(controllers).history.map(record => record.id)).toContain("old-1");
+        });
+
+        it("records the old form closing, and then the new form starting, since the audit is told how it arrived before it goes in", async () => {
+            const { click, controllers, getArrival, newForm } = mount();
+
+            await click();
+
+            expect(getArrival).toHaveBeenCalledWith(expect.objectContaining({ form: newForm }));
+            expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "form-closed", "form-started"]);
+            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "form-started", reason: "new" });
         });
 
         it("says why when the new form could not be started", async () => {

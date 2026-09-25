@@ -4,7 +4,7 @@ import { IModuleBootstrapper, IWorkbenchConfiguration, WorkbenchModule } from "@
 import { IModule, IModuleConfigurator } from "@shrub/core";
 
 import { formRoutes } from "../form-routes";
-import { getExampleTestData } from "../example-data";
+import { hasExampleHeldReport } from "../example-data";
 
 /**
  * Registers one route per catalog form this app routes to, all of them rendered by the same component.
@@ -34,7 +34,7 @@ export class FormsModule implements IModule {
             id: "load-test-data",
             title: "Load test data",
             Component: lazy(() => import("./load-test-data-option").then(m => ({ default: m.LoadTestDataOption }))),
-            canShow: form => !!getExampleTestData({ name: form.name, version: form.version })
+            canShow: form => hasExampleHeldReport({ name: form.name, version: form.version })
         });
     }
 }

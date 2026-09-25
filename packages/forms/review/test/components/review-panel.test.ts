@@ -1,5 +1,6 @@
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { FormModel } from "@forms/core";
 
 import { ReviewPanel } from "../../src/components/review-panel";
 import { ReviewThread } from "../../src/components/review-thread";
@@ -98,5 +99,19 @@ describe("ReviewPanel", () => {
 
     it("offers no comment on the report while the form is not reviewable", () => {
         expect(findButton(panel({ mode: "editable" }).container, "Comment on the report")).toBeUndefined();
+    });
+
+    it("offers no comment on the report while the form is not in review", () => {
+        expect(findButton(panel({ status: "draft" }).container, "Comment on the report")).toBeUndefined();
+    });
+
+    it("stops offering a comment on the report once the report leaves review", () => {
+        const { container, controllers } = panel();
+
+        expect(findButton(container, "Comment on the report")).toBeDefined();
+
+        act(() => controllers.getFormController().setForm({ ...controllers.getFormController().form, status: "rejected" } as FormModel<any>));
+
+        expect(findButton(container, "Comment on the report")).toBeUndefined();
     });
 });

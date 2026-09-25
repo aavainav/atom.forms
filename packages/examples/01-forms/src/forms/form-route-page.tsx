@@ -3,6 +3,7 @@ import { useBlocker, useLocation, useSearchParams } from "react-router";
 import { useService } from "@common/react";
 import { IModalService, IReportViewerComponent, ReportViewer } from "@forms/report-viewer";
 
+import { fry } from "../example-actors";
 import { createExampleDataManager } from "../example-data";
 import { findFormRouteByPath } from "../form-routes";
 import { NotFound } from "@forms/workbench";
@@ -27,8 +28,9 @@ export default function FormRoutePage(): React.JSX.Element {
 
     // the manager closes over the query string the form was opened with, which is what picks the fixture scenario,
     // and can update it back -- e.g. stamping ?record=new on the url once a "new form" reset actually happens, so
-    // a refresh sees the same state instead of silently reading back whatever was last saved
-    const dataManager = useMemo(() => route && createExampleDataManager(route.identity, searchParams, setSearchParams), [route, searchParams]);
+    // a refresh sees the same state instead of silently reading back whatever was last saved. it keeps the audit history
+    // and the comments too, as a host with a database would, so a report it has held shows them when it is opened
+    const dataManager = useMemo(() => route && createExampleDataManager(route.identity, searchParams, setSearchParams, true), [route, searchParams]);
 
     const reportViewerRef = useRef<IReportViewerComponent>(null);
 
@@ -72,5 +74,7 @@ export default function FormRoutePage(): React.JSX.Element {
         return <NotFound />;
     }
 
-    return <ReportViewer ref={reportViewerRef} identity={route.identity} dataManager={dataManager} settings={{ showOptions: true }} />;
+    // the viewer only reads its record as it mounts, so it is keyed on the load "Load test data" asks for; nothing else in
+    // the query string remounts it, or starting a new form, which stamps ?record=new, would. the officer is Fry
+    return <ReportViewer key={searchParams.get("load") ?? undefined} ref={reportViewerRef} identity={route.identity} dataManager={dataManager} settings={{ showOptions: true, user: fry }} />;
 }

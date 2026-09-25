@@ -73,7 +73,10 @@ Every field also carries `hasError`, `isEnabled`, and a uuid `id` used as the DO
 and re-broadcasts each one's `onChanged` through `onControllerChanged`. It also holds **who is using the report** as
 `user` (an `IActor`, set with `setUser`), which the controllers that attribute what happens -- `@forms/audit` and
 `@forms/review` -- read when they act rather than keeping a copy. Set it before `loadForm`, so that what the load
-itself records, such as the audit's `form-opened`, carries it.
+itself records, such as the audit's opening record, carries it. It holds **how the form arrived** the same way, as
+`arrival` (a `FormArrival`, set with `setArrival`): read from a record the host held, or started without one. The audit
+reads it as it opens the form to say which, so it too is set before the form is loaded; it names the form it is about,
+and is ignored for any other.
 
 Every controller extends the abstract `Controller` and is declared with `@RegisterController(key, { eager? })`, which
 puts a **descriptor** — the key and the class — in the static `ControllerRegistry` when the class's module loads. The
@@ -133,7 +136,7 @@ core reads an activity. `@forms/audit` records each one as it comes.
   `data-field-id` attribute `FFieldControl` and `FFieldCheckbox` carry on their root, through `getFieldControl`.
   `setActivePage` also takes an optional `{ page, pageOrdinal }` saying what the page is (the page collection knows the
   definition's name and where the page sits), and reports a **`page-focused`** activity when a page other than the
-  last one shown comes into view, in any mode. The first page shown is silent, since `form-opened` says it, and so is
+  last one shown comes into view, in any mode. The first page shown is silent, since the form's opening record says it, and so is
   the same page coming back after a print, which sets `undefined` in between. So is the first page of a different form
   loaded into the same manager ("Start new form"): the page collection passes the form's id as `formId`, and a page
   shown for a form other than the last one's counts as the first.
@@ -358,7 +361,7 @@ controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and 
 strip numbered across all groups combined**. It derives the watermark from `form.status`, stamping it only while
 `form.mode === "viewable"`, and wires the page add/delete buttons to the form controller, both only while
 `form.mode === "editable"`. `FormMode` has three values: `"editable"`, `"viewable"` (a locked snapshot, styled like a
-printed record) and `"reviewable"` (viewable that a reviewer can also comment on, and so without the watermark, since
+printed record) and `"reviewable"` (viewable that a reviewer can also comment on while it is in review, and so without the watermark, since
 it is being worked on). Everything else that locks a form -- `setMode`, add/delete, the dropzone gates in the form
 packages' page components -- asks whether the mode is *not* `"editable"`, so a new locked mode needs no change to any
 of them; the watermark is the exception, and a new locked mode gets none until it is added there.

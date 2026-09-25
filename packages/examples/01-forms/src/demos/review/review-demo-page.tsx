@@ -73,11 +73,12 @@ export default function ReviewDemoPage(): React.JSX.Element {
 
         return {
             ...record,
-            // the comments and the audit history come back with the record, in the one object
+            // the comments and the audit history come back with the record, in the one object; the report is in review,
+            // which is the only status a reviewer can comment in
             read: async reason => {
                 const result = await record?.read(reason);
 
-                return result && { ...result, audit: audit.current, comments: comments.current };
+                return result && { ...result, audit: audit.current, comments: comments.current, status: "inReview" };
             },
             // append-only: the records are new to the host, matched by id, so a record handed over twice is kept once
             writeAudit: async records => {

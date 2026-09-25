@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { getFieldControl, useActivePageId, usePrintState, IControllerManager, IModalOptions, FCommentMarker } from "@forms/core";
 
 import { getReviewController } from "../controllers";
-import { useReviewComments } from "../hooks";
+import { useCanComment, useReviewComments } from "../hooks";
 import { getThreadModal } from "./thread-modal";
 
 interface IReviewLayerProps {
@@ -50,8 +50,10 @@ export const ReviewLayer = ({ controllers, showModal }: IReviewLayerProps): Reac
     const activePageId = useActivePageId(controllers.getNavigationController());
     const printState = usePrintState(controllers.getPrintController());
 
-    // a marker is drawn from the comments, so it redraws as they change
+    // a marker is drawn from the comments, so it redraws as they change, and from whether a comment can be added, so it
+    // redraws when that does; each marker reads the answer as it renders
     useReviewComments(review);
+    useCanComment(controllers);
 
     // a page not showing has no controls in the document, so only the active page's fields can be marked
     if (printState || !activePageId) {

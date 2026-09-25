@@ -1,5 +1,6 @@
 import { act, createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { FormModel } from "@forms/core";
 
 import { ReviewLayer } from "../../src/components/review-layer";
 import { ReviewThread } from "../../src/components/review-thread";
@@ -110,6 +111,28 @@ describe("ReviewLayer", () => {
         drawControls("field-1", "field-2");
 
         layer({ mode: "editable" }, [held]);
+
+        expect(markers()).toHaveLength(1);
+        expect(control("field-1").querySelector(".f-comment-marker")).not.toBeNull();
+    });
+
+    it("marks only the fields that have comments when the report is not in review", () => {
+        drawControls("field-1", "field-2");
+
+        layer({ status: "rejected" }, [held]);
+
+        expect(markers()).toHaveLength(1);
+        expect(control("field-1").querySelector(".f-comment-marker")).not.toBeNull();
+    });
+
+    it("stops inviting a comment on a field once the report leaves review", () => {
+        drawControls("field-1", "field-2");
+
+        const { controllers } = layer({}, [held]);
+
+        expect(markers()).toHaveLength(2);
+
+        act(() => controllers.getFormController().setForm({ ...controllers.getFormController().form, status: "rejected" } as FormModel<any>));
 
         expect(markers()).toHaveLength(1);
         expect(control("field-1").querySelector(".f-comment-marker")).not.toBeNull();

@@ -3,6 +3,12 @@ import { IActor, IControllerActivityMap, IFormActivityMap, FormMode, FormStatus,
 /** An activity that came with a change to the form gets the paths the change touched, which only the audit can work out. */
 type WithChangedFields<TMap> = { readonly [K in keyof TMap]: TMap[K] & { readonly fields: ReadonlyArray<string> } };
 
+/** Where a form stood when it was shown. */
+interface IFormShown {
+    readonly mode: FormMode;
+    readonly status: FormStatus;
+}
+
 /** Identifies the form a record is about. */
 export interface IAuditFormIdentity {
     /** The form instance's id, stable while it is worked on. */
@@ -21,8 +27,14 @@ export interface IAuditRecordMap extends IControllerActivityMap, WithChangedFiel
     "fields-edited": { readonly fields: ReadonlyArray<string> };
     /** The form was closed: unmounted, put away with the page, or replaced by another. `isDirty` says whether it still held changes that were never saved. */
     "form-closed": { readonly isDirty: boolean; readonly mode: FormMode; readonly status: FormStatus };
-    /** The form was shown, freshly loaded or swapped in. */
-    "form-opened": { readonly status: FormStatus; readonly mode: FormMode };
+    /** The form was read from a record the host held. The counts are what came with it: audit records, comments and workflow entries. */
+    "form-loaded": IFormShown & { readonly auditRecords: number; readonly comments: number; readonly transitions: number };
+    /** The form was shown, and nothing said how it arrived. */
+    "form-opened": IFormShown;
+    /** A page the browser restored from its cache was shown again. */
+    "form-restored": IFormShown;
+    /** The form began without a record: `open` when there was nothing to load, `new` when the user started a new one. */
+    "form-started": IFormShown & { readonly reason: "new" | "open" };
     /** The form left its print layout. */
     "print-ended": Record<never, never>;
     /** The form went into its print layout. `pageNames` is undefined when every page prints. */

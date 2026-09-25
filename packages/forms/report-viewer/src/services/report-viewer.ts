@@ -1,7 +1,7 @@
 import { ComponentType } from "react";
 import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormModel } from "@forms/core";
+import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormArrival, FormModel } from "@forms/core";
 import { getReviewController, IReviewComment } from "@forms/review";
 import { IWorkflowService } from "@forms/workflow";
 import { createService, Singleton } from "@shrub/core";
@@ -63,6 +63,10 @@ export interface IInitialForm {
     readonly comments?: ReadonlyArray<IReviewComment>;
     /** The form model -- self-describing: its own mapper, value-list ids and violation list travel with it. */
     readonly form: FormModel<any>;
+    /** Whether the host had a record to give, or the form was built without one. */
+    readonly hasRecord: boolean;
+    /** Why the host was asked: `open` for a first load, `new` for starting a new form. */
+    readonly reason: ReadReason;
     /** The component used to render the form. */
     readonly Component: ComponentType<IFormComponentProps>;
 }
@@ -76,6 +80,8 @@ export interface IReportViewerService {
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
+    /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one. A new form is started even when the host gave it defaults to start from. */
+    getArrival: (initialForm: IInitialForm) => FormArrival;
     /** Gathers everything held about the report -- its data, the audit history and the review comments -- into one object, unpersisted. */
     getBundle: (form: FormModel<any>, controllers: IControllerManager) => IReportBundle;
     /** The form's options, in the order the bar renders them. */
@@ -163,6 +169,14 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return form.extractData();
     }
 
+    getArrival({ audit, comments, form, hasRecord, reason }: IInitialForm): FormArrival {
+        const formId = form.id ?? "";
+
+        return hasRecord && reason === "open"
+            ? { kind: "loaded", formId, auditRecords: audit?.length ?? 0, comments: comments?.length ?? 0, transitions: form.history.length }
+            : { kind: "started", formId, reason };
+    }
+
     getBundle(form: FormModel<any>, controllers: IControllerManager): IReportBundle {
         return {
             audit: getAuditController(controllers).history,
@@ -193,7 +207,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
             form = this.workflowService.restoreWorkflow(form, result.status, result.workflow);
         }
 
-        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), Component: catalogItem.component };
+        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, Component: catalogItem.component };
     }
 
     registerOption(option: IReportViewerOption): void {

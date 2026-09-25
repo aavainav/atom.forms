@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useService } from "@common/react";
-import { FButton, FCode, FListGroup, FListGroupItem } from "@forms/core";
+import { FButton, FCode, FListGroup, FListGroupItem, FormMode, FormStatus } from "@forms/core";
 import { AuditRecord, IAuditService } from "@forms/report-viewer";
 
 /** How many records the log keeps; the oldest fall off. */
@@ -14,7 +14,10 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "dropped": "primary",
     "fields-edited": "primary",
     "form-closed": "secondary",
+    "form-loaded": "secondary",
     "form-opened": "secondary",
+    "form-restored": "secondary",
+    "form-started": "secondary",
     "page-added": "secondary",
     "page-focused": "light",
     "page-removed": "danger",
@@ -33,6 +36,11 @@ const kindColours: Record<AuditRecord["kind"], string> = {
 interface ILoggedRecord {
     readonly id: number;
     readonly record: AuditRecord;
+}
+
+/** Describes where a form stood when it was shown, in a line. */
+function describeShown({ form, mode, status }: { readonly form: { readonly name: string; readonly version: string }; readonly mode: FormMode; readonly status: FormStatus }): string {
+    return `${form.name} v${form.version}, ${status}${mode === "editable" ? "" : `, ${mode}`}`;
 }
 
 /** Describes what a record is about, in a line. */
@@ -55,8 +63,13 @@ function summarize(record: AuditRecord): string {
             return `${record.codes.join(", ")}: ${record.fields.join(", ")}`;
         case "form-closed":
             return `${record.status}${record.isDirty ? ", unsaved changes" : ""}`;
+        case "form-loaded":
+            return `${describeShown(record)}, ${record.auditRecords} audit record(s), ${record.comments} comment(s), ${record.transitions} transition(s)`;
         case "form-opened":
-            return `${record.form.name} v${record.form.version}, ${record.status}${record.mode === "editable" ? "" : `, ${record.mode}`}`;
+        case "form-restored":
+            return describeShown(record);
+        case "form-started":
+            return `${describeShown(record)}, ${record.reason === "new" ? "a new form" : "nothing to load"}`;
         case "print-started":
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
         case "report-data-copied":

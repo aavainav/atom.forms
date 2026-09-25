@@ -104,7 +104,7 @@ describe("useAuditRecorder", () => {
         manager.reopen();
         getAuditController(manager).recordSaved();
 
-        expect(kinds(records)).toEqual(["form-opened", "form-closed", "form-opened", "saved"]);
+        expect(kinds(records)).toEqual(["form-opened", "form-closed", "form-restored", "saved"]);
     });
 
     it("stops forwarding once the manager is let go", async () => {

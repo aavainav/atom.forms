@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuditRecord } from "@forms/audit";
 import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
-import type { IWorkflowStamp } from "@forms/core";
+import type { IWorkflowEntry, IWorkflowStamp } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import { WorkflowService } from "@forms/workflow";
 
-import { IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
+import { IInitialForm, IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
 
 const noopOption: Pick<IReportViewerOption, "title" | "Component"> = { title: "Stub option", Component: () => null };
 
@@ -186,12 +186,74 @@ describe("ReportViewerService", () => {
             expect(initialForm.comments).toBeUndefined();
         });
 
+        it("says why the host was asked, and whether it had a record to give", async () => {
+            const service = createService(catalogItem);
+
+            expect(await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) })).toMatchObject({ hasRecord: true, reason: "open" });
+            expect(await service.loadForm({ name: "Stub" }, { read: async () => undefined })).toMatchObject({ hasRecord: false, reason: "open" });
+            expect(await service.loadForm({ name: "Stub" }, undefined, "new")).toMatchObject({ hasRecord: false, reason: "new" });
+        });
+
         it("builds a form without populating it when the form carries no mapper", async () => {
             const service = createService(catalogItem);
 
             const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) });
 
             expect(initialForm.form).toBeInstanceOf(StubFormModel);
+        });
+    });
+
+    describe("getArrival", () => {
+        const audit: ReadonlyArray<AuditRecord> = [
+            { at: 1, form: { id: "form-0", name: "Stub", revision: 0, version: "1.0" }, id: "a-1", kind: "saved" },
+            { at: 2, form: { id: "form-0", name: "Stub", revision: 0, version: "1.0" }, id: "a-2", kind: "saved" }
+        ];
+        const comments: ReadonlyArray<IReviewComment> = [{ at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." }];
+        const entry: IWorkflowEntry = { at: 5, by: { id: "officer-1", name: "Officer One" }, from: "draft", to: "inReview", transition: "submit" };
+
+        /** What the report viewer loads for a form the host had no record for; a test says what else it arrived with. */
+        const load = async (service: ReportViewerService): Promise<IInitialForm> => service.loadForm({ name: "Stub" });
+
+        it("says the form was loaded, with how much came with the record, when the host had one", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+            const form = Object.assign(base.form, { history: [entry, entry, entry] });
+
+            expect(service.getArrival({ ...base, audit, comments, form, hasRecord: true })).toEqual({
+                auditRecords: 2,
+                comments: 1,
+                formId: form.id ?? "",
+                kind: "loaded",
+                transitions: 3
+            });
+        });
+
+        it("counts nothing for what did not come with the record", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, hasRecord: true })).toEqual({ auditRecords: 0, comments: 0, formId: base.form.id ?? "", kind: "loaded", transitions: 0 });
+        });
+
+        it("says the form was started when the host had no record", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival(base)).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "open" });
+        });
+
+        it("says a new form was started even when the host gave it defaults to start from", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, hasRecord: true, reason: "new" })).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "new" });
+        });
+
+        it("names no form when the form has no id", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, form: Object.assign(base.form, { id: undefined }) }).formId).toBe("");
         });
     });
 

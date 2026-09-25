@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { ControllerManager } from "@forms/core";
-import type { IActor, IFieldPlacement, FormMode, FormModel } from "@forms/core";
+import type { IActor, IFieldPlacement, FormMode, FormModel, FormStatus } from "@forms/core";
 
 import { getReviewController } from "../../src/controllers/review-controller";
 import type { ReviewTarget } from "../../src/models/review-comment";
@@ -47,18 +47,21 @@ export interface IReviewOptions {
     readonly pageCount?: number;
     /** The form's placements, when the ones every test shares will not do. */
     readonly placements?: ReadonlyMap<string, IFieldPlacement>;
+    /** Where the report stands. In review when omitted, which is the only status a reviewer can comment in. */
+    readonly status?: FormStatus;
     /** Who is commenting; null for nobody. Sgt. Rivera when omitted. */
     readonly user?: IActor | null;
 }
 
 /** Loads a stub form into a manager and gets its review controller, counting the changes it raises. */
 export function review(options: IReviewOptions = {}) {
-    const { mode = "reviewable", pageCount = 1, user = rivera } = options;
+    const { mode = "reviewable", pageCount = 1, status = "inReview", user = rivera } = options;
     const pageIds = ["page-1"];
     const getFieldPlacements = vi.fn(() => new Map(options.placements ?? placements));
     const form = {
         id: "form-1",
         mode,
+        status,
         getFieldPlacements,
         getPages: () => pageIds.map(id => ({ id })),
         getPagesFor: () => Array.from({ length: pageCount }, (_, index) => ({ id: `page-${index + 1}` }))

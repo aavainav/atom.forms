@@ -14,7 +14,11 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
 
     const startNew = async (): Promise<void> => {
         try {
-            const { audit, comments, form } = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new");
+            const loaded = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new");
+            const { audit, comments, form } = loaded;
+
+            // said before the form goes in, which is when the audit records how it arrived
+            controllers.setArrival(reportViewerService.getArrival(loaded));
             controllers.getFormController().setForm(form);
 
             // a new form is a new report, so what was held for the last one goes with it

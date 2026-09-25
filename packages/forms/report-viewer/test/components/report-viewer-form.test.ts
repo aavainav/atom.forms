@@ -5,7 +5,7 @@ import { ServicesContext } from "@common/react";
 import { AuditService, IAuditService, getAuditController } from "@forms/audit";
 import type { AuditRecord } from "@forms/audit";
 import { ControllerManager } from "@forms/core";
-import type { IActor, FormMode, FormModel } from "@forms/core";
+import type { IActor, FormMode, FormModel, FormStatus } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import { IWorkflowService, WorkflowService } from "@forms/workflow";
@@ -29,19 +29,20 @@ const heldComment: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei"
 const mounted: Array<() => void> = [];
 
 /** Stands in for a form: the viewer, the controllers and the audit read only its identity, its mode and what extracting it gives. */
-function stubForm(mode: FormMode = "editable"): FormModel<any> {
+function stubForm(mode: FormMode = "editable", status: FormStatus = "draft"): FormModel<any> {
     const form = {
         id: "form-1",
         mode,
         name: "Stub Form",
-        status: "draft",
+        status,
         version: "1.0",
         mapper: undefined,
-        extractData: () => ({ name: "Stub Form", status: "draft", type: "none", version: "1.0" }),
+        extractData: () => ({ name: "Stub Form", status, type: "none", version: "1.0" }),
         getFieldPlacements: () => new Map(),
         getIsDirty: () => false,
         getPages: () => [],
         getPagesFor: () => [],
+        history: [],
         setMode: (next: FormMode) => ({ ...form, mode: next })
     };
 
@@ -52,12 +53,16 @@ interface IMountOptions {
     readonly audit?: ReadonlyArray<AuditRecord>;
     readonly comments?: ReadonlyArray<IReviewComment>;
     readonly dataManager?: Partial<IReportViewerDataManager<any>>;
+    /** Whether the host had a record to give, which has the form arrive as loaded rather than started. */
+    readonly hasRecord?: boolean;
     /** Renders under `StrictMode`, which in development sets every effect up, cleans it up and sets it up again. */
     readonly isStrict?: boolean;
     readonly mode?: FormMode;
     /** An option to register, which is rendered when the options bar is shown. */
     readonly option?: IReportViewerOption;
     readonly showOptions?: boolean;
+    /** Where the report stands, which is what a reviewer's comments depend on: draft when omitted. */
+    readonly status?: FormStatus;
     readonly user?: IActor;
 }
 
@@ -90,7 +95,9 @@ function mount(options: IMountOptions = {}) {
         audit,
         catalogItem: { name: "Stub Form", version: "1.0" } as never,
         comments,
-        form: stubForm(),
+        form: stubForm("editable", options.status),
+        hasRecord: options.hasRecord ?? false,
+        reason: "open",
         Component: () => createElement("div", { id: "stub-form" })
     });
 
@@ -132,19 +139,31 @@ describe("ReportViewerForm", () => {
 
     describe("what the host held", () => {
         it("loads the audit history and the comments onto the controllers, the history ahead of what is raised now", () => {
-            const { audit, review } = mount({ audit: [loadedRecord], comments: [heldComment] });
+            const { audit, review } = mount({ audit: [loadedRecord], comments: [heldComment], hasRecord: true });
 
             expect(audit.history[0]).toBe(loadedRecord);
-            expect(audit.history.map(record => record.kind)).toEqual(["saved", "form-opened"]);
+            expect(audit.history.map(record => record.kind)).toEqual(["saved", "form-loaded"]);
             expect(review.comments).toEqual([heldComment]);
         });
 
+        it("says the form was loaded, with what came with the record", () => {
+            const { audit } = mount({ audit: [loadedRecord], comments: [heldComment], hasRecord: true });
+
+            expect(audit.session[0]).toMatchObject({ kind: "form-loaded", auditRecords: 1, comments: 1, transitions: 0 });
+        });
+
+        it("says the form was started when the host had no record", () => {
+            const { audit } = mount();
+
+            expect(audit.session[0]).toMatchObject({ kind: "form-started", reason: "open" });
+        });
+
         it("loads what a different form brings when it is handed one", () => {
-            const { audit, initialForm, render, review } = mount({ audit: [loadedRecord], comments: [heldComment] });
+            const { audit, initialForm, render, review } = mount({ audit: [loadedRecord], comments: [heldComment], hasRecord: true });
 
             render(initialForm([], []));
 
-            expect(audit.history.map(record => record.kind)).toEqual(["form-opened"]);
+            expect(audit.history.map(record => record.kind)).toEqual(["form-loaded"]);
             expect(review.comments).toEqual([]);
         });
 
@@ -166,7 +185,7 @@ describe("ReportViewerForm", () => {
             const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
             const writeComments = vi.fn(async () => undefined);
 
-            mount({ audit: [loadedRecord], comments: [heldComment], dataManager: { writeAudit, writeComments }, mode: "reviewable", user: rivera });
+            mount({ audit: [loadedRecord], comments: [heldComment], dataManager: { writeAudit, writeComments }, mode: "reviewable", status: "inReview", user: rivera });
             await settle();
 
             expect(writeComments).not.toHaveBeenCalled();
@@ -181,7 +200,7 @@ describe("ReportViewerForm", () => {
             mounted.splice(0).forEach(unmount => unmount());
             await Promise.resolve();
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "form-closed"]);
         });
 
         it("hands the host the close when the page is put away", async () => {
@@ -192,7 +211,7 @@ describe("ReportViewerForm", () => {
             window.dispatchEvent(new Event("pagehide"));
             await settle();
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "form-closed"]);
         });
 
         it("hands the host the opening again when the browser restores the page from its cache, and what happens after", async () => {
@@ -206,7 +225,7 @@ describe("ReportViewerForm", () => {
             await settle();
             await act(async () => { audit.recordSaved(); });
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed", "form-opened", "saved"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "form-closed", "form-restored", "saved"]);
         });
 
         /** The workbench renders under StrictMode, where the viewer is set up, cleaned up and set up again at once. */
@@ -217,7 +236,7 @@ describe("ReportViewerForm", () => {
 
             await act(async () => { audit.recordSaved(); });
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "saved"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "saved"]);
         });
 
         it("hands the host the close under StrictMode when the viewer really goes", async () => {
@@ -228,7 +247,7 @@ describe("ReportViewerForm", () => {
             mounted.splice(0).forEach(unmount => unmount());
             await Promise.resolve();
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "form-closed"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "form-closed"]);
         });
     });
 
@@ -271,11 +290,11 @@ describe("ReportViewerForm", () => {
         it("attributes the form being opened to them, since they are known before it loads", () => {
             const { audit } = mount({ user: rivera });
 
-            expect(audit.session[0]).toMatchObject({ kind: "form-opened", by: rivera });
+            expect(audit.session[0]).toMatchObject({ kind: "form-started", by: rivera });
         });
 
         it("attributes the comments a reviewer makes to the whole of them", () => {
-            const { review } = mount({ mode: "reviewable", user: rivera });
+            const { review } = mount({ mode: "reviewable", status: "inReview", user: rivera });
             let comment!: IReviewComment;
 
             // the layer draws the comments, so adding one updates it
@@ -285,8 +304,13 @@ describe("ReportViewerForm", () => {
         });
 
         it("lets a reviewer comment once there is a user, and not before", () => {
-            expect(mount({ mode: "reviewable", user: rivera }).review.canComment).toBe(true);
-            expect(mount({ mode: "reviewable" }).review.canComment).toBe(false);
+            expect(mount({ mode: "reviewable", status: "inReview", user: rivera }).review.canComment).toBe(true);
+            expect(mount({ mode: "reviewable", status: "inReview" }).review.canComment).toBe(false);
+        });
+
+        it("lets a reviewer comment only while the report is in review", () => {
+            expect(mount({ mode: "reviewable", status: "draft", user: rivera }).review.canComment).toBe(false);
+            expect(mount({ mode: "reviewable", status: "rejected", user: rivera }).review.canComment).toBe(false);
         });
     });
 
@@ -297,12 +321,12 @@ describe("ReportViewerForm", () => {
 
             await act(async () => { audit.recordSaved(); });
 
-            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-opened", "saved"]);
+            expect(writeAudit.mock.calls.flatMap(call => (call[0] as ReadonlyArray<AuditRecord>).map(record => record.kind))).toEqual(["form-started", "saved"]);
         });
 
         it("hands the comments to the data manager as they change", async () => {
             const writeComments = vi.fn(async () => undefined);
-            const { review } = mount({ dataManager: { writeComments }, mode: "reviewable", user: rivera });
+            const { review } = mount({ dataManager: { writeComments }, mode: "reviewable", status: "inReview", user: rivera });
 
             await act(async () => { review.add({ level: "form" }, "Wrong date."); });
 

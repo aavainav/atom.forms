@@ -2,7 +2,7 @@ import React from "react";
 import { IControllerManager, IModalOptions, FButton, FLabel, FOffCanvas } from "@forms/core";
 
 import { getReviewController } from "../controllers";
-import { useReviewComments } from "../hooks";
+import { useCanComment, useReviewComments } from "../hooks";
 import { ReviewEntry } from "./review-entry";
 import { getThreadModal } from "./thread-modal";
 
@@ -21,6 +21,7 @@ interface IReviewPanelProps {
 export const ReviewPanel = ({ controllers, isOpen, showModal, onClose }: IReviewPanelProps): React.JSX.Element => {
     const review = getReviewController(controllers);
     const comments = useReviewComments(review);
+    const canComment = useCanComment(controllers);
 
     // a stable sort, so each group stays in the order its comments were made
     const ordered = [...comments].sort((a, b) => Number(a.isResolved) - Number(b.isResolved));
@@ -30,7 +31,7 @@ export const ReviewPanel = ({ controllers, isOpen, showModal, onClose }: IReview
         <FOffCanvas id="review-comments" isOpen={isOpen} placement="end">
             <FOffCanvas.Header borderVisibility="visible" onClose={onClose}><h5>Review</h5></FOffCanvas.Header>
             <FOffCanvas.Body>
-                {review.canComment && (
+                {canComment && (
                     <FButton
                         variant="outline-primary"
                         text="Comment on the report"

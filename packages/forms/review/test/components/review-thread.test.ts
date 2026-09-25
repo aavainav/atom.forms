@@ -1,5 +1,6 @@
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
+import type { FormModel } from "@forms/core";
 
 import { ReviewThread } from "../../src/components/review-thread";
 import type { IReviewComment } from "../../src/models/review-comment";
@@ -33,7 +34,7 @@ describe("ReviewThread", () => {
         expect(container.textContent).not.toContain("No comments yet.");
     });
 
-    describe("while the form is reviewable", () => {
+    describe("while the form is reviewable and in review", () => {
         it("adds a comment from the text typed, and clears the text", () => {
             const { container, controller } = thread();
 
@@ -53,6 +54,25 @@ describe("ReviewThread", () => {
             type(container.querySelector("textarea"), "   ");
 
             expect(findButton(container, "Comment")!.disabled).toBe(true);
+        });
+    });
+
+    describe("while the form is not in review", () => {
+        it("offers no way to add a comment", () => {
+            const { container } = thread({ status: "rejected" });
+
+            expect(container.querySelector("textarea")).toBeNull();
+            expect(findButton(container, "Comment")).toBeUndefined();
+        });
+
+        it("stops offering one once the report leaves review", () => {
+            const { container, controllers } = thread();
+
+            expect(container.querySelector("textarea")).not.toBeNull();
+
+            act(() => controllers.getFormController().setForm({ ...controllers.getFormController().form, status: "approved" } as FormModel<any>));
+
+            expect(container.querySelector("textarea")).toBeNull();
         });
     });
 

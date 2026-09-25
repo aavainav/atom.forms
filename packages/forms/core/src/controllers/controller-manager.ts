@@ -10,6 +10,7 @@ import { IPrintController } from "./print-controller";
 
 import { IActor } from "../models/actor";
 import { FormModel } from "../models/form";
+import { FormArrival } from "../models/form-arrival";
 import { RuleCollection } from "../models/validation/rule-collection";
 import { IRulesController, RulesController } from "../models/validation/rules-controller";
 
@@ -31,6 +32,8 @@ export interface IControllerChangedEventArgs {
 
 /** Defines the manager that creates and caches the controllers belonging to a single form. */
 export interface IControllerManager {
+    /** How the form now in the manager arrived, as whoever loaded it said. Controllers read it as they open a form, so set it before the form is loaded. */
+    readonly arrival: FormArrival | undefined;
     /** Raised when a controller owned by this manager reports something that happened, or an update names what it was. Unlike `onControllerChanged`, it survives the form controller itself being replaced. */
     readonly onActivity: IEvent<ActivityEventArgs>;
     /** Raised once when the manager is really let go: everything that retained it has released it and nothing retained it again by the next microtask, or `close` was called. */
@@ -77,6 +80,8 @@ export interface IControllerManager {
     reopen(): void;
     /** Says something is showing the manager, such as a mounted viewer. */
     retain(): void;
+    /** Sets how the form about to be shown arrived. */
+    setArrival(arrival: FormArrival | undefined): void;
     /** Sets who is using the report. */
     setUser(user: IActor | undefined): void;
 
@@ -95,7 +100,12 @@ export class ControllerManager implements IControllerManager {
     private readonly _opened = new EventEmitter<void>("controller-manager:opened");
     private isClosed = false;
     private retained = 0;
+    private _arrival?: FormArrival;
     private _user?: IActor;
+
+    get arrival(): FormArrival | undefined {
+        return this._arrival;
+    }
 
     get onActivity(): IEvent<ActivityEventArgs> {
         return this._activity.event;
@@ -247,6 +257,10 @@ export class ControllerManager implements IControllerManager {
     public retain(): void {
         this.retained += 1;
         this.isClosed = false;
+    }
+
+    public setArrival(arrival: FormArrival | undefined): void {
+        this._arrival = arrival;
     }
 
     public setUser(user: IActor | undefined): void {

@@ -64,6 +64,8 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
 
     // set before the form loads, since the audit records the form being opened as it is loaded
     formControllers.setUser(user);
+    // and how it arrived, which the audit says of it in place of a plain opening
+    formControllers.setArrival(reportViewerService.getArrival(initialForm));
 
     const controller = useFormController(formControllers, initialState);
 

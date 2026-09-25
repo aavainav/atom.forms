@@ -13,7 +13,7 @@ new FormDefinition("comment-stub-form", CommentStubForm, {});
 async function mount() {
     const controllers = new ControllerManager();
     controllers.setUser(reviewer);
-    controllers.loadForm((await new CommentStubForm().initialize()).setMode("reviewable"));
+    controllers.loadForm((await new CommentStubForm().initialize()).setStatus("inReview").setMode("reviewable"));
 
     return { audit: getAuditController(controllers), review: getReviewController(controllers) };
 }

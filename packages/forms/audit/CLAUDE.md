@@ -18,11 +18,14 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 
 | `kind` | Raised when | Detected from |
 | --- | --- | --- |
-| `form-opened` | A form is shown, freshly loaded or swapped in, or shown again when the browser restores its page from the cache. Carries the form's `status` and `mode` | `start()`, the manager announcing a new form, and the manager's `onOpened` |
+| `form-loaded` | A form is shown having been **read from a record the host held**: `{ status, mode, auditRecords, comments, transitions }`, the counts of what came with the record, never its values. The audit history and comments themselves are loaded beside it | `start()`, or the manager announcing a new form, with the arrival the report viewer set; see "How the form arrived" below |
+| `form-started` | A form is shown having **begun without a record**: `{ status, mode, reason }`, where `reason` is `open` for a form with nothing to load and `new` when the user started a new form -- even when the host gave it defaults to start from | Same as `form-loaded` |
+| `form-restored` | A page the browser restored from its back/forward cache is shown again, as `{ status, mode }`. The same form, so what was loaded for it stays | The manager's `onOpened` |
+| `form-opened` | A form is shown and **nothing said how it arrived**, as `{ status, mode }`. The report viewer always says, so this is what a controller-only host, or a form loaded straight into a manager, gets | `start()` or the manager announcing a new form, with no arrival for that form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
 | `dropped` | A drag-and-drop populated fields, as `{ type, fields }` | An `update()` naming what it was, comparing before/after -- see below. Declared by core |
 | `form-closed` | A form stops being shown, as `{ status, mode, isDirty }` -- `isDirty` says whether it still held changes that were never saved. Once for each form opened | The manager closing (the viewer unmounting, or `pagehide`), or another form replacing it in the same manager; see "Closing" below |
-| `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since `form-opened` says it, and neither is a page returning after a print, nor the first page of another form loaded into the same manager | Reported by core's `NavigationController` through the manager's `onActivity` |
+| `page-focused` | A different page comes into view, in any mode: `{ page, pageOrdinal }`. The first page shown is not recorded, since the form's opening record says it, and neither is a page returning after a print, nor the first page of another form loaded into the same manager | Reported by core's `NavigationController` through the manager's `onActivity` |
 | `page-added` / `page-removed` | A page was added to, or removed from, a set of pages: `{ page, pageOrdinal, fields }`, the page definition's name and where the page sits, counting from zero | Same as `dropped`, from `FormController.addPage` / `removePage`. Declared by core |
 | `violations-added` | Violations were added from the panel, as `{ codes, fields }` | Same as `dropped`. Declared by `@forms/violations` |
 | `status-changed` | The form's `status` changes while it is open, as `{ from, to }`, **and no transition accounts for it** | Form controller changes, comparing `status` |
@@ -37,10 +40,26 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 Every record is `{ at, by?, form: { id, name, revision, version }, id, kind, … }` (`AuditRecord`). `id` is a uuid stamped
 when the record is raised, so a host handed one twice can tell. `by` is the `IActor` the manager was told is using
 the report (`manager.setUser`), and is absent when the host did not say. It is read when a record is raised, so the
-manager is told **before the form is loaded** for `form-opened`, which is raised as the load creates this controller,
-to carry it. `form.revision` is whatever the report's own
+manager is told **before the form is loaded** for the opening record, which is raised as the load creates this
+controller, to carry it. `form.revision` is whatever the report's own
 revision was at that moment -- it moves independently of `id`, so it is refreshed on every observed change, not just
 when a different form replaces the watched one.
+
+## How the form arrived
+
+A form is opened as it arrives, and the audit says how instead of a plain opening. The report viewer knows -- it asked
+the host for a record -- and the audit cannot see that, so the viewer tells the manager (`manager.setArrival`) **before
+it hands the form over**, the same way it tells it the user, and the audit reads `manager.arrival` when it opens the
+form. `FormArrival` (from `@forms/core`) is either `loaded`, with the counts of the audit records, comments and
+workflow entries that came with the record, or `started`, with why. It names the form it is about (`formId`), and the
+audit **uses it only for that form**: a form that arrives some other way, or a stale arrival left from an earlier one,
+gets a plain `form-opened`. Because the record is raised as the form opens, it is raised once for each opening -- no
+matter how many times React sets an effect up.
+
+Two paths open a form in the report viewer, and both set the arrival first: `ReportViewerForm` on mount, and
+`NewFormOption`, which swaps a new form into the same manager (`form-closed` for the old one, then `form-started` with
+`reason: "new"`). A page restored from the browser's cache reads nothing, so it is `form-restored`, not a load. A
+failed load has no form, so it records nothing.
 
 ## Files
 
@@ -68,8 +87,8 @@ during render, after the form controller. `start()` opens the form and subscribe
   positions past the shorter side are reported (`list[2]`, not the records that shifted).
 - **Order is causal.** Validating, printing and saving all `flush()` first, so the edits come before what followed them.
 - **Records raised while nothing listens are held** for the next listener, the latest `maxPendingRecords` (100). The
-  controller starts during render and `useAuditRecorder` subscribes in an effect, so `form-opened` is always raised
-  too early to be heard live. A host that reuses one manager remounts the hook for each form, and a form loaded in
+  controller starts during render and `useAuditRecorder` subscribes in an effect, so a form's opening record is always
+  raised too early to be heard live. A host that reuses one manager remounts the hook for each form, and a form loaded in
   between is heard by the next one.
 - **A different form is announced by the manager.** `loadForm` raises `onControllerChanged` for the form controller
   when the form is new to it, and `setForm` raises it on the controller. The audit sees the id change, flushes the old
@@ -106,21 +125,21 @@ followed by the form's `form-closed`.
 `recordClosed()` flushes pending edits and then raises `form-closed`, **once for each form opened** (`open` clears the
 flag), so a `pagehide` followed by an unmount records one close. Two things call it: the controller itself when its
 manager closes, and `observeForm` when a different form replaces the watched one -- recorded under the *old* form's
-identity, just before the new form's `form-opened`.
+identity, just before the new form's opening record.
 
 The manager closes when the viewer really goes, or on `pagehide`; core's `useFormController` holds it while mounted
 (see `retain`, `release`, `close`, `reopen` and `attach` in [`@forms/core`](../core/)). The controller subscribes to
 `onClosed` in `start()`, so the close is raised while the recorder and the writer are still attached, and they let go
 only when the viewer really goes. That is why they attach to the manager rather than tear down with their component:
 React's development `StrictMode` (which `@forms/workbench` uses) sets an effect up, tears it down and sets it up again
-at once, and a close raised from a teardown would log a fake `form-closed` after every `form-opened`. The manager waits
+at once, and a close raised from a teardown would log a fake `form-closed` after every opening. The manager waits
 a microtask before it takes a release for the end, and `attach` ignores a key it already holds, so the remount changes
 nothing. `useAuditWriter` in `@forms/report-viewer` is attached the same way, and needs no particular order among the
 hooks.
 
 They last as long as the manager, not as long as the component that called them, and **`pagehide` does not detach
 them**: a page the browser restores from its back/forward cache is not mounted again, so `pageshow` reopens the manager
-instead, and the controller (subscribed to `onOpened`) records a fresh `form-opened` for the same form. The history
+instead, and the controller (subscribed to `onOpened`) records a `form-restored` for the same form. The history
 that was loaded for the report stays, and the next close is recorded again. If a different form was opened in between,
 nothing is added.
 
@@ -178,14 +197,14 @@ from before it.
 - **`mode` is stamped by the controller itself**, straight off `form.mode`, the same way `status` is -- unlike the
   old `isReadOnly` field this replaced, which only the host knew and had to be added downstream by the recorder.
 - **`status-changed` and `workflow-transition` only fire for a change made through the form controller.** A status set on the model before it
-  is loaded is part of what `form-opened` reports.
+  is loaded is part of what the opening record reports.
 - **A form with no mapper has its edits unrecorded**: there is nothing to diff. Every shipped form has one.
 - **A hard crash loses up to `editQuietPeriod` of edits.** Unmount and `pagehide` flush; nothing else can.
 - **`pagehide` records the close whether or not the page comes back.** A tab restored from the browser's
-  back/forward cache records a fresh `form-opened`, so its log reads opened, closed, opened -- the close is real, and the
+  back/forward cache records a `form-restored`, so its log reads opened, closed, restored -- the close is real, and the
   restore is a second opening.
 - **A manager that is let go and then held again does not re-attach the recorder or the writer** unless their effects
-  run again, and the audit records no second `form-opened` or `form-closed` for it.
+  run again, and the audit records no second opening or `form-closed` for it.
 - **A save the host performs itself is not audited.** On the plain `<ReportViewer />` path a host has no controller to
   call `recordSaved` on, so only the report viewer's own save paths produce `saved` / `save-failed`.
 - **Printing begins twice per print** (the second adds the measured scale), so only the change between not printing and

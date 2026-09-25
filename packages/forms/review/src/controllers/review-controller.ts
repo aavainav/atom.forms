@@ -16,7 +16,7 @@ declare module "@forms/core" {
 
 /** Defines the controller that holds a report's review comments. It reads the form, so it throws until one is loaded. */
 export interface IReviewController extends IController {
-    /** Whether comments can be added, which they can only while the form is reviewable and a user has been set. */
+    /** Whether comments can be added, which they can only while the form is reviewable and in review, and a user has been set. */
     readonly canComment: boolean;
     /** Whether comments can be resolved and reopened, which they can in any mode but viewable: the officer whose report is reviewed deals with them too. */
     readonly canResolve: boolean;
@@ -25,7 +25,7 @@ export interface IReviewController extends IController {
     /** How many comments have not been resolved. */
     readonly openCount: number;
 
-    /** Adds a comment from the user, throwing unless the form is reviewable, a user has been set and there is some text. */
+    /** Adds a comment from the user, throwing unless the form is reviewable and in review, a user has been set and there is some text. */
     add(target: ReviewTarget, text: string): IReviewComment;
     /** Describes where a target is in the words the form uses, outermost first -- "Vehicle > Details > Make" -- for showing beside a comment. */
     describeTarget(target: ReviewTarget): string;
@@ -69,7 +69,7 @@ export class ReviewController extends Controller implements IReviewController {
     private placements?: { readonly placements: ReadonlyMap<string, IFieldPlacement>; readonly signature: string };
 
     get canComment(): boolean {
-        return this.form.mode === "reviewable" && !!this.manager.user;
+        return this.isInReview && !!this.manager.user;
     }
 
     get canResolve(): boolean {
@@ -88,9 +88,13 @@ export class ReviewController extends Controller implements IReviewController {
         return this.manager.getFormController().form;
     }
 
+    private get isInReview(): boolean {
+        return this.form.mode === "reviewable" && this.form.status === "inReview";
+    }
+
     public add(target: ReviewTarget, text: string): IReviewComment {
-        if (this.form.mode !== "reviewable") {
-            throw new Error("Comments can only be added while the form is reviewable.");
+        if (!this.isInReview) {
+            throw new Error("Comments can only be added while the form is reviewable and in review.");
         }
 
         const user = this.manager.user;

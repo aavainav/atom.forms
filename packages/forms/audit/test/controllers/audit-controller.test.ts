@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { IWorkflowEntry, Controller, ControllerManager, FormActivity, RegisterController, RuleCollection } from "@forms/core";
+import { IWorkflowEntry, Controller, ControllerManager, FormActivity, FormArrival, RegisterController, RuleCollection } from "@forms/core";
 
 import { AuditController, editQuietPeriod, getAuditController, maxPendingRecords } from "../../src/controllers/audit-controller";
 import type { IAuditController } from "../../src/controllers/audit-controller";
@@ -16,9 +16,10 @@ interface IWatch {
     readonly records: Array<AuditRecord>;
 }
 
-/** Loads a form into a manager and starts listening to the audit controller it creates. */
-function watch(data: object = { name: "Dana" }, options?: IStubFormOptions): IWatch {
+/** Loads a form into a manager and starts listening to the audit controller it creates. `arrival` is how the manager was told the form arrives, as the report viewer does. */
+function watch(data: object = { name: "Dana" }, options?: IStubFormOptions, arrival?: FormArrival): IWatch {
     const manager = new ControllerManager();
+    manager.setArrival(arrival);
     manager.loadForm(stubForm(data, options));
 
     const audit = getAuditController(manager);
@@ -185,6 +186,47 @@ describe("AuditController", () => {
         });
     });
 
+    describe("how the form arrived", () => {
+        it("says the form was loaded, with what came with the record, when the manager was told so", () => {
+            const { records } = watch({ name: "Dana" }, { mode: "reviewable", status: "inReview" }, { kind: "loaded", formId: "form-1", auditRecords: 4, comments: 1, transitions: 2 });
+
+            expect(records).toHaveLength(1);
+            expect(records[0]).toMatchObject({ kind: "form-loaded", auditRecords: 4, comments: 1, mode: "reviewable", status: "inReview", transitions: 2 });
+        });
+
+        it("says the form was started, and why, when the manager was told so", () => {
+            const { records } = watch({ name: "Dana" }, undefined, { kind: "started", formId: "form-1", reason: "new" });
+
+            expect(records).toHaveLength(1);
+            expect(records[0]).toMatchObject({ kind: "form-started", mode: "editable", reason: "new", status: "draft" });
+        });
+
+        it("says only that the form was opened when nothing said how it arrived", () => {
+            const { records } = watch();
+
+            expect(records[0]).toMatchObject({ kind: "form-opened", mode: "editable", status: "draft" });
+        });
+
+        it("says only that the form was opened when it was told how a different form arrived", () => {
+            const { records } = watch({ name: "Dana" }, undefined, { kind: "loaded", formId: "form-9", auditRecords: 1, comments: 0, transitions: 0 });
+
+            expect(kinds(records)).toEqual(["form-opened"]);
+        });
+
+        it("says how a form swapped in arrived when the manager is told before it goes in", () => {
+            const { manager, records } = watch();
+
+            manager.setArrival({ kind: "started", formId: "form-2", reason: "new" });
+            manager.loadForm(stubForm({ name: "Riley" }, { id: "form-2" }));
+
+            expect(records.map(record => [record.kind, record.form.id])).toEqual([
+                ["form-opened", "form-1"],
+                ["form-closed", "form-1"],
+                ["form-started", "form-2"]
+            ]);
+        });
+    });
+
     describe("form-closed", () => {
         it("records the form being closed, with where it stood", () => {
             const { audit, records } = watch({ name: "Dana" }, { isDirty: true, mode: "reviewable", status: "inReview" });
@@ -246,7 +288,7 @@ describe("AuditController", () => {
             expect(kinds(records)).toEqual(["form-opened", "form-closed"]);
         });
 
-        it("is followed by the form being opened again when the manager is reopened, and a later close is recorded", () => {
+        it("is followed by the form being restored when the manager is reopened, and a later close is recorded", () => {
             const { manager, records } = watch({ name: "Dana" }, { mode: "reviewable", status: "inReview" });
 
             manager.close();
@@ -256,7 +298,7 @@ describe("AuditController", () => {
             expect(records.map(record => [record.kind, "mode" in record ? record.mode : undefined])).toEqual([
                 ["form-opened", "reviewable"],
                 ["form-closed", "reviewable"],
-                ["form-opened", "reviewable"],
+                ["form-restored", "reviewable"],
                 ["form-closed", "reviewable"]
             ]);
         });

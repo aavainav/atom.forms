@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from "react";
 import { FormMode, FormStatus, IWorkflowEntry } from "@forms/core";
 import { AuditRecord, IActor, IReportViewerDataManager, IReviewComment, ReportViewer } from "@forms/report-viewer";
 
+import { fry, hermes, whitey } from "../../example-actors";
 import { clearExampleData, createExampleDataManager } from "../../example-data";
 
 type DemoForm = "citation" | "crash";
@@ -59,19 +60,19 @@ const forms: Record<DemoForm, IDemoForm> = {
 /** Who opens the report in each role, the mode the report viewer shows it in, and what that lets them do. */
 const roles: Record<DemoRole, { readonly actor: IActor; readonly description: string; readonly label: string; readonly mode: FormMode }> = {
     officer: {
-        actor: { agency: "Planet Express", badgeId: "2999", id: "fry", name: "Philip J. Fry", rank: "Delivery Boy" },
+        actor: fry,
         description: "Editable: the officer writes the report and makes the moves an author makes -- submitting a report, issuing a citation.",
         label: "Officer",
         mode: "editable"
     },
     reviewer: {
-        actor: { agency: "Central Bureaucracy", badgeId: "36", id: "bureaucrat-conrad", name: "Hermes Conrad", rank: "Grade 36 Bureaucrat" },
+        actor: hermes,
         description: "Reviewable: the reviewer comments, and makes the moves a reviewer makes -- approving, or rejecting once there is a comment to fix.",
         label: "Reviewer",
         mode: "reviewable"
     },
     viewer: {
-        actor: { agency: "New New York Municipal Court", id: "judge-whitey", name: "Judge Whitey" },
+        actor: whitey,
         description: "Viewable: the report as a printed copy shows it, with nothing to change.",
         label: "Viewer",
         mode: "viewable"

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { IControllerManager, FButton, FComment, FFieldTextArea, FLabel } from "@forms/core";
 
 import { getReviewController } from "../controllers";
-import { useReviewComments } from "../hooks";
+import { useCanComment, useReviewComments } from "../hooks";
 import { ReviewTarget } from "../models";
 
 interface IReviewThreadProps {
@@ -19,6 +19,7 @@ export const ReviewThread = ({ controllers, target }: IReviewThreadProps): React
 
     // the subscription is what schedules a render when a comment is added or resolved; they are read through the controller
     useReviewComments(review);
+    const canComment = useCanComment(controllers);
 
     const comments = review.getComments(target);
 
@@ -42,7 +43,7 @@ export const ReviewThread = ({ controllers, target }: IReviewThreadProps): React
                     )}
                 </FComment>
             ))}
-            {review.canComment && (
+            {canComment && (
                 <>
                     <FFieldTextArea label="Add a comment" placeholder="Add a comment" margin={{ bottom: 8 }} value={text} onChange={setText} />
                     <FButton text="Comment" disabled={!text.trim()} onClick={add} />

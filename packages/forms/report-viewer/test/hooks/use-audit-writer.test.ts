@@ -137,7 +137,7 @@ describe("useAuditWriter", () => {
         expect(written(writeAudit)).toEqual(["form-opened", "saved", "save-failed"]);
     });
 
-    it("hands over the form's close when the manager closes, and its opening again when it is reopened, without repeating anything", async () => {
+    it("hands over the form's close when the manager closes, and its restoring when it is reopened, without repeating anything", async () => {
         const writeAudit = vi.fn(async (_records: ReadonlyArray<AuditRecord>) => undefined);
         const { controllers } = mount({ writeAudit });
         await act(async () => { await Promise.resolve(); });
@@ -146,7 +146,7 @@ describe("useAuditWriter", () => {
         await act(async () => { controllers.close(); });
         await act(async () => { controllers.reopen(); });
 
-        expect(written(writeAudit)).toEqual(["form-closed", "form-opened"]);
+        expect(written(writeAudit)).toEqual(["form-closed", "form-restored"]);
     });
 
     it("hands over the form's close when the manager is let go, and then stops writing", async () => {

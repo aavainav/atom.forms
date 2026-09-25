@@ -22,6 +22,7 @@ contract and never in a field's value.
 | [src/models/review-comment.ts](src/models/review-comment.ts) | `ReviewTarget`, `IReviewComment`, and `getTargetKey`, which names a target so equal ones match. |
 | [src/utils/placement-targets.ts](src/utils/placement-targets.ts) | `getPlacementTargets(placement)`: the targets a field can be commented on as -- itself, its section, its page. |
 | [src/hooks/use-review-comments.ts](src/hooks/use-review-comments.ts) | `useReviewComments(controller)`: the comments, as a `useSyncExternalStore` snapshot. |
+| [src/hooks/use-can-comment.ts](src/hooks/use-can-comment.ts) | `useCanComment(controllers)`: whether a comment can be added, as a `useSyncExternalStore` snapshot over the form, so a change of status redraws what offers one. Not exported. |
 | [src/components/review-layer.tsx](src/components/review-layer.tsx) | `ReviewLayer`: a `FCommentMarker` portaled into the control of each field on the page showing. |
 | [src/components/review-thread.tsx](src/components/review-thread.tsx) · [thread-modal.ts](src/components/thread-modal.ts) | `ReviewThread`, the body of the modal for one target, and `getThreadModal(controllers, target)`, which builds the `IModalOptions` to open it. |
 | [src/components/review-panel.tsx](src/components/review-panel.tsx) · [review-entry.tsx](src/components/review-entry.tsx) | `ReviewPanel`, an off canvas listing every comment, and its `ReviewEntry`. |
@@ -50,10 +51,15 @@ be a `useSyncExternalStore` snapshot. `getComments(target)` builds a new array o
   target whose definitions have gone is named by the names it was made with, so an orphaned comment still says where
   it was.
 - **The host owns persistence.** It hands comments over with `load` and writes them back on `onChanged`.
-- **`add` fails loudly** unless the form is `"reviewable"`, a user has been set on the manager (`manager.setUser`), and there is some
-  text. The controller stamps the id, the time and the author itself, and the author is the user as an `IActor`, so a
-  comment keeps who made it by id and not only by name. `canComment` is the same test without the text, so a
-  reviewable form with no user named shows its comments but offers no way to add one.
+- **`add` fails loudly** unless the form is `"reviewable"` **and in review** (`status === "inReview"`), a user has been
+  set on the manager (`manager.setUser`), and there is some text. The controller stamps the id, the time and the author
+  itself, and the author is the user as an `IActor`, so a comment keeps who made it by id and not only by name.
+  `canComment` is the same test without the text, so a reviewable form with no user named, or one no longer in review,
+  shows its comments but offers no way to add one.
+- **The status changes while the reviewer is looking**, since approving or rejecting moves the report out of review, so
+  the components read `canComment` through `useCanComment`. It subscribes to the form and re-renders only when the
+  answer changes, and the panel, the thread and the layer all use it -- without it the add box would stay until
+  something else drew them.
 - **`setResolved` works in any mode but `"viewable"`, and throws there.** The officer whose report is reviewed
   resolves comments as they deal with them, so an editable form can resolve and reopen; it cannot add. The components
   hide the button when `canResolve` is false rather than relying on the throw.
@@ -93,8 +99,8 @@ controller (and, for the layer, the navigation and print controllers) through it
 - **The controller registers when its module loads.** `src/index.ts` exports it so importing the package is enough;
   giving this package `"sideEffects": false` would silently break that.
 - **It throws if no form is loaded**, because it reads the form controller. That includes `canComment`.
-- **Only `"reviewable"` with a user can comment.** An editable form's officer reads comments; adding is the
-  reviewer's. The host sets the user on the manager before the components draw (the report viewer does it during
+- **Only `"reviewable"` in review, with a user, can comment.** An editable form's officer reads comments; adding is the
+  reviewer's, and only while the report is in review. The host sets the user on the manager before the components draw (the report viewer does it during
   render), since nothing raises a change when it is set.
 - **A marker is placed when the layer renders.** It looks its control up in the document then, so a field that
   appears without a comment change, a page change or a print ending -- a conditionally shown section -- is not marked

@@ -17,7 +17,8 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/main.ts](src/main.ts) | The app's startup: one `WorkbenchBootstrapper.start` call listing every bootstrapper. **The file every new form is registered in.** |
 | [src/form-routes.ts](src/form-routes.ts) | `formRoutes` — identity → path for every catalog form this app routes to. Read twice: to register the routes, and by the home page to build its menu. |
 | [src/forms/](src/forms/) | `FormsModule` registers one route per `formRoutes` entry, all pointing at `form-route-page.tsx` — **the one route component every catalog form is rendered by.** |
-| [src/example-data.ts](src/example-data.ts) | The host data boundary: `createExampleDataManager(identity, searchParams)`, the fixture-per-identity table, and the sessionStorage round trip. A plain function, not a module or a service. |
+| [src/example-data.ts](src/example-data.ts) | The host data boundary: `createExampleDataManager(identity, searchParams, setSearchParams, keepsHistory)`, the fixture-per-identity table, and the sessionStorage round trip. A plain function, not a module or a service. |
+| [src/example-held-reports.ts](src/example-held-reports.ts) · [example-actors.ts](src/example-actors.ts) | The report each form holds for `?record=held`: its own id, status, workflow history, audit history and comments, told for one person or another. And the Futurama actors (Fry the officer, Hermes the reviewer, Judge Whitey) the stories, the sandbox pages and the workflow demo share. |
 | [src/home/](src/home/) | The index route at `/`: `HomeModule` registers it, `home-page.tsx` renders it. |
 | [src/mock-citation-data.ts](src/mock-citation-data.ts) · [mock-ga-utc-data.ts](src/mock-ga-utc-data.ts) · [mock-public-contact-or-warning-data.ts](src/mock-public-contact-or-warning-data.ts) · [mock-tr310-data.ts](src/mock-tr310-data.ts) | The fixtures, each written in its own form's published data contract. Each exports a `Record<string, T>` keyed by scenario: `full` and `minimal`. |
 | [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
@@ -45,8 +46,11 @@ and does the resolving, building and populating itself. All `FormRoutePage` does
 `formRoutes` and render:
 
 ```tsx
-<ReportViewer identity={route.identity} dataManager={createExampleDataManager(route.identity, searchParams)} settings={{ showOptions: true }} />
+<ReportViewer key={searchParams.get("load") ?? undefined} identity={route.identity} dataManager={createExampleDataManager(route.identity, searchParams, setSearchParams, true)} settings={{ showOptions: true, user: fry }} />
 ```
+
+The user is **Fry, the officer**, so the workflow buttons and the audit's `by` are live on every form page. The
+`key` is the nonce "Load test data" sets, since the viewer only reads its record as it mounts (see below).
 
 ## The home page
 
@@ -84,8 +88,35 @@ right. The round trip works with no server:
   saved `status` and `workflow` back beside the record, so a form saved after it was issued reloads locked, with its history.
 
 Query string controls: `?record=full` / `?record=minimal` picks the scenario (`?citation=` is accepted as an alias),
-`?record=new` starts from the values a host gives a record that does not exist yet, and `?reset=1` clears the saved
-record for that form first.
+`?record=new` starts from the values a host gives a record that does not exist yet, `?record=held` is the report the
+host has been keeping (below), and `?reset=1` clears the saved record for that form first.
+
+**A held report is a report with a past.** Each form has one to tell in [example-held-reports.ts](src/example-held-reports.ts):
+the full fixture under its own `id` and `revision`, the status it stands at, the workflow history that got it there, the
+audit history of the people who worked on it and, where the status allows, their comments. The report viewer is
+handed all of it in the one `read()`, so opening it says the form was **loaded** -- with how much came with it --
+shows the history in the report data dialog, and restores the status and its lock. Each form tells the story its
+workflow can:
+
+| Form | Held as | What it carries |
+| --- | --- | --- |
+| TR-310 | `rejected` | Fry wrote and submitted it, Hermes rejected it with a comment that is still open: 13 audit records, 2 workflow entries, 1 comment |
+| S438 | `issued` | Fry wrote, validated and issued it, which closed what a citation charges: 7 audit records, 1 workflow entry |
+| GA UTC | `draft` | Started and saved: 4 audit records |
+| SC 432 | `draft` | Started and saved: 4 audit records |
+
+**Comments only belong to a report in review or sent back**, so only the crash report has any: a draft never has
+comments, and a citation or a warning goes from draft to issued without being reviewed.
+
+With `keepsHistory` (the form route page asks for it) the manager also has `writeAudit` and `writeComments`, which
+store the history and the comments in `sessionStorage` beside the record, so a report the host has held shows them and
+what is done to it is added to them. A host that can keep comments makes the review option appear on an editable form,
+which is how the officer reads and resolves a reviewer's comment. The other demos leave it off.
+
+**"Load test data" is a real reload.** It clears what was saved for the form, then sets `?record=held` and a `load`
+nonce; the route page keys the viewer on the nonce so it mounts again and reads the record the way it always does. It
+cannot fill the open form in place, because the audit would record that as edits and infer the loaded workflow
+history as transitions made now. It offers itself only on a form route, since a demo page does not key on the nonce.
 
 **There is no separate "defaults" path.** `?record=new` is just a scenario whose values come from the table's
 `defaults` entry rather than a fixture — one `read()`, one shape. Two forms have one, which is what shows that
@@ -120,7 +151,8 @@ Saves through the options bar do.
 [review-demo-page.tsx](src/demos/review/review-demo-page.tsx) renders a plain `<ReportViewer />`, and its data manager is
 the one place the example shows a host **keeping** what the viewer hands it. The comments and the audit history live in
 `useRef`s standing in for a database. `read()` returns them with the record, in the one object; `writeComments`
-replaces the comments; `writeAudit` appends the new records **by id**, as a real host should. Switching role remounts
+replaces the comments; `writeAudit` appends the new records **by id**, as a real host should. It also has `read()` say the
+report is **in review**, the only status a reviewer can comment in. Switching role remounts
 the viewer (the mode is applied as the form loads), and the comments and history survive it -- which is what shows they
 came back through `read()`. The user fields -- name, badge ID, rank and agency -- become the `settings.user` the records and comments are
 attributed to, so the whole actor can be seen on the Audit history and Comments tabs of the report data dialog.

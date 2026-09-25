@@ -506,6 +506,23 @@ describe("ControllerManager", () => {
         });
     });
 
+    describe("arrival", () => {
+        it("holds how the form arrived until it is told otherwise", () => {
+            const manager = new ControllerManager();
+            const arrival = { kind: "started", formId: "form-1", reason: "open" } as const;
+
+            expect(manager.arrival).toBeUndefined();
+
+            manager.setArrival(arrival);
+
+            expect(manager.arrival).toBe(arrival);
+
+            manager.setArrival(undefined);
+
+            expect(manager.arrival).toBeUndefined();
+        });
+    });
+
     describe("reopen", () => {
         /** A manager, and how many times it has said it was shown again. */
         function watched() {
