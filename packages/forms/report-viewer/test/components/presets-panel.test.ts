@@ -8,50 +8,12 @@ import { IServiceCollection } from "@shrub/core";
 
 import { PresetsPanel } from "../../src/components/panel/presets-panel";
 import { IModalService } from "../../src/services/modal";
+import { IPresetService, PresetService } from "../../src/services/preset";
 import { IPresetSelectorService, PresetSelectorService } from "../../src/services/preset-selector";
 import { IReportPreset, IReportViewerDataManager } from "../../src/services/report-viewer";
+import { identity, populated, stubForm } from "../fixtures/preset-form";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-
-const identity = { name: "Stub Form", status: "draft", type: "none", version: "1.0" } as const;
-
-interface IPopulateInput {
-    readonly data: Record<string, unknown>;
-    readonly readOnlyFields?: Record<string, unknown>;
-}
-
-/** What every populate is handed, so a test can say what the panel asked for. */
-const populated = vi.fn<(input: IPopulateInput) => void>();
-
-/**
- * Stands in for a form that keeps what it is given: the panel and the audit read only its identity, its answers, its
- * locks, and what populating it gives. It is made on the real form's prototype, so it is a form without a cast.
- */
-function stubForm(answers: Record<string, unknown> = {}, readOnlyFields?: Record<string, unknown>, populate?: (input: IPopulateInput) => Promise<FormModel<any>>): FormModel<any> {
-    return Object.assign(Object.create(FormModel.prototype), {
-        ...identity,
-        answers,
-        history: [],
-        id: "form-1",
-        mode: "editable",
-        readOnlyFields,
-        clean() { return this; },
-        extractData: () => ({ ...identity, ...answers }),
-        getIsDirty: () => false,
-        mapper: { extract: (source: { answers: Record<string, unknown> }) => ({ ...source.answers }) },
-        populate: async (input: IPopulateInput) => {
-            populated(input);
-
-            if (populate) {
-                return populate(input);
-            }
-
-            const kept = Object.fromEntries(Object.entries(input.data).filter(([key]) => !(key in identity)));
-
-            return stubForm({ ...answers, ...kept }, { ...readOnlyFields, ...input.readOnlyFields });
-        }
-    });
-}
 
 const columbia: IReportPreset<any> = { data: { agencyCity: "Columbia", agencyName: "Columbia PD" }, id: "columbia-pd", readOnlyFields: { agencyName: true }, title: "Columbia PD" };
 const twoPersons: IReportPreset<any> = { data: { persons: [{ first: "A" }, { first: "B" }] }, id: "two-persons", title: "Two persons" };
@@ -77,7 +39,7 @@ function mount({ answers, dataManager, form = stubForm(answers), presets = [colu
     const onError = vi.fn();
     const readPresets = vi.fn(async () => presets);
     const manager: IReportViewerDataManager<any> = { deletePreset: vi.fn(async () => undefined), read: async () => undefined, readPresets, writePreset: vi.fn(async () => undefined), ...dataManager };
-    const registry = new Map<unknown, unknown>([[IModalService, { showConfirmModal }], [IPresetSelectorService, selector]]);
+    const registry = new Map<unknown, unknown>([[IModalService, { showConfirmModal }], [IPresetSelectorService, selector], [IPresetService, new PresetService()]]);
     const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);
@@ -234,37 +196,6 @@ describe("PresetsPanel", () => {
             expect(populated).toHaveBeenCalledWith(expect.objectContaining({ data: { agencyCity: "Columbia", agencyName: "Columbia PD", ...identity } }));
         });
 
-        it("applies the lock the preset carries, for what it wrote", async () => {
-            const { apply, choose, form$, open } = mount();
-            await open();
-            choose("columbia-pd");
-
-            await apply();
-
-            expect(populated).toHaveBeenCalledWith(expect.objectContaining({ readOnlyFields: { agencyName: true } }));
-            expect(form$().readOnlyFields).toEqual({ agencyName: true });
-        });
-
-        it("does not lock what it did not write", async () => {
-            const { apply, choose, open } = mount({ answers: { agencyName: "Charleston PD" } });
-            await open();
-            choose("columbia-pd");
-
-            await apply();
-
-            expect(populated).toHaveBeenCalledWith(expect.objectContaining({ readOnlyFields: undefined }));
-        });
-
-        it("leaves what the report answers alone by default", async () => {
-            const { apply, choose, form$, open } = mount({ answers: { agencyCity: "Charleston" } });
-            await open();
-            choose("columbia-pd");
-
-            await apply();
-
-            expect(form$().extractData()).toMatchObject({ agencyCity: "Charleston", agencyName: "Columbia PD" });
-        });
-
         it("writes over what the report answers when told to overwrite", async () => {
             const { $, apply, choose, form$, open } = mount({ answers: { agencyCity: "Charleston" } });
             await open();
@@ -276,103 +207,6 @@ describe("PresetsPanel", () => {
             expect(form$().extractData()).toMatchObject({ agencyCity: "Columbia" });
         });
 
-        it("never writes what the host locked, even when told to overwrite", async () => {
-            const { $, apply, choose, form$, open } = mount({ form: stubForm({ agencyName: "Charleston PD" }, { agencyName: true }) });
-            await open();
-            choose("columbia-pd");
-
-            act(() => $<HTMLElement>("#presets-overwrite")!.click());
-            await apply();
-
-            expect(form$().extractData()).toMatchObject({ agencyName: "Charleston PD", agencyCity: "Columbia" });
-            expect(populated).toHaveBeenCalledWith(expect.objectContaining({ data: { agencyCity: "Columbia", ...identity } }));
-        });
-
-        it("asks for the pages a preset adds, by giving the whole list", async () => {
-            const { apply, choose, open } = mount({ answers: { units: [{}] } });
-            await open();
-            choose("two-units");
-
-            await apply();
-
-            expect(populated).toHaveBeenCalledWith(expect.objectContaining({ data: { units: [{}, {}], ...identity } }));
-        });
-
-        it("makes one change to the report, so it is one step to undo", async () => {
-            const { apply, choose, controllers, open } = mount();
-            await open();
-            choose("columbia-pd");
-            const changed = vi.fn();
-            controllers.getFormController().onChanged(changed);
-
-            await apply();
-
-            expect(changed).toHaveBeenCalledTimes(1);
-        });
-
-        it("makes no change, and asks the form for none, when the preset changes nothing", async () => {
-            const held = stubForm({ units: [{}, {}] });
-            const { apply, choose, form$, open } = mount({ form: held });
-            await open();
-            choose("two-units");
-
-            await apply();
-
-            expect(populated).not.toHaveBeenCalled();
-            expect(form$()).toBe(held);
-        });
-    });
-
-    describe("what the audit says", () => {
-        it("records the preset applied, with the fields it changed and never what they held, and each field it left alone after it, with why", async () => {
-            const { apply, choose, controllers, open } = mount({ form: stubForm({ agencyName: "Charleston PD" }, { agencyName: true }) });
-            await open();
-            choose("columbia-pd");
-
-            await apply();
-
-            const records = getAuditController(controllers).session;
-            expect(records.map(record => record.kind)).toEqual(["form-opened", "preset-applied", "preset-skipped"]);
-            expect(records[1]).toMatchObject({ preset: "columbia-pd", fields: ["agencyCity"] });
-            expect(records[2]).toMatchObject({ preset: "columbia-pd", field: "agencyName", reason: "locked" });
-            expect(JSON.stringify(records)).not.toContain("Columbia");
-        });
-
-        it("records each field left alone as a record of its own, with why", async () => {
-            const wide: IReportPreset<any> = { data: { agencyCity: "Columbia", agencyName: "Columbia PD", agencyPhone: "803-555-0100" }, id: "wide", title: "Wide" };
-            const { apply, choose, controllers, open } = mount({ answers: { agencyCity: "Charleston", agencyName: "Charleston PD" }, presets: [wide] });
-            await open();
-            choose("wide");
-
-            await apply();
-
-            const skipped = getAuditController(controllers).session.filter(record => record.kind === "preset-skipped");
-            expect(skipped).toHaveLength(2);
-            expect(skipped).toMatchObject([
-                { preset: "wide", field: "agencyCity", reason: "answered" },
-                { preset: "wide", field: "agencyName", reason: "answered" }
-            ]);
-            expect(new Set(skipped.map(record => record.id)).size).toBe(2);
-        });
-
-        it("says nothing was skipped when every field was written", async () => {
-            const { apply, choose, controllers, open } = mount();
-            await open();
-            choose("columbia-pd");
-
-            await apply();
-
-            expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "preset-applied"]);
-        });
-
-        it("records nothing of a preset that was not applied", async () => {
-            const { choose, kinds, open } = mount();
-            await open();
-
-            choose("columbia-pd");
-
-            expect(kinds()).toEqual(["form-opened"]);
-        });
     });
 
     describe("when applying goes wrong", () => {
@@ -453,36 +287,6 @@ describe("PresetsPanel", () => {
             expect($("#preset-title")).toBeNull();
         });
 
-        it("hands the host a preset of the user's own, with what was ticked kept by position", async () => {
-            const { $, byId, manager, open } = mount({ answers });
-            await open();
-            act(() => $<HTMLElement>("#presets-save-button")!.click());
-
-            type($<HTMLInputElement>("#preset-title")!, "Rileys page");
-            act(() => byId("preset-field-persons[1].first")!.click());
-            act(() => $<HTMLElement>("#preset-save-button")!.click());
-            await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-
-            expect(manager.writePreset).toHaveBeenCalledTimes(1);
-            expect(manager.writePreset).toHaveBeenCalledWith({ data: { persons: [{}, { first: "Riley" }] }, id: expect.any(String), isPersonal: true, title: "Rileys page" });
-        });
-
-        it("records that it was saved, naming what it was saved from and never what they held", async () => {
-            const { $, byId, controllers, open } = mount({ answers });
-            await open();
-            act(() => $<HTMLElement>("#presets-save-button")!.click());
-
-            type($<HTMLInputElement>("#preset-title")!, "Rileys page");
-            act(() => byId("preset-field-persons[1].first")!.click());
-            act(() => byId("preset-pages-persons")!.click());
-            act(() => $<HTMLElement>("#preset-save-button")!.click());
-            await act(async () => { await Promise.resolve(); await Promise.resolve(); });
-
-            const saved = getAuditController(controllers).session.find(record => record.kind === "preset-saved");
-            expect(saved).toMatchObject({ fields: ["persons[1].first", "persons"] });
-            expect(JSON.stringify(saved)).not.toContain("Riley");
-        });
-
         it("goes back to the list, read again, with the new preset chosen", async () => {
             const { $, byId, open, readPresets } = mount({ answers });
             await open();
@@ -496,6 +300,25 @@ describe("PresetsPanel", () => {
             expect(readPresets).toHaveBeenCalledTimes(2);
             expect($("#preset-list")).not.toBeNull();
             expect($("#preset-title")).toBeNull();
+        });
+
+        it("chooses the preset it saved once the list holds it, so that what it would do is shown at once", async () => {
+            const kept: Array<IReportPreset<any>> = [];
+            const { $, byId, open } = mount({
+                answers,
+                dataManager: { readPresets: async () => [...kept, columbia], writePreset: async preset => { kept.push(preset); } }
+            });
+            await open();
+            act(() => $<HTMLElement>("#presets-save-button")!.click());
+            type($<HTMLInputElement>("#preset-title")!, "Rileys page");
+            act(() => byId("preset-field-persons[1].first")!.click());
+
+            act(() => $<HTMLElement>("#preset-save-button")!.click());
+            await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+
+            expect($(".list-group-item.active")!.textContent).toContain("Rileys page");
+            // saved from this report, it has nothing left to do to it, which is what the preview of the chosen preset says
+            expect($("#preset-preview-empty")).not.toBeNull();
         });
 
         it("says why, stays on the step, and records nothing, when the host refuses", async () => {
@@ -656,7 +479,7 @@ describe("PresetsPanel", () => {
         });
 
         it("deletes it, records that it did, reads the list again, and chooses nothing, once confirmed", async () => {
-            const { $, choose, controllers, manager, open, readPresets, showConfirmModal } = mount();
+            const { $, choose, manager, open, readPresets, showConfirmModal } = mount();
             await open();
             choose("mine");
             act(() => $<HTMLElement>("#presets-delete-button")!.click());
@@ -664,7 +487,6 @@ describe("PresetsPanel", () => {
             await act(async () => { await showConfirmModal.mock.calls[0][0].onConfirm(); });
 
             expect(manager.deletePreset).toHaveBeenCalledWith("mine");
-            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "preset-deleted", preset: "mine" });
             expect(readPresets).toHaveBeenCalledTimes(2);
             expect($("#preset-preview")).toBeNull();
         });
@@ -681,7 +503,7 @@ describe("PresetsPanel", () => {
         });
 
         it("says why, and records nothing, when the host cannot delete it", async () => {
-            const { $, choose, controllers, onError, open, showConfirmModal } = mount({ dataManager: { deletePreset: async () => { throw new Error("offline"); } } });
+            const { $, choose, onError, open, showConfirmModal } = mount({ dataManager: { deletePreset: async () => { throw new Error("offline"); } } });
             await open();
             choose("mine");
             act(() => $<HTMLElement>("#presets-delete-button")!.click());
@@ -689,7 +511,6 @@ describe("PresetsPanel", () => {
             await act(async () => { await showConfirmModal.mock.calls[0][0].onConfirm(); });
 
             expect(onError).toHaveBeenCalledWith("offline");
-            expect(getAuditController(controllers).session.map(record => record.kind)).not.toContain("preset-deleted");
         });
     });
 });

@@ -63,7 +63,7 @@ the previously loaded form on screen.
 | [src/components/notification/notification-items.ts](src/components/notification/notification-items.ts) | What `NotificationManager` shows and how: `addNotification` merges a raised notification into the list. Owns `maxNotifications` (3) and `defaultDurations` (danger 10s, warning 8s, info/success 5s). |
 | [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, and the presets panel, for an editable form whose host has `readPresets`, alongside the other managers. |
 | [src/components/panel/presets-panel.tsx](src/components/panel/presets-panel.tsx) + [preset-list.tsx](src/components/panel/preset-list.tsx) · [preset-preview.tsx](src/components/panel/preset-preview.tsx) · [preset-save-form.tsx](src/components/panel/preset-save-form.tsx) | The presets panel, an off canvas on the end edge, and its three parts: the searchable list, the preview of what applying the chosen preset would do, and the step a preset is saved from -- a controlled form whose state the panel holds, so that Save can sit in the panel's footer. See *Presets* below. |
-| [src/utils/](src/utils/) | The pure logic the panel is built on: `plan-preset.ts` (what applying a preset comes to), `savable-groups.ts` (what a preset could be saved from, and building one from what was ticked), `is-answered.ts` and `humanize.ts`. |
+| [src/services/preset.ts](src/services/preset.ts) · [preset-selector.ts](src/services/preset-selector.ts) | `IPresetService` -- the logic the presets panel is built on: `plan` (what applying a preset comes to), `getSavableGroups` / `getPageLists` / `toPresetData` (what a preset could be saved from, and building one from what was ticked), and the two rules they share, `isAnswered` and `humanize` -- and `IPresetSelectorService`, the event that opens the panel. Two services, two files: one is stateless logic and the other holds a listener. |
 | [src/components/options/new-form-option.tsx](src/components/options/new-form-option.tsx) + [template-picker.tsx](src/components/options/template-picker.tsx) | The `#new-form-button`. A host that offers templates (`readTemplates`) has the user pick one first, in a modal: `TemplatePicker` is the **body** only, listing the form's own default as "Blank" (unless the host flags a default of its own, which replaces it) and then the host's templates, under their `group` headings. Only one thing to start from means no question asked, and cancelling the picker leaves the form as it is, without asking about its unsaved changes. See *Templates* below. |
 | [src/components/review/manager.tsx](src/components/review/manager.tsx) · [options/review-option.tsx](src/components/options/review-option.tsx) | `ReviewManager` mounts `@forms/review`'s markers and panel and writes the comments back through the data manager; `ReviewOption` is the button that toggles the panel. See *Review* below. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
@@ -201,7 +201,23 @@ own with `writePreset(preset)` and `deletePreset(id)`, which the panel offers on
 or `units`, a field on each page: the lists are **paired with the report's by position**, and one longer than the
 report's adds pages. The mapper adds them, from the array's length; it never removes one.
 
-- **`planPreset(preset, current, locked, overwrite)` decides what is written**, before `populate` is asked:
+- **The logic and the actions are a service, and only the panel calls it.** `IPresetService` is registered by the module and public, with
+  the types of what it answers (`IPresetPlan`, `ISavableGroup`, `IPageList` and the rest). The panel is the one
+  component that resolves it and hands the results **down as props**, so `PresetSaveForm` and `PresetPreview` stay
+  presentational: what they show is already worded. A result carries its display strings -- `ISavableGroup.title`
+  ("Persons, page 2"), `ISavableField.label` and `.path`, `IPageList.label`, `IPagesAdded.label`, and
+  `IPresetPlan.groups` (the paths it sets, sorted under their page) -- and `humanize` is what words them. The two rules
+  are **override seams**: `plan` and the save step reach `isAnswered` and `humanize` through the service, so a service
+  that changes one (a host that counts a zero as an answer, or words a key from its own field labels) changes what is
+  planned, offered and shown alike. `IPresetSelectorService` is separate on purpose: it holds a listener and nothing
+  else, and the option only ever needs it.
+- **`apply`, `save` and `remove` are the service's too, and the panel keeps only what is on screen.** Each takes the
+  controllers (and, for the last two, the data manager) rather than holding any, as `ReportViewerService.saveForm`
+  does, so a host can apply a preset from its own launcher and get the audit records with it. They **reject** with
+  what went wrong -- the panel already turns an error into `onError` -- and answer with what they did (`apply` the plan,
+  `save` the preset). The panel is left with `isApplying`, closing the step, choosing the new preset, reading the list
+  again, and the confirm before a delete.
+- **`IPresetService.plan(preset, current, locked, overwrite)` decides what is written**, before `populate` is asked:
   - a field the host **locked** is never written, whatever the mode, and is `locked`;
   - a field the report **answers** is not written unless told to overwrite, and is `answered`. Blank text, an
     unchecked box, nothing, an empty list, **a zero and an option box with nothing chosen** are unanswered: a report
@@ -220,11 +236,12 @@ report's adds pages. The mapper adds them, from the array's length; it never rem
   mode does not**, and would write over one of those.
 - **A host preset's own locks are applied with it**, for what it wrote, so it can settle a field for the rest of the
   report. A preset an officer saved never has any.
-- **One change, one undo.** The panel populates the form as it stands, checks it was not edited while it waited (a
-  form that adds pages is async) and, if it was, applies nothing and says so. Then it makes **one** update, with
+- **One change, one undo.** `apply` populates the form as it stands, checks it was not edited while it waited (a
+  form that adds pages is async) and, if it was, applies nothing and rejects. A preset that would do nothing is a
+  no-op: no populate, no update, nothing recorded. Otherwise it makes **one** update, with
   `reason: { kind: "preset-applied", preset }` -- the same seam as `violations-added` -- so the audit names the fields
   it changed from the diff. What it skipped is recorded after, one `preset-skipped` for each field.
-- **Saving keeps what was ticked, grouped by where it sits.** `getSavableGroups` offers the report's own single
+- **Saving keeps what was ticked, grouped by where it sits.** `IPresetService.getSavableGroups` offers the report's own single
   fields, then each page of each list, leaving out what is unanswered, what the host locked, and the report's identity;
   `getPageLists` offers to keep the number of pages of a list, blank; `toPresetData` builds the data from the paths
   ticked and holds a page's place with an empty record for each page before it. **Nothing is ticked to begin with**:
@@ -237,10 +254,10 @@ report's adds pages. The mapper adds them, from the array's length; it never rem
   preset to save it.", then "Tick what to keep.") and otherwise counts what will be kept. `PresetSaveForm` is
   **controlled** for that reason -- the panel holds the draft, and starts it empty each time the step opens -- and
   puts the cursor in the name box.
-- **The audit is told each of the three**: `preset-applied` and `preset-skipped` (above), `preset-saved` (the paths
+- **The audit is told each of the three, by the service**: `preset-applied` and `preset-skipped` (above), `preset-saved` (the paths
   ticked) and `preset-deleted`, never a value.
 - **`ReadOnlyFields` types an optional list as a plain `boolean`**, so a contract's `persons?: ReadonlyArray<...>`
-  cannot be locked page by page in a typed way today. `planPreset` and the save step understand a `true` on a whole
+  cannot be locked page by page in a typed way today. `plan` and the save step understand a `true` on a whole
   list, and marks by position where a host builds them.
 
 ## The options bar — a closed list, gated by the form instance

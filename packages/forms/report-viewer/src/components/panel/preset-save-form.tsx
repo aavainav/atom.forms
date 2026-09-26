@@ -1,37 +1,22 @@
-import React, { useMemo } from "react";
-import { IReportData, FFieldControl, FFieldInput, FListGroup, FListGroupCheckbox, FListGroupHeading, ReadOnlyFields } from "@forms/core";
+import React from "react";
+import { FFieldControl, FFieldInput, FListGroup, FListGroupCheckbox, FListGroupHeading } from "@forms/core";
 
-import { humanize } from "../../utils/humanize";
-import { getPageLists, getSavableGroups, ISavableGroup } from "../../utils/savable-groups";
-
-/** What the user has chosen to save. */
-export interface ISaveRequest {
-    /** The lists to keep the number of pages of, blank. */
-    readonly pageCounts: ReadonlySet<string>;
-    /** The paths ticked, such as `agencyName` or `persons[1].nonMotoristUnitType`. */
-    readonly selected: ReadonlySet<string>;
-    /** What the preset is called. */
-    readonly title: string;
-}
+import { IPageList, ISavableGroup, ISaveRequest } from "../../services";
 
 /** What the user has chosen before they have chosen anything. Nothing is ticked to begin with. */
 export const emptySaveRequest: ISaveRequest = { pageCounts: new Set(), selected: new Set(), title: "" };
 
 interface IPresetSaveFormProps {
-    /** What the report holds now. */
-    readonly current: IReportData;
-    /** Which fields the host closed, which are never offered. */
-    readonly locked?: ReadOnlyFields<IReportData>;
+    /** What can be saved, grouped by where it sits. */
+    readonly groups: ReadonlyArray<ISavableGroup>;
+    /** The lists of pages the report has, of which the number of pages can be kept. */
+    readonly lists: ReadonlyArray<IPageList>;
     /** What the user has chosen so far. */
     readonly value: ISaveRequest;
 
     /** Invoked with what the user has chosen, each time it changes. */
     onChange: (value: ISaveRequest) => void;
 }
-
-const getPath = ({ index, list }: ISavableGroup, key: string): string => list === undefined ? key : `${list}[${index}].${key}`;
-
-const getTitle = ({ index, list }: ISavableGroup): string => list === undefined ? "The report" : `${humanize(list)}, page ${(index ?? 0) + 1}`;
 
 /** Says a value the way the officer would read it. */
 function describe(value: unknown): string {
@@ -67,10 +52,7 @@ export function getSaveBlocker({ pageCounts, selected, title }: ISaveRequest): s
  * Defines the step a preset is saved from: a name, and what of the report to keep, grouped by where it sits. What the
  * user has chosen is the caller's to hold, so that whatever saves it can be reached without scrolling this list.
  */
-export const PresetSaveForm = ({ current, locked, value, onChange }: IPresetSaveFormProps): React.JSX.Element => {
-    const groups = useMemo(() => getSavableGroups(current, locked), [current, locked]);
-    const lists = useMemo(() => getPageLists(current), [current]);
-
+export const PresetSaveForm = ({ groups, lists, value, onChange }: IPresetSaveFormProps): React.JSX.Element => {
     return (
         <>
             <FFieldControl border="visible" borderEdges={["bottom"]}>
@@ -80,37 +62,37 @@ export const PresetSaveForm = ({ current, locked, value, onChange }: IPresetSave
             {lists.length > 0 && (
                 <FListGroup id="preset-pages">
                     <FListGroupHeading>Pages</FListGroupHeading>
-                    {lists.map(({ count, list }) => (
+                    {lists.map(({ count, label, list }) => (
                         <FListGroupCheckbox
                             key={list}
                             id={`preset-pages-${list}`}
                             checked={value.pageCounts.has(list)}
-                            label={`Keep ${count} ${humanize(list)} ${count === 1 ? "page" : "pages"}, blank`}
+                            label={`Keep ${count} ${label} ${count === 1 ? "page" : "pages"}, blank`}
                             onChange={checked => onChange({ ...value, pageCounts: change(value.pageCounts, [list], checked) })} />
                     ))}
                 </FListGroup>
             )}
 
             {groups.map(group => {
-                const paths = group.fields.map(({ key }) => getPath(group, key));
+                const paths = group.fields.map(({ path }) => path);
                 const ticked = paths.filter(path => value.selected.has(path)).length;
 
                 return (
-                    <FListGroup key={getTitle(group)} id={`preset-group-${getTitle(group)}`}>
-                        <FListGroupHeading>{getTitle(group)}</FListGroupHeading>
+                    <FListGroup key={group.title} id={`preset-group-${group.title}`}>
+                        <FListGroupHeading>{group.title}</FListGroupHeading>
                         <FListGroupCheckbox
-                            id={`preset-all-${getTitle(group)}`}
+                            id={`preset-all-${group.title}`}
                             checked={ticked === paths.length}
                             indeterminate={ticked > 0 && ticked < paths.length}
                             label="Everything here"
                             onChange={checked => onChange({ ...value, selected: change(value.selected, paths, checked) })} />
-                        {group.fields.map(({ key, value: held }) => (
+                        {group.fields.map(({ label, path, value: held }) => (
                             <FListGroupCheckbox
-                                key={getPath(group, key)}
-                                id={`preset-field-${getPath(group, key)}`}
-                                checked={value.selected.has(getPath(group, key))}
-                                label={`${humanize(key)}: ${describe(held)}`}
-                                onChange={checked => onChange({ ...value, selected: change(value.selected, [getPath(group, key)], checked) })} />
+                                key={path}
+                                id={`preset-field-${path}`}
+                                checked={value.selected.has(path)}
+                                label={`${label}: ${describe(held)}`}
+                                onChange={checked => onChange({ ...value, selected: change(value.selected, [path], checked) })} />
                         ))}
                     </FListGroup>
                 );

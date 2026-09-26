@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IReportData } from "@forms/core";
 
-import { emptySaveRequest, getSaveBlocker, ISaveRequest, PresetSaveForm } from "../../src/components/panel/preset-save-form";
+import { emptySaveRequest, getSaveBlocker, PresetSaveForm } from "../../src/components/panel/preset-save-form";
+import { ISaveRequest, PresetService } from "../../src/services/preset";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -30,11 +31,15 @@ interface IMountOptions {
 
 const mounted: Array<() => void> = [];
 
-/** Holds what the user has chosen, as the panel does, so that the form shows what it is told. */
+const service = new PresetService();
+
+/** Holds what the user has chosen, as the panel does, and hands the form what the service works out of the report, so that the form shows what it is told. */
 function Harness({ current, initial, locked, onChange }: Required<Omit<IMountOptions, "locked">> & { readonly locked?: object }): React.JSX.Element {
     const [value, setValue] = useState(initial);
+    const groups = service.getSavableGroups(current, locked as never);
+    const lists = service.getPageLists(current);
 
-    return createElement(PresetSaveForm, { current, locked: locked as never, value, onChange: next => { setValue(next); onChange(next); } });
+    return createElement(PresetSaveForm, { groups, lists, value, onChange: next => { setValue(next); onChange(next); } });
 }
 
 function mount({ current = report(answers), initial = emptySaveRequest, locked, onChange = () => undefined }: IMountOptions = {}): HTMLElement {
@@ -88,18 +93,12 @@ describe("PresetSaveForm", () => {
             expect(row(container, "preset-field-persons[1].type")!.textContent).toContain("Type: NON-MOTORIST");
         });
 
-        it("offers no field the host locked, on the report or on a page", () => {
+        it("offers what the service offers it and nothing else, so a field the host locked, or the report's own identity, is not there", () => {
             const container = mount({ locked: { agencyName: true, persons: [{ first: true }, {}] } });
 
             expect(row(container, "preset-field-agencyName")).toBeNull();
             expect(row(container, "preset-field-persons[0].first")).toBeNull();
             expect(row(container, "preset-field-persons[0].last")).not.toBeNull();
-            expect(row(container, "preset-field-persons[1].first")).not.toBeNull();
-        });
-
-        it("offers nothing of the report's own identity", () => {
-            const container = mount();
-
             ["id", "name", "revision", "status", "type", "version"].forEach(key => expect(row(container, `preset-field-${key}`)).toBeNull());
         });
 

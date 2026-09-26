@@ -11,6 +11,7 @@ import {
     IModalService,
     INotificationService,
     IPresetSelectorService,
+    IPresetService,
     IReportViewerOptionRegistrationService,
     IReportViewerService,
     IReviewService,
@@ -19,6 +20,7 @@ import {
     ModalService,
     NotificationService,
     PresetSelectorService,
+    PresetService,
     ReportViewerService,
     ReviewService,
     ThemeService,
@@ -42,6 +44,7 @@ export class ReportViewerModule implements IModule {
         registration.register<IModalService, ModalService>(IModalService, ModalService);
         registration.register<INotificationService, NotificationService>(INotificationService, NotificationService);
         registration.register<IPresetSelectorService, PresetSelectorService>(IPresetSelectorService, PresetSelectorService);
+        registration.register<IPresetService, PresetService>(IPresetService, PresetService);
 
         // one instance behind two interfaces, since the options bar's read side (getOptions) and its write side
         // (registerOption) are the same registry

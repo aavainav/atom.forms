@@ -7,6 +7,7 @@ import { IServiceCollection } from "@shrub/core";
 
 import PanelManager from "../../src/components/panel/manager";
 import { IModalService } from "../../src/services/modal";
+import { IPresetService, PresetService } from "../../src/services/preset";
 import { IPresetSelectorService, PresetSelectorService } from "../../src/services/preset-selector";
 import { IReportViewerDataManager } from "../../src/services/report-viewer";
 
@@ -35,7 +36,7 @@ async function mount(mode: FormMode, dataManager?: Partial<IReportViewerDataMana
     const controllers = new ControllerManager();
     controllers.loadForm(stubForm(mode));
 
-    const registry = new Map<unknown, unknown>([[IModalService, { showConfirmModal: vi.fn() }], [IPresetSelectorService, new PresetSelectorService()]]);
+    const registry = new Map<unknown, unknown>([[IModalService, { showConfirmModal: vi.fn() }], [IPresetSelectorService, new PresetSelectorService()], [IPresetService, new PresetService()]]);
     const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const container = document.createElement("div");
     document.body.append(container);

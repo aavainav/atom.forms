@@ -1,14 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useService } from "@common/react";
-import { getAuditController } from "@forms/audit";
 import { useForm, IControllerManager, FButton, FListGroup, FListGroupCheckbox, FOffCanvas } from "@forms/core";
 
 import { PresetList } from "./preset-list";
 import { PresetPreview } from "./preset-preview";
-import { emptySaveRequest, getSaveBlocker, ISaveRequest, PresetSaveForm } from "./preset-save-form";
-import { planPreset } from "../../utils/plan-preset";
-import { toPresetData } from "../../utils/savable-groups";
-import { IModalService, IPresetSelectorService, IReportPreset, IReportViewerDataManager } from "../../services";
+import { emptySaveRequest, getSaveBlocker, PresetSaveForm } from "./preset-save-form";
+import { IModalService, IPresetSelectorService, IPresetService, IReportPreset, IReportViewerDataManager, ISaveRequest } from "../../services";
 
 interface IPresetsPanelProps {
     /** The controllers belonging to the form the panel acts on. */
@@ -23,6 +20,7 @@ interface IPresetsPanelProps {
 export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPanelProps): React.JSX.Element {
     const modalService = useService<IModalService>(IModalService);
     const presetSelectorService = useService<IPresetSelectorService>(IPresetSelectorService);
+    const presetService = useService<IPresetService>(IPresetService);
 
     const [draft, setDraft] = useState<ISaveRequest>(emptySaveRequest);
     const [isApplying, setIsApplying] = useState(false);
@@ -34,7 +32,6 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
 
     // read through the hook, so the preview follows the form as it is edited and as presets are applied
     const form = useForm(controllers.getFormController());
-    const audit = getAuditController(controllers);
 
     const loadPresets = useCallback(async (): Promise<void> => {
         try {
@@ -60,7 +57,10 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
     // what the report holds, read once for each form it is, since the save step lists all of it and is rendered for every keystroke of a name
     const current = useMemo(() => form.extractData(), [form]);
     const preset = presets.find(entry => entry.id === selected);
-    const plan = useMemo(() => preset && planPreset(preset, current, form.readOnlyFields, overwrite), [preset, current, form, overwrite]);
+    const plan = useMemo(() => preset && presetService.plan(preset, current, form.readOnlyFields, overwrite), [preset, presetService, current, form, overwrite]);
+    // what the save step lists is worked out only while it is showing, since on a large report it runs to hundreds of rows
+    const groups = useMemo(() => isSaving ? presetService.getSavableGroups(current, form.readOnlyFields) : [], [isSaving, presetService, current, form]);
+    const lists = useMemo(() => isSaving ? presetService.getPageLists(current) : [], [isSaving, presetService, current]);
     const blocker = getSaveBlocker(draft);
     const canApply = !!plan && (plan.fields.length > 0 || plan.pages.length > 0) && !isApplying;
 
@@ -78,21 +78,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
         setIsApplying(true);
 
         try {
-            const controller = controllers.getFormController();
-            const base = controller.form;
-            // planned against the form as it stands now, since that is what it is applied to
-            const { data, readOnlyFields, skipped } = planPreset(preset, base.extractData(), base.readOnlyFields, overwrite);
-            // the lock a host preset carries is applied with it
-            const populated = await base.populate({ data: { ...data, name: base.name, status: base.status, type: base.type, version: base.version }, readOnlyFields });
-
-            // populate can take a moment on a form that adds pages, and a form edited meanwhile would be written over
-            if (controller.form !== base) {
-                onError("The report changed while the preset was being applied. Apply it again.");
-                return;
-            }
-
-            controller.update({ update: () => populated, reason: { kind: "preset-applied", preset: preset.id } });
-            audit.recordPresetSkipped(preset.id, skipped);
+            await presetService.apply(controllers, preset, overwrite);
         }
         catch (error) {
             onError(error instanceof Error ? error.message : "The preset could not be applied.");
@@ -107,13 +93,10 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
         setIsSaving(true);
     };
 
-    const save = async ({ pageCounts, selected: ticked, title }: ISaveRequest): Promise<void> => {
-        const current = controllers.getFormController().form.extractData();
-        const saved: IReportPreset<any> = { id: crypto.randomUUID(), isPersonal: true, title, data: toPresetData(current, ticked, pageCounts) };
-
+    const save = async (request: ISaveRequest): Promise<void> => {
         try {
-            await dataManager.writePreset!(saved);
-            audit.recordPresetSaved(saved.id, [...ticked, ...pageCounts]);
+            const saved = await presetService.save(controllers, dataManager, request);
+
             setIsSaving(false);
             setSelected(saved.id);
             await loadPresets();
@@ -124,7 +107,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
     };
 
     const remove = (): void => {
-        if (!preset || !dataManager.deletePreset) {
+        if (!preset) {
             return;
         }
 
@@ -137,8 +120,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
             onCancel: async () => {},
             onConfirm: async () => {
                 try {
-                    await dataManager.deletePreset!(id);
-                    audit.recordPresetDeleted(id);
+                    await presetService.remove(controllers, dataManager, id);
                     setSelected(undefined);
                     await loadPresets();
                 }
@@ -154,7 +136,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
             <FOffCanvas.Header borderVisibility="visible" onClose={close}><h5>{isSaving ? "Save as preset" : "Presets"}</h5></FOffCanvas.Header>
             <FOffCanvas.Body>
                 {isSaving
-                    ? <PresetSaveForm current={current} locked={form.readOnlyFields} value={draft} onChange={setDraft} />
+                    ? <PresetSaveForm groups={groups} lists={lists} value={draft} onChange={setDraft} />
                     : (
                         <>
                             <PresetList presets={presets} selected={selected} onSelect={setSelected} />
