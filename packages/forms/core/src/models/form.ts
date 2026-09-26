@@ -15,8 +15,9 @@ import { RuleIssueSeverity, type IRuleIssue } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
 import type { IWorkflow, IWorkflowEntry } from "./workflow";
 
-import type { IFormMapper, IPopulateData } from "../mapping/form-mapper";
+import type { IFormMapper, IPopulateData, ReadOnlyFields } from "../mapping/form-mapper";
 import type { IReportData } from "../mapping/data/report-data";
+import { mergeReadOnlyFields } from "../mapping/merge-read-only-fields";
 import { withChanges } from "../utils/clone";
 
 /** How a form renders: "editable" allows edits and the add/delete/import affordances; "viewable" is a locked snapshot, styled like a printed record; "reviewable" is viewable that a reviewer can also comment on. */
@@ -64,6 +65,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     readonly mapper?: IFormMapper<any, TData>;
     /** How the form renders. Defaults to "editable". */
     readonly mode: FormMode;
+    /** Which of the contract's fields the host closed when it populated the form, so that a change made later can leave them alone. */
+    readonly readOnlyFields?: ReadOnlyFields<TData>;
     /** The status of the form. This will also determine if a watermark is needed to be displayed. */
     readonly status: FormStatus;
     /** The type of the form. */
@@ -139,6 +142,7 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     public readonly history: ReadonlyArray<IWorkflowEntry> = [];
     public readonly mapper?: IFormMapper<FormModel<TData>, TData>;
     public readonly mode: FormMode = "editable";
+    public readonly readOnlyFields?: ReadOnlyFields<TData>;
     public readonly status: FormStatus = "draft";
     public readonly type: FormType;
     public readonly valueListIds?: ReadonlyArray<string>;
@@ -331,7 +335,17 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     }
 
     public populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>> {
-        return this.mapper ? this.mapper.populate(this, <IPopulateData<TData>>input) : this;
+        if (!this.mapper) {
+            return this;
+        }
+
+        const populated = this.mapper.populate(this, <IPopulateData<TData>>input);
+        // kept as the locked sections are, so that a later change can tell which fields the host closed
+        const remember = (form: FormModel<TData>): FormModel<TData> => input.readOnlyFields
+            ? withChanges(form, { readOnlyFields: mergeReadOnlyFields(this.readOnlyFields, <ReadOnlyFields<TData>>input.readOnlyFields) })
+            : form;
+
+        return populated instanceof Promise ? populated.then(remember) : remember(populated);
     }
 
     public removePage(index: number, pageDefinition: PageDefinition): this {

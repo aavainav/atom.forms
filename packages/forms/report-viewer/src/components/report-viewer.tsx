@@ -24,6 +24,8 @@ export interface IReportViewerProps<TData extends object = IReportData> {
     readonly dataManager?: IReportViewerDataManager<TData>;
     /** How the form is rendered. */
     readonly settings?: IReportViewerSettings;
+    /** Starts a new report from this template of the host's, in place of opening one. */
+    readonly template?: string;
 }
 
 /**
@@ -34,7 +36,7 @@ export interface IReportViewerProps<TData extends object = IReportData> {
  * `IReportViewerService.loadForm` then `ReportViewerForm` directly, which is exactly what this does.
  */
 function ReportViewerInner<TData extends object = IReportData>(
-    { identity, dataManager, settings }: IReportViewerProps<TData>,
+    { identity, dataManager, settings, template }: IReportViewerProps<TData>,
     ref: React.ForwardedRef<IReportViewerComponent>
 ): React.JSX.Element {
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -45,7 +47,7 @@ function ReportViewerInner<TData extends object = IReportData>(
                 this key remounting it -- which also drops the old controllers rather than re-seeding a new tree. */}
             <FAsyncLoader<IInitialForm>
                 key={`${identity.name}@${identity.version ?? ""}`}
-                op={() => reportViewerService.loadForm(identity, dataManager)}
+                op={() => reportViewerService.loadForm(identity, dataManager, template ? "new" : "open", template)}
                 loading={<FLoadingIndicator message={`Loading ${identity.name} form...`} />}>
                 {initialForm => (
                     <ReportViewerForm

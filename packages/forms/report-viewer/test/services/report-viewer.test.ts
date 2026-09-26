@@ -201,6 +201,26 @@ describe("ReportViewerService", () => {
 
             expect(initialForm.form).toBeInstanceOf(StubFormModel);
         });
+
+        it("gives the data manager the template a new form was asked to start from, and says which it was", async () => {
+            const read = vi.fn(async () => ({ data: record("Stub") }));
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read }, "new", "speeding");
+
+            expect(read).toHaveBeenCalledWith("new", "speeding");
+            expect(initialForm.template).toBe("speeding");
+        });
+
+        it("asks the data manager for no template, and names none, when none was asked for", async () => {
+            const read = vi.fn(async () => ({ data: record("Stub") }));
+            const service = createService(catalogItem);
+
+            const initialForm = await service.loadForm({ name: "Stub" }, { read }, "new");
+
+            expect(read).toHaveBeenCalledWith("new", undefined);
+            expect(initialForm.template).toBeUndefined();
+        });
     });
 
     describe("getArrival", () => {
@@ -247,6 +267,27 @@ describe("ReportViewerService", () => {
             const base = await load(service);
 
             expect(service.getArrival({ ...base, hasRecord: true, reason: "new" })).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "new" });
+        });
+
+        it("names the template a new form was started from", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, hasRecord: true, reason: "new", template: "speeding" })).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "new", template: "speeding" });
+        });
+
+        it("names no template when the form was not started from one, rather than an empty one", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, reason: "new" })).not.toHaveProperty("template");
+        });
+
+        it("names no template for a form that was loaded, whatever it was asked for", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, hasRecord: true, template: "speeding" })).not.toHaveProperty("template");
         });
 
         it("names no form when the form has no id", async () => {

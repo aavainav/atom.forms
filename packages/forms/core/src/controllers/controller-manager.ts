@@ -130,8 +130,8 @@ export class ControllerManager implements IControllerManager {
     public loadForm<TForm extends FormModel<any>>(form: TForm): IFormController<TForm> {
         const existing = this.controllers.get(ControllerKey.form)?.[0] as FormController<TForm> | undefined;
 
-        // the same form is re-seeded on every render, so the comparison is on the form's id, which is stable across
-        // edits; only a genuinely different form resets the controllers, leaving repeat renders a no-op
+        // the same form can be seeded again, so the comparison is on the form's id, which is stable across edits;
+        // only a genuinely different form resets the controllers, leaving a repeat seeding a no-op
         const isNewForm = !existing?.isLoaded || existing.form.id !== form.id;
 
         if (existing?.isLoaded && isNewForm) {

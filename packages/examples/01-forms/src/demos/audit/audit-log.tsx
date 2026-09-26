@@ -21,6 +21,10 @@ const kindColours: Record<AuditRecord["kind"], string> = {
     "page-added": "secondary",
     "page-focused": "light",
     "page-removed": "danger",
+    "preset-applied": "primary",
+    "preset-deleted": "danger",
+    "preset-saved": "primary",
+    "preset-skipped": "secondary",
     "print-ended": "info",
     "print-started": "info",
     "report-data-copied": "warning",
@@ -69,7 +73,14 @@ function summarize(record: AuditRecord): string {
         case "form-restored":
             return describeShown(record);
         case "form-started":
-            return `${describeShown(record)}, ${record.reason === "new" ? "a new form" : "nothing to load"}`;
+            return `${describeShown(record)}, ${record.reason === "new" ? `a new form${record.template ? ` from the ${record.template} template` : ""}` : "nothing to load"}`;
+        case "preset-applied":
+        case "preset-saved":
+            return `${record.preset}: ${record.fields.join(", ")}`;
+        case "preset-deleted":
+            return record.preset;
+        case "preset-skipped":
+            return `${record.preset}: ${record.field} (${record.reason})`;
         case "print-started":
             return `${record.layout}: ${record.pageNames?.join(", ") ?? "all pages"}`;
         case "report-data-copied":

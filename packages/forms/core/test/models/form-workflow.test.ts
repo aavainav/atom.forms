@@ -127,6 +127,50 @@ describe("FormModel workflow", () => {
 
             expect(mapped.populate({ data: {} as never })).not.toBeInstanceOf(Promise);
         });
+
+        describe("the fields the host locked", () => {
+            const syncMapper: IFormMapper<FormModel<any>, any> = { extract: () => ({}), populate: populated => populated };
+            const asyncMapper: IFormMapper<FormModel<any>, any> = { extract: () => ({}), populate: async populated => populated };
+
+            it("are remembered by the form, so a later change can leave them alone", () => {
+                const populated = withChanges(form, { mapper: syncMapper }).populate({ data: {} as never, readOnlyFields: { agencyName: true } as never }) as WorkflowForm;
+
+                expect(populated.readOnlyFields).toEqual({ agencyName: true });
+            });
+
+            it("are remembered by a form whose mapper has something to await", async () => {
+                const populated = await withChanges(form, { mapper: asyncMapper }).populate({ data: {} as never, readOnlyFields: { agencyName: true } as never });
+
+                expect(populated.readOnlyFields).toEqual({ agencyName: true });
+            });
+
+            it("stay remembered when a later populate locks others, which are remembered beside them", () => {
+                const first = withChanges(form, { mapper: syncMapper }).populate({ data: {} as never, readOnlyFields: { agencyName: true } as never }) as WorkflowForm;
+                const second = first.populate({ data: {} as never, readOnlyFields: { courtName: true } as never }) as WorkflowForm;
+
+                expect(second.readOnlyFields).toEqual({ agencyName: true, courtName: true });
+            });
+
+            it("stay remembered when a later populate locks nothing", () => {
+                const first = withChanges(form, { mapper: syncMapper }).populate({ data: {} as never, readOnlyFields: { agencyName: true } as never }) as WorkflowForm;
+
+                expect((first.populate({ data: {} as never }) as WorkflowForm).readOnlyFields).toEqual({ agencyName: true });
+            });
+
+            it("are not made up when the data locks none", () => {
+                const populated = withChanges(form, { mapper: syncMapper }).populate({ data: {} as never }) as WorkflowForm;
+
+                expect(populated.readOnlyFields).toBeUndefined();
+            });
+
+            it("are remembered by the form that was populated and not the one it was called on", () => {
+                const mapped = withChanges(form, { mapper: syncMapper });
+
+                mapped.populate({ data: {} as never, readOnlyFields: { agencyName: true } as never });
+
+                expect(mapped.readOnlyFields).toBeUndefined();
+            });
+        });
     });
 
     describe("extractData", () => {

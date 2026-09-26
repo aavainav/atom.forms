@@ -1,7 +1,7 @@
 import { IEvent, IEventListener, EventEmitter } from "@common/event-emitter";
 import { IController, IControllerChangedEventArgs, IControllerManager, IPrintController, IRulesController, ActivityEventArgs, Controller, ControllerKey, FormModel, RegisterController } from "@forms/core";
 
-import { IAuditFormIdentity, AuditRecord, AuditRecordDetail } from "../models/audit-record";
+import { IAuditFormIdentity, IPresetSkip, AuditRecord, AuditRecordDetail } from "../models/audit-record";
 import { getChangedPaths } from "../utils/changed-paths";
 
 /** How long a form must sit idle, in milliseconds, before its edits are recorded together. */
@@ -35,6 +35,12 @@ export interface IAuditController extends IController {
     recordDataCopied(tab: string): void;
     /** Records that report data was shown, naming the tab. */
     recordDataViewed(tab: string): void;
+    /** Records that a preset was deleted. */
+    recordPresetDeleted(preset: string): void;
+    /** Records that a preset was saved from the report, naming the fields it was saved from. */
+    recordPresetSaved(preset: string, fields: ReadonlyArray<string>): void;
+    /** Records each field a preset left alone, and why, one record for each. */
+    recordPresetSkipped(preset: string, skipped: ReadonlyArray<IPresetSkip>): void;
     /** Records that the form was saved. */
     recordSaved(): void;
     /** Records that saving the form failed. */
@@ -146,6 +152,24 @@ export class AuditController extends Controller implements IAuditController {
         this.raise({ kind: "report-data-viewed", tab });
     }
 
+    public recordPresetDeleted(preset: string): void {
+        this.flush();
+        this.raise({ kind: "preset-deleted", preset });
+    }
+
+    public recordPresetSaved(preset: string, fields: ReadonlyArray<string>): void {
+        this.flush();
+        this.raise({ kind: "preset-saved", preset, fields });
+    }
+
+    public recordPresetSkipped(preset: string, skipped: ReadonlyArray<IPresetSkip>): void {
+        this.flush();
+
+        for (const { field, reason } of skipped) {
+            this.raise({ kind: "preset-skipped", preset, field, reason });
+        }
+    }
+
     public recordSaved(): void {
         this.flush();
         this.raise({ kind: "saved" });
@@ -184,7 +208,7 @@ export class AuditController extends Controller implements IAuditController {
 
         return arrival.kind === "loaded"
             ? { kind: "form-loaded", ...shown, auditRecords: arrival.auditRecords, comments: arrival.comments, transitions: arrival.transitions }
-            : { kind: "form-started", ...shown, reason: arrival.reason };
+            : { kind: "form-started", ...shown, reason: arrival.reason, ...(arrival.template ? { template: arrival.template } : {}) };
     }
 
     private observe(event: IControllerChangedEventArgs): void {

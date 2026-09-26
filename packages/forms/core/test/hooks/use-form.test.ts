@@ -159,6 +159,63 @@ describe("useFormController", () => {
         expect(hook.result.current.form).toBe(second);
     });
 
+    it("does not bring back the form it was handed when another has been swapped in since, on a repeat render", async () => {
+        const first = await createTestForm();
+        const started = await createTestForm();
+        const controllers = new ControllerManager();
+        const hook = renderHook(() => useFormController(controllers, first));
+
+        act(() => hook.result.current.setForm(started));
+        hook.rerender();
+
+        expect(hook.result.current.form).toBe(started);
+        expect(controllers.getFormController().form).toBe(started);
+    });
+
+    it("keeps the controller it answered, and the edits made to the form swapped in, across those repeat renders", async () => {
+        const first = await createTestForm();
+        const started = await createTestForm();
+        const controllers = new ControllerManager();
+        const hook = renderHook(() => useFormController(controllers, first));
+        const controller = hook.result.current;
+
+        act(() => controller.setForm(started));
+        act(() => controller.update({ update: current => current.setStatus("issued") }));
+        hook.rerender();
+        hook.rerender();
+
+        expect(hook.result.current).toBe(controller);
+        expect(hook.result.current.form.status).toBe("issued");
+    });
+
+    it("loads a different form it is handed afterwards, though another was swapped in before", async () => {
+        const first = await createTestForm();
+        const started = await createTestForm();
+        const handed = await createTestForm();
+        const controllers = new ControllerManager();
+        let form = first;
+        const hook = renderHook(() => useFormController(controllers, form));
+
+        act(() => hook.result.current.setForm(started));
+        form = handed;
+        hook.rerender();
+
+        expect(hook.result.current.form).toBe(handed);
+    });
+
+    it("loads the form into a manager it is handed afterwards, which has not had it", async () => {
+        const form = await createTestForm();
+        const other = new ControllerManager();
+        let controllers = new ControllerManager();
+        const hook = renderHook(() => useFormController(controllers, form));
+
+        controllers = other;
+        hook.rerender();
+
+        expect(hook.result.current).toBe(other.getFormController());
+        expect(hook.result.current.form).toBe(form);
+    });
+
     describe("holding the manager", () => {
         /** A form for the manager, and a count of how many times the manager has said it closed. */
         async function watched() {

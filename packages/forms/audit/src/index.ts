@@ -7,4 +7,4 @@ export type { IAuditController } from "./controllers";
 
 export { useAuditRecorder } from "./hooks";
 
-export type { AuditRecord, AuditRecordDetail, IAuditFormIdentity, IAuditRecordBase } from "./models";
+export type { AuditRecord, AuditRecordDetail, IAuditFormIdentity, IAuditRecordBase, IPresetSkip } from "./models";

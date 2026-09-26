@@ -19,7 +19,7 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `kind` | Raised when | Detected from |
 | --- | --- | --- |
 | `form-loaded` | A form is shown having been **read from a record the host held**: `{ status, mode, auditRecords, comments, transitions }`, the counts of what came with the record, never its values. The audit history and comments themselves are loaded beside it | `start()`, or the manager announcing a new form, with the arrival the report viewer set; see "How the form arrived" below |
-| `form-started` | A form is shown having **begun without a record**: `{ status, mode, reason }`, where `reason` is `open` for a form with nothing to load and `new` when the user started a new form -- even when the host gave it defaults to start from | Same as `form-loaded` |
+| `form-started` | A form is shown having **begun without a record**: `{ status, mode, reason, template? }`, where `reason` is `open` for a form with nothing to load and `new` when the user started a new form -- even when the host gave it defaults to start from. `template` is the id of the host's template a new form was started from, and is **absent** (not empty) when it began from the form's own default | Same as `form-loaded` |
 | `form-restored` | A page the browser restored from its back/forward cache is shown again, as `{ status, mode }`. The same form, so what was loaded for it stays | The manager's `onOpened` |
 | `form-opened` | A form is shown and **nothing said how it arrived**, as `{ status, mode }`. The report viewer always says, so this is what a controller-only host, or a form loaded straight into a manager, gets | `start()` or the manager announcing a new form, with no arrival for that form |
 | `fields-edited` | Edits settle for `editQuietPeriod` (1.5s) | Form controller changes, diffed |
@@ -34,6 +34,9 @@ from. Carrying values would mean changing `getChangedPaths` and the record types
 | `print-started` / `print-ended` | The form enters and leaves its print layout | Print controller's `state` |
 | `saved` / `save-failed` | A save finishes | **Pushed** by the caller; see below |
 | `report-data-viewed` / `report-data-copied` | The report data dialog opens or moves to another tab, or a tab of it is copied: `{ tab }`, the id of the tab (`data`, `audit`, `comments`, `workflow` or `all`), never what it holds. A copy the browser refuses is not recorded | **Pushed** by the report viewer's report data option, through `recordDataViewed(tab)` / `recordDataCopied(tab)` |
+| `preset-applied` | A preset was applied to the report: `{ preset, fields }`, the preset's id and the paths it changed, never what they hold. It is a form activity like `violations-added`, so `fields` is worked out from the diff -- a preset that changed nothing raises nothing. Declared by `@forms/report-viewer` | Same as `dropped` |
+| `preset-skipped` | A preset left a field alone: `{ preset, field, reason }`, where `reason` is `locked` (the host closed the field) or `answered` (the report already held an answer and the preset was not told to overwrite). **One record for each field**, straight after `preset-applied` | **Pushed** by the report viewer's presets panel, through `recordPresetSkipped(preset, skipped)` |
+| `preset-saved` / `preset-deleted` | An officer saved a preset from the report, or deleted one: `{ preset, fields }` -- the paths it was saved from, never what they held -- and `{ preset }` | **Pushed** by the presets panel, through `recordPresetSaved(preset, fields)` / `recordPresetDeleted(preset)` |
 | `comment-added` / `comment-resolved` / `comment-reopened` | A reviewer comments on the report, or a comment is resolved or reopened: `{ commentId, target }`, the comment's id and where it is, never what it says | Reported by `@forms/review`, through the manager's `onActivity` |
 | Whatever a package reports | A controller calls `emitActivity({ kind, ... })` | The manager's `onActivity`; the package declares the kind by merging into core's `IControllerActivityMap` |
 
@@ -51,7 +54,8 @@ A form is opened as it arrives, and the audit says how instead of a plain openin
 the host for a record -- and the audit cannot see that, so the viewer tells the manager (`manager.setArrival`) **before
 it hands the form over**, the same way it tells it the user, and the audit reads `manager.arrival` when it opens the
 form. `FormArrival` (from `@forms/core`) is either `loaded`, with the counts of the audit records, comments and
-workflow entries that came with the record, or `started`, with why. It names the form it is about (`formId`), and the
+workflow entries that came with the record, or `started`, with why, and the template it began from if it began from
+one. It names the form it is about (`formId`), and the
 audit **uses it only for that form**: a form that arrives some other way, or a stale arrival left from an earlier one,
 gets a plain `form-opened`. Because the record is raised as the form opens, it is raised once for each opening -- no
 matter how many times React sets an effect up.

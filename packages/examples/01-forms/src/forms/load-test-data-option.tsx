@@ -26,11 +26,13 @@ export const LoadTestDataOption = ({ catalogItem, title }: IReportViewerOptionPr
         // what was saved for the form would be read in place of the held report, so it goes first
         clearExampleData(catalogItem);
 
-        // the nonce is what has the route page open the viewer again, since the same record twice is no change to the url
+        // the nonce is what has the route page open the viewer again, since the same record twice is no change to the url.
+        // a template is dropped, since a viewer given one starts a new report from it instead of opening the held one
         setSearchParams(prev => {
             const next = new URLSearchParams(prev);
             next.set("record", "held");
             next.set("load", String(Date.now()));
+            next.delete("template");
             return next;
         });
     };

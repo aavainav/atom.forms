@@ -351,6 +351,46 @@ describe("ReportViewerForm", () => {
         });
     });
 
+    describe("a new form swapped in after it was mounted", () => {
+        /** A different form, as the New form option swaps one in: it has an id of its own. */
+        const startedForm = (): FormModel<any> => Object.assign(stubForm(), { id: "form-2" });
+
+        it("stays when the viewer renders again with the form it began with, as it does whenever its host does", () => {
+            const { controllers, initialForm, render } = mount();
+            const original = initialForm();
+            const started = startedForm();
+            render(original);
+
+            act(() => controllers.getFormController().setForm(started));
+            render(original);
+
+            expect(controllers.getFormController().form).toBe(started);
+        });
+
+        it("stays when the viewer renders again with a different data manager, as a host that re-reads its url does", () => {
+            const { controllers, initialForm, render } = mount({ dataManager: { read: async () => undefined } });
+            const original = initialForm();
+            const started = startedForm();
+            render(original);
+
+            act(() => controllers.getFormController().setForm(started));
+            render(original);
+
+            expect(controllers.getFormController().form.id).toBe("form-2");
+        });
+
+        it("is replaced when the viewer is handed a different form of its own, since that is a form the host asked for", () => {
+            const { controllers, initialForm, render } = mount();
+            render(initialForm());
+            act(() => controllers.getFormController().setForm(startedForm()));
+            const handed = { ...initialForm(), form: Object.assign(stubForm(), { id: "form-3" }) };
+
+            render(handed);
+
+            expect(controllers.getFormController().form).toBe(handed.form);
+        });
+    });
+
     describe("getBundle", () => {
         it("gathers the data, the audit history and the comments the form holds", () => {
             const { audit, ref, review } = mount({ audit: [loadedRecord], comments: [heldComment] });

@@ -117,7 +117,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             <ModalManager />
             <NotificationManager />
             <ValidationManager controllers={formControllers} />
-            <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} onError={onError} />
+            <PanelManager catalogItem={initialForm.catalogItem} controllers={formControllers} dataManager={dataManager} onError={onError} />
             {reportViewerService.canReview(initialState, dataManager) && (
                 <ReviewManager controllers={formControllers} dataManager={dataManager} onError={onError} />
             )}

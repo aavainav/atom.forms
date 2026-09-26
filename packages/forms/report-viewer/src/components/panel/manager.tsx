@@ -2,17 +2,24 @@ import React, { lazy, Suspense } from "react";
 import { IResolvedFormCatalogItem } from "@forms/catalog";
 import { IControllerManager } from "@forms/core";
 
+import { IReportViewerDataManager } from "../../services";
+
 /**
  * The violations selector, loaded only for a form that declares a violation list -- and only then is the chunk
  * carrying the panel and its list rows fetched at all.
  */
 const ViolationsPanel = lazy(() => import("@forms/violations").then(module => ({ default: module.ViolationsPanel })));
 
+/** The presets panel, loaded only for a report that can be edited by a host that has presets to give. */
+const PresetsPanel = lazy(() => import("./presets-panel").then(module => ({ default: module.PresetsPanel })));
+
 interface IPanelManagerProps {
     /** The catalog item the form was loaded from; printing/violations resolve against it. */
     readonly catalogItem: IResolvedFormCatalogItem;
     /** The controllers belonging to the form the panels act on. */
     readonly controllers: IControllerManager;
+    /** Where the presets come from; the presets panel is mounted only when it can give some. */
+    readonly dataManager?: IReportViewerDataManager<any>;
     /** Reports a panel's failure through the report viewer's notifications. */
     readonly onError: (message: string) => void;
 }
@@ -25,15 +32,20 @@ interface IPanelManagerProps {
  * A panel mounts for the form's whole lifetime and decides for itself whether it's showing, which lets the option
  * that opens it be a plain button raising an event on a service.
  */
-export default function PanelManager({ catalogItem, controllers, onError }: IPanelManagerProps): React.JSX.Element {
+export default function PanelManager({ catalogItem, controllers, dataManager, onError }: IPanelManagerProps): React.JSX.Element {
     // the violation list is the form's own declaration, decided per-instance rather than off the catalog item
-    const violationListId = controllers.getFormController().form.violationListId;
+    const { mode, violationListId } = controllers.getFormController().form;
 
     return (
         <>
             {violationListId && (
                 <Suspense fallback={null}>
                     <ViolationsPanel catalogItem={catalogItem} controllers={controllers} onError={onError} />
+                </Suspense>
+            )}
+            {mode === "editable" && dataManager?.readPresets && (
+                <Suspense fallback={null}>
+                    <PresetsPanel controllers={controllers} dataManager={dataManager} onError={onError} />
                 </Suspense>
             )}
         </>

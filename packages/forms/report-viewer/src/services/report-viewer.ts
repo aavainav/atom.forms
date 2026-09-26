@@ -1,12 +1,19 @@
 import { ComponentType } from "react";
 import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormArrival, FormModel } from "@forms/core";
+import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormArrival, FormModel, ReadOnlyFields } from "@forms/core";
 import { getReviewController, IReviewComment } from "@forms/review";
 import { IWorkflowService } from "@forms/workflow";
 import { createService, Singleton } from "@shrub/core";
 
 export type ReadReason = "open" | "new";
+
+declare module "@forms/core" {
+    interface IFormActivityMap {
+        /** A preset was applied to the report. `preset` is its id; the fields it changed are worked out from the form. */
+        "preset-applied": { readonly preset: string };
+    }
+}
 
 export const IReportViewerService = createService<IReportViewerService>("forms-report-viewer-service");
 export const IReportViewerOptionRegistrationService = createService<IReportViewerOptionRegistrationService>("forms-report-viewer-option-registration-service");
@@ -16,11 +23,18 @@ export const IReportViewerOptionRegistrationService = createService<IReportViewe
  * Handed to the report viewer as a prop rather than registered, so a host holds one per record, not one per form.
  */
 export interface IReportViewerDataManager<TData extends object = IReportData> {
+    /** Deletes a preset the user saved. Without it a personal preset cannot be deleted. */
+    deletePreset?(id: string): Promise<void>;
     /**
      * Reads the host's record into the form's own contract. Called with `"open"` on a first load and `"new"` when
-     * resetting to a blank form -- a manager whose data isn't tied to a specific record can ignore which one it gets.
+     * resetting to a blank form, from `template` when the user picked one -- a manager whose data isn't tied to a
+     * specific record can ignore both.
      */
-    read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;
+    read(reason: ReadReason, template?: string): Promise<IReadDataResult<TData> | undefined>;
+    /** Lists the presets a user can apply to the report they are writing, data and all. Without it the presets option is not offered. */
+    readPresets?(): Promise<ReadonlyArray<IReportPreset<TData>>>;
+    /** Lists the templates a new report can start from. Without it, only the form's own default is offered. */
+    readTemplates?(): Promise<ReadonlyArray<IReportTemplate>>;
     /** Hands the form's extracted data back to the host when the report is saved, unless the host has a `writeBundle`. A manager with neither leaves the form unsaveable. */
     write?(data: IReportData): Promise<void>;
     /** Hands the audit records raised since the last write back to the host, after each settled batch of them. Append-only: the host adds them to what it holds, matching by id, and is never handed a record twice once it has taken it. */
@@ -29,6 +43,8 @@ export interface IReportViewerDataManager<TData extends object = IReportData> {
     writeBundle?(bundle: IReportBundle): Promise<void>;
     /** Hands the review comments back to the host each time one is added, resolved or reopened, all of them each time. They are review metadata, never part of what `write` receives. */
     writeComments?(comments: ReadonlyArray<IReviewComment>): Promise<void>;
+    /** Keeps a preset the user saved from the report, and may refuse by throwing. Without it the panel offers no way to save one. */
+    writePreset?(preset: IReportPreset<TData>): Promise<void>;
 }
 
 /** What a data manager's `read` returns: the record, and everything else the host holds for it, in one object. */
@@ -37,6 +53,38 @@ export interface IReadDataResult<TData extends object = IReportData> extends IPo
     readonly audit?: ReadonlyArray<AuditRecord>;
     /** The review comments made on the report. */
     readonly comments?: ReadonlyArray<IReviewComment>;
+}
+
+/** Data the user can apply to the report they are writing. */
+export interface IReportPreset<TData extends object = IReportData> {
+    /** What the preset sets, in the form's own contract. A list of pages is paired with the report's by position. */
+    readonly data: Partial<TData>;
+    /** Says a little more about what the preset sets, shown under its title. */
+    readonly description?: string;
+    /** The heading the preset is listed under in the panel. */
+    readonly group?: string;
+    /** Identifies the preset, and is what the audit records when it is applied. */
+    readonly id: string;
+    /** One the current user saved, listed under "My presets" and open to being deleted. */
+    readonly isPersonal?: boolean;
+    /** Which of `data` the host considers settled: applying the preset locks them. A personal preset never has any. */
+    readonly readOnlyFields?: ReadOnlyFields<TData>;
+    /** What the preset is called in the panel. */
+    readonly title: string;
+}
+
+/** A starting point the host offers for a new report; the data behind it comes from `read`. */
+export interface IReportTemplate {
+    /** Says a little more about what the template starts a report with, shown under its title. */
+    readonly description?: string;
+    /** The heading the template is listed under in the picker. */
+    readonly group?: string;
+    /** Identifies the template, and is what `read` is given when it is picked. */
+    readonly id: string;
+    /** Replaces the form's own default as what a new report starts from, hiding it, and is preselected in the picker. At most one. */
+    readonly isDefault?: boolean;
+    /** What the template is called in the picker. */
+    readonly title: string;
 }
 
 /** Everything the report viewer holds about a report, as one object: what a host is handed to keep it as a document, or to export it. */
@@ -67,6 +115,8 @@ export interface IInitialForm {
     readonly hasRecord: boolean;
     /** Why the host was asked: `open` for a first load, `new` for starting a new form. */
     readonly reason: ReadReason;
+    /** The template a new form was started from, if the user picked one. */
+    readonly template?: string;
     /** The component used to render the form. */
     readonly Component: ComponentType<IFormComponentProps>;
 }
@@ -80,17 +130,18 @@ export interface IReportViewerService {
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
-    /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one. A new form is started even when the host gave it defaults to start from. */
+    /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one, from the template the user picked if they did. A new form is started even when the host gave it defaults to start from. */
     getArrival: (initialForm: IInitialForm) => FormArrival;
     /** Gathers everything held about the report -- its data, the audit history and the review comments -- into one object, unpersisted. */
     getBundle: (form: FormModel<any>, controllers: IControllerManager) => IReportBundle;
     /** The form's options, in the order the bar renders them. */
     getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
-     * Resolves, builds and populates the identified form. `reason` passes through to the data manager -- `"open"`
-     * for a first load, `"new"` for a reset. Nothing to populate leaves the form as its constructor built it.
+     * Resolves, builds and populates the identified form. `reason` and `template` pass through to the data manager --
+     * `"open"` for a first load, `"new"` for a reset, from the template the user picked if they did. Nothing to
+     * populate leaves the form as its constructor built it.
      */
-    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason) => Promise<IInitialForm>;
+    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason, template?: string) => Promise<IInitialForm>;
     /**
      * Extracts the form's data and hands it to the data manager, if it can write. Returned either way, so a host that
      * persists it itself can reuse this. With the controllers, and a data manager that has a `writeBundle`, the whole
@@ -169,12 +220,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return form.extractData();
     }
 
-    getArrival({ audit, comments, form, hasRecord, reason }: IInitialForm): FormArrival {
+    getArrival({ audit, comments, form, hasRecord, reason, template }: IInitialForm): FormArrival {
         const formId = form.id ?? "";
 
         return hasRecord && reason === "open"
             ? { kind: "loaded", formId, auditRecords: audit?.length ?? 0, comments: comments?.length ?? 0, transitions: form.history.length }
-            : { kind: "started", formId, reason };
+            : { kind: "started", formId, reason, ...(template ? { template } : {}) };
     }
 
     getBundle(form: FormModel<any>, controllers: IControllerManager): IReportBundle {
@@ -191,9 +242,9 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(form, dataManager));
     }
 
-    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open"): Promise<IInitialForm> {
+    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open", template?: string): Promise<IInitialForm> {
         const catalogItem = await this.formCatalogService.get(identity);
-        const result = await dataManager?.read(reason);
+        const result = await dataManager?.read(reason, template);
         const record = result?.data as IReportData | undefined;
         let form = await new catalogItem.ctor(record?.id, record?.revision).initialize();
 
@@ -207,7 +258,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
             form = this.workflowService.restoreWorkflow(form, result.status, result.workflow);
         }
 
-        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, Component: catalogItem.component };
+        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, template, Component: catalogItem.component };
     }
 
     registerOption(option: IReportViewerOption): void {

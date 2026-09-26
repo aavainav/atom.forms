@@ -21,6 +21,12 @@ export interface IAuditFormIdentity {
     readonly version: string;
 }
 
+/** A field a preset left alone, and why: `locked` when the host closed it, `answered` when the report already held an answer and the preset was not told to overwrite. */
+export interface IPresetSkip {
+    readonly field: string;
+    readonly reason: "answered" | "locked";
+}
+
 /** Every kind of record and what it carries beyond `at` and `form`, including the kinds other packages report. Records name the fields touched, never what they held. */
 export interface IAuditRecordMap extends IControllerActivityMap, WithChangedFields<IFormActivityMap> {
     /** Edits settled. `fields` are data-contract paths, such as `violatorSex` or `additionalViolations[1].violationDescription`. */
@@ -33,8 +39,14 @@ export interface IAuditRecordMap extends IControllerActivityMap, WithChangedFiel
     "form-opened": IFormShown;
     /** A page the browser restored from its cache was shown again. */
     "form-restored": IFormShown;
-    /** The form began without a record: `open` when there was nothing to load, `new` when the user started a new one. */
-    "form-started": IFormShown & { readonly reason: "new" | "open" };
+    /** The form began without a record: `open` when there was nothing to load, `new` when the user started a new one, from `template` when they picked one. */
+    "form-started": IFormShown & { readonly reason: "new" | "open"; readonly template?: string };
+    /** A preset was deleted. */
+    "preset-deleted": { readonly preset: string };
+    /** A preset was saved from the report. `fields` are the data-contract paths it was saved from. */
+    "preset-saved": { readonly preset: string; readonly fields: ReadonlyArray<string> };
+    /** A preset left a field alone. */
+    "preset-skipped": IPresetSkip & { readonly preset: string };
     /** The form left its print layout. */
     "print-ended": Record<never, never>;
     /** The form went into its print layout. `pageNames` is undefined when every page prints. */

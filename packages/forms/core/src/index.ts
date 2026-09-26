@@ -24,6 +24,7 @@ export { FLabel } from "./components/form-label";
 export { FFormStackPanel } from "./components/form-stackpanel";
 export { FListGroup } from "./components/list-group";
 export { FListGroupCheckbox } from "./components/list-group-checkbox";
+export { FListGroupHeading } from "./components/list-group-heading";
 export { FListGroupItem } from "./components/list-group-item";
 export { FLoadingIndicator } from "./components/loading-indicator";
 export { FModal } from "./components/modal";
@@ -142,6 +143,7 @@ export { useActivePageId, useForm, useFormController, useNavigationTarget, usePr
 
 export { setOptionWithDependents } from "./utils/dependent-fields";
 export { getFieldControl, getFieldId } from "./utils/field-control";
+export { isRecord } from "./utils/is-record";
 
 export { schema as ImportablePersonSchema, validateImportablePerson } from "./models/import/importable-person";
 export { schema as ImportableVehicleSchema, validateImportableVehicle } from "./models/import/importable-vehicle";

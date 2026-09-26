@@ -10,6 +10,7 @@ import { IModule, IModuleConfigurator, IServiceRegistration, SingletonServiceFac
 import {
     IModalService,
     INotificationService,
+    IPresetSelectorService,
     IReportViewerOptionRegistrationService,
     IReportViewerService,
     IReviewService,
@@ -17,6 +18,7 @@ import {
     IValidationService,
     ModalService,
     NotificationService,
+    PresetSelectorService,
     ReportViewerService,
     ReviewService,
     ThemeService,
@@ -39,6 +41,7 @@ export class ReportViewerModule implements IModule {
     configureServices(registration: IServiceRegistration): void {
         registration.register<IModalService, ModalService>(IModalService, ModalService);
         registration.register<INotificationService, NotificationService>(INotificationService, NotificationService);
+        registration.register<IPresetSelectorService, PresetSelectorService>(IPresetSelectorService, PresetSelectorService);
 
         // one instance behind two interfaces, since the options bar's read side (getOptions) and its write side
         // (registerOption) are the same registry
@@ -75,6 +78,13 @@ export class ReportViewerModule implements IModule {
             title: "Violations",
             Component: lazy(() => import("@forms/violations").then(module => ({ default: module.ViolationsOption }))),
             canShow: form => !!form.violationListId
+        });
+
+        options.registerOption({
+            id: "presets",
+            title: "Apply a preset",
+            Component: lazy(() => import("./components/options").then(module => ({ default: module.PresetsOption }))),
+            canShow: (form, dataManager) => form.mode === "editable" && !!dataManager?.readPresets
         });
 
         options.registerOption({

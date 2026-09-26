@@ -201,6 +201,18 @@ describe("AuditController", () => {
             expect(records[0]).toMatchObject({ kind: "form-started", mode: "editable", reason: "new", status: "draft" });
         });
 
+        it("names the template a new form was started from when the manager was told which", () => {
+            const { records } = watch({ name: "Dana" }, undefined, { kind: "started", formId: "form-1", reason: "new", template: "speeding" });
+
+            expect(records[0]).toMatchObject({ kind: "form-started", reason: "new", template: "speeding" });
+        });
+
+        it("names no template when the manager was told of none, rather than an empty one", () => {
+            const { records } = watch({ name: "Dana" }, undefined, { kind: "started", formId: "form-1", reason: "new" });
+
+            expect(records[0]).not.toHaveProperty("template");
+        });
+
         it("says only that the form was opened when nothing said how it arrived", () => {
             const { records } = watch();
 
@@ -755,6 +767,64 @@ describe("AuditController", () => {
             audit.recordDataCopied("data");
 
             expect(kinds(records)).toEqual(["form-opened", "fields-edited", "report-data-viewed", "fields-edited", "report-data-copied"]);
+        });
+    });
+
+    describe("presets", () => {
+        it("records a preset being saved, naming the fields it was saved from", () => {
+            const { audit, records } = watch();
+
+            audit.recordPresetSaved("preset-1", ["agencyName", "persons[1].personFirstName"]);
+
+            expect(records[1]).toMatchObject({ kind: "preset-saved", preset: "preset-1", fields: ["agencyName", "persons[1].personFirstName"] });
+        });
+
+        it("records a preset being deleted", () => {
+            const { audit, records } = watch();
+
+            audit.recordPresetDeleted("preset-1");
+
+            expect(records[1]).toMatchObject({ kind: "preset-deleted", preset: "preset-1" });
+        });
+
+        it("records each field a preset left alone as a record of its own, with why, in the order given", () => {
+            const { audit, records } = watch();
+
+            audit.recordPresetSkipped("columbia-pd", [{ field: "agencyName", reason: "locked" }, { field: "agencyCity", reason: "answered" }]);
+
+            expect(records.slice(1)).toMatchObject([
+                { kind: "preset-skipped", preset: "columbia-pd", field: "agencyName", reason: "locked" },
+                { kind: "preset-skipped", preset: "columbia-pd", field: "agencyCity", reason: "answered" }
+            ]);
+        });
+
+        it("records nothing for a preset that left nothing alone", () => {
+            const { audit, records } = watch();
+
+            audit.recordPresetSkipped("columbia-pd", []);
+
+            expect(kinds(records)).toEqual(["form-opened"]);
+        });
+
+        it("gives each record an id of its own", () => {
+            const { audit, records } = watch();
+
+            audit.recordPresetSkipped("columbia-pd", [{ field: "agencyName", reason: "locked" }, { field: "agencyCity", reason: "answered" }]);
+
+            expect(new Set(records.map(record => record.id)).size).toBe(records.length);
+        });
+
+        it("records the edits made before each first", () => {
+            const { audit, manager, records } = watch({ name: "Dana" });
+            edit(manager, { name: "Riley" });
+
+            audit.recordPresetSkipped("columbia-pd", [{ field: "agencyName", reason: "locked" }]);
+            edit(manager, { name: "Sam" });
+            audit.recordPresetSaved("preset-1", ["name"]);
+            edit(manager, { name: "Alex" });
+            audit.recordPresetDeleted("preset-1");
+
+            expect(kinds(records)).toEqual(["form-opened", "fields-edited", "preset-skipped", "fields-edited", "preset-saved", "fields-edited", "preset-deleted"]);
         });
     });
 

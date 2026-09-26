@@ -59,6 +59,10 @@ for the title, description and version and joins each against [src/form-routes.t
 form with no entry there is still listed, greyed out and marked "no route registered", so registering a form's
 bootstrapper without adding a route shows up as a visible gap rather than a silently missing row.
 
+Beneath each form it lists the templates the host offers for starting one, indented, as links to `?template=<id>`
+(asked of the same data manager the form's route uses, through `readTemplates`). The form's own row starts the default
+template, or, for a form with none, `?record=new`; a default is therefore not listed a second time.
+
 **It does not preview a form's options.** `getLatestVersions()` deliberately never constructs a form or calls its
 catalog item's `load()`, so nothing about a form's `mapper`/`violationListId` — which the options bar's gates now
 read off the constructed form instance, not the catalog item — is knowable from this listing alone. Answering that
@@ -88,8 +92,9 @@ right. The round trip works with no server:
   saved `status` and `workflow` back beside the record, so a form saved after it was issued reloads locked, with its history.
 
 Query string controls: `?record=full` / `?record=minimal` picks the scenario (`?citation=` is accepted as an alias),
-`?record=new` starts from the values a host gives a record that does not exist yet, `?record=held` is the report the
-host has been keeping (below), and `?reset=1` clears the saved record for that form first.
+`?record=new` starts a new report from the form's default template (below), `?template=<id>` starts one from a named
+template, `?record=held` is the report the host has been keeping (below), and `?reset=1` clears the saved record for
+that form first.
 
 **A held report is a report with a past.** Each form has one to tell in [example-held-reports.ts](src/example-held-reports.ts):
 the full fixture under its own `id` and `revision`, the status it stands at, the workflow history that got it there, the
@@ -118,14 +123,45 @@ nonce; the route page keys the viewer on the nonce so it mounts again and reads 
 cannot fill the open form in place, because the audit would record that as edits and infer the loaded workflow
 history as transitions made now. It offers itself only on a form route, since a demo page does not key on the nonce.
 
-**There is no separate "defaults" path.** `?record=new` is just a scenario whose values come from the table's
-`defaults` entry rather than a fixture — one `read()`, one shape. Two forms have one, which is what shows that
-locking follows the keys a host names rather than being wired up per form:
+**There is no separate "defaults" path; there are templates.** A new report starts from a **template** the host
+offers, through the same `read()` and the same shape as any record. The table's entries each carry `presets` -- reusable
+pieces of data -- and `templates`, and a template is the presets it names, laid down in order, and then its own data
+on top. `resolveTemplate` puts one together, and the report viewer is handed only the finished record: composing
+is the host's business, so this file is the reference for how a host might, not a thing the viewer does for it.
 
-| | pre-filled | locked |
-| --- | --- | --- |
-| `/sc/432?record=new&reset=1` | agency name, agency city | agency name |
-| `/sc/s438?record=new&reset=1` | court name, city, state | court name |
+- **The one flagged `isDefault` replaces the form's own default**, and is what `?record=new` and the New Form option
+  start from. It is where a settled value is locked for every report. Two forms have one, which is what shows that
+  locking follows the keys a host names rather than being wired up per form:
+
+  | | default template | pre-filled | locked |
+  | --- | --- | --- | --- |
+  | SC 432 (`/sc/432?record=new&reset=1`) | Public contact, from the `columbia-pd` preset | agency name, agency city | agency name |
+  | S438 (`/sc/s438?record=new&reset=1`) | Citation, from the `columbia-court` preset | court name, city, state | court name |
+
+- **A form with no default template starts as the form makes it** -- today's date, a ticket number -- which is the
+  form's own default, built in and needing nothing from a host. TR-310 and GA UTC are like that.
+- **The other templates are what the officer chooses between.** S438 has Speeding, 15 over and Failure to stop at a stop
+  sign; SC 432 has Speeding stop and Motorist assistance; TR-310 has a rear-end collision and one in the rain, each
+  **built wholly from presets** to show a template needing no data of its own; GA UTC has one built from data alone, to
+  show composition is optional. `readTemplates` lists them without their data, which comes with `read("new", id)`.
+- **They are reached three ways:** the home page lists each form's templates beneath it, as links to `?template=<id>`,
+  which the route page hands `ReportViewer` as its `template` prop; the New Form option opens the picker whenever a form
+  has more than one thing to start from; and a URL is stamped with `?record=new&template=<id>` when a new form is
+  started, so a refresh starts from the same one. "Load test data" drops the `template` param, since a viewer given one
+  starts a new report from it instead of opening the held one.
+
+**The same presets are what an officer applies to a report already under way**, from the Presets button in the options
+bar (`readPresets` lists the officer's own first, then the form's). Applying one fills in what the report has not
+answered, and it never touches a field the host locked -- so applying `columbia-pd` to a report whose agency name is
+locked changes the city and leaves the name. TR-310 has a preset that sets **more than one page**: `mv-and-pedestrian`
+gives the vehicle its unit page and its driver and a pedestrian their person pages, each list paired with the report's
+by position (the pedestrian is a person page, as the fixtures have it). The template of the same name is that preset
+and nothing else.
+
+**An officer can save a preset from the report**, on any form with a manager, through `writePreset` and `deletePreset`.
+They are kept in `sessionStorage` under a key of their own (`example-data:<name>@<version>:presets`) that
+`clearExampleData` never touches, since they belong to the officer and not to the report: "Start over" and "Load test
+data" leave them be. Each is marked `isPersonal` as it is kept, which is what lists it under "My presets".
 
 `readOnlyFields` is **typed against each form's own contract** — the table's entries go through a `defineForm<TData>`
 helper for exactly that, so a misspelled key is a compile error rather than a lock that silently does nothing.

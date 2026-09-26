@@ -75,6 +75,7 @@ export default function FormRoutePage(): React.JSX.Element {
     }
 
     // the viewer only reads its record as it mounts, so it is keyed on the load "Load test data" asks for; nothing else in
-    // the query string remounts it, or starting a new form, which stamps ?record=new, would. the officer is Fry
-    return <ReportViewer key={searchParams.get("load") ?? undefined} ref={reportViewerRef} identity={route.identity} dataManager={dataManager} settings={{ showOptions: true, user: fry }} />;
+    // the query string remounts it, or starting a new form, which stamps ?record=new, would. a ?template= is the one
+    // thing it starts a new report from as it mounts, in place of opening one. the officer is Fry
+    return <ReportViewer key={searchParams.get("load") ?? undefined} ref={reportViewerRef} identity={route.identity} dataManager={dataManager} settings={{ showOptions: true, user: fry }} template={searchParams.get("template") ?? undefined} />;
 }

@@ -25,13 +25,14 @@ even the workbench.
 <ReportViewer identity={{ name: "S438 Citation Form", version: "1.0" }} dataManager={…} settings={{ showOptions: true }} />
 ```
 
-Three props, nothing else:
+Four props, nothing else:
 
 | Prop | |
 | --- | --- |
 | `identity` | `IFormIdentity`. The catalog resolves it, answering with the latest version when none is named. |
 | `dataManager` | `IReportViewerDataManager` — where the record is read from and written back to. Optional: without one the form renders blank and unsaveable. |
 | `settings` | `IReportViewerSettings` — `mode?` (`FormMode`, defaults `"editable"`), `showOptions?` and `user?` (an `IActor`: who is using the report, which its audit records and review comments are attributed to). How the report renders, as opposed to which one. |
+| `template` | Optional. The id of one of the host's templates: the report starts **new** from it in place of opening one, so `read` is called with `"new"` and the id, and the audit says `form-started` with the template rather than `form-loaded`. It is how a host's own launcher starts a report from a template. |
 
 There is deliberately **no `controllers` prop**. A host needing shared controllers or a mutation of the loaded model
 takes the advanced path instead: `IReportViewerService.loadForm(identity, dataManager)` then `<ReportViewerForm />`,
@@ -54,13 +55,16 @@ the previously loaded form on screen.
 | [src/services/validation.ts](src/services/validation.ts) | `IValidationService`: `showIssues` (event only, same shape as notification; `ValidationManager` listens) and `validate(controllers)`, which runs the rules, shows what they found, marks the failing fields on the form and answers with the `RuleIssueCollection`. The Validate button and the workflow option both go through it. |
 | [src/components/report-viewer.tsx](src/components/report-viewer.tsx) | `ReportViewer` and `IReportViewerSettings`. Also the one `import "@forms/core/theme/_main.scss"` in the graph. |
 | [src/components/report-viewer-form.tsx](src/components/report-viewer-form.tsx) | Owns the `ControllerManager`, wires `useFormController`, applies the form's mode, sets the delete-page confirmation, builds the `onError` the plugin components report through, calls `useAuditRecorder`, and renders `WorkflowActions` above the form. |
-| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own five. |
+| [src/components/report-viewer-options.tsx](src/components/report-viewer-options.tsx) + [options/](src/components/options/) | The floating bottom-right bar: it renders whatever `getOptions` answers with, under a suspense boundary. `options/` holds this package's own six. |
 | [src/components/workflow/workflow-actions.tsx](src/components/workflow/workflow-actions.tsx) | `WorkflowActions` — **not** an options-bar entry; see *Workflow* below. |
 | [src/components/options/report-data-option.tsx](src/components/options/report-data-option.tsx) + [report-data-dialog.tsx](src/components/options/report-data-dialog.tsx) | The `#report-data-button`, and the modal showing the bundle on tabs -- Report data, Audit history, Comments, Workflow (the record's `workflow` stamp, only when the form has one), and All data (the whole bundle, as `writeBundle` receives it) -- as formatted JSON, with a Copy action that copies the tab showing. Opening the dialog, moving to a tab and copying one are each recorded by the audit (`report-data-viewed`, `report-data-copied`), naming the tab and never its contents; a copy the browser refuses is not. The dialog is the **body** only — the chrome belongs to `IModalService`. |
 | [src/hooks/use-audit-writer.ts](src/hooks/use-audit-writer.ts) | `useAuditWriter`: hands the audit controller's session records to the data manager's `writeAudit`, only the ones it has not yet handed over. |
 | [src/components/modal/manager.tsx](src/components/modal/manager.tsx) · [notification/manager.tsx](src/components/notification/manager.tsx) · [validation/manager.tsx](src/components/validation/manager.tsx) | Subscribe to their service's events and render `FModal` / `FNotification` / the validation off-canvas. |
 | [src/components/notification/notification-items.ts](src/components/notification/notification-items.ts) | What `NotificationManager` shows and how: `addNotification` merges a raised notification into the list. Owns `maxNotifications` (3) and `defaultDurations` (danger 10s, warning 8s, info/success 5s). |
-| [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, alongside the other managers. |
+| [src/components/panel/manager.tsx](src/components/panel/manager.tsx) | Mounts the violations panel, for a form that declares a `violationListId`, and the presets panel, for an editable form whose host has `readPresets`, alongside the other managers. |
+| [src/components/panel/presets-panel.tsx](src/components/panel/presets-panel.tsx) + [preset-list.tsx](src/components/panel/preset-list.tsx) · [preset-preview.tsx](src/components/panel/preset-preview.tsx) · [preset-save-form.tsx](src/components/panel/preset-save-form.tsx) | The presets panel, an off canvas on the end edge, and its three parts: the searchable list, the preview of what applying the chosen preset would do, and the step a preset is saved from. See *Presets* below. |
+| [src/utils/](src/utils/) | The pure logic the panel is built on: `plan-preset.ts` (what applying a preset comes to), `savable-groups.ts` (what a preset could be saved from, and building one from what was ticked), `is-answered.ts` and `humanize.ts`. |
+| [src/components/options/new-form-option.tsx](src/components/options/new-form-option.tsx) + [template-picker.tsx](src/components/options/template-picker.tsx) | The `#new-form-button`. A host that offers templates (`readTemplates`) has the user pick one first, in a modal: `TemplatePicker` is the **body** only, listing the form's own default as "Blank" (unless the host flags a default of its own, which replaces it) and then the host's templates, under their `group` headings. Only one thing to start from means no question asked, and cancelling the picker leaves the form as it is, without asking about its unsaved changes. See *Templates* below. |
 | [src/components/review/manager.tsx](src/components/review/manager.tsx) · [options/review-option.tsx](src/components/options/review-option.tsx) | `ReviewManager` mounts `@forms/review`'s markers and panel and writes the comments back through the data manager; `ReviewOption` is the button that toggles the panel. See *Review* below. |
 | [src/components/validation/](src/components/validation/) | Off-canvas list of `IRuleIssue`s; `ValidationManager` owns the open/closed state, `Validation` is the plain presentational off-canvas. |
 
@@ -68,7 +72,8 @@ the previously loaded form on screen.
 
 ```ts
 interface IReportViewerDataManager<TData extends object = IReportData> {
-    read(reason: ReadReason): Promise<IReadDataResult<TData> | undefined>;   // one object in
+    read(reason: ReadReason, template?: string): Promise<IReadDataResult<TData> | undefined>;   // one object in
+    readTemplates?(): Promise<ReadonlyArray<IReportTemplate>>;               // what a new report can start from
     write?(data: IReportData): Promise<void>;                                // the record, on Save
     writeAudit?(records: ReadonlyArray<AuditRecord>): Promise<void>;         // the audit records not yet handed over
     writeBundle?(bundle: IReportBundle): Promise<void>;                      // everything, on Save, in place of write
@@ -82,10 +87,12 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
 }
 ```
 
-- **`read(reason)` takes only why it is being called** -- `"open"` or `"new"`. The host owns its own routing, so a
-  manager closes over whichever record it was built for rather than being handed a context to guess from.
+- **`read(reason, template?)` takes only why it is being called** -- `"open"` or `"new"` -- and, for a new one, the
+  template the user picked. The host owns its own routing, so a manager closes over whichever record it was built for
+  rather than being handed a context to guess from.
 - **There is no separate notion of defaults.** A host with no record yet answers with the values a new one should
-  start with; resolving `undefined` loads a blank form. One path, not two.
+  start with; resolving `undefined` loads a blank form. One path, not two. A template is the same path with a name:
+  the host answers `read("new", id)` with the finished record, and the report viewer never sees how it was put together.
 - **`readOnlyFields` mirrors the shape of `data` itself**, marking whichever fields -- at any depth -- should come
   back locked rather than editable, e.g. `{ agencyName: true }`. `ReadOnlyFields<TData>` (from `@forms/core`) is
   typed against the contract, so a misspelled key is a compile error rather than a lock that silently does nothing.
@@ -125,17 +132,18 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
 1. `formCatalogService.get(identity)` — resolves and caches the catalog item, calling its `load()` at most once per
    identity, ever.
 2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages.
-3. `await dataManager?.read(reason)`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
+3. `await dataManager?.read(reason, template)`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
    decides for itself whether it has a mapper to run (awaited either way, since a repeating-page mapper must create
    pages, which is async; a form with no mapper just returns itself unchanged) -- then
    `form = workflowService.restoreWorkflow(form, result.status, result.workflow)`, the explicit second step that
    restores the record's status and workflow history and applies the lock its status carries. Safe to call
    unconditionally, even for a form with no workflow: see [`@forms/workflow`](../workflow/CLAUDE.md#restoreworkflow--the-two-step-load).
-4. → `IInitialForm { audit?, catalogItem, comments?, form, hasRecord, reason, Component }`: the audit history and the
-   comments the read returned ride along, and `ReportViewerForm` loads them onto the controllers. `hasRecord` (the read
-   answered) and `reason` (`open` or `new`) say how the form came to be, which `getArrival(initialForm)` turns into the
-   `FormArrival` the audit reports: loaded, with the counts of what came with the record, or started. A new form is
-   started even when the host gave it defaults.
+4. → `IInitialForm { audit?, catalogItem, comments?, form, hasRecord, reason, template?, Component }`: the audit history
+   and the comments the read returned ride along, and `ReportViewerForm` loads them onto the controllers. `hasRecord`
+   (the read answered), `reason` (`open` or `new`) and `template` (the one a new form was started from) say how the
+   form came to be, which `getArrival(initialForm)` turns into the `FormArrival` the audit reports: loaded, with the
+   counts of what came with the record, or started -- naming the template when there was one, and only then. A new
+   form is started even when the host gave it defaults or a template.
 
 **The form is self-describing -- its own `mapper`, `valueListIds` and `violationListId` travel with it.** Nothing
 here reaches into the catalog item to decide what the form can do; it asks the constructed `form` instead.
@@ -157,6 +165,77 @@ outgoing data, so the report-data option is offered where save is not. Both exis
 instance methods now -- not free functions -- so `ReportViewerModule.configure` reaches the singleton through
 `services.get<IReportViewerService>(IReportViewerService)` to pass them as `canShow` closures.
 
+## Templates
+
+A **template** is a named starting point for a new report. The host offers them with the optional
+`readTemplates(): Promise<ReadonlyArray<IReportTemplate>>` -- `{ id, title, description?, group?, isDefault? }`, and
+**no data**: the data comes with `read("new", id)` when one is chosen, which is where a host learns that a new report
+began (the sandbox clears what it kept for the last one and stamps the url there). So a host with a server lists the
+templates cheaply and fetches the one chosen.
+
+- **The form's own default is built in.** What a form makes of itself when it initializes -- today's date, a ticket
+  number, closed to editing -- is the default every new report starts from, and needs nothing from the host. It is
+  listed in the picker as "Blank", never by a host. Only what is true of every agency using the form belongs to it.
+- **`isDefault` replaces it.** A host that flags one of its templates as the default has it start every new report
+  that is not started from another, and the form's own is then *not offered*, so that an officer cannot pick it to
+  skip whatever the agency locks (a court name, an agency name). At most one is flagged.
+- **Only one thing to start from means no question is asked.** No `readTemplates`, or an empty list, is exactly the
+  flow before templates: `read("new")`. A single template flagged as the default starts straight away. Two or more
+  choices open the picker, which has the default selected, or Blank when the host names none.
+- **The pick comes before the unsaved-changes guard**, so cancelling the picker never asks whether to discard
+  anything. The chosen id is held in a variable the Start action reads, as the report-data dialog holds its active
+  tab: a modal's actions are fixed when it opens and cannot see the dialog's state.
+- **Composition is the host's.** A template built from several pieces of data -- a preset for the agency, another for
+  the road conditions -- is put together by the host, which answers `read` with one finished record. The report
+  viewer has no notion of a template's parts; see `createExampleDataManager` in the sandbox for one way to do it.
+- **A host's own launcher starts one with the `template` prop** on `ReportViewer`, which loads with `"new"` and the id
+  in place of `"open"`, so the audit says `form-started` from that template rather than a load.
+
+## Presets
+
+A **preset** is a named piece of data an officer applies to the report they are already writing; a template
+(above) starts a new one. The host offers them with `readPresets(): Promise<ReadonlyArray<IReportPreset<TData>>>` --
+the data comes with them, since applying is done here and the preview needs it -- and lets the officer keep their
+own with `writePreset(preset)` and `deletePreset(id)`, which the panel offers only when the host has them. A preset's
+`data` is in the form's own contract, so it can set a field on the report and, in a list of pages such as `persons`
+or `units`, a field on each page: the lists are **paired with the report's by position**, and one longer than the
+report's adds pages. The mapper adds them, from the array's length; it never removes one.
+
+- **`planPreset(preset, current, locked, overwrite)` decides what is written**, before `populate` is asked:
+  - a field the host **locked** is never written, whatever the mode, and is `locked`;
+  - a field the report **answers** is not written unless told to overwrite, and is `answered`. Blank text, an
+    unchecked box, nothing, an empty list, **a zero and an option box with nothing chosen** are unanswered: a report
+    holds a box left alone as false, a number left alone as 0 and an option left alone as a blank `{ value: "",
+    description: "" }`, which cannot be told from an answer, and counting them as answers would leave every such
+    field forever "answered" on a real form;
+  - a field already holding what the preset sets is neither written nor skipped;
+  - an option box's `{ value, description }` is one field, and is named as itself (`isRecord` in `@forms/core`);
+  - a mark on a whole list, or a whole page, locks everything on it; a page is found in the marks by position.
+  It answers with the data left to write, the paths it sets, the pages it adds (`pages`), the preset's own locks cut
+  down to what was written, and what it skipped -- each as a path (`persons[1].nonMotoristUnitType`) with why.
+- **Which fields are locked is what the form remembers.** `FormModel.populate` keeps the `readOnlyFields` it was given
+  (`FormModel.readOnlyFields`), merged with those it already had, so the panel reads them off the form and needs no
+  registry of its own. It knows only the locks the host declared: a form's own stamps, a workflow's locked sections
+  and a field its own rules disable are not in it. Fill-empty mode still leaves an answered one alone; **overwrite
+  mode does not**, and would write over one of those.
+- **A host preset's own locks are applied with it**, for what it wrote, so it can settle a field for the rest of the
+  report. A preset an officer saved never has any.
+- **One change, one undo.** The panel populates the form as it stands, checks it was not edited while it waited (a
+  form that adds pages is async) and, if it was, applies nothing and says so. Then it makes **one** update, with
+  `reason: { kind: "preset-applied", preset }` -- the same seam as `violations-added` -- so the audit names the fields
+  it changed from the diff. What it skipped is recorded after, one `preset-skipped` for each field.
+- **Saving keeps what was ticked, grouped by where it sits.** `getSavableGroups` offers the report's own single
+  fields, then each page of each list, leaving out what is unanswered, what the host locked, and the report's identity;
+  `getPageLists` offers to keep the number of pages of a list, blank; `toPresetData` builds the data from the paths
+  ticked and holds a page's place with an empty record for each page before it. **Nothing is ticked to begin with**:
+  a person page holds names and licence numbers, and the officer chooses. The host may refuse in `writePreset` by
+  throwing, and the panel shows why. A nested record inside a page is not offered.
+- **The audit is told each of the three**: `preset-applied` and `preset-skipped` (above), `preset-saved` (the paths
+  ticked) and `preset-deleted`, never a value.
+- **`ReadOnlyFields` types an optional list as a plain `boolean`**, so a contract's `persons?: ReadonlyArray<...>`
+  cannot be locked page by page in a typed way today. `planPreset` and the save step understand a `true` on a whole
+  list, and marks by position where a host builds them.
+
 ## The options bar — a closed list, gated by the form instance
 
 `registerOption`/`registerPanel` are **gone**. The options are declared in one table in
@@ -167,6 +246,7 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 | `validate` | always |
 | `review` | `canReview`: a `"reviewable"` form; an `"editable"` one only when the data manager can keep comments (`writeComments` or `writeBundle`) |
 | `violations` | `!!form.violationListId` |
+| `presets` | an `"editable"` form, and a data manager with `readPresets` |
 | `report-data` | `!!form.mapper` |
 | `print` | always |
 | `day-night-mode` | always |
@@ -175,9 +255,9 @@ instance methods now -- not free functions -- so `ReportViewerModule.configure` 
 list, so **what a form offers can be asked for without rendering any of it** -- `ReportViewerOptions` calls it with
 `controllers.getFormController().form`, deciding per rendered instance rather than off anything static.
 
-Two of the six components are imported from packages *below* this one (`ViolationsOption` from `@forms/violations`,
-`PrintOption` from `@forms/printing`) rather than being handed up through a registration seam. All six go through
-`React.lazy`, so the bar renders under a `<Suspense fallback={null}>`; the report viewer's own four genuinely split
+Two of the seven components are imported from packages *below* this one (`ViolationsOption` from `@forms/violations`,
+`PrintOption` from `@forms/printing`) rather than being handed up through a registration seam. All seven go through
+`React.lazy`, so the bar renders under a `<Suspense fallback={null}>`; the report viewer's own five genuinely split
 into their own chunk. Every one of them is rendered with `IReportViewerOptionProps`, which is a **superset** of what
 any one option takes — a component declaring fewer props is assignable, so no adapters are needed.
 

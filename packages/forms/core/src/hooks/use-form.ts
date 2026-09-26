@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 import { IControllerManager } from "../controllers/controller-manager";
 import { IFormController } from "../controllers/form-controller";
@@ -20,8 +20,10 @@ export function useForm<TForm extends FormModel<any>>(controller: IFormControlle
 }
 
 /**
- * Resolves the form controller for the given manager, loading the form into it the first time that form is seen.
- * Holds the manager while mounted: it closes when the page is put away, or a microtask after this goes unless
+ * Resolves the form controller for the given manager, loading the form into it the first time that form is seen --
+ * not again on every render, since the manager may have been given another form since, a new one started in its
+ * place, and loading this one again would bring it back. Handing it a different form, or a different manager, loads
+ * that. Holds the manager while mounted: it closes when the page is put away, or a microtask after this goes unless
  * something holds it again by then. Only one component should call this for a given manager; everything below it
  * reads the controller from the manager.
  */
@@ -46,7 +48,14 @@ export function useFormController<TForm extends FormModel<any>>(controllers: ICo
         };
     }, [controllers]);
 
-    // resolved during render so the controller is available on the first pass; loading a form the manager already
-    // drives is a no-op, so a repeated render is harmless
-    return controllers.loadForm(form);
+    const seeded = useRef<{ readonly controllers: IControllerManager; readonly form: TForm } | undefined>(undefined);
+
+    // resolved during render so the controller is available on the first pass, and only when this is handed a form or
+    // a manager it has not seeded: a repeat render must not undo a form swapped in since
+    if (seeded.current?.controllers !== controllers || seeded.current.form !== form) {
+        seeded.current = { controllers, form };
+        return controllers.loadForm(form);
+    }
+
+    return controllers.getFormController<TForm>();
 }

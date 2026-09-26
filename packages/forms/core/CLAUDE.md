@@ -74,9 +74,9 @@ and re-broadcasts each one's `onChanged` through `onControllerChanged`. It also 
 `user` (an `IActor`, set with `setUser`), which the controllers that attribute what happens -- `@forms/audit` and
 `@forms/review` -- read when they act rather than keeping a copy. Set it before `loadForm`, so that what the load
 itself records, such as the audit's opening record, carries it. It holds **how the form arrived** the same way, as
-`arrival` (a `FormArrival`, set with `setArrival`): read from a record the host held, or started without one. The audit
-reads it as it opens the form to say which, so it too is set before the form is loaded; it names the form it is about,
-and is ignored for any other.
+`arrival` (a `FormArrival`, set with `setArrival`): read from a record the host held, or started without one -- from the
+template the user picked, if they did. The audit reads it as it opens the form to say which, so it too is set before the
+form is loaded; it names the form it is about, and is ignored for any other.
 
 Every controller extends the abstract `Controller` and is declared with `@RegisterController(key, { eager? })`, which
 puts a **descriptor** — the key and the class — in the static `ControllerRegistry` when the class's module loads. The
@@ -145,11 +145,29 @@ core reads an activity. `@forms/audit` records each one as it comes.
   stale model; its rules are the form's own unless `getRulesController(ruleCollection)` sets one or
   `addRuleCollection` adds to it.
 
-`loadForm(form)` compares by `form.id` — re-seeding the same form on every render is a no-op; a genuinely different
+`loadForm(form)` compares by `form.id` — seeding the same form again is a no-op; a genuinely different
 form disposes the form and rules controllers. It also creates every eager controller, after the form controller, and
 those survive a form swap. When the form is new to the manager it raises `onControllerChanged` for the form
 controller, since seeding raises nothing itself and that is how an observer (`@forms/audit`) learns of a swap. `dispose()` releases controllers last created first, so one that observes another goes
 before what it observes.
+
+**A form remembers the fields the host closed.** `FormModel.populate` keeps the `readOnlyFields` it was given on the form it
+returns (`FormModel.readOnlyFields`), merged with those it already held (`mergeReadOnlyFields`: a field either marks
+stays marked, and a list of pages is laid over by position), as the form keeps its locked sections. It is how a change
+made later -- a preset applied to the report -- can tell which fields were settled by the host. It is only what the host
+declared: a form's own stamps, a workflow's locked sections and a field its own rules disable are not in it. Note that
+`ReadOnlyFields` types an optional list (`persons?: ReadonlyArray<...>`) as a plain `boolean`, since `undefined` is
+among its values; a mark by page needs a contract whose list is not optional.
+
+**`isRecord`** (`utils/is-record.ts`, exported) is the one answer to whether a value is a record to walk key by key: an
+object that is not an array, and **not an option box's `{ value, description }` pair**, which is one field and not two.
+`@forms/audit`'s paths and `@forms/report-viewer`'s presets both walk a report by it.
+
+**`useFormController` seeds a form once, not on every render.** A form swapped in since ("Start new form", through
+`setForm`) has a different id, so seeding the one the hook was handed again on the next render -- any render of the
+host, such as a route that re-renders as its url changes -- would dispose the controllers and bring the first form
+back, and the new one would flicker and vanish. The hook seeds only when it is handed a form or a manager it has not
+seeded before.
 
 **The manager also knows when it is let go.** `retain()` and `release()` count what is showing it, and
 `useFormController` retains it while mounted, closes it on `pagehide`, and reopens it on a `pageshow` that says the
@@ -329,7 +347,8 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   does that for any `[data-field-id]` holding one. An empty marker is hidden until its control is hovered or focused,
   but stays a real button, since a disabled input swallows the pointer and a reviewer on a locked form still has to
   reach it by keyboard.
-- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FBadge`, `FButton`, `FCode`, `FIcon`, `FModal`,
+- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FListGroupHeading` (a row titling the items
+  beneath it, which cannot be acted on), `FBadge`, `FButton`, `FCode`, `FIcon`, `FModal`,
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`. `FCode` is a `<pre><code>` panel whose
   colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle. `FBadge` is a bootstrap
   badge with a prop for each concern -- `variant`, `pill`, `overlay` (on the corner of the `FButton` it is in, which

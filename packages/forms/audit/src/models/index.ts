@@ -1,1 +1,1 @@
-export type { AuditRecord, AuditRecordDetail, IAuditFormIdentity, IAuditRecordBase } from "./audit-record";
+export type { AuditRecord, AuditRecordDetail, IAuditFormIdentity, IAuditRecordBase, IPresetSkip } from "./audit-record";

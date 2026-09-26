@@ -4,6 +4,7 @@ import { useService } from "@common/react";
 import { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { FAsyncLoader, FListGroup, FListGroupItem } from "@forms/core";
 
+import { createExampleDataManager } from "../example-data";
 import { getFormRoutePath } from "../form-routes";
 
 /** The sandbox demos. These are not catalog forms, so unlike the forms they carry their own title and description. */
@@ -36,7 +37,9 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
 ];
 
 interface IHomeLinkProps {
-    readonly description: string;
+    /** Sets a row apart from the ones around it, as a template is beneath the form it starts. */
+    readonly className?: string;
+    readonly description?: string;
     /** The route to navigate to. A catalog form with no entry in the app's route table has none, and lists as unreachable. */
     readonly path?: string;
     readonly title: string;
@@ -44,25 +47,35 @@ interface IHomeLinkProps {
 }
 
 /**
- * Lists every catalog form, alphabetically, alongside the route this app knows for it. A form with no entry in the
- * route table is listed rather than dropped, so registering a form's bootstrapper without adding its route shows up
- * as a visible gap instead of a silently missing row.
+ * Lists every catalog form, alphabetically, alongside the route this app knows for it, and beneath each the templates
+ * the host offers for starting one. A form with no entry in the route table is listed rather than dropped, so
+ * registering a form's bootstrapper without adding its route shows up as a visible gap instead of a silently missing row.
  */
-function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Array<IHomeLinkProps> {
-    return Array.from(catalogItems.values())
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map(catalogItem => {
-            const path = getFormRoutePath(catalogItem.name);
+async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promise<Array<IHomeLinkProps>> {
+    const links: Array<IHomeLinkProps> = [];
 
-            return {
-                description: catalogItem.description,
-                // starts every form new/blank rather than mid-way through whatever was last saved for it; the
-                // "Load test data" option is how to fill one in once it's open
-                path: path && `${path}?record=new`,
-                title: catalogItem.name,
-                version: catalogItem.version
-            };
+    for (const catalogItem of Array.from(catalogItems.values()).sort((a, b) => a.name.localeCompare(b.name))) {
+        const path = getFormRoutePath(catalogItem.name);
+        const templates = await createExampleDataManager(catalogItem, new URLSearchParams(), () => undefined)?.readTemplates?.() ?? [];
+        const standard = templates.find(entry => entry.isDefault);
+
+        links.push({
+            description: catalogItem.description,
+            // starts every form new rather than mid-way through whatever was last saved for it -- from the host's
+            // default template when it has one, or else as the form makes it; the "Load test data" option is how
+            // to fill one in once it's open
+            path: path && `${path}?${standard ? `template=${encodeURIComponent(standard.id)}` : "record=new"}`,
+            title: catalogItem.name,
+            version: catalogItem.version
         });
+
+        // the default is what the form's own row starts, so it is not listed a second time
+        for (const template of templates.filter(entry => entry !== standard)) {
+            links.push({ className: "ps-5", description: template.description, path: path && `${path}?template=${encodeURIComponent(template.id)}`, title: template.title });
+        }
+    }
+
+    return links;
 }
 
 /**
@@ -70,7 +83,7 @@ function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Array<IHomeL
  * react-router without reloading the app. A modified click is left to the browser, so ctrl/cmd/shift still open the
  * route in a new tab or window the way they would on any other link.
  */
-function HomeLink({ description, path, title, version }: IHomeLinkProps): React.JSX.Element {
+function HomeLink({ className, description, path, title, version }: IHomeLinkProps): React.JSX.Element {
     const navigate = useNavigate();
 
     const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
@@ -83,7 +96,7 @@ function HomeLink({ description, path, title, version }: IHomeLinkProps): React.
     };
 
     return (
-        <FListGroupItem disabled={!path} href={path} onClick={path ? handleClick : undefined}>
+        <FListGroupItem className={className} disabled={!path} href={path} onClick={path ? handleClick : undefined}>
             <div className="d-flex justify-content-between align-items-center">
                 <span className="fw-semibold">
                     {title}
@@ -91,7 +104,7 @@ function HomeLink({ description, path, title, version }: IHomeLinkProps): React.
                 </span>
                 <span className="text-muted small font-monospace">{path ?? "no route registered"}</span>
             </div>
-            <div className="text-muted small">{description}</div>
+            {description && <div className="text-muted small">{description}</div>}
         </FListGroupItem>
     );
 }
@@ -106,10 +119,10 @@ export default function HomePage(): React.JSX.Element {
             <p className="text-muted">Pick a form to start a new one, or a demo to exercise a piece of the report viewer.</p>
 
             <h6 className="text-uppercase text-muted mt-4 mb-2">Forms</h6>
-            <FAsyncLoader<Map<string, IFormCatalogItem>> op={() => formCatalogService.getLatestVersions()}>
-                {(catalogItems) => (
+            <FAsyncLoader<Array<IHomeLinkProps>> op={async () => getFormLinks(await formCatalogService.getLatestVersions())}>
+                {(links) => (
                     <FListGroup>
-                        {getFormLinks(catalogItems).map(link => <HomeLink key={link.title} {...link} />)}
+                        {links.map(link => <HomeLink key={link.path ?? link.title} {...link} />)}
                     </FListGroup>
                 )}
             </FAsyncLoader>
