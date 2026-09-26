@@ -375,6 +375,14 @@ that can be open at once need different edges, or they cover each other. It is p
 no portal, so it has to be rendered somewhere that is not itself a stacking context — which is why
 `@forms/report-viewer` mounts every panel at its own root rather than inside its `position-fixed` options bar.
 
+A panel is `FOffCanvas.Header`, `FOffCanvas.Body` and, for one that has actions, `FOffCanvas.Footer`. The body is the
+part that scrolls (Bootstrap makes the off canvas a flex column and the body the growing one), so the footer that
+follows it stays pinned at the bottom with the actions in reach however long the list is. It has a prop for each
+concern rather than utility classes for a caller to spell: `borderVisibility` (a border above it, like the header's
+below it), `direction` (`"horizontal"` by default, or `"vertical"`), `contentAlignment` and `contentJustify` (the same
+values `FBorder` takes, and applied only when given), and `padding` (pixels, sixteen on every side unless told
+otherwise, with per-side overrides that leave the other sides at sixteen).
+
 `FPageCollection` takes `controllers` (the manager, **not** a form controller — it resolves the form and print
 controllers from it) and `groups` of `{pageDefinition, children(binding)}`, and renders them as **one continuous tab
 strip numbered across all groups combined**. It derives the watermark from `form.status`, stamping it only while

@@ -1,6 +1,7 @@
 import React from "react";
 
 import { FOffCanvasBody } from "./off-canvas-body";
+import { FOffCanvasFooter } from "./off-canvas-footer";
 import { FOffCanvasHeader } from "./off-canvas-header";
 
 import { buildClasses } from "../../utils/class-names";
@@ -27,3 +28,4 @@ export default function FOffCanvas({ id, isOpen, placement = "start", children }
 
 FOffCanvas.Header = FOffCanvasHeader;
 FOffCanvas.Body = FOffCanvasBody;
+FOffCanvas.Footer = FOffCanvasFooter;

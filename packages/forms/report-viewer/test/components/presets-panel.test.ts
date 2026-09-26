@@ -514,6 +514,114 @@ describe("PresetsPanel", () => {
         });
     });
 
+    describe("the step a preset is saved from", () => {
+        const answers = { agencyCity: "Columbia", agencyName: "Columbia PD", persons: [{ first: "Dana" }, { first: "Riley", type: "3" }] };
+
+        /** Opens the step, and gives back what a test needs to work in it. */
+        async function openStep() {
+            const opened = mount({ answers });
+            await opened.open();
+            act(() => opened.$<HTMLElement>("#presets-save-button")!.click());
+
+            const save = (): HTMLButtonElement => opened.$<HTMLButtonElement>("#preset-save-button")!;
+            const hint = (): string => opened.$("#presets-save-hint")!.textContent ?? "";
+            const name = (value: string): void => type(opened.$<HTMLInputElement>("#preset-title")!, value);
+            const tickEverything = (): void => {
+                ["preset-all-The report", "preset-all-Persons, page 1", "preset-all-Persons, page 2"].forEach(id => act(() => opened.byId(id)!.click()));
+            };
+
+            return { ...opened, hint, name, save, tickEverything };
+        }
+
+        it("keeps Save disabled, and says the preset needs a name, however much is ticked -- the name is what is easy to miss on a long list", async () => {
+            const { hint, name, save, tickEverything } = await openStep();
+
+            tickEverything();
+
+            expect(save().disabled).toBe(true);
+            expect(hint()).toBe("Name the preset to save it.");
+
+            name("Everything");
+
+            expect(save().disabled).toBe(false);
+            // the report's two fields, one on the first page of persons and two on the second
+            expect(hint()).toBe("5 to keep");
+        });
+
+        it("says something must be ticked when it is named and nothing is", async () => {
+            const { hint, name, save } = await openStep();
+
+            name("My stop");
+
+            expect(save().disabled).toBe(true);
+            expect(hint()).toBe("Tick what to keep.");
+        });
+
+        it("counts what it will keep beside Save as it is ticked, the number of pages of a list included", async () => {
+            const { byId, hint, name } = await openStep();
+            name("My stop");
+
+            act(() => byId("preset-field-agencyCity")!.click());
+            expect(hint()).toBe("1 to keep");
+
+            act(() => byId("preset-pages-persons")!.click());
+            expect(hint()).toBe("2 to keep");
+
+            act(() => byId("preset-field-agencyCity")!.click());
+            expect(hint()).toBe("1 to keep");
+        });
+
+        it("keeps the actions in the footer, outside the list they follow, so they can be reached without scrolling it", async () => {
+            const { $, byId, name, save } = await openStep();
+            act(() => byId("preset-field-agencyCity")!.click());
+            name("My stop");
+
+            expect(save().closest(".offcanvas-body")).toBeNull();
+            expect(save().closest(".f-offcanvas__footer")).not.toBeNull();
+            expect($<HTMLElement>("#preset-cancel-button")!.closest(".f-offcanvas__footer")).not.toBeNull();
+            expect($("#preset-title")!.closest(".offcanvas-body")).not.toBeNull();
+        });
+
+        it("saves what is ticked when Save is pressed in the footer", async () => {
+            const { $, byId, manager, name, save } = await openStep();
+            name("Everything on Rileys page");
+            act(() => byId("preset-all-Persons, page 2")!.click());
+
+            act(() => save().click());
+            await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+
+            expect(manager.writePreset).toHaveBeenCalledWith({ data: { persons: [{}, { first: "Riley", type: "3" }] }, id: expect.any(String), isPersonal: true, title: "Everything on Rileys page" });
+            expect($("#preset-title")).toBeNull();
+        });
+
+        it("starts empty each time it is opened, whatever was ticked and named before", async () => {
+            const { $, byId, hint, name } = await openStep();
+            name("My stop");
+            act(() => byId("preset-field-agencyCity")!.click());
+
+            act(() => $<HTMLElement>("#preset-cancel-button")!.click());
+            act(() => $<HTMLElement>("#presets-save-button")!.click());
+
+            expect($<HTMLInputElement>("#preset-title")!.value).toBe("");
+            expect(document.querySelectorAll("[id=\"preset-field-agencyCity\"] input:checked")).toHaveLength(0);
+            expect(hint()).toBe("Name the preset to save it.");
+        });
+
+        it("puts the cursor in the name box when it opens", async () => {
+            const { $ } = await openStep();
+
+            expect(document.activeElement).toBe($("#preset-title"));
+        });
+
+        it("has no hint, and no footer of its own, while the list is showing", async () => {
+            const { $, open } = mount({ answers });
+            await open();
+
+            expect($("#presets-save-hint")).toBeNull();
+            expect($("#preset-save-button")).toBeNull();
+        });
+    });
+
     describe("deleting a preset", () => {
         it("is offered for a preset the user saved, and not for the host's", async () => {
             const { $, choose, open } = mount();

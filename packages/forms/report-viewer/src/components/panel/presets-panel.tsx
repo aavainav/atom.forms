@@ -5,7 +5,7 @@ import { useForm, IControllerManager, FButton, FListGroup, FListGroupCheckbox, F
 
 import { PresetList } from "./preset-list";
 import { PresetPreview } from "./preset-preview";
-import { ISaveRequest, PresetSaveForm } from "./preset-save-form";
+import { emptySaveRequest, getSaveBlocker, ISaveRequest, PresetSaveForm } from "./preset-save-form";
 import { planPreset } from "../../utils/plan-preset";
 import { toPresetData } from "../../utils/savable-groups";
 import { IModalService, IPresetSelectorService, IReportPreset, IReportViewerDataManager } from "../../services";
@@ -24,6 +24,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
     const modalService = useService<IModalService>(IModalService);
     const presetSelectorService = useService<IPresetSelectorService>(IPresetSelectorService);
 
+    const [draft, setDraft] = useState<ISaveRequest>(emptySaveRequest);
     const [isApplying, setIsApplying] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -56,8 +57,11 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
         }
     }, [isOpen, loadPresets]);
 
+    // what the report holds, read once for each form it is, since the save step lists all of it and is rendered for every keystroke of a name
+    const current = useMemo(() => form.extractData(), [form]);
     const preset = presets.find(entry => entry.id === selected);
-    const plan = useMemo(() => preset && planPreset(preset, form.extractData(), form.readOnlyFields, overwrite), [preset, form, overwrite]);
+    const plan = useMemo(() => preset && planPreset(preset, current, form.readOnlyFields, overwrite), [preset, current, form, overwrite]);
+    const blocker = getSaveBlocker(draft);
     const canApply = !!plan && (plan.fields.length > 0 || plan.pages.length > 0) && !isApplying;
 
     const close = useCallback(() => {
@@ -96,6 +100,11 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
         finally {
             setIsApplying(false);
         }
+    };
+
+    const startSaving = (): void => {
+        setDraft(emptySaveRequest);
+        setIsSaving(true);
     };
 
     const save = async ({ pageCounts, selected: ticked, title }: ISaveRequest): Promise<void> => {
@@ -145,7 +154,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
             <FOffCanvas.Header borderVisibility="visible" onClose={close}><h5>{isSaving ? "Save as preset" : "Presets"}</h5></FOffCanvas.Header>
             <FOffCanvas.Body>
                 {isSaving
-                    ? <PresetSaveForm current={form.extractData()} locked={form.readOnlyFields} onCancel={() => setIsSaving(false)} onSave={save} />
+                    ? <PresetSaveForm current={current} locked={form.readOnlyFields} value={draft} onChange={setDraft} />
                     : (
                         <>
                             <PresetList presets={presets} selected={selected} onSelect={setSelected} />
@@ -154,18 +163,28 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
                     )}
             </FOffCanvas.Body>
             {!isSaving && (
-                <div className="f-offcanvas__footer d-flex flex-column border-top p-3">
+                <FOffCanvas.Footer borderVisibility="visible" direction="vertical">
                     <FListGroup borderless>
                         <FListGroupCheckbox id="presets-overwrite" checked={overwrite} label="Overwrite what is already answered" onChange={setOverwrite} />
                     </FListGroup>
                     <div className="d-flex justify-content-between mt-2">
                         <div>
-                            {dataManager.writePreset && <FButton id="presets-save-button" variant="light" type="button" text="Save as preset" onClick={() => setIsSaving(true)} />}
+                            {dataManager.writePreset && <FButton id="presets-save-button" variant="light" type="button" text="Save as preset" onClick={startSaving} />}
                             {preset?.isPersonal && dataManager.deletePreset && <FButton id="presets-delete-button" variant="light" type="button" text="Delete" onClick={remove} />}
                         </div>
                         <FButton id="presets-apply-button" variant="primary" type="button" disabled={!canApply} text="Apply" onClick={apply} />
                     </div>
-                </div>
+                </FOffCanvas.Footer>
+            )}
+            {isSaving && (
+                // the actions are here rather than beneath the list, which on a full report is far too long to scroll to before Save can be reached
+                <FOffCanvas.Footer borderVisibility="visible" contentAlignment="center" contentJustify="between">
+                    <span id="presets-save-hint" className="small text-muted">{blocker ?? `${draft.selected.size + draft.pageCounts.size} to keep`}</span>
+                    <div>
+                        <FButton id="preset-cancel-button" variant="light" type="button" text="Cancel" onClick={() => setIsSaving(false)} />
+                        <FButton id="preset-save-button" variant="primary" type="button" disabled={!!blocker} text="Save" onClick={() => save(draft)} />
+                    </div>
+                </FOffCanvas.Footer>
             )}
         </FOffCanvas>
     );

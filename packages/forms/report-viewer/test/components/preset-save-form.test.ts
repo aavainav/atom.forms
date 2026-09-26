@@ -1,10 +1,10 @@
-import { act, createElement } from "react";
+import { act, createElement, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { IReportData } from "@forms/core";
 
-import { ISaveRequest, PresetSaveForm } from "../../src/components/panel/preset-save-form";
+import { emptySaveRequest, getSaveBlocker, ISaveRequest, PresetSaveForm } from "../../src/components/panel/preset-save-form";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -23,19 +23,26 @@ const answers = {
 
 interface IMountOptions {
     readonly current?: IReportData;
+    readonly initial?: ISaveRequest;
     readonly locked?: object;
-    readonly onCancel?: () => void;
-    readonly onSave?: (request: ISaveRequest) => void;
+    readonly onChange?: (value: ISaveRequest) => void;
 }
 
 const mounted: Array<() => void> = [];
 
-function mount({ current = report(answers), locked, onCancel = () => undefined, onSave = () => undefined }: IMountOptions = {}): HTMLElement {
+/** Holds what the user has chosen, as the panel does, so that the form shows what it is told. */
+function Harness({ current, initial, locked, onChange }: Required<Omit<IMountOptions, "locked">> & { readonly locked?: object }): React.JSX.Element {
+    const [value, setValue] = useState(initial);
+
+    return createElement(PresetSaveForm, { current, locked: locked as never, value, onChange: next => { setValue(next); onChange(next); } });
+}
+
+function mount({ current = report(answers), initial = emptySaveRequest, locked, onChange = () => undefined }: IMountOptions = {}): HTMLElement {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
-    act(() => root.render(createElement(PresetSaveForm, { current, locked: locked as never, onCancel, onSave })));
+    act(() => root.render(createElement(Harness, { current, initial, locked, onChange })));
     mounted.push(() => { act(() => root.unmount()); container.remove(); });
 
     return container;
@@ -58,8 +65,6 @@ function name(container: HTMLElement, value: string): void {
         input.dispatchEvent(new Event("input", { bubbles: true }));
     });
 }
-
-const saveButton = (container: HTMLElement): HTMLButtonElement => container.querySelector<HTMLButtonElement>("#preset-save-button")!;
 
 afterEach(() => {
     mounted.splice(0).forEach(unmount => unmount());
@@ -115,10 +120,36 @@ describe("PresetSaveForm", () => {
             expect(container.querySelector("#preset-pages")).toBeNull();
         });
 
-        it("has nothing ticked to begin with", () => {
+        it("offers nothing to tick for a report with nothing answered", () => {
+            expect(mount({ current: report() }).querySelectorAll(".list-group-item.text-uppercase")).toHaveLength(0);
+        });
+
+        it("has nothing ticked, and no name, to begin with", () => {
             const container = mount();
 
             expect(container.querySelectorAll("input:checked")).toHaveLength(0);
+            expect(container.querySelector<HTMLInputElement>("#preset-title")!.value).toBe("");
+        });
+
+        it("puts the cursor in the name box, since a preset cannot be saved without one", () => {
+            const container = mount();
+
+            expect(document.activeElement).toBe(container.querySelector("#preset-title"));
+        });
+    });
+
+    describe("what it shows of what it is given", () => {
+        it("shows the name it is given", () => {
+            expect(mount({ initial: { ...emptySaveRequest, title: "My stop" } }).querySelector<HTMLInputElement>("#preset-title")!.value).toBe("My stop");
+        });
+
+        it("shows a field ticked that it is given as ticked, and the number of pages of a list", () => {
+            const container = mount({ initial: { pageCounts: new Set(["units"]), selected: new Set(["agencyCity"]), title: "" } });
+
+            expect(isTicked(container, "preset-field-agencyCity")).toBe(true);
+            expect(isTicked(container, "preset-field-agencyName")).toBe(false);
+            expect(isTicked(container, "preset-pages-units")).toBe(true);
+            expect(isTicked(container, "preset-pages-persons")).toBe(false);
         });
     });
 
@@ -175,80 +206,83 @@ describe("PresetSaveForm", () => {
         });
     });
 
-    describe("saving", () => {
-        it("cannot save until it is named and something is ticked", () => {
-            const container = mount();
-            expect(saveButton(container).disabled).toBe(true);
+    describe("what it says was chosen", () => {
+        it("says the name, as it is typed, keeping what was ticked", () => {
+            const onChange = vi.fn();
+            const container = mount({ onChange });
+
+            tick(container, "preset-field-agencyCity");
+            name(container, "My stop");
+
+            const last = onChange.mock.calls.at(-1)![0] as ISaveRequest;
+            expect(last.title).toBe("My stop");
+            expect([...last.selected]).toEqual(["agencyCity"]);
+        });
+
+        it("says what was ticked, by path, keeping the name and the pages kept", () => {
+            const onChange = vi.fn();
+            const container = mount({ onChange });
 
             name(container, "My stop");
-            expect(saveButton(container).disabled).toBe(true);
-
-            tick(container, "preset-field-agencyCity");
-            expect(saveButton(container).disabled).toBe(false);
-        });
-
-        it("cannot save when something is ticked but it has no name, or only blanks for one", () => {
-            const container = mount();
-
-            tick(container, "preset-field-agencyCity");
-            expect(saveButton(container).disabled).toBe(true);
-
-            name(container, "   ");
-            expect(saveButton(container).disabled).toBe(true);
-        });
-
-        it("can save the number of pages alone, with nothing else ticked", () => {
-            const container = mount();
-
-            name(container, "Two units");
-            tick(container, "preset-pages-units");
-
-            expect(saveButton(container).disabled).toBe(false);
-        });
-
-        it("says what was ticked, and what it was named without the spaces round it", () => {
-            const onSave = vi.fn();
-            const container = mount({ onSave });
-
-            name(container, "  My stop  ");
             tick(container, "preset-field-agencyCity");
             tick(container, "preset-field-persons[1].type");
             tick(container, "preset-pages-units");
-            act(() => saveButton(container).click());
 
-            expect(onSave).toHaveBeenCalledTimes(1);
-            const request = onSave.mock.calls[0][0] as ISaveRequest;
-
-            expect(request.title).toBe("My stop");
-            expect([...request.selected]).toEqual(["agencyCity", "persons[1].type"]);
-            expect([...request.pageCounts]).toEqual(["units"]);
+            const last = onChange.mock.calls.at(-1)![0] as ISaveRequest;
+            expect(last.title).toBe("My stop");
+            expect([...last.selected]).toEqual(["agencyCity", "persons[1].type"]);
+            expect([...last.pageCounts]).toEqual(["units"]);
         });
 
-        it("does not say anything when it is not ready to save", () => {
-            const onSave = vi.fn();
-            const container = mount({ onSave });
+        it("says every field on a page when everything there is ticked", () => {
+            const onChange = vi.fn();
+            const container = mount({ onChange });
 
-            act(() => saveButton(container).click());
+            tick(container, "preset-all-Persons, page 1");
 
-            expect(onSave).not.toHaveBeenCalled();
+            expect([...(onChange.mock.calls.at(-1)![0] as ISaveRequest).selected]).toEqual(["persons[0].first", "persons[0].last"]);
+        });
+
+        it("does not change what it was given, which is the caller's to hold", () => {
+            const initial: ISaveRequest = { pageCounts: new Set(), selected: new Set(["agencyCity"]), title: "" };
+            const container = mount({ initial });
+
+            tick(container, "preset-field-agencyName");
+
+            expect([...initial.selected]).toEqual(["agencyCity"]);
         });
     });
+});
 
-    it("says the user went back, without saving, when Cancel is pressed", () => {
-        const onCancel = vi.fn();
-        const onSave = vi.fn();
-        const container = mount({ onCancel, onSave });
+describe("emptySaveRequest", () => {
+    it("has no name, and nothing ticked", () => {
+        expect(emptySaveRequest.title).toBe("");
+        expect(emptySaveRequest.selected.size).toBe(0);
+        expect(emptySaveRequest.pageCounts.size).toBe(0);
+    });
+});
 
-        act(() => container.querySelector<HTMLButtonElement>("#preset-cancel-button")!.click());
+describe("getSaveBlocker", () => {
+    const named = { ...emptySaveRequest, title: "My stop" };
 
-        expect(onCancel).toHaveBeenCalledTimes(1);
-        expect(onSave).not.toHaveBeenCalled();
+    it("says a preset needs a name when it has none, whatever is ticked, since that is what the user has not seen", () => {
+        expect(getSaveBlocker(emptySaveRequest)).toBe("Name the preset to save it.");
+        expect(getSaveBlocker({ ...emptySaveRequest, selected: new Set(["agencyCity"]) })).toBe("Name the preset to save it.");
     });
 
-    it("offers nothing to tick for a report with nothing answered", () => {
-        const container = mount({ current: report() });
+    it("counts a name of blanks as none", () => {
+        expect(getSaveBlocker({ ...emptySaveRequest, selected: new Set(["agencyCity"]), title: "   " })).toBe("Name the preset to save it.");
+    });
 
-        expect(container.querySelectorAll(".list-group-item.text-uppercase")).toHaveLength(0);
-        expect(saveButton(container).disabled).toBe(true);
+    it("says something must be ticked when it is named and nothing is", () => {
+        expect(getSaveBlocker(named)).toBe("Tick what to keep.");
+    });
+
+    it("says nothing is in the way once it is named and a field is ticked", () => {
+        expect(getSaveBlocker({ ...named, selected: new Set(["agencyCity"]) })).toBeUndefined();
+    });
+
+    it("counts the number of pages of a list as something to keep, with nothing else ticked", () => {
+        expect(getSaveBlocker({ ...named, pageCounts: new Set(["units"]) })).toBeUndefined();
     });
 });
