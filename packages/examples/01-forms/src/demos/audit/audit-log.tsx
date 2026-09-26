@@ -97,11 +97,18 @@ function summarize(record: AuditRecord): string {
     }
 }
 
+interface IAuditLogProps {
+    /** The kinds of record to show. Every kind is shown when it is left out; the kinds not shown are still kept, and come back when it changes. */
+    readonly kinds?: ReadonlyArray<AuditRecord["kind"]>;
+}
+
 /** Lists the records the audit service hands out, newest first. */
-export default function AuditLog(): React.JSX.Element {
+export default function AuditLog({ kinds }: IAuditLogProps = {}): React.JSX.Element {
     const auditService = useService<IAuditService>(IAuditService);
     const [records, setRecords] = useState<ReadonlyArray<ILoggedRecord>>([]);
     const nextId = useRef(0);
+
+    const shown = kinds ? records.filter(({ record }) => kinds.includes(record.kind)) : records;
 
     useEffect(() => {
         const listener = auditService.onRecord(record => {
@@ -116,15 +123,15 @@ export default function AuditLog(): React.JSX.Element {
             <div className="d-flex justify-content-between align-items-center mb-1">
                 <h6 className="mb-0">
                     Audit log
-                    <span className="badge text-bg-light fw-normal ms-2">{records.length}</span>
+                    <span className="badge text-bg-light fw-normal ms-2">{shown.length}</span>
                 </h6>
                 <FButton size="small" variant="outline-secondary" text="Clear" disabled={!records.length} onClick={() => setRecords([])} />
             </div>
             <p className="text-muted small">Records name the fields touched, never what they held.</p>
             <div style={{ maxHeight: "calc(100vh - 9rem)", overflowY: "auto" }}>
-                {records.length === 0 && <div className="text-muted small">Nothing recorded yet.</div>}
+                {shown.length === 0 && <div className="text-muted small">{records.length === 0 ? "Nothing recorded yet." : "Nothing of the kinds shown yet."}</div>}
                 <FListGroup>
-                    {records.map(({ id, record }) => (
+                    {shown.map(({ id, record }) => (
                         <FListGroupItem key={id}>
                             <div className="d-flex justify-content-between align-items-center">
                                 <span className={`badge text-bg-${kindColours[record.kind]}`}>{record.kind}</span>

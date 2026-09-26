@@ -9,6 +9,7 @@ import { TR310CrashFormBootstrapper } from "@forms/tr310";
 import { bootstrapper as AuditDemoBootstrapper } from "./demos/audit";
 import { bootstrapper as DropzoneDemoBootstrapper } from "./demos/dropzone";
 import { bootstrapper as FormModeDemoBootstrapper } from "./demos/form-mode";
+import { bootstrapper as PresetsDemoBootstrapper } from "./demos/presets";
 import { bootstrapper as ReviewDemoBootstrapper } from "./demos/review";
 import { bootstrapper as WorkflowDemoBootstrapper } from "./demos/workflow";
 import { bootstrapper as FormsBootstrapper } from "./forms";
@@ -26,6 +27,7 @@ await WorkbenchBootstrapper.start({
         HomeBootstrapper,
         OKParkingFormBootstrapper,
         OKTrafficFormBootstrapper,
+        PresetsDemoBootstrapper,
         PublicContactOrWarningFormBootstrapper,
         ReviewDemoBootstrapper,
         S438CitationFormBootstrapper,

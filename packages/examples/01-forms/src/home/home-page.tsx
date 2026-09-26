@@ -25,6 +25,11 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         title: "Form Mode"
     },
     {
+        description: "Apply a preset to a report under way, or save one of your own: what it sets, what it leaves alone and why, with the audit records it raises listed beside it.",
+        path: "/demo/presets",
+        title: "Presets"
+    },
+    {
         description: "A reviewer comments on a report -- on a field, a page or the whole of it -- and the officer reads and resolves the comments, both working from the same ones.",
         path: "/demo/review",
         title: "Review"

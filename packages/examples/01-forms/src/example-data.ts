@@ -317,6 +317,11 @@ export function clearExampleData(identity: IFormIdentity): void {
     sessionStorage.removeItem(getStorageKey(identity, "comments"));
 }
 
+/** Forgets the presets the officer saved for the given form. They outlive a reset of the record, so this is the only thing that clears them. */
+export function clearExamplePresets(identity: IFormIdentity): void {
+    sessionStorage.removeItem(getPresetsKey(identity));
+}
+
 /** Whether this host holds a report to load for the given form, which is how the "Load test data" option knows whether to offer itself. */
 export function hasExampleHeldReport(identity: IFormIdentity): boolean {
     return !!forms.find(entry => entry.identity.name === identity.name && entry.identity.version === identity.version)?.held;

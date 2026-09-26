@@ -24,6 +24,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | [src/demos/audit/](src/demos/audit/) | `/demo/audit` — the S438 form beside a live log of what `@forms/audit` records as it is worked on. |
 | [src/demos/dropzone/](src/demos/dropzone/) | `/demo/dropzone` — drags mock person/vehicle records onto the public contact/warning form's dropzones. |
 | [src/demos/form-mode/](src/demos/form-mode/) | `/demo/form-mode` — how a form's `FormMode` changes what's on screen: fields disabling, placeholders disappearing, and the watermark each `FormStatus` stamps. |
+| [src/demos/presets/](src/demos/presets/) | `/demo/presets` — a form opened in a chosen state beside the presets the host gives for it and a live audit log narrowed to what a preset raises. See *The presets demo* below. |
 | [src/demos/workflow/](src/demos/workflow/) | `/demo/workflow` — a crash report (TR-310) moved from draft to approved by an officer and then a reviewer, and a citation (S438) from draft to issued. See *The workflow demo* below. |
 | [src/demos/review/](src/demos/review/) | `/demo/review` — a reviewer comments on the public contact/warning form and an officer resolves the comments, both working from the same comments and audit history, held in memory the way a host's database would hold them. |
 | [vite.config.ts](vite.config.ts) | Port 3002, react plugin, and the Sass deprecation categories silenced for Bootstrap 5.3. |
@@ -34,7 +35,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- | --- |
 | `/` | `HomePage` — the index route | [src/home/home-module.ts](src/home/home-module.ts) |
 | `/ga/utc` · `/ok/parking` · `/ok/traffic` · `/sc/432` · `/sc/s438` · `/sc/tr310` | **one** `FormRoutePage`, resolving its identity from the matched path | [src/forms/forms-module.ts](src/forms/forms-module.ts) |
-| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` · `/demo/review` · `/demo/workflow` | the demo pages | [src/demos/](src/demos/) |
+| `/demo/audit` · `/demo/dropzone` · `/demo/form-mode` · `/demo/presets` · `/demo/review` · `/demo/workflow` | the demo pages | [src/demos/](src/demos/) |
 | `*` | `NotFound` | `@forms/workbench` |
 
 Every route is a **child** of the workbench's `"app"` root route, registered through
@@ -169,6 +170,27 @@ helper for exactly that, so a misspelled key is a compile error rather than a lo
 Fixtures are chosen by **identity**, not by anything in a route context, because a host reading from a real source
 already knows which record it is asking for. **A form with no entry in the `forms` table gets no manager at all** —
 `ok/parking` and `ok/traffic` render empty and unsaveable rather than quietly borrowing another form's fixture.
+
+## The presets demo shows what applying one did, and left alone
+
+[presets-demo-page.tsx](src/demos/presets/presets-demo-page.tsx) opens a form as **Fry, the officer** -- presets only apply to a
+report that can be edited -- in a state chosen from a select, and lists beside it what the host gives for the form:
+each preset's title, the fields it sets (a list of pages as how many it holds), and any lock it carries, read live
+from the data manager's `readPresets`. The officer's own show too, marked "yours". `AuditLog` runs beside the report,
+narrowed by default to the four records a preset raises (`preset-applied`, `preset-skipped`, `preset-saved`,
+`preset-deleted`), so what applying one did, what it left alone and why reads as it happens; a checkbox shows the rest.
+
+| Start from | The report holds | What it is good for |
+| --- | --- | --- |
+| A new report | the form's default: SC 432 and S438 have a locked agency name and court name | a preset that carries a locked value leaves it alone, whatever the mode |
+| A partly written report | the `minimal` fixture | most of what a preset carries is skipped as *answered* |
+| A well-written report | the `full` fixture | overwrite mode is what changes anything |
+
+**Start over** clears what was saved for the form and opens it again in that state; **Clear my presets** removes the
+officer's own for the form (`clearExamplePresets`), which Start over deliberately keeps. The table follows the panel:
+the page wraps `writePreset` and `deletePreset` to bump a counter that has it read the presets again, the way the
+workflow demo wraps `write`. A "new report" start ignores whatever was saved for the form, as `?record=new` does
+anywhere; the other two read it back, which is why Start over clears it first.
 
 ## The audit demo takes the short path
 
