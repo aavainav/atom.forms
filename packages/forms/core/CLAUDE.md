@@ -336,8 +336,8 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 - `FWorkflowActions` renders an icon button (its `transition.icon`, no text) for each `IAvailableTransition` it is
   given (`transitions`, `openComments`, `user`), always tooltipped -- with its title while enabled, with a blocker
   it computes itself while not -- and reports a click as `onSelect(transition, user)`. Purely presentational, like
-  everything else here -- `@forms/report-viewer`'s `WorkflowActions` (not this one) owns validating, confirming,
-  saving and applying a transition, since none of that is reachable from core.
+  everything else here -- `@forms/report-viewer`'s `WorkflowActions` (not this one) owns validating and confirming,
+  and its `IReportViewerService.transition` the saving and applying, since none of that is reachable from core.
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.

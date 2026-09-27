@@ -61,7 +61,7 @@ gets a plain `form-opened`. Because the record is raised as the form opens, it i
 matter how many times React sets an effect up.
 
 Two paths open a form in the report viewer, and both set the arrival first: `ReportViewerForm` on mount, and
-`NewFormOption`, which swaps a new form into the same manager (`form-closed` for the old one, then `form-started` with
+`NewFormOption`, through `IReportViewerService.openForm`, which swaps a new form into the same manager (`form-closed` for the old one, then `form-started` with
 `reason: "new"`). A page restored from the browser's cache reads nothing, so it is `form-restored`, not a load. A
 failed load has no form, so it records nothing.
 
@@ -183,11 +183,11 @@ records none of it, since it only compares what came after it was opened.
 ## Saves are pushed, not inferred
 
 The save flow lives in the report viewer, above this package, and a dirty→clean transition is ambiguous: starting a
-new form calls `clean()` too. So the report viewer's `WorkflowActions` (its Save button) and the save path of
-`NewFormOption` call `getAuditController(controllers).recordSaved()` / `recordSaveFailed()`. **Anything else that
-saves must do the same.** Call `recordSaved` **after** the form controller holds the saved form: a record's
-`form.revision` is read off the form the audit is watching, so recording first would stamp the save with the revision
-from before it.
+new form calls `clean()` too. So the report viewer's `IReportViewerService.save` and `.transition` (behind its Save
+button, the workflow buttons and the save path of `NewFormOption`) call `getAuditController(controllers).recordSaved()`
+/ `recordSaveFailed()`. **Anything else that saves must go through them, or do the same.** `recordSaved` is called
+**after** the form controller holds the saved form: a record's `form.revision` is read off the form the audit is
+watching, so recording first would stamp the save with the revision from before it.
 
 ## Gotchas
 

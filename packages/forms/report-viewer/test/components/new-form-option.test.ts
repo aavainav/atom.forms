@@ -2,11 +2,9 @@ import { act, createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ServicesContext } from "@common/react";
-import { getAuditController } from "@forms/audit";
 import type { AuditRecord } from "@forms/audit";
 import { ControllerManager } from "@forms/core";
 import type { FormModel } from "@forms/core";
-import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import type { IServiceCollection } from "@shrub/core";
 
@@ -46,9 +44,11 @@ function mount(options: IMountOptions = {}) {
     controllers.loadForm(stubForm("form-1", isDirty));
 
     const newForm = stubForm("form-2", false);
-    const loadForm = vi.fn(async () => ({ audit: [previousAudit], comments: [previousComment], form: newForm }));
-    const getArrival = vi.fn(() => ({ kind: "started" as const, formId: "form-2", reason: "new" as const }));
-    const saveForm = vi.fn(async () => undefined);
+    const loaded = { audit: [previousAudit], comments: [previousComment], form: newForm };
+    const loadForm = vi.fn(async () => loaded);
+    // the service seats the form and tells the audit; what it is asked, and what it answers, is all the option sees
+    const openForm = vi.fn();
+    const save = vi.fn(async () => undefined);
     const showConfirmModal = vi.fn();
     const showModal = vi.fn();
     const showSaveChangesModal = vi.fn();
@@ -56,7 +56,7 @@ function mount(options: IMountOptions = {}) {
     const registry = new Map<unknown, unknown>([
         [IModalService, { showConfirmModal, showModal, showSaveChangesModal }],
         [INotificationService, { showNotification }],
-        [IReportViewerService, { canSaveForm: () => canSave, getArrival, loadForm, saveForm }]
+        [IReportViewerService, { canSaveForm: () => canSave, loadForm, openForm, save }]
     ]);
     const services = { get: (service: unknown) => registry.get(service) } as IServiceCollection;
     const dataManager: IReportViewerDataManager<any> = { read: async () => undefined, ...(readTemplates ? { readTemplates } : {}) };
@@ -76,7 +76,7 @@ function mount(options: IMountOptions = {}) {
         return { cancel: () => press("Cancel"), choose: (id?: string) => options.contentProps.onChange(id), close: () => act(async () => { await options.close.invoke(); }), contentProps: options.contentProps, start: () => press("Start"), title: options.title };
     };
 
-    return { click, controllers, dataManager, getArrival, loadForm, newForm, picker, saveForm, showConfirmModal, showModal, showNotification, showSaveChangesModal };
+    return { click, controllers, dataManager, loaded, loadForm, picker, openForm, save, showConfirmModal, showModal, showNotification, showSaveChangesModal };
 }
 
 afterEach(() => {
@@ -93,41 +93,32 @@ describe("NewFormOption", () => {
             expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined);
         });
 
-        it("puts the new form in place of the old", async () => {
-            const { click, controllers, newForm } = mount();
+        it("has the service put the new form in place of the old, with what the host held for it", async () => {
+            const { click, controllers, loaded, openForm } = mount();
 
             await click();
 
-            expect(controllers.getFormController().form).toBe(newForm);
+            expect(openForm).toHaveBeenCalledTimes(1);
+            expect(openForm).toHaveBeenCalledWith(controllers, loaded);
         });
 
-        it("replaces the audit history and the comments with those of the new report, not the last one's", async () => {
-            const { click, controllers } = mount();
-            getReviewController(controllers).load([{ ...previousComment, id: "last-report" }]);
-
-            await click();
-
-            expect(getReviewController(controllers).comments).toEqual([previousComment]);
-            expect(getAuditController(controllers).history.map(record => record.id)).toContain("old-1");
-        });
-
-        it("records the old form closing, and then the new form starting, since the audit is told how it arrived before it goes in", async () => {
-            const { click, controllers, getArrival, newForm } = mount();
-
-            await click();
-
-            expect(getArrival).toHaveBeenCalledWith(expect.objectContaining({ form: newForm }));
-            expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened", "form-closed", "form-started"]);
-            expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "form-started", reason: "new" });
-        });
-
-        it("says why when the new form could not be started", async () => {
-            const { click, loadForm, showNotification } = mount();
+        it("says why, and puts nothing in place, when the new form could not be started", async () => {
+            const { click, loadForm, openForm, showNotification } = mount();
             loadForm.mockRejectedValue(new Error("No such form."));
 
             await click();
 
             expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: "No such form." });
+            expect(openForm).not.toHaveBeenCalled();
+        });
+
+        it("says why when the new form could not be put in place", async () => {
+            const { click, openForm, showNotification } = mount();
+            openForm.mockImplementation(() => { throw new Error("The form would not go in."); });
+
+            await click();
+
+            expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: "The form would not go in." });
         });
     });
 
@@ -156,44 +147,45 @@ describe("NewFormOption", () => {
             expect(loadForm).not.toHaveBeenCalled();
         });
 
-        it("saves them, with the controllers, records that it did, and then starts the new form", async () => {
-            const { click, controllers, dataManager, loadForm, saveForm, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+        it("has the service save them, with the controllers and the data manager, and then starts the new form", async () => {
+            const { click, controllers, dataManager, loadForm, save, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
 
             await click();
             await act(async () => { await showSaveChangesModal.mock.calls[0][0].onSave(); });
 
-            expect(saveForm).toHaveBeenCalledWith(expect.anything(), dataManager, controllers);
-            expect(getAuditController(controllers).session.map(record => record.kind)).toContain("saved");
+            expect(save).toHaveBeenCalledWith(controllers, dataManager);
             expect(loadForm).toHaveBeenCalledTimes(1);
         });
 
-        it("records the save under the revision it saved", async () => {
-            const { click, controllers, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+        it("saves them before it starts the new form", async () => {
+            const { click, loadForm, save, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+            const order: Array<string> = [];
+            save.mockImplementationOnce(async () => { order.push("save"); });
+            loadForm.mockImplementationOnce(async () => { order.push("load"); return { audit: [], comments: [], form: stubForm("form-2", false) }; });
 
             await click();
             await act(async () => { await showSaveChangesModal.mock.calls[0][0].onSave(); });
 
-            expect(getAuditController(controllers).session.find(record => record.kind === "saved")).toMatchObject({ form: { id: "form-1", revision: 1 } });
+            expect(order).toEqual(["save", "load"]);
         });
 
-        it("records a save that failed, and does not start the new form", async () => {
-            const { click, controllers, loadForm, saveForm, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
-            saveForm.mockRejectedValue(new Error("offline"));
+        it("does not start the new form, and lets the save's reason through, when the save fails", async () => {
+            const { click, loadForm, save, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+            save.mockRejectedValue(new Error("offline"));
 
             await click();
 
             await expect(act(async () => { await showSaveChangesModal.mock.calls[0][0].onSave(); })).rejects.toThrow("offline");
-            expect(getAuditController(controllers).session.map(record => record.kind)).toContain("save-failed");
             expect(loadForm).not.toHaveBeenCalled();
         });
 
         it("starts the new form without saving when the changes are discarded", async () => {
-            const { click, loadForm, saveForm, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
+            const { click, loadForm, save, showSaveChangesModal } = mount({ canSave: true, isDirty: true });
 
             await click();
             await act(async () => { await showSaveChangesModal.mock.calls[0][0].onDiscard(); });
 
-            expect(saveForm).not.toHaveBeenCalled();
+            expect(save).not.toHaveBeenCalled();
             expect(loadForm).toHaveBeenCalledTimes(1);
         });
     });
@@ -273,23 +265,24 @@ describe("NewFormOption", () => {
             expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined);
         });
 
-        it("puts the new form in place of the old once one is chosen", async () => {
-            const { click, controllers, newForm, picker } = mount({ readTemplates: async () => [speeding, standard] });
+        it("has the service put the new form in place of the old once one is chosen", async () => {
+            const { click, controllers, loaded, openForm, picker } = mount({ readTemplates: async () => [speeding, standard] });
 
             await click();
             await picker().start();
 
-            expect(controllers.getFormController().form).toBe(newForm);
+            expect(openForm).toHaveBeenCalledWith(controllers, loaded);
         });
 
         it("starts nothing, and leaves the form as it is, when Cancel is pressed", async () => {
-            const { click, controllers, loadForm, picker } = mount({ readTemplates: async () => [speeding, standard] });
+            const { click, controllers, loadForm, openForm, picker } = mount({ readTemplates: async () => [speeding, standard] });
             const before = controllers.getFormController().form;
 
             await click();
             await picker().cancel();
 
             expect(loadForm).not.toHaveBeenCalled();
+            expect(openForm).not.toHaveBeenCalled();
             expect(controllers.getFormController().form).toBe(before);
         });
 

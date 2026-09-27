@@ -1,8 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { getAuditController } from "@forms/audit";
 import { FButton, FIcon, FTooltip } from "@forms/core";
-import { getReviewController } from "@forms/review";
 
 import { TemplatePicker } from "./template-picker";
 import { IModalService, INotificationService, IReportTemplate, IReportViewerOptionProps, IReportViewerService } from "../../services";
@@ -66,15 +64,8 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
     const startNew = async (template?: string): Promise<void> => {
         try {
             const loaded = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new", template);
-            const { audit, comments, form } = loaded;
 
-            // said before the form goes in, which is when the audit records how it arrived
-            controllers.setArrival(reportViewerService.getArrival(loaded));
-            controllers.getFormController().setForm(form);
-
-            // a new form is a new report, so what was held for the last one goes with it
-            getAuditController(controllers).load(audit ?? []);
-            getReviewController(controllers).load(comments ?? []);
+            reportViewerService.openForm(controllers, loaded);
         }
         catch (error) {
             notificationService.showNotification({ type: "danger", message: error instanceof Error ? error.message : "The new form could not be started." });
@@ -115,19 +106,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
             onCancel: async () => {},
             onDiscard: start,
             onSave: async () => {
-                const toSave = form.incrementRevision();
-
-                try {
-                    await reportViewerService.saveForm(toSave, dataManager, controllers);
-                }
-                catch (error) {
-                    getAuditController(controllers).recordSaveFailed();
-                    throw error;
-                }
-
-                controllers.getFormController().update({ update: () => toSave.clean() });
-                // the saved form goes in first, so the audit records the save under the revision it saved
-                getAuditController(controllers).recordSaved();
+                await reportViewerService.save(controllers, dataManager);
                 await start();
             }
         });

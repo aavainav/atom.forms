@@ -1,7 +1,6 @@
 import React from "react";
 import { useService } from "@common/react";
-import { getAuditController } from "@forms/audit";
-import { useForm, IActor, IAvailableTransition, IControllerManager, FButton, FFormHeader, FGrid, FIcon, FormModel, FTooltip, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
+import { useForm, IActor, IAvailableTransition, IControllerManager, FButton, FFormHeader, FGrid, FIcon, FTooltip, FWorkflowActions, RuleIssueCollection, RuleIssueSeverity } from "@forms/core";
 import { getReviewController, useReviewComments } from "@forms/review";
 import { IWorkflowService } from "@forms/workflow";
 
@@ -46,57 +45,22 @@ export const WorkflowActions = ({ controllers, dataManager, user }: IWorkflowAct
     const canSave = reportViewerService.canSaveForm(form, dataManager);
 
     const handleSave = async (): Promise<void> => {
-        // the form controller owns the current model and replaces it on every edit, so it is read at click time
-        const current = formController.form.incrementRevision();
-
         try {
-            await reportViewerService.saveForm(current, dataManager, controllers);
-            // the form as it is now, so what was typed while the save was under way is kept
-            formController.update({ update: now => now.incrementRevision().clean() });
-            // the audit reads the revision off the form it watches, so the saved form goes in first
-            getAuditController(controllers).recordSaved();
+            await reportViewerService.save(controllers, dataManager);
             notificationService.showNotification({ type: "success", message: "Report saved." });
         }
         catch (error) {
-            getAuditController(controllers).recordSaveFailed();
             notifyFailure(error instanceof Error ? error.message : "The report could not be saved.");
         }
     };
 
     const apply = async ({ id, transition }: IAvailableTransition, by: IActor, issues: RuleIssueCollection): Promise<void> => {
-        // the form controller owns the current model and replaces it on every edit, so it is read at confirm time
-        let next: FormModel<any>;
-
         try {
-            next = workflowService.transition(formController.form, id, by, { issues, openComments: review.openCount });
+            await reportViewerService.transition(controllers, id, by, issues, dataManager);
         }
         catch (error) {
             notifyFailure(error instanceof Error ? error.message : `${transition.title} could not be made.`);
             return;
-        }
-
-        const isSaved = reportViewerService.canSaveForm(next, dataManager);
-
-        if (isSaved) {
-            next = next.incrementRevision();
-        }
-
-        try {
-            if (isSaved) {
-                await reportViewerService.saveForm(next, dataManager, controllers);
-            }
-        }
-        catch (error) {
-            getAuditController(controllers).recordSaveFailed();
-            notifyFailure(error instanceof Error ? error.message : "The report could not be saved.");
-            return;
-        }
-
-        // the audit records the transition as the form is replaced, and then the save that kept it
-        formController.update({ update: () => next.clean() });
-
-        if (isSaved) {
-            getAuditController(controllers).recordSaved();
         }
 
         notificationService.showNotification({ type: "success", message: `${transition.title} complete.` });

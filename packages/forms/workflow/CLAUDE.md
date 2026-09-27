@@ -74,8 +74,9 @@ without the lock that status is supposed to carry.
 ## Who reaches this package, and why
 
 - **`@forms/report-viewer`** is the real consumer: `WorkflowActions` (its own package, not `@forms/core`'s
-  presentational `FWorkflowActions`) calls `getTransitions`/`transition` to drive the workflow buttons, and
-  `ReportViewerService.loadForm` calls `restoreWorkflow` after every populate.
+  presentational `FWorkflowActions`) calls `getTransitions` to drive the workflow buttons,
+  `ReportViewerService.transition` calls `transition` to make one (and saves it), and `ReportViewerService.loadForm`
+  calls `restoreWorkflow` after every populate.
 - **Every citation/crash/warning form package** depends on it too, but only in its own `test/models/*-workflow.test.ts`
   — exercising `citationWorkflow`/`crashWorkflow`/`warningWorkflow` (or a jurisdiction's `.with()` of one) through the
   real service is more honest than each test file reimplementing transition logic to check its own workflow. No

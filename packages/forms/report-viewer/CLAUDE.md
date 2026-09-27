@@ -120,7 +120,7 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
   that has both `write` and `writeBundle` is given the bundle only.
 - **`write` doesn't depend on `TData`.** It always takes the full `IReportData` -- `FormModel.extractData()` stamps
   `name`/`status`/`type`/`version` on top of whatever the mapper narrowly produces, so what comes back out is never
-  just the contract that went in. That's why the props, the options bar and `saveForm` all type their `dataManager`
+  just the contract that went in. That's why the props, the options bar and `save` all type their `dataManager`
   as `IReportViewerDataManager<any>` rather than being made generic over a `TData` they never call `read()` with:
   `any` erases only the part of the type they don't use, and `IReportViewerDataManager<IS438Data>` (say) is freely
   assignable to it either way, which a concrete default like `IReportViewerDataManager<IReportData>` is not --
@@ -153,11 +153,28 @@ then **stamps the whole of `IForm` -- `name`, `description`, `status`, `type`, `
 itself**, which declares the identity it is registered under and assigns it to itself. Without the stamp the saved
 data could not be resolved back to a form. Persists nothing.
 
-`saveForm(form, dataManager?, controllers?)` is `extractData(form)` then `dataManager?.write?.(data)`, returning the data
-whether or not it was consumed -- or, when the data manager has a `writeBundle` and the controllers are given, the
-whole `getBundle(form, controllers)` in one `writeBundle` call instead. `getBundle` gathers the data, the audit
-history and the comments into one object and persists nothing; the ref's `getBundle()` returns the same. The extract-and-stamp lives on the form alone so that **what a preview shows and what a
-save sends cannot drift** — the report-data option renders exactly this payload without touching the writer.
+**Writing is `save` and `transition`, and nothing else is public**: the Save button, the workflow buttons and
+`NewFormOption`'s save all go through them, which keeps the ordering the audit needs in one place. What they write is
+`extractData(form)` handed to `dataManager?.write?.(data)` -- or, when the data manager has a `writeBundle`, the whole
+`getBundle(form, controllers)` in one `writeBundle` call instead. `getBundle` gathers the data, the audit history and the
+comments into one object and persists nothing; the ref's `getBundle()` returns the same. The extract-and-stamp lives on
+the form alone so that **what a preview shows and what a save sends cannot drift** — the report-data option renders
+exactly this payload without touching the writer.
+
+Like the preset service's actions they take the controllers rather than holding any, **reject** with what went wrong
+(a reason of their own when the host gives none), and leave the report as it was when they do. The write itself is a
+private step they share, so a caller cannot write a report and leave the audit blind to it.
+
+- **`save(controllers, dataManager?)`** writes the form a revision on, puts the **live** form back in the controllers
+  a revision on and clean, and only then records `saved`, so the record carries the revision it saved. It rejects
+  without writing when the host cannot write (`canSaveForm`).
+- **`transition(controllers, id, by, issues, dataManager?)`** builds the candidate with `IWorkflowService.transition`
+  (reading the open comments off the review controller), saves it when the host can write, and only then replaces the
+  form with it and records `saved`. With nothing to write to it moves the report in memory and records no save.
+- **A write that fails records `save-failed`** and rejects; nothing else is recorded and the form is left alone.
+- **The two differ on what was typed while the write was under way.** `save` keeps the live form, so it is kept -- but
+  cleaned, so it counts as saved and the unsaved-changes guard will not warn about it. `transition` replaces the form
+  with the candidate built before the write, so it is lost. Both are as they were before the move into the service.
 
 `canExtractData(form)` is `!!form.mapper`. `canSaveForm(form, dataManager?)` is that *plus* `write` or `writeBundle`.
 They are different gates on purpose: a form with a mapper but nowhere to write still produces perfectly good
@@ -212,7 +229,7 @@ report's adds pages. The mapper adds them, from the array's length; it never rem
   planned, offered and shown alike. `IPresetSelectorService` is separate on purpose: it holds a listener and nothing
   else, and the option only ever needs it.
 - **`apply`, `save` and `remove` are the service's too, and the panel keeps only what is on screen.** Each takes the
-  controllers (and, for the last two, the data manager) rather than holding any, as `ReportViewerService.saveForm`
+  controllers (and, for the last two, the data manager) rather than holding any, as `ReportViewerService.save`
   does, so a host can apply a preset from its own launcher and get the audit records with it. They **reject** with
   what went wrong -- the panel already turns an error into `onError` -- and answer with what they did (`apply` the plan,
   `save` the preset). The panel is left with `isApplying`, closing the step, choosing the new preset, reading the list
@@ -354,9 +371,12 @@ Clicking one, in order:
 2. **confirm** in a modal saying where the status is going.
 3. **build the candidate**, `workflowService.transition(form, id, user, { issues, openComments })`, which is pure.
    It throws if the transition cannot be made; that is shown as a notification and nothing is saved.
-4. **save the candidate**, through `saveForm`, when the form can be saved at all. A failure records `save-failed`,
+4. **save the candidate**, when the form can be saved at all. A failure records `save-failed`,
    notifies, and leaves the form on screen untouched.
 5. **apply it**, `update(() => candidate.clean())`, and only then record `saved`.
+
+The component does the first two and reports the outcome; **steps 3 to 5 are `IReportViewerService.transition`**, which
+reads the open comments off the review controller itself and rejects with what went wrong.
 
 **Saved before it is applied**, so a failed save cannot leave a transition in the audit history that was never kept:
 the audit raises `workflow-transition` from the form's history as the form is replaced (see `@forms/audit`). The catch
@@ -389,14 +409,19 @@ never -- and the `review` option is gated on the same call.
 
 **`ReportViewerForm` does the setting up, before anything below subscribes:** during render it hands the user
 (`settings.user`) to the manager, and how the form arrived (`getArrival`) -- **before the form is loaded**, since the
-audit records `form-loaded` or `form-started` as the load creates it and reads both then. `NewFormOption` sets the
-arrival the same way before it swaps a new form in. It also loads what the host held -- `initialForm.audit` into the audit controller,
+audit records `form-loaded` or `form-started` as the load creates it and reads both then. It also has
+`IReportViewerService.restoreHistory` load what the host held -- `initialForm.audit` into the audit controller,
 `initialForm.comments` into the review controller -- once for each form it is given, in a **layout effect**. That is
 not during render, because a mounted component subscribed to the comments (the workflow actions count the open ones)
 would be updated while `ReportViewerForm` renders, which React warns about whenever a viewer is handed a different form.
 It is not in an ordinary effect either: the manager's writer subscribes in an effect that runs *before* the parent's,
 so loading there would be written straight back, and a layout effect runs before every such effect. Without a user, or
 once the report is out of review, a `"reviewable"` form shows its comments but cannot add any.
+
+**`NewFormOption` does none of this itself.** It loads the new form (`loadForm`, from the template the user picked, if
+they did) and has `IReportViewerService.openForm` swap it into the same manager: the arrival first, then the form,
+then `restoreHistory`, so the history the host held for it replaces the last report's. That can run straight away,
+unlike above, since a click handler is not a render. The service does not touch the user, which stays as it was.
 
 The manager, beside the other managers at the viewer's root:
 
@@ -447,9 +472,10 @@ what is recorded and how. The history a host handed back through `read()` is loa
 report data dialog and the bundle show it ahead of this session's records. **The viewer never writes the loaded
 history back**: `writeAudit` is given only the session's records, for the host to append by `id`.
 
-**Saving is the one thing the audit cannot observe**, so `WorkflowActions`' Save button and the save path of
-`NewFormOption` tell it (`getAuditController(controllers).recordSaved()` / `recordSaveFailed()`). A dirty→clean
-transition is ambiguous, since starting a new form calls `clean()` too. Anything new that saves must do the same.
+**Saving is the one thing the audit cannot observe**, so `IReportViewerService.save` and `.transition` -- behind the Save
+button, the workflow buttons and the save path of `NewFormOption` -- tell it (`getAuditController(controllers).recordSaved()`
+/ `recordSaveFailed()`). A dirty→clean transition is ambiguous, since starting a new form calls `clean()` too. Anything
+new that saves must go through them, or do the same.
 
 ## Routing — there is none
 

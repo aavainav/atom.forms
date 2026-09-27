@@ -1,14 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { getAuditController } from "@forms/audit";
 import type { AuditRecord } from "@forms/audit";
 import type { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
-import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData, Schema } from "@forms/core";
-import type { IWorkflowEntry, IWorkflowStamp } from "@forms/core";
+import { ControllerManager, FormDefinition, FormModel, IFormMapper, IReportData, RuleIssueCollection, RuleIssueSeverity, Schema } from "@forms/core";
+import type { IActor, IRuleIssue, IWorkflowEntry, IWorkflowStamp } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import { WorkflowService } from "@forms/workflow";
 
-import { IInitialForm, IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
+import { IInitialForm, IReportViewerDataManager, IReportViewerOption, ReportViewerService } from "../../src/services/report-viewer";
+import { WorkflowStubForm } from "../fixtures/workflow-form";
 
 const noopOption: Pick<IReportViewerOption, "title" | "Component"> = { title: "Stub option", Component: () => null };
 
@@ -298,47 +300,368 @@ describe("ReportViewerService", () => {
         });
     });
 
-    describe("saveForm", () => {
-        it("hands the extracted data to the data manager", async () => {
-            stubMapper();
+    describe("opening a form", () => {
+        const held: AuditRecord = { at: 1, form: { id: "form-0", name: "Stub", revision: 0, version: "1.0" }, id: "old-1", kind: "saved" };
+        const comment: IReviewComment = { at: 1, author: { id: "9", name: "Lt. Osei" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Left over." };
+
+        /** A report in the controllers, as the viewer holds one, and a new one, as loaded, to put in its place. */
+        async function open(template?: string) {
             const service = createService(catalogItem);
-            const write = vi.fn(async () => { });
+            const controllers = new ControllerManager();
+            controllers.loadForm((await service.loadForm({ name: "Stub" })).form);
+            const started = await service.loadForm({ name: "Stub" }, undefined, "new", template);
 
-            const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write });
+            return { controllers, loaded: { ...started, audit: [held], comments: [comment] }, service };
+        }
 
-            expect(write).toHaveBeenCalledWith(data);
+        const ids = (controllers: ControllerManager): Array<string> => getAuditController(controllers).history.map(record => record.id);
+
+        describe("openForm", () => {
+            it("puts the form in place of the one the controllers hold", async () => {
+                const { controllers, loaded, service } = await open();
+
+                service.openForm(controllers, loaded);
+
+                expect(controllers.getFormController().form).toBe(loaded.form);
+            });
+
+            it("says how it arrived first, so the audit records the old form closing and then the new one starting", async () => {
+                const { controllers, loaded, service } = await open();
+
+                service.openForm(controllers, loaded);
+
+                const { session } = getAuditController(controllers);
+                expect(session.map(record => record.kind)).toEqual(["form-opened", "form-closed", "form-started"]);
+                expect(session.at(-1)).toMatchObject({ kind: "form-started", reason: "new" });
+            });
+
+            it("names the template it was started from", async () => {
+                const { controllers, loaded, service } = await open("speeding");
+
+                service.openForm(controllers, loaded);
+
+                expect(getAuditController(controllers).session.at(-1)).toMatchObject({ kind: "form-started", template: "speeding" });
+            });
+
+            it("brings the history the host held for the report with it, in place of the last report's", async () => {
+                const { controllers, loaded, service } = await open();
+                getAuditController(controllers).load([{ ...held, id: "last-report" }]);
+                getReviewController(controllers).load([{ ...comment, id: "last-report" }]);
+
+                service.openForm(controllers, loaded);
+
+                expect(getReviewController(controllers).comments).toEqual([comment]);
+                expect(ids(controllers)).toContain("old-1");
+                expect(ids(controllers)).not.toContain("last-report");
+            });
         });
 
-        it("writes the whole bundle in one call instead, when the data manager has a writeBundle and the controllers are given", async () => {
-            const service = createService(catalogItem);
-            const controllers = stubControllers();
-            const write = vi.fn(async () => { });
-            const writeBundle = vi.fn(async () => { });
+        describe("restoreHistory", () => {
+            it("puts the audit history and the comments the host held into the controllers", async () => {
+                const { controllers, loaded, service } = await open();
 
-            const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write, writeBundle }, controllers);
+                service.restoreHistory(controllers, loaded);
 
-            expect(writeBundle).toHaveBeenCalledTimes(1);
-            expect(writeBundle).toHaveBeenCalledWith(expect.objectContaining({ data, version: 1 }));
-            expect(write).not.toHaveBeenCalled();
+                expect(ids(controllers)).toContain("old-1");
+                expect(getReviewController(controllers).comments).toEqual([comment]);
+            });
+
+            it("replaces what was held for the last report", async () => {
+                const { controllers, loaded, service } = await open();
+                getAuditController(controllers).load([{ ...held, id: "last-report" }]);
+                getReviewController(controllers).load([{ ...comment, id: "last-report" }]);
+
+                service.restoreHistory(controllers, loaded);
+
+                expect(ids(controllers)).not.toContain("last-report");
+                expect(getReviewController(controllers).comments).toEqual([comment]);
+            });
+
+            it("leaves the report with no history and no comments when the host held none", async () => {
+                const { controllers, loaded, service } = await open();
+                getAuditController(controllers).load([held]);
+                getReviewController(controllers).load([comment]);
+                expect(ids(controllers)).toContain("old-1");
+
+                service.restoreHistory(controllers, { ...loaded, audit: undefined, comments: undefined });
+
+                expect(ids(controllers)).not.toContain("old-1");
+                expect(getReviewController(controllers).comments).toEqual([]);
+            });
+
+            it("does not touch the form the controllers hold, or say anything of how it arrived", async () => {
+                const { controllers, loaded, service } = await open();
+                const before = controllers.getFormController().form;
+
+                service.restoreHistory(controllers, loaded);
+
+                expect(controllers.getFormController().form).toBe(before);
+                expect(getAuditController(controllers).session.map(record => record.kind)).toEqual(["form-opened"]);
+            });
+        });
+    });
+
+    describe("keeping a report", () => {
+        const officer: IActor = { id: "officer-1", name: "Officer One" };
+        const comment: IReviewComment = { at: 1, author: { id: "reviewer-1", name: "Reviewer One" }, id: "c-1", isResolved: false, target: { level: "form" }, text: "Needs a narrative." };
+        const held: AuditRecord = { at: 1, form: { id: "form-1", name: "Stub", revision: 0, version: "1.0" }, id: "old-1", kind: "saved" };
+        const noIssues = new RuleIssueCollection();
+        let name: string;
+
+        beforeEach(() => {
+            // what the form extracts moves with `name`, so a test makes the form dirty by changing it
+            name = "Stub";
+            WorkflowStubForm.mapper = { extract: () => record(name), populate: async form => form };
+            vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
         });
 
-        it("writes only the data when the data manager has a writeBundle but no controllers are given to build the bundle from", async () => {
-            const service = createService(catalogItem);
-            const write = vi.fn(async () => { });
-            const writeBundle = vi.fn(async () => { });
-
-            const data = await service.saveForm(new StubFormModel(), { read: async () => undefined, write, writeBundle });
-
-            expect(write).toHaveBeenCalledWith(data);
-            expect(writeBundle).not.toHaveBeenCalled();
+        afterEach(() => {
+            WorkflowStubForm.mapper = undefined;
+            vi.restoreAllMocks();
         });
 
-        it("returns the extracted data even with nothing to write it to", async () => {
-            const service = createService(catalogItem);
+        /** A report held by real controllers, with the real audit and review watching it, clean as it opens. */
+        async function open(configure: (form: FormModel<any>) => FormModel<any> = form => form) {
+            const controllers = new ControllerManager();
+            controllers.loadForm(configure(await new WorkflowStubForm().initialize()).clean());
 
-            const data = await service.saveForm(new StubFormModel());
+            return {
+                controllers,
+                form: (): FormModel<any> => controllers.getFormController().form,
+                kinds: (): Array<string> => getAuditController(controllers).session.map(entry => entry.kind),
+                records: () => getAuditController(controllers).session
+            };
+        }
 
-            expect(data.name).toBe(new StubFormModel().name);
+        const inReview = (form: FormModel<any>): FormModel<any> => form.setStatus("inReview").setMode("reviewable");
+        const rejected = (form: FormModel<any>): FormModel<any> => form.setStatus("rejected");
+
+        /** A host that keeps what it is given, and the spy that says what it was given. */
+        function host(write: (data: IReportData) => Promise<void> = async () => undefined) {
+            const spy = vi.fn(write);
+            const manager: IReportViewerDataManager<any> = { read: async () => undefined, write: spy };
+
+            return { manager, write: spy };
+        }
+
+        describe("save", () => {
+            it("writes the report a revision on", async () => {
+                const { controllers } = await open();
+                const { manager, write } = host();
+
+                await createService(catalogItem).save(controllers, manager);
+
+                expect(write).toHaveBeenCalledTimes(1);
+                expect(write).toHaveBeenCalledWith(expect.objectContaining({ revision: 1 }));
+            });
+
+            it("gives a host that takes the whole bundle the history with the data, and only the bundle", async () => {
+                const { controllers } = await open();
+                getAuditController(controllers).load([held]);
+                getReviewController(controllers).load([comment]);
+                const write = vi.fn(async () => undefined);
+                const writeBundle = vi.fn(async () => undefined);
+
+                await createService(catalogItem).save(controllers, { read: async () => undefined, write, writeBundle });
+
+                expect(writeBundle).toHaveBeenCalledTimes(1);
+                expect(writeBundle).toHaveBeenCalledWith(expect.objectContaining({ audit: expect.arrayContaining([held]), comments: [comment], data: expect.objectContaining({ revision: 1 }), version: 1 }));
+                expect(write).not.toHaveBeenCalled();
+            });
+
+            it("rejects with the host's reason, and records the failure, when a bundle write fails", async () => {
+                const { controllers, kinds } = await open();
+                const writeBundle = vi.fn(async () => { throw new Error("The server is down."); });
+
+                await expect(createService(catalogItem).save(controllers, { read: async () => undefined, writeBundle })).rejects.toThrow("The server is down.");
+
+                expect(kinds()).toEqual(["form-opened", "save-failed"]);
+            });
+
+            it("puts the saved form in the controllers, a revision on and clean", async () => {
+                const { controllers, form } = await open();
+                name = "Typed";
+                expect(form().getIsDirty()).toBe(true);
+
+                await createService(catalogItem).save(controllers, host().manager);
+
+                expect(form().revision).toBe(1);
+                expect(form().getIsDirty()).toBe(false);
+            });
+
+            it("records that it saved, under the revision it saved, not the one before", async () => {
+                const { controllers, kinds, records } = await open();
+
+                await createService(catalogItem).save(controllers, host().manager);
+
+                expect(kinds()).toEqual(["form-opened", "saved"]);
+                expect(records().at(-1)).toMatchObject({ kind: "saved", form: { revision: 1 } });
+            });
+
+            it("keeps what was typed while the write was under way, at the revision that was written", async () => {
+                const { controllers, form } = await open();
+                let finish!: () => void;
+                const { manager } = host(() => new Promise<void>(resolve => { finish = resolve; }));
+
+                const pending = createService(catalogItem).save(controllers, manager);
+                controllers.getFormController().update({ update: live => live.setStatus("inProgress") });
+                finish();
+                await pending;
+
+                expect(form().status).toBe("inProgress");
+                expect(form().revision).toBe(1);
+            });
+
+            it("rejects with the host's reason, leaving the report as it was and recording only the failure", async () => {
+                const { controllers, form, kinds } = await open();
+                const before = form();
+                const { manager } = host(async () => { throw new Error("The server is down."); });
+
+                await expect(createService(catalogItem).save(controllers, manager)).rejects.toThrow("The server is down.");
+
+                expect(form()).toBe(before);
+                expect(kinds()).toEqual(["form-opened", "save-failed"]);
+            });
+
+            it("rejects with a reason of its own when the host gives none", async () => {
+                const { controllers, kinds } = await open();
+                const { manager } = host(() => Promise.reject("offline"));
+
+                await expect(createService(catalogItem).save(controllers, manager)).rejects.toThrow("The report could not be saved.");
+
+                expect(kinds()).toEqual(["form-opened", "save-failed"]);
+            });
+
+            it("rejects, and writes and records nothing, when the host cannot write", async () => {
+                const { controllers, form, kinds } = await open();
+                const before = form();
+                const service = createService(catalogItem);
+
+                await expect(service.save(controllers, { read: async () => undefined })).rejects.toThrow("The host cannot keep reports.");
+                await expect(service.save(controllers)).rejects.toThrow("The host cannot keep reports.");
+
+                expect(form()).toBe(before);
+                expect(kinds()).toEqual(["form-opened"]);
+            });
+        });
+
+        describe("transition", () => {
+            it("saves the report as the transition leaves it, and puts it in the controllers", async () => {
+                const { controllers, form } = await open();
+                const { manager, write } = host();
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues, manager);
+
+                expect(write).toHaveBeenCalledTimes(1);
+                expect(write).toHaveBeenCalledWith(expect.objectContaining({ revision: 1, status: "inReview" }));
+                expect(form().status).toBe("inReview");
+                expect(form().revision).toBe(1);
+            });
+
+            it("gives a host that takes the whole bundle the report as the transition leaves it as its data", async () => {
+                const { controllers } = await open();
+                const writeBundle = vi.fn(async () => undefined);
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues, { read: async () => undefined, writeBundle });
+
+                expect(writeBundle).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ revision: 1, status: "inReview" }) }));
+            });
+
+            it("keeps who made it, and when, in the history", async () => {
+                const { controllers, form } = await open();
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues, host().manager);
+
+                expect(form().history).toEqual([{ at: 1_700_000_000_000, by: officer, from: "draft", to: "inReview", transition: "submit" }]);
+            });
+
+            it("leaves the form clean, since what it holds is what was saved", async () => {
+                const { controllers, form } = await open();
+                name = "Typed";
+                expect(form().getIsDirty()).toBe(true);
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues, host().manager);
+
+                expect(form().getIsDirty()).toBe(false);
+            });
+
+            it("records the transition, and then the save that kept it, under the revision it saved", async () => {
+                const { controllers, kinds, records } = await open();
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues, host().manager);
+
+                expect(kinds()).toEqual(["form-opened", "workflow-transition", "saved"]);
+                expect(records().at(-1)).toMatchObject({ kind: "saved", form: { revision: 1 } });
+            });
+
+            it("counts the comments the review holds, for a transition that needs one open", async () => {
+                const { controllers, form } = await open(inReview);
+                getReviewController(controllers).load([comment]);
+
+                await createService(catalogItem).transition(controllers, "reject", officer, noIssues, host().manager);
+
+                expect(form().status).toBe("rejected");
+            });
+
+            it("rejects, and saves and records nothing, when it needs a comment open and none is", async () => {
+                const { controllers, form, kinds } = await open(inReview);
+                const { manager, write } = host();
+
+                await expect(createService(catalogItem).transition(controllers, "reject", officer, noIssues, manager)).rejects.toThrow('"reject" needs at least one open comment.');
+
+                expect(write).not.toHaveBeenCalled();
+                expect(form().status).toBe("inReview");
+                expect(kinds()).toEqual(["form-opened"]);
+            });
+
+            it("rejects a resubmission while a comment is open, and allows it once it is resolved", async () => {
+                const { controllers, form } = await open(rejected);
+                const { manager, write } = host();
+                const service = createService(catalogItem);
+                getReviewController(controllers).load([comment]);
+
+                await expect(service.transition(controllers, "submit", officer, noIssues, manager)).rejects.toThrow('"submit" cannot be made while a comment is open.');
+                expect(write).not.toHaveBeenCalled();
+                expect(form().status).toBe("rejected");
+
+                getReviewController(controllers).load([{ ...comment, isResolved: true }]);
+                await service.transition(controllers, "submit", officer, noIssues, manager);
+
+                expect(form().status).toBe("inReview");
+            });
+
+            it("rejects, and saves nothing, while what validation found holds an error", async () => {
+                const { controllers, form } = await open();
+                const { manager, write } = host();
+                const issues = new RuleIssueCollection([{ field: { name: "firstName" }, message: "Bad.", section: {}, severity: RuleIssueSeverity.error } as IRuleIssue]);
+
+                await expect(createService(catalogItem).transition(controllers, "submit", officer, issues, manager)).rejects.toThrow('"submit" cannot be made while the form has validation errors.');
+
+                expect(write).not.toHaveBeenCalled();
+                expect(form().status).toBe("draft");
+            });
+
+            it("rejects with the host's reason, leaving the report as it was and recording only the failure, when the save fails", async () => {
+                const { controllers, form, kinds } = await open();
+                const before = form();
+                const { manager } = host(async () => { throw new Error("The server is down."); });
+
+                await expect(createService(catalogItem).transition(controllers, "submit", officer, noIssues, manager)).rejects.toThrow("The server is down.");
+
+                expect(form()).toBe(before);
+                expect(form().history).toEqual([]);
+                expect(kinds()).toEqual(["form-opened", "save-failed"]);
+            });
+
+            it("applies it in memory, without writing or recording a save, when there is no host to write to", async () => {
+                const { controllers, form, kinds } = await open();
+
+                await createService(catalogItem).transition(controllers, "submit", officer, noIssues);
+
+                expect(form().status).toBe("inReview");
+                expect(form().revision ?? 0).toBe(0);
+                expect(kinds()).toEqual(["form-opened", "workflow-transition"]);
+            });
         });
     });
 
