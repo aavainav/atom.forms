@@ -1,7 +1,7 @@
 import { ComponentType } from "react";
 import { getAuditController, AuditRecord } from "@forms/audit";
 import { IFormCatalogService, IFormComponentProps, IResolvedFormCatalogItem } from "@forms/catalog";
-import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormArrival, FormModel, ReadOnlyFields } from "@forms/core";
+import { IActor, IControllerManager, IFormIdentity, IModalOptions, IPopulateData, IReportData, FormArrival, FormModel, ReadOnlyFields, RuleIssueCollection } from "@forms/core";
 import { getReviewController, IReviewComment } from "@forms/review";
 import { IWorkflowService } from "@forms/workflow";
 import { createService, Singleton } from "@shrub/core";
@@ -128,7 +128,7 @@ export interface IReportViewerService {
     canReview: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Whether the form can be saved -- true once it carries a mapper and the data manager can write, by `write` or `writeBundle`. */
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
-    /** Extracts the form's published data, unpersisted -- what `saveForm` sends to the data manager. */
+    /** Extracts the form's published data, unpersisted -- what `save` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
     /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one, from the template the user picked if they did. A new form is started even when the host gave it defaults to start from. */
     getArrival: (initialForm: IInitialForm) => FormArrival;
@@ -143,11 +143,28 @@ export interface IReportViewerService {
      */
     loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason, template?: string) => Promise<IInitialForm>;
     /**
-     * Extracts the form's data and hands it to the data manager, if it can write. Returned either way, so a host that
-     * persists it itself can reuse this. With the controllers, and a data manager that has a `writeBundle`, the whole
-     * bundle is written in one call instead; without them only the data can be, so `write` is used.
+     * Puts a loaded form in place of the one the controllers hold, with the history the host held for it. How it
+     * arrived is said first, so the audit records it as the form goes in.
      */
-    saveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>, controllers?: IControllerManager) => Promise<IReportData>;
+    openForm: (controllers: IControllerManager, initialForm: IInitialForm) => void;
+    /**
+     * Puts the audit history and the comments the host held for the report into the controllers, in place of any held
+     * before. `openForm` does this as it swaps a form in; a form rendered for the first time is given its history here.
+     */
+    restoreHistory: (controllers: IControllerManager, initialForm: IInitialForm) => void;
+    /**
+     * Saves the report as it stands: writes it a revision on, puts the saved form in the controllers clean, and tells
+     * the audit. A data manager that has a `writeBundle` is given the whole bundle in one call, the audit history and
+     * the comments with the data, instead of the data alone. Rejects with what went wrong, after telling the audit it
+     * failed, leaving the report as it was. Rejects too when the host cannot write.
+     */
+    save: (controllers: IControllerManager, dataManager?: IReportViewerDataManager<any>) => Promise<void>;
+    /**
+     * Makes the transition on the report and, when the host can write, saves the result: both happen or neither does.
+     * The report is replaced with the result and the audit is told, and it moves in memory only when there is no
+     * host to write to. Rejects with what went wrong -- the transition refused, or the save failed -- leaving the report as it was.
+     */
+    transition: (controllers: IControllerManager, id: string, by: IActor, issues: RuleIssueCollection, dataManager?: IReportViewerDataManager<any>) => Promise<void>;
 }
 
 /** Describes an option offered in the report viewer's options bar, in the order the bar renders them. */
@@ -261,6 +278,13 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, template, Component: catalogItem.component };
     }
 
+    openForm(controllers: IControllerManager, initialForm: IInitialForm): void {
+        // said before the form goes in, which is when the audit records how it arrived
+        controllers.setArrival(this.getArrival(initialForm));
+        controllers.getFormController().setForm(initialForm.form);
+        this.restoreHistory(controllers, initialForm);
+    }
+
     registerOption(option: IReportViewerOption): void {
         if (this.options.has(option.id)) {
             throw new Error(`An option with the id of ${option.id} has already been registered with the report viewer.`);
@@ -269,16 +293,61 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         this.options.set(option.id, option);
     }
 
-    async saveForm(form: FormModel<any>, dataManager?: IReportViewerDataManager<any>, controllers?: IControllerManager): Promise<IReportData> {
-        const data = this.extractData(form);
+    restoreHistory(controllers: IControllerManager, initialForm: IInitialForm): void {
+        // what was held for the last report goes with it
+        getAuditController(controllers).load(initialForm.audit ?? []);
+        getReviewController(controllers).load(initialForm.comments ?? []);
+    }
 
-        if (dataManager?.writeBundle && controllers) {
-            await dataManager.writeBundle({ ...this.getBundle(form, controllers), data });
-        }
-        else {
-            await dataManager?.write?.(data);
+    async save(controllers: IControllerManager, dataManager?: IReportViewerDataManager<any>): Promise<void> {
+        const formController = controllers.getFormController();
+
+        if (!this.canSaveForm(formController.form, dataManager)) {
+            throw new Error("The host cannot keep reports.");
         }
 
-        return data;
+        // the form controller owns the current model and replaces it on every edit, so it is read now
+        await this.persist(formController.form.incrementRevision(), controllers, dataManager);
+        // the form as it is now, so what was typed while the save was under way is kept
+        formController.update({ update: now => now.incrementRevision().clean() });
+        // the audit reads the revision off the form it watches, so the saved form goes in first
+        getAuditController(controllers).recordSaved();
+    }
+
+    async transition(controllers: IControllerManager, id: string, by: IActor, issues: RuleIssueCollection, dataManager?: IReportViewerDataManager<any>): Promise<void> {
+        const formController = controllers.getFormController();
+        // the form controller owns the current model and replaces it on every edit, so it is read now
+        let next = this.workflowService.transition(formController.form, id, by, { issues, openComments: getReviewController(controllers).openCount });
+        const isSaved = this.canSaveForm(next, dataManager);
+
+        if (isSaved) {
+            next = next.incrementRevision();
+            await this.persist(next, controllers, dataManager);
+        }
+
+        // the audit records the transition as the form is replaced, and then the save that kept it
+        formController.update({ update: () => next.clean() });
+
+        if (isSaved) {
+            getAuditController(controllers).recordSaved();
+        }
+    }
+
+    /** Writes the form to the host, telling the audit when it could not. */
+    private async persist(form: FormModel<any>, controllers: IControllerManager, dataManager?: IReportViewerDataManager<any>): Promise<void> {
+        try {
+            const data = this.extractData(form);
+
+            if (dataManager?.writeBundle) {
+                await dataManager.writeBundle({ ...this.getBundle(form, controllers), data });
+            }
+            else {
+                await dataManager?.write?.(data);
+            }
+        }
+        catch (error) {
+            getAuditController(controllers).recordSaveFailed();
+            throw error instanceof Error ? error : new Error("The report could not be saved.");
+        }
     }
 }
