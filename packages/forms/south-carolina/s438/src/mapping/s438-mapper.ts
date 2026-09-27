@@ -44,8 +44,8 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
      * Returns a new form with the data applied to its front pages, creating a page per further violation. Async,
      * since creating a page means awaiting its `initialize`. Pages beyond `additionalViolations` are left alone
      * rather than removed, so a record naming fewer violations never silently discards a page an officer added.
-     * A field the data omits keeps its current value -- how the date of violation and ticket number the form
-     * stamps on itself survive a partial record.
+     * A field the data omits keeps its current value -- how the date and time of violation the form stamps on
+     * itself survive a partial record.
      */
     public async populate(form: S438FormModel, { data, readOnlyFields }: IPopulateData<IS438Data>): Promise<S438FormModel> {
         const additional = data.additionalViolations ?? [];

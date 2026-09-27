@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { IGAUTCData, IGAUTCViolationData } from "../../src/mapping/utc-data";
 import { GAUTCFormModel } from "../../src/models/utc-form";
@@ -226,6 +226,38 @@ describe("GAUTCMapper", () => {
     });
 
     describe("extract", () => {
+        /**
+         * The clock is pinned, since which of the AM and PM boxes is ticked follows the time of day. The base class
+         * stamps the date and time, so a form that stopped inheriting the time would lose them here.
+         */
+        describe("the date and time of the offense a new form stamps on itself", () => {
+            afterEach(() => { vi.useRealTimers(); });
+
+            const stampedAt = async (at: Date) => {
+                vi.useFakeTimers({ toFake: ["Date"] });
+                vi.setSystemTime(at);
+
+                return mapper.extract(await createForm());
+            };
+
+            it("writes the date as the paper prints it: the month's abbreviation, the day and the year's last two digits", async () => {
+                expect(await stampedAt(new Date(2026, 5, 15, 15, 30))).toMatchObject({ headerMonth: "Jun", headerDay: "15", headerYear: "26" });
+            });
+
+            it("ticks the afternoon box, on the twelve-hour clock, after noon", async () => {
+                expect(await stampedAt(new Date(2026, 5, 15, 15, 30))).toMatchObject({ headerHour: "03", headerMinute: "30", headerAm: false, headerPm: true });
+            });
+
+            it("ticks the morning box before noon", async () => {
+                expect(await stampedAt(new Date(2026, 5, 15, 9, 5))).toMatchObject({ headerHour: "09", headerMinute: "05", headerAm: true, headerPm: false });
+            });
+
+            it("reads midnight as twelve in the morning, and noon as twelve in the afternoon", async () => {
+                expect(await stampedAt(new Date(2026, 5, 15, 0, 5))).toMatchObject({ headerHour: "12", headerAm: true, headerPm: false });
+                expect(await stampedAt(new Date(2026, 5, 15, 12, 0))).toMatchObject({ headerHour: "12", headerAm: false, headerPm: true });
+            });
+        });
+
         it("reports an unanswered number as zero rather than omitting it", async () => {
             const extracted = mapper.extract(await mapper.populate(form, { data: { violatorFirstName: "Dana" } }));
 

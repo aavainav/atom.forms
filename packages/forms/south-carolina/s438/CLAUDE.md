@@ -44,7 +44,7 @@ differs. The violation *location* is shared: one stop happens in one place.
   separate `*-rules.ts` with a `createRuleCollection(schema)` factory). There are only three:
   required first/last name, and a max-length 5 zip. If the rule set grows, extract it to
   `src/models/s438-rules.ts` to match the other packages.
-- **Form self-stamping.** `CitationForm.initialize()` chains `setDateOfViolation().setTicketNumber()`. Every
+- **Form self-stamping.** `CitationForm.initialize()` chains `setDateOfViolation().setTimeOfViolation().setTicketNumber()`. Every
   `ICitationForm` setter returns `this` and threads its change back through the page collection via the private
   `setFrontPageValue(sectionDefinition, fieldDefinition, value, isEnabled)` helper — the same shape as
   `TR310FormModel.setCollisionValue`. A setter returning `void` here would have its work silently discarded, since
@@ -52,7 +52,7 @@ differs. The violation *location* is shared: one stop happens in one place.
   - `setDateOfViolation` stamps `MM/DD/YYYY` (module-level `formatDate`) and **disables** the box. Note this is not
     the `YYYY-MM-DD` that `DateRangeFieldRule` parses; the form has no date rule today, but adding one means
     changing the format too or it will silently skip validation.
-  - `setTimeOfViolation` stamps the time and leaves it editable. It is **not** called from `initialize()`.
+  - `setTimeOfViolation` stamps the time and leaves it editable. The base `initialize()` calls it, so a new form starts with it.
   - `setIssuedDate` / `setIssuedTime` return the form unchanged — the citation has no boxes for them distinct from
     the arrest date and time of violation.
 - **The workflow is South Carolina's own.** `S438FormModel.workflow` is `citationWorkflow.with({ id: "sc-citation", locks })`:
@@ -63,8 +63,8 @@ differs. The violation *location* is shared: one stop happens in one place.
   has taken it" is the host's to say, by loading the record `viewable`. The front page's violation dropzone gate asks
   `binding.isSectionLocked(frontPage.violationSection)` rather than the mode, and the same lock is applied again when
   an issued record is loaded. Georgia and Oklahoma keep the family's whole-form lock.
-- `setTicketNumber` holds a hard-coded `"20250000000000"` behind a `// TODO`; the citation cannot issue its own
-  number and no ticket-number source is wired up yet.
+- `setTicketNumber` returns the form unchanged -- the citation cannot issue its own number, so it arrives with the data
+  a host loads, through the defaults for a new form.
 - `VehicleSectionModel.make` is a `StringFieldModel` here (free text), so the vehicle dropzone applies the dropped
   make and year directly with no value-list resolution — contrast the other two forms.
 - `IS438Data` keeps the first charge in its **flat** `violation*` fields and carries the rest in

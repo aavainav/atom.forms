@@ -44,11 +44,13 @@ export const citationWorkflow: IWorkflow = defineWorkflow({
 export abstract class CitationForm<TData extends object> extends FormModel<TData> implements ICitationForm {
     readonly type: FormType = "citation";
 
+    /** Starts the form stamped with the date and time of violation, and with the ticket number where the form issues its own. */
     public async initialize(): Promise<this> {
         const form = await super.initialize();
 
         return form
             .setDateOfViolation()
+            .setTimeOfViolation()
             .setTicketNumber();
     }
 

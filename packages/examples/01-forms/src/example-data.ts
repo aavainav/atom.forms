@@ -32,6 +32,8 @@ interface IExampleForm<TData extends object> {
     readonly presets?: ReadonlyArray<IReportPreset<TData>>;
     /** What a new report can start from. The one flagged as the default replaces the form's own, so it is where a settled value is locked for every report. */
     readonly templates?: ReadonlyArray<IExampleTemplate<TData>>;
+    /** What the host works out afresh for every new report, and what of it is locked, laid under the template's own data -- a ticket number dealt from the sequence the host keeps. Typed against the form's own contract, like the presets. */
+    readonly assign?: (identity: Required<IFormIdentity>) => { readonly data: Partial<TData>; readonly readOnlyFields?: ReadOnlyFields<TData> };
     /** Tells the report this form holds for `?record=held`, as of the given time: its own id, where it stands, and the history and comments the people who worked on it left. */
     readonly held?: (now: number) => IHeldReport;
 }
@@ -170,6 +172,9 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
                 data: { violationDescription: "Failure to stop at a stop sign", violationSectionNumber: "56-5-2110" }
             }
         ],
+        // the ticket number is the host's to give, so every new citation is dealt the next in the sequence, and it is
+        // locked: an officer cannot correct a number that was issued. the form stamps none of its own.
+        assign: identity => ({ data: { footerTicketNumber: nextTicketNumber(identity) }, readOnlyFields: { footerTicketNumber: true } }),
         held: getCitationReport
     })
 ];
@@ -190,8 +195,9 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
  * `reason: "new"`, and `read` stamps `?record=new`, and the template the user picked, onto the url then, so a
  * refresh doesn't silently read back whatever was last saved.
  *
- * A template is built from the presets it names, laid down in order, and then its own data on top. The report
- * viewer is handed only the finished record: putting one together is the host's business, not its.
+ * A template is built from the presets it names, laid down in order, and then its own data on top, all over what
+ * the form's `assign` deals every new report -- S438's ticket number. The report viewer is handed only the finished
+ * record: putting one together is the host's business, not its.
  *
  * `?record=held` is a report the host has been keeping: the full fixture with an id, a status, the history its
  * workflow has made, and the audit history and comments the people who worked on it left, all handed over in the one
@@ -248,9 +254,7 @@ export function createExampleDataManager(identity: IFormIdentity, searchParams: 
                 // a new record starts from the template it was asked for, or else the host's default one, ignoring
                 // whatever is saved for the record being replaced -- a stale record surviving into a "new" one is
                 // exactly what `reason` prevents. a form with no default template starts as the form makes it
-                const chosen = template ?? templates?.find(entry => entry.isDefault)?.id;
-
-                return chosen ? resolveTemplate(form, chosen) : undefined;
+                return resolveTemplate(form, template ?? templates?.find(entry => entry.isDefault)?.id);
             }
 
             const saved = getSavedData(form.identity);
@@ -355,6 +359,11 @@ function getStorageKey({ name, version }: IFormIdentity, kept?: Kept): string {
     return `example-data:${name}@${version}${kept ? `:${kept}` : ""}`;
 }
 
+/** The key the ticket sequence for the given form is kept under. It belongs to the host, not to a report, so a reset of the record does not rewind it. */
+function getTicketKey({ name, version }: IFormIdentity): string {
+    return `example-data:${name}@${version}:ticket`;
+}
+
 /** Whether the value is an object that holds others by key, as a value in a record is, rather than an array of them or nothing. */
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -372,18 +381,33 @@ function merge<T extends Record<string, unknown>>(base: T, next: T): T {
     return merged as T;
 }
 
-/** Puts together what a new report starts with from the template: the presets it names, in order, and then its own data on top. */
-function resolveTemplate(form: IExampleForm<any>, id: string): IReadDataResult {
-    const template = form.templates?.find(entry => entry.id === id);
+/** Deals the next ticket number in the sequence the host keeps for the given form: the year, then a count of ten digits, as the mock records carry. */
+function nextTicketNumber(identity: IFormIdentity): string {
+    const next = Number(sessionStorage.getItem(getTicketKey(identity)) ?? 0) + 1;
 
-    if (!template) {
+    sessionStorage.setItem(getTicketKey(identity), String(next));
+
+    return `${new Date().getFullYear()}${String(next).padStart(10, "0")}`;
+}
+
+/** Puts together what a new report starts with: what the host assigns it, and over that the presets the template names, in order, and then its own data on top. Nothing when there is neither, so the form starts as it makes itself. */
+function resolveTemplate(form: IExampleForm<any>, id?: string): IReadDataResult | undefined {
+    const template = id === undefined ? undefined : form.templates?.find(entry => entry.id === id);
+
+    if (id !== undefined && !template) {
         throw new Error(`"${form.identity.name}" has no template called "${id}".`);
     }
 
-    let data: Record<string, unknown> = {};
-    let readOnlyFields: ReadOnlyFields<any> = {};
+    const assigned = form.assign?.(form.identity);
 
-    for (const presetId of template.presets ?? []) {
+    if (!template && !assigned) {
+        return undefined;
+    }
+
+    let data: Record<string, unknown> = { ...assigned?.data };
+    let readOnlyFields: ReadOnlyFields<any> = { ...assigned?.readOnlyFields };
+
+    for (const presetId of template?.presets ?? []) {
         const preset = form.presets?.find(entry => entry.id === presetId);
 
         if (!preset) {
@@ -394,7 +418,7 @@ function resolveTemplate(form: IExampleForm<any>, id: string): IReadDataResult {
         readOnlyFields = merge(readOnlyFields, preset.readOnlyFields ?? {});
     }
 
-    return { data: stamp(form, merge(data, template.data ?? {})), readOnlyFields: merge(readOnlyFields, template.readOnlyFields ?? {}) };
+    return { data: stamp(form, merge(data, template?.data ?? {})), readOnlyFields: merge(readOnlyFields, template?.readOnlyFields ?? {}) };
 }
 
 /** Keeps what the host holds beside the record for the given form, replacing what was kept. */

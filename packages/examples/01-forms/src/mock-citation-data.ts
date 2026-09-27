@@ -6,7 +6,7 @@ import { IS438Data } from "@forms/s438";
  *
  * `full` covers every section of the front page, showing the court, violation location and arresting officer
  * populating. `minimal` covers only the violator and the violation, showing a partial record leaving the rest of
- * the form alone, including the date of violation and ticket number the form stamps on itself.
+ * the form alone, including the date and time of violation the form stamps on itself.
  */
 export const mockCitations: Record<string, IS438Data> = {
     full: {

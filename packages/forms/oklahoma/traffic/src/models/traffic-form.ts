@@ -47,12 +47,9 @@ export class OKTrafficFormModel extends CitationForm<IOKTrafficData> implements 
     public readonly supplementPage: PageDefinition<SupplementPageModel> = this.schema.supplementPage;
 
     public async initialize(): Promise<this> {
-        // the base stamps the date of violation and the ticket number; the time is this form's own addition
         const form = await super.initialize();
 
-        return form
-            .setTimeOfViolation()
-            .addRuleCollection(this.schema.ruleCollection);
+        return form.addRuleCollection(this.schema.ruleCollection);
     }
 
     /** Retrieves the single complaint page of the form. */

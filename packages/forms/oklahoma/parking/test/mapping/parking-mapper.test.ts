@@ -90,6 +90,14 @@ describe("OKParkingMapper", () => {
     });
 
     describe("extract", () => {
+        /** The base class stamps both, so a form that stopped inheriting the time would lose it here. */
+        it("stamps the date and time of violation a new form carries on itself", () => {
+            const extracted = mapper.extract(form);
+
+            expect(extracted.violationDate).toBeTruthy();
+            expect(extracted.violationTime).toBeTruthy();
+        });
+
         it("reports an unanswered number as zero rather than omitting it", async () => {
             const extracted = mapper.extract(await mapper.populate(form, { data: { ownerFirstName: "Dana" } }));
 

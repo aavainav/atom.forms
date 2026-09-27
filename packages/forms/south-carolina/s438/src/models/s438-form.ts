@@ -85,14 +85,9 @@ export class S438FormModel extends CitationForm<IS438Data> implements IS438Form 
         return this;
     }
 
-    /** Returns a form with the ticket number stamped on the footer, and that box closed to editing. */
+    /** Returns the form unchanged -- the citation cannot issue its own ticket number, so it arrives with the data a host loads, through the defaults for a new form, rather than being stamped here. */
     public setTicketNumber(): this {
-        // TODO: the number is a placeholder until a ticket number source is wired up; the citation cannot issue its own.
-        return this.setFrontPageValue(
-            this.schema.footerSection,
-            this.schema.footerFields.footerTicketNumber,
-            "20250000000000",
-            false);
+        return this;
     }
 
     /** Returns a form with the current time stamped as the time of violation; unlike the date, the officer may correct it. */

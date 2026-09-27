@@ -135,15 +135,17 @@ describe("S438Mapper", () => {
             expect(extracted.vehicleYear).toBe(0);
         });
 
-        /**
-         * A form the officer has not touched still carries the date of violation and ticket number it stamped on
-         * itself.
-         */
-        it("stamps the date of violation and ticket number a new form carries on itself", () => {
+        /** A form the officer has not touched still carries the date and time of violation it stamped on itself. */
+        it("stamps the date and time of violation a new form carries on itself", () => {
             const extracted = mapper.extract(form);
 
-            expect(extracted.footerTicketNumber).toBeTruthy();
             expect(extracted.violationDateOfViolation).toBeTruthy();
+            expect(extracted.violationTimeOfViolation).toBeTruthy();
+        });
+
+        /** The ticket number is the host's to give, through the defaults for a new form, so a new form has none of its own. */
+        it("stamps no ticket number on a new form", () => {
+            expect(mapper.extract(form).footerTicketNumber).toBe("");
         });
 
         /** An unanswered number field holds 0, and extract now reports that rather than omitting the key. */
@@ -161,11 +163,12 @@ describe("S438Mapper", () => {
 
     describe("populate", () => {
         it("leaves a field the data does not mention at the value it already held", async () => {
-            const stamped = mapper.extract(form).footerTicketNumber;
+            const stamped = mapper.extract(form).violationDateOfViolation;
+            expect(stamped).toBeTruthy();
 
             const populated = await mapper.populate(form, { data: { violatorFirstName: "Dana" } });
 
-            expect(mapper.extract(populated).footerTicketNumber).toBe(stamped);
+            expect(mapper.extract(populated).violationDateOfViolation).toBe(stamped);
         });
 
         it("creates a page per further violation", async () => {

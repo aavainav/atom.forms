@@ -139,7 +139,12 @@ is the host's business, so this file is the reference for how a host might, not 
   | SC 432 (`/sc/432?record=new&reset=1`) | Public contact, from the `columbia-pd` preset | agency name, agency city | agency name |
   | S438 (`/sc/s438?record=new&reset=1`) | Citation, from the `columbia-court` preset | court name, city, state | court name |
 
-- **A form with no default template starts as the form makes it** -- today's date, a ticket number -- which is the
+- **A host can also deal a value to every new report**, through a form's `assign` in the table: what to work out afresh
+  each time, and what of it to lock, laid **under** the template's own data so a template can still set it. S438 uses it
+  for the ticket number, which the form stamps none of: the next in a sequence the host keeps in `sessionStorage`
+  (a reset of the record does not rewind it), and locked, since an officer cannot correct a number that was issued.
+  It is the pattern for any value that is the host's to give.
+- **A form with no default template starts as the form makes it** -- today's date and time -- which is the
   form's own default, built in and needing nothing from a host. TR-310 and GA UTC are like that.
 - **The other templates are what the officer chooses between.** S438 has Speeding, 15 over and Failure to stop at a stop
   sign; SC 432 has Speeding stop and Motorist assistance; TR-310 has a rear-end collision and one in the rain, each

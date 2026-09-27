@@ -47,12 +47,9 @@ export class GAUTCFormModel extends CitationForm<IGAUTCData> implements IGAUTCFo
     public readonly courtPage: PageDefinition<CourtPageModel> = this.schema.courtPage;
 
     public async initialize(): Promise<this> {
-        // the base stamps the date of the offense and the citation number; the time is this form's own addition
         const form = await super.initialize();
 
-        return form
-            .setTimeOfViolation()
-            .addRuleCollection(this.schema.ruleCollection);
+        return form.addRuleCollection(this.schema.ruleCollection);
     }
 
     /** Retrieves the single citation page of the form. */

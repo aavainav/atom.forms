@@ -14,8 +14,8 @@ new S438FormSchema();
 /**
  * Builds a form with its pages created.
  *
- * `initialize()` must be awaited -- it is what creates the pages -- and it also stamps the date of violation and
- * the ticket number onto the form, which is why a partial record leaves those two fields already filled in.
+ * `initialize()` must be awaited -- it is what creates the pages -- and it also stamps the date and time of
+ * violation onto the form, which is why a partial record leaves those two fields already filled in.
  */
 export function createForm(): Promise<S438FormModel> {
     return new S438FormModel().initialize();
