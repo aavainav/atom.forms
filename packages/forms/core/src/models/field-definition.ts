@@ -2,10 +2,14 @@ import { IDefinition, Definition } from "./definition";
 import { FieldModel, FieldModelConstructor } from "./field";
 import { PageModel } from "./page";
 import { PageDefinition } from "./page-definition";
+import { SectionCollectionDefinition } from "./section-collection-definition";
 import { SectionModel } from "./section";
 import { SectionDefinition } from "./section-definition";
 
 export type TValueType = string | number | boolean | string[] | number[] | boolean[] | any;
+
+/** The definition a field belongs to: an ordinary section holding one instance, or a section collection holding a fixed number of them. */
+export type FieldParentDefinition = SectionDefinition<SectionModel> | SectionCollectionDefinition<SectionModel>;
 
 /** Defines the definition of a field within a section. */
 export interface IFieldDefinition extends IDefinition {
@@ -14,8 +18,8 @@ export interface IFieldDefinition extends IDefinition {
     /** Whether the field is deprecated and should no longer be used. */
     readonly isDeprecated?: boolean;
 
-    /** Returns the section definition that this field belongs to. */
-    getSectionDefinition(): SectionDefinition<SectionModel>;
+    /** Returns the section, or section collection, definition that this field belongs to. */
+    getSectionDefinition(): FieldParentDefinition;
     /** Returns the page definition that this field's section belongs to. */
     getPageDefinition(): PageDefinition<PageModel>;
     /** Creates a new field model instance from this definition. */
@@ -30,7 +34,7 @@ export class FieldDefinition<TField extends FieldModel<TValueType>> extends Defi
     constructor(
         name: string,
         label: string,
-        sectionDefinition: SectionDefinition<SectionModel>,
+        sectionDefinition: FieldParentDefinition,
         ctor: FieldModelConstructor<TField>) {
         super(
             name,
@@ -42,8 +46,8 @@ export class FieldDefinition<TField extends FieldModel<TValueType>> extends Defi
         sectionDefinition.registerField(this);
     }
 
-    public getSectionDefinition(): SectionDefinition<SectionModel> {
-        return this.parent as SectionDefinition<SectionModel>;
+    public getSectionDefinition(): FieldParentDefinition {
+        return this.parent as FieldParentDefinition;
     }
 
     public getPageDefinition(): PageDefinition<PageModel> {

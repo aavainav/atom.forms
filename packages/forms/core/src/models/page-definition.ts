@@ -4,6 +4,7 @@ import { FormDefinition } from "./form-definition";
 import { FormModel } from "./form";
 import { PageModel, PageModelConstructor } from "./page";
 import { PageCollection } from "./page-collection";
+import { ISectionCollectionDefinition } from "./section-collection-definition";
 import { ISectionDefinition } from "./section-definition";
 
 /** Defines the definition of a page within a form. */
@@ -11,8 +12,8 @@ export interface IPageDefinition extends IDefinition {
     /** The page's display title, shown wherever a human-readable name is needed. Falls back to a title-cased version of `name` when not given. */
     readonly title: string;
 
-    /** Registers a section definition as a child of this page. */
-    registerSection(sectionDefinition: ISectionDefinition): void;
+    /** Registers a section, or section collection, definition as a child of this page. */
+    registerSection(sectionDefinition: ISectionDefinition | ISectionCollectionDefinition): void;
     /** Creates a new, empty page collection for this definition. */
     createNew(): PageCollection;
     /** Creates a new page model instance from this definition. */
@@ -44,7 +45,7 @@ export class PageDefinition<TPage extends PageModel = PageModel> extends Definit
         PageModel.registerDefinition(ctor, this);
     }
 
-    public registerSection(sectionDefinition: ISectionDefinition): void {
+    public registerSection(sectionDefinition: ISectionDefinition | ISectionCollectionDefinition): void {
         this.registerChild(sectionDefinition);
     }
 

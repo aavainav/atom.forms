@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionCollection, SectionCollectionDefinition, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { PersonHeaderSectionModel } from "./person-header-section";
 import { PersonSectionModel } from "./person-section";
@@ -32,7 +32,7 @@ export class PersonPageModel extends PageModel implements IPersonPageModel {
     public readonly injurySection: SectionDefinition<InjurySectionModel> = this.schema.injurySection;
     public readonly safetyEquipmentSection: SectionDefinition<SafetyEquipmentSectionModel> = this.schema.safetyEquipmentSection;
     public readonly alcoholDrugsSection: SectionDefinition<AlcoholDrugsSectionModel> = this.schema.alcoholDrugsSection;
-    public readonly passengersSection: SectionDefinition<PassengersSectionModel> = this.schema.passengersSection;
+    public readonly passengersSection: SectionCollectionDefinition<PassengersSectionModel> = this.schema.passengersSection;
     public readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel> = this.schema.personOfficerSection;
 
     /** Initializes the page, registers its dropzone, and stamps it with an id of its own that survives every save. */
@@ -54,6 +54,6 @@ export class PersonPageModel extends PageModel implements IPersonPageModel {
     public getInjurySection(): InjurySectionModel { return this.get<InjurySectionModel>(this.injurySection); }
     public getSafetyEquipmentSection(): SafetyEquipmentSectionModel { return this.get<SafetyEquipmentSectionModel>(this.safetyEquipmentSection); }
     public getAlcoholDrugsSection(): AlcoholDrugsSectionModel { return this.get<AlcoholDrugsSectionModel>(this.alcoholDrugsSection); }
-    public getPassengersSection(): PassengersSectionModel { return this.get<PassengersSectionModel>(this.passengersSection); }
+    public getPassengersSection(): SectionCollection<PassengersSectionModel> { return this.get<SectionCollection<PassengersSectionModel>>(this.passengersSection); }
     public getPersonOfficerSection(): PersonOfficerSectionModel { return this.get<PersonOfficerSectionModel>(this.personOfficerSection); }
 }

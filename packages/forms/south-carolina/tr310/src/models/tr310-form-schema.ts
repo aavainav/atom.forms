@@ -7,6 +7,7 @@ import {
     PageDefinition,
     RuleCollection,
     Schema,
+    SectionCollectionDefinition,
     SectionDefinition,
     BooleanFieldModel,
     HiddenFieldModel,
@@ -310,64 +311,22 @@ export interface ITR310FormSchema extends ISchema {
         readonly alcoholDrugsDrugTestResult: FieldDefinition<OptionFieldModel>;
     };
 
-    readonly passengersSection: SectionDefinition<PassengersSectionModel>;
+    readonly passengersSection: SectionCollectionDefinition<PassengersSectionModel>;
     readonly passengersFields: {
-        readonly passengerOnePersonNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerOneUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerOneNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly passengerOneDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly passengerOneInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneSex: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneRace: FieldDefinition<StringFieldModel>;
-        readonly passengerOneSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly passengerOneEjection: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly passengerOneHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoPersonNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoSex: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoRace: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly passengerTwoEjection: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly passengerTwoHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreePersonNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeSex: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeRace: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly passengerThreeEjection: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly passengerThreeHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourPersonNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerFourUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly passengerFourNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly passengerFourDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly passengerFourInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourSex: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourRace: FieldDefinition<StringFieldModel>;
-        readonly passengerFourSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly passengerFourEjection: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly passengerFourHeadInjury: FieldDefinition<OptionFieldModel>;
+        readonly personNumber: FieldDefinition<StringFieldModel>;
+        readonly unitNumber: FieldDefinition<StringFieldModel>;
+        readonly nameAndAddress: FieldDefinition<StringFieldModel>;
+        readonly dateOfBirth: FieldDefinition<StringFieldModel>;
+        readonly injuryStatus: FieldDefinition<OptionFieldModel>;
+        readonly sex: FieldDefinition<OptionFieldModel>;
+        readonly race: FieldDefinition<StringFieldModel>;
+        readonly seatingLocation: FieldDefinition<StringFieldModel>;
+        readonly ejection: FieldDefinition<OptionFieldModel>;
+        readonly medicalFacilityTransport: FieldDefinition<OptionFieldModel>;
+        readonly airBagDeployment: FieldDefinition<OptionFieldModel>;
+        readonly safetyEquipment: FieldDefinition<OptionFieldModel>;
+        readonly restraintDevice: FieldDefinition<OptionFieldModel>;
+        readonly headInjury: FieldDefinition<OptionFieldModel>;
     };
 
     readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel>;
@@ -511,64 +470,22 @@ export interface ITR310FormSchema extends ISchema {
         readonly diagramContent: FieldDefinition<StringFieldModel>;
     };
 
-    readonly additionalPassengersSection: SectionDefinition<AdditionalPassengersSectionModel>;
+    readonly additionalPassengersSection: SectionCollectionDefinition<AdditionalPassengersSectionModel>;
     readonly additionalPassengersFields: {
-        readonly additionalPassengerOnePersonNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneSex: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneRace: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerOneEjection: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerOneHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoPersonNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoSex: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoRace: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerTwoEjection: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerTwoHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreePersonNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeSex: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeRace: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerThreeEjection: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerThreeHeadInjury: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourPersonNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourUnitNumber: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourNameAndAddress: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourDateOfBirth: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourInjuryStatus: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourSex: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourRace: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourSeatingLocation: FieldDefinition<StringFieldModel>;
-        readonly additionalPassengerFourEjection: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourAirBagDeployment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourSafetyEquipment: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourRestraintDevice: FieldDefinition<OptionFieldModel>;
-        readonly additionalPassengerFourHeadInjury: FieldDefinition<OptionFieldModel>;
+        readonly personNumber: FieldDefinition<StringFieldModel>;
+        readonly unitNumber: FieldDefinition<StringFieldModel>;
+        readonly nameAndAddress: FieldDefinition<StringFieldModel>;
+        readonly dateOfBirth: FieldDefinition<StringFieldModel>;
+        readonly injuryStatus: FieldDefinition<OptionFieldModel>;
+        readonly sex: FieldDefinition<OptionFieldModel>;
+        readonly race: FieldDefinition<StringFieldModel>;
+        readonly seatingLocation: FieldDefinition<StringFieldModel>;
+        readonly ejection: FieldDefinition<OptionFieldModel>;
+        readonly medicalFacilityTransport: FieldDefinition<OptionFieldModel>;
+        readonly airBagDeployment: FieldDefinition<OptionFieldModel>;
+        readonly safetyEquipment: FieldDefinition<OptionFieldModel>;
+        readonly restraintDevice: FieldDefinition<OptionFieldModel>;
+        readonly headInjury: FieldDefinition<OptionFieldModel>;
     };
 
     readonly narrativeOfficerSection: SectionDefinition<NarrativeOfficerSectionModel>;
@@ -833,64 +750,23 @@ export class TR310FormSchema extends Schema implements ITR310FormSchema {
         alcoholDrugsDrugTestResult: { label: "Drug Test Result", ctor: OptionFieldModel }
     });
 
-    readonly passengersSection: SectionDefinition<PassengersSectionModel> = DefinitionFactory.section<PassengersSectionModel>("passengers-section", this.personPage, PassengersSectionModel);
+    // four rows, matching the four the paper form prints; see PassengersSectionModel for why this is a collection, not a page
+    readonly passengersSection: SectionCollectionDefinition<PassengersSectionModel> = DefinitionFactory.sectionCollection<PassengersSectionModel>("passengers-section", this.personPage, PassengersSectionModel, 4);
     readonly passengersFields = defineFields(this.passengersSection, {
-        passengerOnePersonNumber: { label: "Person #", ctor: StringFieldModel },
-        passengerOneUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        passengerOneNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        passengerOneDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        passengerOneInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        passengerOneSex: { label: "Sex", ctor: OptionFieldModel },
-        passengerOneRace: { label: "Race", ctor: StringFieldModel },
-        passengerOneSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        passengerOneEjection: { label: "EJECT", ctor: OptionFieldModel },
-        passengerOneMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        passengerOneAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        passengerOneSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        passengerOneRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        passengerOneHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        passengerTwoPersonNumber: { label: "Person #", ctor: StringFieldModel },
-        passengerTwoUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        passengerTwoNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        passengerTwoDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        passengerTwoInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        passengerTwoSex: { label: "Sex", ctor: OptionFieldModel },
-        passengerTwoRace: { label: "Race", ctor: StringFieldModel },
-        passengerTwoSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        passengerTwoEjection: { label: "EJECT", ctor: OptionFieldModel },
-        passengerTwoMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        passengerTwoAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        passengerTwoSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        passengerTwoRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        passengerTwoHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        passengerThreePersonNumber: { label: "Person #", ctor: StringFieldModel },
-        passengerThreeUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        passengerThreeNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        passengerThreeDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        passengerThreeInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        passengerThreeSex: { label: "Sex", ctor: OptionFieldModel },
-        passengerThreeRace: { label: "Race", ctor: StringFieldModel },
-        passengerThreeSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        passengerThreeEjection: { label: "EJECT", ctor: OptionFieldModel },
-        passengerThreeMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        passengerThreeAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        passengerThreeSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        passengerThreeRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        passengerThreeHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        passengerFourPersonNumber: { label: "Person #", ctor: StringFieldModel },
-        passengerFourUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        passengerFourNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        passengerFourDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        passengerFourInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        passengerFourSex: { label: "Sex", ctor: OptionFieldModel },
-        passengerFourRace: { label: "Race", ctor: StringFieldModel },
-        passengerFourSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        passengerFourEjection: { label: "EJECT", ctor: OptionFieldModel },
-        passengerFourMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        passengerFourAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        passengerFourSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        passengerFourRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        passengerFourHeadInjury: { label: "HI", ctor: OptionFieldModel }
+        personNumber: { label: "Person #", ctor: StringFieldModel },
+        unitNumber: { label: "Unit #", ctor: StringFieldModel },
+        nameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
+        dateOfBirth: { label: "DOB", ctor: StringFieldModel },
+        injuryStatus: { label: "INJ", ctor: OptionFieldModel },
+        sex: { label: "Sex", ctor: OptionFieldModel },
+        race: { label: "Race", ctor: StringFieldModel },
+        seatingLocation: { label: "SL", ctor: StringFieldModel },
+        ejection: { label: "EJECT", ctor: OptionFieldModel },
+        medicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
+        airBagDeployment: { label: "ABD", ctor: OptionFieldModel },
+        safetyEquipment: { label: "SE", ctor: OptionFieldModel },
+        restraintDevice: { label: "RD", ctor: OptionFieldModel },
+        headInjury: { label: "HI", ctor: OptionFieldModel }
     });
 
     readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel> = DefinitionFactory.section<PersonOfficerSectionModel>("person-officer-section", this.personPage, PersonOfficerSectionModel);
@@ -1039,64 +915,23 @@ export class TR310FormSchema extends Schema implements ITR310FormSchema {
         diagramContent: { label: "Diagram", ctor: StringFieldModel }
     });
 
-    readonly additionalPassengersSection: SectionDefinition<AdditionalPassengersSectionModel> = DefinitionFactory.section<AdditionalPassengersSectionModel>("additional-passengers-section", this.narrativePage, AdditionalPassengersSectionModel);
+    // four rows, matching the four the paper form prints, exactly like the person page's own passenger rows
+    readonly additionalPassengersSection: SectionCollectionDefinition<AdditionalPassengersSectionModel> = DefinitionFactory.sectionCollection<AdditionalPassengersSectionModel>("additional-passengers-section", this.narrativePage, AdditionalPassengersSectionModel, 4);
     readonly additionalPassengersFields = defineFields(this.additionalPassengersSection, {
-        additionalPassengerOnePersonNumber: { label: "Person #", ctor: StringFieldModel },
-        additionalPassengerOneUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        additionalPassengerOneNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        additionalPassengerOneDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        additionalPassengerOneInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        additionalPassengerOneSex: { label: "Sex", ctor: OptionFieldModel },
-        additionalPassengerOneRace: { label: "Race", ctor: StringFieldModel },
-        additionalPassengerOneSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        additionalPassengerOneEjection: { label: "EJECT", ctor: OptionFieldModel },
-        additionalPassengerOneMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        additionalPassengerOneAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        additionalPassengerOneSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        additionalPassengerOneRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        additionalPassengerOneHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        additionalPassengerTwoPersonNumber: { label: "Person #", ctor: StringFieldModel },
-        additionalPassengerTwoUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        additionalPassengerTwoNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        additionalPassengerTwoDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        additionalPassengerTwoInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        additionalPassengerTwoSex: { label: "Sex", ctor: OptionFieldModel },
-        additionalPassengerTwoRace: { label: "Race", ctor: StringFieldModel },
-        additionalPassengerTwoSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        additionalPassengerTwoEjection: { label: "EJECT", ctor: OptionFieldModel },
-        additionalPassengerTwoMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        additionalPassengerTwoAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        additionalPassengerTwoSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        additionalPassengerTwoRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        additionalPassengerTwoHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        additionalPassengerThreePersonNumber: { label: "Person #", ctor: StringFieldModel },
-        additionalPassengerThreeUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        additionalPassengerThreeNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        additionalPassengerThreeDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        additionalPassengerThreeInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        additionalPassengerThreeSex: { label: "Sex", ctor: OptionFieldModel },
-        additionalPassengerThreeRace: { label: "Race", ctor: StringFieldModel },
-        additionalPassengerThreeSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        additionalPassengerThreeEjection: { label: "EJECT", ctor: OptionFieldModel },
-        additionalPassengerThreeMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        additionalPassengerThreeAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        additionalPassengerThreeSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        additionalPassengerThreeRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        additionalPassengerThreeHeadInjury: { label: "HI", ctor: OptionFieldModel },
-        additionalPassengerFourPersonNumber: { label: "Person #", ctor: StringFieldModel },
-        additionalPassengerFourUnitNumber: { label: "Unit #", ctor: StringFieldModel },
-        additionalPassengerFourNameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
-        additionalPassengerFourDateOfBirth: { label: "DOB", ctor: StringFieldModel },
-        additionalPassengerFourInjuryStatus: { label: "INJ", ctor: OptionFieldModel },
-        additionalPassengerFourSex: { label: "Sex", ctor: OptionFieldModel },
-        additionalPassengerFourRace: { label: "Race", ctor: StringFieldModel },
-        additionalPassengerFourSeatingLocation: { label: "SL", ctor: StringFieldModel },
-        additionalPassengerFourEjection: { label: "EJECT", ctor: OptionFieldModel },
-        additionalPassengerFourMedicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
-        additionalPassengerFourAirBagDeployment: { label: "ABD", ctor: OptionFieldModel },
-        additionalPassengerFourSafetyEquipment: { label: "SE", ctor: OptionFieldModel },
-        additionalPassengerFourRestraintDevice: { label: "RD", ctor: OptionFieldModel },
-        additionalPassengerFourHeadInjury: { label: "HI", ctor: OptionFieldModel }
+        personNumber: { label: "Person #", ctor: StringFieldModel },
+        unitNumber: { label: "Unit #", ctor: StringFieldModel },
+        nameAndAddress: { label: "Name & Address", ctor: StringFieldModel },
+        dateOfBirth: { label: "DOB", ctor: StringFieldModel },
+        injuryStatus: { label: "INJ", ctor: OptionFieldModel },
+        sex: { label: "Sex", ctor: OptionFieldModel },
+        race: { label: "Race", ctor: StringFieldModel },
+        seatingLocation: { label: "SL", ctor: StringFieldModel },
+        ejection: { label: "EJECT", ctor: OptionFieldModel },
+        medicalFacilityTransport: { label: "TRANS", ctor: OptionFieldModel },
+        airBagDeployment: { label: "ABD", ctor: OptionFieldModel },
+        safetyEquipment: { label: "SE", ctor: OptionFieldModel },
+        restraintDevice: { label: "RD", ctor: OptionFieldModel },
+        headInjury: { label: "HI", ctor: OptionFieldModel }
     });
 
     readonly narrativeOfficerSection: SectionDefinition<NarrativeOfficerSectionModel> = DefinitionFactory.section<NarrativeOfficerSectionModel>("narrative-officer-section", this.narrativePage, NarrativeOfficerSectionModel);

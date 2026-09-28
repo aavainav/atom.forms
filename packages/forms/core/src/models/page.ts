@@ -2,10 +2,15 @@ import { Definition } from "./definition";
 import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
+import { SectionCollection } from "./section-collection";
+import { SectionCollectionDefinition } from "./section-collection-definition";
 import { SectionDefinition } from "./section-definition";
 import { SectionModel } from "./section";
 import { withChanges } from "../utils/clone";
 import { Dropzone, DropzoneConstructor } from "./import/dropzone";
+
+/** A page's child is either an ordinary section, holding one instance, or a section collection, holding a fixed number of them. */
+type PageChildDefinition = SectionDefinition | SectionCollectionDefinition;
 
 export type PageModelConstructor<T extends PageModel> = new () => T;
 
@@ -24,8 +29,8 @@ export interface IPage extends IEntity<Definition> {
 export interface IPageModel extends IPage {
     /** Creates and initializes the page's sections. */
     initialize(): Promise<this>;
-    /** Gets the child entity registered for the specified section definition. */
-    get<TSection>(sectionDefinition: SectionDefinition): TSection;
+    /** Gets the child entity registered for the specified section, or section collection, definition. */
+    get<TValue>(definition: PageChildDefinition): TValue;
     /** Gets the dropzone registered for the specified dropzone type. */
     getDropzone<TDropzone extends Dropzone>(dropzoneType: DropzoneConstructor<TDropzone>): TDropzone;
     /** Gets every dropzone registered on the page. */
@@ -39,7 +44,7 @@ export interface IPageModel extends IPage {
 }
 
 /** Represents a model for a page, extending `Entity` with a section definition. */
-export class PageModel extends Entity<SectionDefinition> implements IPageModel {
+export class PageModel extends Entity<PageChildDefinition> implements IPageModel {
     public readonly name: string;
     public readonly description?: string;
 
@@ -50,8 +55,8 @@ export class PageModel extends Entity<SectionDefinition> implements IPageModel {
         return this;
     }
 
-    public get<TSection>(sectionDefinition: SectionDefinition): TSection {
-        return super.get<TSection>(sectionDefinition);
+    public get<TValue>(definition: PageChildDefinition): TValue {
+        return super.get<TValue>(definition);
     }
 
     public getDropzone<TDropzone extends Dropzone>(dropzoneType: DropzoneConstructor<TDropzone>): TDropzone {
@@ -85,12 +90,14 @@ export class PageModel extends Entity<SectionDefinition> implements IPageModel {
     }
 
     private getFieldsInPage<TField>(fieldDefinition: FieldDefinition<FieldModel<TValueType>>): Array<TField> {
-        const fields: Array<TField> = [];
-
-        const section = this.get<SectionModel>(fieldDefinition.getSectionDefinition());
-        if (section) {
-            fields.push(section.get<TField>(fieldDefinition));
+        const value = this.get<SectionModel | SectionCollection<SectionModel>>(fieldDefinition.getSectionDefinition());
+        if (!value) {
+            return [];
         }
-        return fields;
+
+        // a field on a section collection has one value per section it repeats, not just the one
+        const sections = value instanceof SectionCollection ? value.getSections<SectionModel>() : [value];
+
+        return sections.map(section => section.get<TField>(fieldDefinition));
     }
 }

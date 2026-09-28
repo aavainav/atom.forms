@@ -97,6 +97,7 @@ export type { ICrashForm } from "./models/crash-form";
 export type { IDefinition } from "./models/definition";
 export type { IFieldDefinition } from "./models/field-definition";
 export type { ISectionDefinition, ISectionDefinitionOptions } from "./models/section-definition";
+export type { ISectionCollectionDefinition, ISectionCollectionDefinitionOptions } from "./models/section-collection-definition";
 export type { IPageDefinition } from "./models/page-definition";
 export type { IFormDefinition, FormDefinitionConstructor } from "./models/form-definition";
 
@@ -128,6 +129,8 @@ export { StringFieldModel } from "./models/string-field";
 export { OptionFieldModel } from "./models/option-field";
 export { SectionModel } from "./models/section";
 export { PageCollection } from "./models/page-collection";
+export type { ISectionCollection } from "./models/section-collection";
+export { SectionCollection } from "./models/section-collection";
 export { PageModel } from "./models/page";
 export { knownStatuses, FormModel } from "./models/form";
 export { FormMapper } from "./mapping/form-mapper";
@@ -138,7 +141,35 @@ export { VehicleDropzone, VehicleDropzoneFields } from "./models/import/vehicle-
 export { ViolationDropzone, ViolationDropzoneFields } from "./models/import/violation-dropzone";
 
 export { Controller, ControllerKey, ControllerManager, DragAndDropController, FormController, NavigationController, PrintController, RegisterController } from "./controllers";
-export type { ActivityEventArgs, ConfirmPageDelete, ControllerActivity, ControllerConstructor, FormActivity, IActivePage, IController, IControllerActivityMap, IControllerChangedEventArgs, IControllerManager, IDragAndDropController, IFormActivityEventArgs, IFormActivityMap, IFormController, IFormUpdateOptions, INavigationController, INavigationTarget, IPageBinding, IPageUpdateOptions, IPrintController, IPrintState, IRegisterControllerOptions, ISectionBinding, ISectionUpdateOptions, PrintLayout } from "./controllers";
+export type { 
+    IActivePage, 
+    IController, 
+    IControllerActivityMap, 
+    IControllerChangedEventArgs, 
+    IControllerManager, 
+    IDragAndDropController, 
+    IFormActivityEventArgs, 
+    IFormActivityMap, 
+    IFormController, 
+    IFormUpdateOptions, 
+    INavigationController, 
+    INavigationTarget, 
+    IPageBinding, 
+    IPageUpdateOptions, 
+    IPrintController, 
+    IPrintState, 
+    IRegisterControllerOptions, 
+    ISectionBinding,
+    ISectionCollectionBinding,
+    ISectionCollectionUpdateOptions,
+    ISectionUpdateOptions,
+    ActivityEventArgs, 
+    ConfirmPageDelete, 
+    ControllerActivity, 
+    ControllerConstructor, 
+    FormActivity, 
+    PrintLayout
+} from "./controllers";
 
 export { useActivePageId, useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 
@@ -158,11 +189,12 @@ export { warningWorkflow, WarningForm } from "./models/warning-form";
 export { Definition } from "./models/definition";
 export { FieldDefinition } from "./models/field-definition";
 export { SectionDefinition } from "./models/section-definition";
+export { SectionCollectionDefinition } from "./models/section-collection-definition";
 export { PageDefinition } from "./models/page-definition";
 export { FormDefinition } from "./models/form-definition";
 
 export { Schema } from "./models/schema";
-export { DefinitionFactory, defineFields } from "./models/definition-factory";
+export { defineFields, DefinitionFactory } from "./models/definition-factory";
 
 export { LogicalOperator } from "./models/validation/logical-operator";
 export { RuleCollection } from "./models/validation/rule-collection";

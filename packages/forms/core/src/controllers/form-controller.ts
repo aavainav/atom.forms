@@ -8,6 +8,8 @@ import { FormMode, FormModel } from "../models/form";
 import { PageCollection } from "../models/page-collection";
 import { PageDefinition } from "../models/page-definition";
 import { PageModel } from "../models/page";
+import { SectionCollection } from "../models/section-collection";
+import { SectionCollectionDefinition } from "../models/section-collection-definition";
 import { SectionDefinition } from "../models/section-definition";
 import { SectionModel } from "../models/section";
 
@@ -42,7 +44,7 @@ export interface IFormUpdateOptions<TForm extends FormModel<any>> {
 
 /** Binds a single section within a page, so its values can be read and written without knowing where it sits in the form. */
 export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
-    readonly sectionDefinition: SectionDefinition<TSection>;
+    readonly sectionDefinition: SectionDefinition<TSection> | SectionCollectionDefinition<TSection>;
 
     /** Gets the section as it currently stands on the form. */
     get(): TSection;
@@ -50,6 +52,26 @@ export interface ISectionBinding<TSection extends SectionModel = SectionModel> {
     setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void;
     /** Applies a change computed from the section's current state. Compute from the argument, not a section captured during render -- that snapshot may already be stale. */
     update(options: ISectionUpdateOptions<TSection>): void;
+}
+
+/** What a section collection update needs: how to compute the new collection, and optionally why. See `ISectionUpdateOptions` for why `update` uses method shorthand. */
+export interface ISectionCollectionUpdateOptions<TSection extends SectionModel> {
+    /** What the update was, for whatever observes the change to record -- core never interprets it itself. */
+    readonly reason?: FormActivity;
+    /** Computes the new collection from its current state. */
+    update(collection: SectionCollection<TSection>): SectionCollection<TSection>;
+}
+
+/** Binds a section collection within a page, so one of its sections can be read and replaced without knowing where the collection sits in the form. */
+export interface ISectionCollectionBinding<TSection extends SectionModel = SectionModel> {
+    readonly sectionDefinition: SectionCollectionDefinition<TSection>;
+
+    /** Gets the collection as it currently stands on the form. */
+    get(): SectionCollection<TSection>;
+    /** Binds one section within the collection, by its index -- stable, since nothing here ever adds or removes one. */
+    getSection(index: number): ISectionBinding<TSection>;
+    /** Applies a change computed from the collection's current state. */
+    update(options: ISectionCollectionUpdateOptions<TSection>): void;
 }
 
 /** Binds a single page instance, identified by its id so it survives other pages being added or removed. */
@@ -65,6 +87,8 @@ export interface IPageBinding<TPage extends PageModel = PageModel> {
     get(): TPage;
     /** Gets the binding for one of the page's sections. */
     getSection<TSection extends SectionModel>(sectionDefinition: SectionDefinition<TSection>): ISectionBinding<TSection>;
+    /** Gets the binding for one of the page's section collections. */
+    getSectionCollection<TSection extends SectionModel>(sectionDefinition: SectionCollectionDefinition<TSection>): ISectionCollectionBinding<TSection>;
     /** Whether the form has locked the section, closing its fields and anything that would write to them. */
     isSectionLocked(sectionDefinition: SectionDefinition): boolean;
     /** Applies a change computed from the page's current state. */
@@ -175,8 +199,56 @@ class SharedSectionBinding<TSection extends SectionModel> implements ISectionBin
     }
 }
 
+/** Binds one section within a section collection, by its index, so it can be read and written like any ordinary section. */
+class SectionCollectionItemBinding<TSection extends SectionModel> implements ISectionBinding<TSection> {
+    constructor(
+        private readonly collection: ISectionCollectionBinding<TSection>,
+        private readonly index: number,
+        readonly sectionDefinition: SectionCollectionDefinition<TSection>) {
+    }
+
+    public get(): TSection {
+        return this.collection.get().getSections<TSection>()[this.index];
+    }
+
+    public setValue(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, value: TValueType): void {
+        this.update({ update: section => section.set(fieldDefinition, section.get<FieldModel<TValueType>>(fieldDefinition).setValue(value)) });
+    }
+
+    public update({ reason, update }: ISectionUpdateOptions<TSection>): void {
+        this.collection.update({ update: collection => collection.replace(this.index, update(collection.getSections<TSection>()[this.index])), reason });
+    }
+}
+
+class SectionCollectionBinding<TSection extends SectionModel> implements ISectionCollectionBinding<TSection> {
+    private readonly items: Map<number, ISectionBinding<TSection>> = new Map<number, ISectionBinding<TSection>>();
+
+    constructor(private readonly page: IPageBinding<PageModel>, readonly sectionDefinition: SectionCollectionDefinition<TSection>) {
+    }
+
+    public get(): SectionCollection<TSection> {
+        return this.page.get().get<SectionCollection<TSection>>(this.sectionDefinition);
+    }
+
+    public getSection(index: number): ISectionBinding<TSection> {
+        let binding = this.items.get(index);
+
+        if (!binding) {
+            binding = new SectionCollectionItemBinding<TSection>(this, index, this.sectionDefinition);
+            this.items.set(index, binding);
+        }
+
+        return binding;
+    }
+
+    public update({ reason, update }: ISectionCollectionUpdateOptions<TSection>): void {
+        this.page.update({ update: page => page.set(this.sectionDefinition, update(page.get<SectionCollection<TSection>>(this.sectionDefinition))), reason });
+    }
+}
+
 class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
     private readonly sections: Map<string, ISectionBinding<any>> = new Map<string, ISectionBinding<any>>();
+    private readonly sectionCollections: Map<string, ISectionCollectionBinding<any>> = new Map<string, ISectionCollectionBinding<any>>();
 
     constructor(
         private readonly controller: IFormController,
@@ -208,6 +280,17 @@ class PageBinding<TPage extends PageModel> implements IPageBinding<TPage> {
                 : new SectionBinding<TSection>(this, sectionDefinition);
 
             this.sections.set(sectionDefinition.id, binding);
+        }
+
+        return binding;
+    }
+
+    public getSectionCollection<TSection extends SectionModel>(sectionDefinition: SectionCollectionDefinition<TSection>): ISectionCollectionBinding<TSection> {
+        let binding = this.sectionCollections.get(sectionDefinition.id);
+
+        if (!binding) {
+            binding = new SectionCollectionBinding<TSection>(this, sectionDefinition);
+            this.sectionCollections.set(sectionDefinition.id, binding);
         }
 
         return binding;

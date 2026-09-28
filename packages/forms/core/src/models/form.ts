@@ -2,21 +2,23 @@ import { Definition } from "./definition";
 import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
-import type { IFieldPlacement } from "./field-placement";
+import { IFieldPlacement } from "./field-placement";
 
 import { PageModel } from "./page";
 import { PageCollection } from "./page-collection";
 import { PageDefinition } from "./page-definition";
-import type { SectionModel } from "./section";
-import type { SectionDefinition } from "./section-definition";
+import { SectionCollection } from "./section-collection";
+import { SectionCollectionDefinition } from "./section-collection-definition";
+import { SectionModel } from "./section";
+import { SectionDefinition } from "./section-definition";
 import { ISchema } from "./schema";
 import { RuleCollection } from "./validation/rule-collection";
 import { RuleIssueSeverity, type IRuleIssue } from "./validation/rule-issue";
 import { RuleIssueCollection } from "./validation/rule-issue-collection";
-import type { IWorkflow, IWorkflowEntry } from "./workflow";
+import { IWorkflow, IWorkflowEntry } from "./workflow";
 
-import type { IFormMapper, IPopulateData, ReadOnlyFields } from "../mapping/form-mapper";
-import type { IReportData } from "../mapping/data/report-data";
+import { IFormMapper, IPopulateData, ReadOnlyFields } from "../mapping/form-mapper";
+import { IReportData } from "../mapping/data/report-data";
 import { mergeReadOnlyFields } from "../mapping/merge-read-only-fields";
 import { withChanges } from "../utils/clone";
 
@@ -117,7 +119,7 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     /** Returns a form in which no page of the definition can be added or removed. Its fields are not closed; lock a section for that. */
     lockPageSet(pageDefinition: PageDefinition): this;
     /** Returns a form in which the section's fields are closed on every page, including a page added later, and stay closed. */
-    lockSection(sectionDefinition: SectionDefinition): this;
+    lockSection(sectionDefinition: SectionDefinition | SectionCollectionDefinition): this;
     /** Returns a new form with the given data applied through its own mapper. A form without a mapper returns itself unchanged. */
     populate(input: IPopulateData<IReportData>): FormModel<TData> | Promise<FormModel<TData>>;
     /** Removes the page at the specified index from the page collection for the specified page definition. */
@@ -328,7 +330,7 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         return withChanges(this, { lockedPageSets: new Set([...this.lockedPageSets, pageDefinition.id]) });
     }
 
-    public lockSection(sectionDefinition: SectionDefinition): this {
+    public lockSection(sectionDefinition: SectionDefinition | SectionCollectionDefinition): this {
         const closed = this.mapSectionFields(sectionDefinition, field => field.setIsEnabled(false));
 
         return withChanges(closed, { lockedSections: new Set([...this.lockedSections, sectionDefinition.id]) });
@@ -399,9 +401,9 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     private lockAddedPage(page: PageModel, pageDefinition: PageDefinition): PageModel {
         let locked = page;
 
-        for (const sectionDefinition of pageDefinition.children as Array<SectionDefinition>) {
+        for (const sectionDefinition of pageDefinition.children as Array<SectionDefinition | SectionCollectionDefinition>) {
             if (this.lockedSections.has(sectionDefinition.id)) {
-                locked = locked.set(sectionDefinition, FormModel.mapSection(locked.get<SectionModel>(sectionDefinition), sectionDefinition, field => field.setIsEnabled(false)));
+                locked = FormModel.mapPageSection(locked, sectionDefinition, field => field.setIsEnabled(false));
             }
         }
 
@@ -419,16 +421,7 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
                 let updatedPage = page;
 
                 pageDefinition.children.forEach(sectionDefinition => {
-                    let section = updatedPage.get<SectionModel>(sectionDefinition as SectionDefinition);
-
-                    sectionDefinition.children.forEach(fieldDefinition => {
-                        if (fieldDefinition instanceof FieldDefinition) {
-                            const field = section.get<FieldModel<TValueType>>(fieldDefinition);
-                            section = section.set(fieldDefinition, map(field));
-                        }
-                    });
-
-                    updatedPage = updatedPage.set(sectionDefinition as SectionDefinition, section);
+                    updatedPage = FormModel.mapPageSection(updatedPage, sectionDefinition as SectionDefinition | SectionCollectionDefinition, map);
                 });
 
                 return updatedPage;
@@ -441,15 +434,27 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
     }
 
     /** Returns a new form with every field of the section, on every page, replaced by the result of the given mapping. */
-    private mapSectionFields(sectionDefinition: SectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): this {
+    private mapSectionFields(sectionDefinition: SectionDefinition | SectionCollectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): this {
         const pageDefinition = sectionDefinition.getPageDefinition();
-        const pages = this.getPagesFor(pageDefinition).map(page => page.set(sectionDefinition, FormModel.mapSection(page.get<SectionModel>(sectionDefinition), sectionDefinition, map)));
+        const pages = this.getPagesFor(pageDefinition).map(page => FormModel.mapPageSection(page, sectionDefinition, map));
 
         return this.set(pageDefinition, new PageCollection(pages));
     }
 
+    /** Returns a page's section, or every section of a collection, with each field replaced by the result of the given mapping. */
+    private static mapPageSection(page: PageModel, sectionDefinition: SectionDefinition | SectionCollectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): PageModel {
+        const value = page.get<SectionModel | SectionCollection<SectionModel>>(sectionDefinition);
+
+        if (value instanceof SectionCollection) {
+            const sections = value.getSections<SectionModel>().map(section => FormModel.mapSection(section, sectionDefinition, map));
+            return page.set(sectionDefinition, sections.reduce((collection, section, index) => collection.replace(index, section), value));
+        }
+
+        return page.set(sectionDefinition, FormModel.mapSection(value, sectionDefinition, map));
+    }
+
     /** Returns a section with each of its fields replaced by the result of the given mapping. */
-    private static mapSection(section: SectionModel, sectionDefinition: SectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): SectionModel {
+    private static mapSection(section: SectionModel, sectionDefinition: SectionDefinition | SectionCollectionDefinition, map: (field: FieldModel<TValueType>) => FieldModel<TValueType>): SectionModel {
         let mapped = section;
 
         sectionDefinition.children.forEach(fieldDefinition => {

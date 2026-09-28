@@ -1,4 +1,5 @@
 import { IField } from "../field";
+import { ISectionCollectionDefinition } from "../section-collection-definition";
 import { ISectionDefinition } from "../section-definition";
 
 /** Defines the severity of the rule. */
@@ -11,8 +12,8 @@ export enum RuleIssueSeverity {
 export interface IRuleIssue {
     /** The field with the rule issue. */
     readonly field: IField;
-    /** The section the field belongs to; its own `getPageDefinition()` reaches the page. */
-    readonly section: ISectionDefinition;
+    /** The section, or section collection, the field belongs to; its own `getPageDefinition()` reaches the page. */
+    readonly section: ISectionDefinition | ISectionCollectionDefinition;
 
     /** The rule issue message. */
     readonly message: string;

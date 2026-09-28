@@ -5,8 +5,11 @@ import { ControllerManager } from "../../src/controllers/controller-manager";
 import type { IFormController } from "../../src/controllers/form-controller";
 import type { OptionFieldModel } from "../../src/models/option-field";
 import type { PageCollection } from "../../src/models/page-collection";
-import type { StringFieldModel } from "../../src/models/string-field";
-import type { SectionModel } from "../../src/models/section";
+import { DefinitionFactory, defineFields } from "../../src/models/definition-factory";
+import { FormModel } from "../../src/models/form";
+import { PageModel } from "../../src/models/page";
+import { SectionModel } from "../../src/models/section";
+import { StringFieldModel } from "../../src/models/string-field";
 import {
     chargeFields,
     chargeSection,
@@ -16,6 +19,26 @@ import {
     violatorFields,
     violatorSection
 } from "../fixtures/citation-form";
+
+/**
+ * The smallest tree that exercises a section collection's binding: one page carrying three rows, each with a name
+ * field of its own. A fixture of its own for the same reason `citation-form.ts` is -- its own subclasses, built
+ * once at module scope.
+ */
+class TestRowsForm extends FormModel<any> { }
+class TestRowsPage extends PageModel { }
+class TestRowSection extends SectionModel { }
+
+const rowsForm = DefinitionFactory.form("test-rows-form", TestRowsForm, {});
+const rowsPage = DefinitionFactory.page("rows-page", rowsForm, TestRowsPage);
+const rowsDefinition = DefinitionFactory.sectionCollection("rows", rowsPage, TestRowSection, 3);
+const rowFields = defineFields(rowsDefinition, {
+    name: { label: "Name", ctor: StringFieldModel }
+});
+
+function createRowsForm(): Promise<TestRowsForm> {
+    return new TestRowsForm().initialize();
+}
 
 describe("FormController", () => {
     let controller: IFormController<TestCitationForm>;
@@ -91,6 +114,83 @@ describe("FormController", () => {
 
             expect(readAll<StringFieldModel>(chargeSection, chargeFields.offenseDescription).map(field => field.getValue()))
                 .toEqual(["Speeding", ""]);
+        });
+    });
+
+    describe("a section collection's binding", () => {
+        let rowsController: IFormController<TestRowsForm>;
+
+        beforeEach(async () => {
+            rowsController = new ControllerManager().loadForm(await createRowsForm());
+        });
+
+        function firstRowsPageId(): string {
+            return rowsController.form.getPages()[0].id!;
+        }
+
+        function binding() {
+            return rowsController.getPageBinding(rowsPage, firstRowsPageId()).getSectionCollection(rowsDefinition);
+        }
+
+        it("gets the collection with all of its rows", () => {
+            expect(binding().get().getSections()).toHaveLength(3);
+        });
+
+        it("hands back the same binding for the same collection", () => {
+            const pageBinding = rowsController.getPageBinding(rowsPage, firstRowsPageId());
+
+            expect(pageBinding.getSectionCollection(rowsDefinition)).toBe(pageBinding.getSectionCollection(rowsDefinition));
+        });
+
+        it("hands back the same row binding for the same index", () => {
+            expect(binding().getSection(1)).toBe(binding().getSection(1));
+        });
+
+        it("reads the row at the given index", () => {
+            binding().getSection(1).setValue(rowFields.name, "Riley");
+
+            expect(binding().getSection(1).get().get<StringFieldModel>(rowFields.name).getValue()).toBe("Riley");
+        });
+
+        it("writes to one row without disturbing the others", () => {
+            binding().getSection(1).setValue(rowFields.name, "Riley");
+
+            const names = binding().get().getSections().map(section => section.get<StringFieldModel>(rowFields.name).getValue());
+
+            expect(names).toEqual(["", "Riley", ""]);
+        });
+
+        it("computes a row's update from its own current state, not a stale snapshot", () => {
+            const row = binding().getSection(0);
+            row.setValue(rowFields.name, "Dana");
+
+            row.update({ update: section => section.set(rowFields.name, section.get<StringFieldModel>(rowFields.name).setValue(section.get<StringFieldModel>(rowFields.name).getValue() + " Lee")) });
+
+            expect(row.get().get<StringFieldModel>(rowFields.name).getValue()).toBe("Dana Lee");
+        });
+
+        it("computes a collection update from its own current state", () => {
+            binding().update({
+                update: collection => collection.replace(2, collection.getSections()[2].set(rowFields.name, collection.getSections()[2].get<StringFieldModel>(rowFields.name).setValue("Sam")))
+            });
+
+            expect(binding().get().getSections()[2].get<StringFieldModel>(rowFields.name).getValue()).toBe("Sam");
+        });
+
+        it("relays a row's update reason through, the same as any other section binding", async () => {
+            const manager = new ControllerManager();
+            const formController = manager.loadForm(await createRowsForm());
+            const relayed: Array<ActivityEventArgs> = [];
+            manager.onActivity(args => relayed.push(args));
+            const pageId = formController.form.getPages()[0].id!;
+
+            formController.getPageBinding(rowsPage, pageId).getSectionCollection(rowsDefinition).getSection(0).update({
+                update: section => section.set(rowFields.name, section.get<StringFieldModel>(rowFields.name).setValue("Dana")),
+                reason: { kind: "dropped", type: "person" }
+            });
+
+            expect(relayed).toHaveLength(1);
+            expect(relayed[0]).toMatchObject({ activity: { kind: "dropped", type: "person" } });
         });
     });
 

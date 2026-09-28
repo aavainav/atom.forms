@@ -11,6 +11,6 @@ export type { ActivityEventArgs, ControllerActivity, FormActivity, IControllerAc
 export type { IControllerChangedEventArgs, IControllerManager } from "./controller-manager";
 export type { IRegisterControllerOptions } from "./controller-registry";
 export type { IDragAndDropController } from "./drag-and-drop-controller";
-export type { ConfirmPageDelete, IFormController, IFormUpdateOptions, IPageBinding, IPageUpdateOptions, ISectionBinding, ISectionUpdateOptions } from "./form-controller";
+export type { ConfirmPageDelete, IFormController, IFormUpdateOptions, IPageBinding, IPageUpdateOptions, ISectionBinding, ISectionCollectionBinding, ISectionCollectionUpdateOptions, ISectionUpdateOptions } from "./form-controller";
 export type { IActivePage, INavigationController, INavigationTarget } from "./navigation-controller";
 export type { IPrintController, IPrintState, PrintLayout } from "./print-controller";

@@ -1,10 +1,11 @@
 import { FieldModel, FieldModelConstructor, TValueType } from "./field";
-import { FieldDefinition } from "./field-definition";
+import { FieldDefinition, FieldParentDefinition } from "./field-definition";
 import { FormDefinition } from "./form-definition";
 import { FormModel, FormModelConstructor } from "./form";
 import { IPageDefinitionOptions, PageDefinition } from "./page-definition";
 import { PageModel, PageModelConstructor } from "./page";
 import type { ISchema } from "./schema";
+import { ISectionCollectionDefinitionOptions, SectionCollectionDefinition } from "./section-collection-definition";
 import { ISectionDefinitionOptions, SectionDefinition } from "./section-definition";
 import { SectionModel, SectionModelConstructor } from "./section";
 
@@ -39,10 +40,15 @@ export class DefinitionFactory {
     static section<TSection extends SectionModel>(name: string, page: PageDefinition<PageModel>, ctor: SectionModelConstructor<TSection>, options?: ISectionDefinitionOptions): SectionDefinition<TSection> {
         return new SectionDefinition<TSection>(name, page, ctor, options);
     }
+
+    /** A section that repeats `count` times within the page -- a passenger table's rows, say -- rather than holding one instance. */
+    static sectionCollection<TSection extends SectionModel>(name: string, page: PageDefinition<PageModel>, ctor: SectionModelConstructor<TSection>, count: number, options?: ISectionCollectionDefinitionOptions): SectionCollectionDefinition<TSection> {
+        return new SectionCollectionDefinition<TSection>(name, page, ctor, count, options);
+    }
 }
 
-/** Declares a group of fields on a section in one call, keyed by property name. */
-export function defineFields<TSpecs extends Record<string, FieldDescriptor>>(section: SectionDefinition<SectionModel>, specs: TSpecs): FieldDefinitionsOf<TSpecs> {
+/** Declares a group of fields on a section, or section collection, in one call, keyed by property name. */
+export function defineFields<TSpecs extends Record<string, FieldDescriptor>>(section: FieldParentDefinition, specs: TSpecs): FieldDefinitionsOf<TSpecs> {
     const result = {} as FieldDefinitionsOf<TSpecs>;
 
     for (const key of Object.keys(specs) as (keyof TSpecs & string)[]) {

@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionCollection, SectionCollectionDefinition, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { NarrativeHeaderSectionModel } from "./narrative-header-section";
 import { NarrativeSectionModel } from "./narrative-section";
@@ -19,12 +19,12 @@ export class NarrativePageModel extends PageModel implements INarrativePageModel
     public readonly narrativeHeaderSection: SectionDefinition<NarrativeHeaderSectionModel> = this.schema.narrativeHeaderSection;
     public readonly narrativeSection: SectionDefinition<NarrativeSectionModel> = this.schema.narrativeSection;
     public readonly diagramSection: SectionDefinition<DiagramSectionModel> = this.schema.diagramSection;
-    public readonly additionalPassengersSection: SectionDefinition<AdditionalPassengersSectionModel> = this.schema.additionalPassengersSection;
+    public readonly additionalPassengersSection: SectionCollectionDefinition<AdditionalPassengersSectionModel> = this.schema.additionalPassengersSection;
     public readonly narrativeOfficerSection: SectionDefinition<NarrativeOfficerSectionModel> = this.schema.narrativeOfficerSection;
 
     public getNarrativeHeaderSection(): NarrativeHeaderSectionModel { return this.get<NarrativeHeaderSectionModel>(this.narrativeHeaderSection); }
     public getNarrativeSection(): NarrativeSectionModel { return this.get<NarrativeSectionModel>(this.narrativeSection); }
     public getDiagramSection(): DiagramSectionModel { return this.get<DiagramSectionModel>(this.diagramSection); }
-    public getAdditionalPassengersSection(): AdditionalPassengersSectionModel { return this.get<AdditionalPassengersSectionModel>(this.additionalPassengersSection); }
+    public getAdditionalPassengersSection(): SectionCollection<AdditionalPassengersSectionModel> { return this.get<SectionCollection<AdditionalPassengersSectionModel>>(this.additionalPassengersSection); }
     public getNarrativeOfficerSection(): NarrativeOfficerSectionModel { return this.get<NarrativeOfficerSectionModel>(this.narrativeOfficerSection); }
 }
