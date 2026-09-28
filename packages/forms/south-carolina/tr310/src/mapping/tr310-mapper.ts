@@ -1,4 +1,4 @@
-import { IPopulateData, FormMapper, FormValues, PageCollection, PageDefinition, ReadOnlyFields } from "@forms/core";
+import { IPopulateData, FormMapper, FormValues, PageCollection, PageDefinition, ReadOnlyFields, SectionCollection } from "@forms/core";
 
 import { TR310FormModel } from "../models/tr310-form";
 import { CollisionPageModel } from "../models/collision-page/collision-page";
@@ -46,7 +46,7 @@ import { NarrativeSectionModel } from "../models/narrative-page/narrative-sectio
 import { DiagramSectionModel } from "../models/narrative-page/diagram-section";
 import { AdditionalPassengersSectionModel } from "../models/narrative-page/additional-passengers-section";
 import { NarrativeOfficerSectionModel } from "../models/narrative-page/narrative-officer-section";
-import { ITR310Data, ITR310PersonData, ITR310UnitData } from "./tr310-data";
+import { ITR310Data, ITR310PassengerData, ITR310PersonData, ITR310UnitData, ITR310WitnessData } from "./tr310-data";
 
 /**
  * Maps the SC TR-310 traffic collision report to and from the data contract it publishes. Each section's read
@@ -73,13 +73,13 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.extractHarmfulEvent(collisionPage.getHarmfulEventSection(), data);
         this.extractJunction(collisionPage.getJunctionSection(), data);
         this.extractWorkZone(collisionPage.getWorkZoneSection(), data);
-        this.extractWitness(collisionPage.getWitnessSection(), data);
+        data.witnesses = this.extractWitness(collisionPage.getWitnessSection());
         this.extractCollisionOfficer(collisionPage.getCollisionOfficerSection(), data);
 
         this.extractNarrativeHeader(narrativePage.getNarrativeHeaderSection(), data);
         this.extractNarrative(narrativePage.getNarrativeSection(), data);
         this.extractDiagram(narrativePage.getDiagramSection(), data);
-        this.extractAdditionalPassengers(narrativePage.getAdditionalPassengersSection(), data);
+        data.additionalPassengers = this.extractAdditionalPassengers(narrativePage.getAdditionalPassengersSection());
         this.extractNarrativeOfficer(narrativePage.getNarrativeOfficerSection(), data);
 
         data.persons = form.getPersonPages().map(page => this.extractPersonRecord(page));
@@ -135,7 +135,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         updated = updated.set(updated.harmfulEventSection, this.populateHarmfulEvent(updated.getHarmfulEventSection(), data, readOnlyFields));
         updated = updated.set(updated.junctionSection, this.populateJunction(updated.getJunctionSection(), data, readOnlyFields));
         updated = updated.set(updated.workZoneSection, this.populateWorkZone(updated.getWorkZoneSection(), data, readOnlyFields));
-        updated = updated.set(updated.witnessSection, this.populateWitness(updated.getWitnessSection(), data, readOnlyFields));
+        updated = updated.set(updated.witnessSection, this.populateWitness(updated.getWitnessSection(), data.witnesses));
         updated = updated.set(updated.collisionOfficerSection, this.populateCollisionOfficer(updated.getCollisionOfficerSection(), data, readOnlyFields));
 
         return form.set(form.collisionPage, collection.replace(0, updated));
@@ -149,7 +149,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         let updated = page.set(page.narrativeHeaderSection, this.populateNarrativeHeader(page.getNarrativeHeaderSection(), data, readOnlyFields));
         updated = updated.set(updated.narrativeSection, this.populateNarrative(updated.getNarrativeSection(), data, readOnlyFields));
         updated = updated.set(updated.diagramSection, this.populateDiagram(updated.getDiagramSection(), data, readOnlyFields));
-        updated = updated.set(updated.additionalPassengersSection, this.populateAdditionalPassengers(updated.getAdditionalPassengersSection(), data, readOnlyFields));
+        updated = updated.set(updated.additionalPassengersSection, this.populateAdditionalPassengers(updated.getAdditionalPassengersSection(), data.additionalPassengers));
         updated = updated.set(updated.narrativeOfficerSection, this.populateNarrativeOfficer(updated.getNarrativeOfficerSection(), data, readOnlyFields));
 
         return form.set(form.narrativePage, collection.replace(0, updated));
@@ -168,7 +168,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         this.extractInjury(page.getInjurySection(), data);
         this.extractSafetyEquipment(page.getSafetyEquipmentSection(), data);
         this.extractAlcoholDrugs(page.getAlcoholDrugsSection(), data);
-        this.extractPassengers(page.getPassengersSection(), data);
+        data.passengers = this.extractPassengers(page.getPassengersSection());
         this.extractPersonOfficer(page.getPersonOfficerSection(), data);
 
         return data;
@@ -200,7 +200,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         updated = updated.set(updated.injurySection, this.populateInjury(updated.getInjurySection(), data));
         updated = updated.set(updated.safetyEquipmentSection, this.populateSafetyEquipment(updated.getSafetyEquipmentSection(), data));
         updated = updated.set(updated.alcoholDrugsSection, this.populateAlcoholDrugs(updated.getAlcoholDrugsSection(), data));
-        updated = updated.set(updated.passengersSection, this.populatePassengers(updated.getPassengersSection(), data));
+        updated = updated.set(updated.passengersSection, this.populatePassengers(updated.getPassengersSection(), data.passengers));
         updated = updated.set(updated.personOfficerSection, this.populatePersonOfficer(updated.getPersonOfficerSection(), data));
 
         return updated;
@@ -457,77 +457,56 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         return this.write(updated, section.workerPresent, data, "workZoneWorkerPresent", readOnlyFields);
     }
 
-    private extractWitness(section: WitnessSectionModel, data: FormValues<ITR310Data>): void {
-        this.read(data, "witnessOneAddress", section.getOneAddress());
-        this.read(data, "witnessOneCity", section.getOneCity());
-        this.read(data, "witnessOneFirstName", section.getOneFirstName());
-        this.read(data, "witnessOneLastName", section.getOneLastName());
-        this.read(data, "witnessOneMiddleInitial", section.getOneMiddleInitial());
-        this.read(data, "witnessOnePropertyDamageAmount", section.getOnePropertyDamageAmount());
-        this.read(data, "witnessOnePropertyDamageDescription", section.getOnePropertyDamageDescription());
-        this.read(data, "witnessOneState", section.getOneState());
-        this.read(data, "witnessOneTelephone", section.getOneTelephone());
-        this.read(data, "witnessOneType", section.getOneType());
-        this.read(data, "witnessOneZipCode", section.getOneZipCode());
-        this.read(data, "witnessThreeAddress", section.getThreeAddress());
-        this.read(data, "witnessThreeCity", section.getThreeCity());
-        this.read(data, "witnessThreeFirstName", section.getThreeFirstName());
-        this.read(data, "witnessThreeLastName", section.getThreeLastName());
-        this.read(data, "witnessThreeMiddleInitial", section.getThreeMiddleInitial());
-        this.read(data, "witnessThreePropertyDamageAmount", section.getThreePropertyDamageAmount());
-        this.read(data, "witnessThreePropertyDamageDescription", section.getThreePropertyDamageDescription());
-        this.read(data, "witnessThreeState", section.getThreeState());
-        this.read(data, "witnessThreeTelephone", section.getThreeTelephone());
-        this.read(data, "witnessThreeType", section.getThreeType());
-        this.read(data, "witnessThreeZipCode", section.getThreeZipCode());
-        this.read(data, "witnessTwoAddress", section.getTwoAddress());
-        this.read(data, "witnessTwoCity", section.getTwoCity());
-        this.read(data, "witnessTwoFirstName", section.getTwoFirstName());
-        this.read(data, "witnessTwoLastName", section.getTwoLastName());
-        this.read(data, "witnessTwoMiddleInitial", section.getTwoMiddleInitial());
-        this.read(data, "witnessTwoPropertyDamageAmount", section.getTwoPropertyDamageAmount());
-        this.read(data, "witnessTwoPropertyDamageDescription", section.getTwoPropertyDamageDescription());
-        this.read(data, "witnessTwoState", section.getTwoState());
-        this.read(data, "witnessTwoTelephone", section.getTwoTelephone());
-        this.read(data, "witnessTwoType", section.getTwoType());
-        this.read(data, "witnessTwoZipCode", section.getTwoZipCode());
+    /** Returns one entry per witness or property owner row, in row order. Always reports all three, blank or not. */
+    private extractWitness(witnesses: SectionCollection<WitnessSectionModel>): ReadonlyArray<ITR310WitnessData> {
+        return witnesses.getSections<WitnessSectionModel>().map(section => {
+            const data: FormValues<ITR310WitnessData> = {};
+
+            this.read(data, "type", section.getType());
+            this.read(data, "firstName", section.getFirstName());
+            this.read(data, "middleInitial", section.getMiddleInitial());
+            this.read(data, "lastName", section.getLastName());
+            this.read(data, "address", section.getAddress());
+            this.read(data, "city", section.getCity());
+            this.read(data, "state", section.getState());
+            this.read(data, "zipCode", section.getZipCode());
+            this.read(data, "telephone", section.getTelephone());
+            this.read(data, "propertyDamageAmount", section.getPropertyDamageAmount());
+            this.read(data, "propertyDamageDescription", section.getPropertyDamageDescription());
+
+            return data as ITR310WitnessData;
+        });
     }
 
-    private populateWitness(section: WitnessSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): WitnessSectionModel {
-        let updated = this.write(section, section.oneAddress, data, "witnessOneAddress", readOnlyFields);
-        updated = this.write(updated, section.oneCity, data, "witnessOneCity", readOnlyFields);
-        updated = this.write(updated, section.oneFirstName, data, "witnessOneFirstName", readOnlyFields);
-        updated = this.write(updated, section.oneLastName, data, "witnessOneLastName", readOnlyFields);
-        updated = this.write(updated, section.oneMiddleInitial, data, "witnessOneMiddleInitial", readOnlyFields);
-        updated = this.write(updated, section.onePropertyDamageAmount, data, "witnessOnePropertyDamageAmount", readOnlyFields);
-        updated = this.write(updated, section.onePropertyDamageDescription, data, "witnessOnePropertyDamageDescription", readOnlyFields);
-        updated = this.write(updated, section.oneState, data, "witnessOneState", readOnlyFields);
-        updated = this.write(updated, section.oneTelephone, data, "witnessOneTelephone", readOnlyFields);
-        updated = this.write(updated, section.oneType, data, "witnessOneType", readOnlyFields);
-        updated = this.write(updated, section.oneZipCode, data, "witnessOneZipCode", readOnlyFields);
-        updated = this.write(updated, section.threeAddress, data, "witnessThreeAddress", readOnlyFields);
-        updated = this.write(updated, section.threeCity, data, "witnessThreeCity", readOnlyFields);
-        updated = this.write(updated, section.threeFirstName, data, "witnessThreeFirstName", readOnlyFields);
-        updated = this.write(updated, section.threeLastName, data, "witnessThreeLastName", readOnlyFields);
-        updated = this.write(updated, section.threeMiddleInitial, data, "witnessThreeMiddleInitial", readOnlyFields);
-        updated = this.write(updated, section.threePropertyDamageAmount, data, "witnessThreePropertyDamageAmount", readOnlyFields);
-        updated = this.write(updated, section.threePropertyDamageDescription, data, "witnessThreePropertyDamageDescription", readOnlyFields);
-        updated = this.write(updated, section.threeState, data, "witnessThreeState", readOnlyFields);
-        updated = this.write(updated, section.threeTelephone, data, "witnessThreeTelephone", readOnlyFields);
-        updated = this.write(updated, section.threeType, data, "witnessThreeType", readOnlyFields);
-        updated = this.write(updated, section.threeZipCode, data, "witnessThreeZipCode", readOnlyFields);
-        updated = this.write(updated, section.twoAddress, data, "witnessTwoAddress", readOnlyFields);
-        updated = this.write(updated, section.twoCity, data, "witnessTwoCity", readOnlyFields);
-        updated = this.write(updated, section.twoFirstName, data, "witnessTwoFirstName", readOnlyFields);
-        updated = this.write(updated, section.twoLastName, data, "witnessTwoLastName", readOnlyFields);
-        updated = this.write(updated, section.twoMiddleInitial, data, "witnessTwoMiddleInitial", readOnlyFields);
-        updated = this.write(updated, section.twoPropertyDamageAmount, data, "witnessTwoPropertyDamageAmount", readOnlyFields);
-        updated = this.write(updated, section.twoPropertyDamageDescription, data, "witnessTwoPropertyDamageDescription", readOnlyFields);
-        updated = this.write(updated, section.twoState, data, "witnessTwoState", readOnlyFields);
-        updated = this.write(updated, section.twoTelephone, data, "witnessTwoTelephone", readOnlyFields);
-        updated = this.write(updated, section.twoType, data, "witnessTwoType", readOnlyFields);
+    /** Returns the collection with each record written onto the row at its own index; a record past the last row is dropped, and a row the records don't reach is left alone. */
+    private populateWitness(witnesses: SectionCollection<WitnessSectionModel>, records: ReadonlyArray<ITR310WitnessData> = []): SectionCollection<WitnessSectionModel> {
+        let updated = witnesses;
 
-        return this.write(updated, section.twoZipCode, data, "witnessTwoZipCode", readOnlyFields);
+        records.forEach((record, index) => {
+            const section = <WitnessSectionModel | undefined>updated.getSections<WitnessSectionModel>()[index];
+
+            if (section) {
+                updated = updated.replace(index, this.populateWitnessRow(section, record));
+            }
+        });
+
+        return updated;
+    }
+
+    /** Returns a new witness row with the given record applied to it. */
+    private populateWitnessRow(section: WitnessSectionModel, data: ITR310WitnessData): WitnessSectionModel {
+        let updated = this.write(section, section.type, data, "type");
+        updated = this.write(updated, section.firstName, data, "firstName");
+        updated = this.write(updated, section.middleInitial, data, "middleInitial");
+        updated = this.write(updated, section.lastName, data, "lastName");
+        updated = this.write(updated, section.address, data, "address");
+        updated = this.write(updated, section.city, data, "city");
+        updated = this.write(updated, section.state, data, "state");
+        updated = this.write(updated, section.zipCode, data, "zipCode");
+        updated = this.write(updated, section.telephone, data, "telephone");
+        updated = this.write(updated, section.propertyDamageAmount, data, "propertyDamageAmount");
+
+        return this.write(updated, section.propertyDamageDescription, data, "propertyDamageDescription");
     }
 
     private extractCollisionOfficer(section: CollisionOfficerSectionModel, data: FormValues<ITR310Data>): void {
@@ -719,123 +698,62 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         return this.write(updated, section.suspectedUse, data, "alcoholDrugsSuspectedUse");
     }
 
-    private extractPassengers(section: PassengersSectionModel, data: FormValues<ITR310PersonData>): void {
-        this.read(data, "passengerFourAirBagDeployment", section.getFourAirBagDeployment());
-        this.read(data, "passengerFourDateOfBirth", section.getFourDateOfBirth());
-        this.read(data, "passengerFourEjection", section.getFourEjection());
-        this.read(data, "passengerFourHeadInjury", section.getFourHeadInjury());
-        this.read(data, "passengerFourInjuryStatus", section.getFourInjuryStatus());
-        this.read(data, "passengerFourMedicalFacilityTransport", section.getFourMedicalFacilityTransport());
-        this.read(data, "passengerFourNameAndAddress", section.getFourNameAndAddress());
-        this.read(data, "passengerFourPersonNumber", section.getFourPersonNumber());
-        this.read(data, "passengerFourRace", section.getFourRace());
-        this.read(data, "passengerFourRestraintDevice", section.getFourRestraintDevice());
-        this.read(data, "passengerFourSafetyEquipment", section.getFourSafetyEquipment());
-        this.read(data, "passengerFourSeatingLocation", section.getFourSeatingLocation());
-        this.read(data, "passengerFourSex", section.getFourSex());
-        this.read(data, "passengerFourUnitNumber", section.getFourUnitNumber());
-        this.read(data, "passengerOneAirBagDeployment", section.getOneAirBagDeployment());
-        this.read(data, "passengerOneDateOfBirth", section.getOneDateOfBirth());
-        this.read(data, "passengerOneEjection", section.getOneEjection());
-        this.read(data, "passengerOneHeadInjury", section.getOneHeadInjury());
-        this.read(data, "passengerOneInjuryStatus", section.getOneInjuryStatus());
-        this.read(data, "passengerOneMedicalFacilityTransport", section.getOneMedicalFacilityTransport());
-        this.read(data, "passengerOneNameAndAddress", section.getOneNameAndAddress());
-        this.read(data, "passengerOnePersonNumber", section.getOnePersonNumber());
-        this.read(data, "passengerOneRace", section.getOneRace());
-        this.read(data, "passengerOneRestraintDevice", section.getOneRestraintDevice());
-        this.read(data, "passengerOneSafetyEquipment", section.getOneSafetyEquipment());
-        this.read(data, "passengerOneSeatingLocation", section.getOneSeatingLocation());
-        this.read(data, "passengerOneSex", section.getOneSex());
-        this.read(data, "passengerOneUnitNumber", section.getOneUnitNumber());
-        this.read(data, "passengerThreeAirBagDeployment", section.getThreeAirBagDeployment());
-        this.read(data, "passengerThreeDateOfBirth", section.getThreeDateOfBirth());
-        this.read(data, "passengerThreeEjection", section.getThreeEjection());
-        this.read(data, "passengerThreeHeadInjury", section.getThreeHeadInjury());
-        this.read(data, "passengerThreeInjuryStatus", section.getThreeInjuryStatus());
-        this.read(data, "passengerThreeMedicalFacilityTransport", section.getThreeMedicalFacilityTransport());
-        this.read(data, "passengerThreeNameAndAddress", section.getThreeNameAndAddress());
-        this.read(data, "passengerThreePersonNumber", section.getThreePersonNumber());
-        this.read(data, "passengerThreeRace", section.getThreeRace());
-        this.read(data, "passengerThreeRestraintDevice", section.getThreeRestraintDevice());
-        this.read(data, "passengerThreeSafetyEquipment", section.getThreeSafetyEquipment());
-        this.read(data, "passengerThreeSeatingLocation", section.getThreeSeatingLocation());
-        this.read(data, "passengerThreeSex", section.getThreeSex());
-        this.read(data, "passengerThreeUnitNumber", section.getThreeUnitNumber());
-        this.read(data, "passengerTwoAirBagDeployment", section.getTwoAirBagDeployment());
-        this.read(data, "passengerTwoDateOfBirth", section.getTwoDateOfBirth());
-        this.read(data, "passengerTwoEjection", section.getTwoEjection());
-        this.read(data, "passengerTwoHeadInjury", section.getTwoHeadInjury());
-        this.read(data, "passengerTwoInjuryStatus", section.getTwoInjuryStatus());
-        this.read(data, "passengerTwoMedicalFacilityTransport", section.getTwoMedicalFacilityTransport());
-        this.read(data, "passengerTwoNameAndAddress", section.getTwoNameAndAddress());
-        this.read(data, "passengerTwoPersonNumber", section.getTwoPersonNumber());
-        this.read(data, "passengerTwoRace", section.getTwoRace());
-        this.read(data, "passengerTwoRestraintDevice", section.getTwoRestraintDevice());
-        this.read(data, "passengerTwoSafetyEquipment", section.getTwoSafetyEquipment());
-        this.read(data, "passengerTwoSeatingLocation", section.getTwoSeatingLocation());
-        this.read(data, "passengerTwoSex", section.getTwoSex());
-        this.read(data, "passengerTwoUnitNumber", section.getTwoUnitNumber());
+    /** Returns one entry per passenger row, in row order. Always reports all four, blank or not. */
+    private extractPassengers(passengers: SectionCollection<PassengersSectionModel>): ReadonlyArray<ITR310PassengerData> {
+        return passengers.getSections<PassengersSectionModel>().map(section => {
+            const data: FormValues<ITR310PassengerData> = {};
+
+            this.read(data, "airBagDeployment", section.getAirBagDeployment());
+            this.read(data, "dateOfBirth", section.getDateOfBirth());
+            this.read(data, "ejection", section.getEjection());
+            this.read(data, "headInjury", section.getHeadInjury());
+            this.read(data, "injuryStatus", section.getInjuryStatus());
+            this.read(data, "medicalFacilityTransport", section.getMedicalFacilityTransport());
+            this.read(data, "nameAndAddress", section.getNameAndAddress());
+            this.read(data, "personNumber", section.getPersonNumber());
+            this.read(data, "race", section.getRace());
+            this.read(data, "restraintDevice", section.getRestraintDevice());
+            this.read(data, "safetyEquipment", section.getSafetyEquipment());
+            this.read(data, "seatingLocation", section.getSeatingLocation());
+            this.read(data, "sex", section.getSex());
+            this.read(data, "unitNumber", section.getUnitNumber());
+
+            return data as ITR310PassengerData;
+        });
     }
 
-    private populatePassengers(section: PassengersSectionModel, data: ITR310PersonData): PassengersSectionModel {
-        let updated = this.write(section, section.fourAirBagDeployment, data, "passengerFourAirBagDeployment");
-        updated = this.write(updated, section.fourDateOfBirth, data, "passengerFourDateOfBirth");
-        updated = this.write(updated, section.fourEjection, data, "passengerFourEjection");
-        updated = this.write(updated, section.fourHeadInjury, data, "passengerFourHeadInjury");
-        updated = this.write(updated, section.fourInjuryStatus, data, "passengerFourInjuryStatus");
-        updated = this.write(updated, section.fourMedicalFacilityTransport, data, "passengerFourMedicalFacilityTransport");
-        updated = this.write(updated, section.fourNameAndAddress, data, "passengerFourNameAndAddress");
-        updated = this.write(updated, section.fourPersonNumber, data, "passengerFourPersonNumber");
-        updated = this.write(updated, section.fourRace, data, "passengerFourRace");
-        updated = this.write(updated, section.fourRestraintDevice, data, "passengerFourRestraintDevice");
-        updated = this.write(updated, section.fourSafetyEquipment, data, "passengerFourSafetyEquipment");
-        updated = this.write(updated, section.fourSeatingLocation, data, "passengerFourSeatingLocation");
-        updated = this.write(updated, section.fourSex, data, "passengerFourSex");
-        updated = this.write(updated, section.fourUnitNumber, data, "passengerFourUnitNumber");
-        updated = this.write(updated, section.oneAirBagDeployment, data, "passengerOneAirBagDeployment");
-        updated = this.write(updated, section.oneDateOfBirth, data, "passengerOneDateOfBirth");
-        updated = this.write(updated, section.oneEjection, data, "passengerOneEjection");
-        updated = this.write(updated, section.oneHeadInjury, data, "passengerOneHeadInjury");
-        updated = this.write(updated, section.oneInjuryStatus, data, "passengerOneInjuryStatus");
-        updated = this.write(updated, section.oneMedicalFacilityTransport, data, "passengerOneMedicalFacilityTransport");
-        updated = this.write(updated, section.oneNameAndAddress, data, "passengerOneNameAndAddress");
-        updated = this.write(updated, section.onePersonNumber, data, "passengerOnePersonNumber");
-        updated = this.write(updated, section.oneRace, data, "passengerOneRace");
-        updated = this.write(updated, section.oneRestraintDevice, data, "passengerOneRestraintDevice");
-        updated = this.write(updated, section.oneSafetyEquipment, data, "passengerOneSafetyEquipment");
-        updated = this.write(updated, section.oneSeatingLocation, data, "passengerOneSeatingLocation");
-        updated = this.write(updated, section.oneSex, data, "passengerOneSex");
-        updated = this.write(updated, section.oneUnitNumber, data, "passengerOneUnitNumber");
-        updated = this.write(updated, section.threeAirBagDeployment, data, "passengerThreeAirBagDeployment");
-        updated = this.write(updated, section.threeDateOfBirth, data, "passengerThreeDateOfBirth");
-        updated = this.write(updated, section.threeEjection, data, "passengerThreeEjection");
-        updated = this.write(updated, section.threeHeadInjury, data, "passengerThreeHeadInjury");
-        updated = this.write(updated, section.threeInjuryStatus, data, "passengerThreeInjuryStatus");
-        updated = this.write(updated, section.threeMedicalFacilityTransport, data, "passengerThreeMedicalFacilityTransport");
-        updated = this.write(updated, section.threeNameAndAddress, data, "passengerThreeNameAndAddress");
-        updated = this.write(updated, section.threePersonNumber, data, "passengerThreePersonNumber");
-        updated = this.write(updated, section.threeRace, data, "passengerThreeRace");
-        updated = this.write(updated, section.threeRestraintDevice, data, "passengerThreeRestraintDevice");
-        updated = this.write(updated, section.threeSafetyEquipment, data, "passengerThreeSafetyEquipment");
-        updated = this.write(updated, section.threeSeatingLocation, data, "passengerThreeSeatingLocation");
-        updated = this.write(updated, section.threeSex, data, "passengerThreeSex");
-        updated = this.write(updated, section.threeUnitNumber, data, "passengerThreeUnitNumber");
-        updated = this.write(updated, section.twoAirBagDeployment, data, "passengerTwoAirBagDeployment");
-        updated = this.write(updated, section.twoDateOfBirth, data, "passengerTwoDateOfBirth");
-        updated = this.write(updated, section.twoEjection, data, "passengerTwoEjection");
-        updated = this.write(updated, section.twoHeadInjury, data, "passengerTwoHeadInjury");
-        updated = this.write(updated, section.twoInjuryStatus, data, "passengerTwoInjuryStatus");
-        updated = this.write(updated, section.twoMedicalFacilityTransport, data, "passengerTwoMedicalFacilityTransport");
-        updated = this.write(updated, section.twoNameAndAddress, data, "passengerTwoNameAndAddress");
-        updated = this.write(updated, section.twoPersonNumber, data, "passengerTwoPersonNumber");
-        updated = this.write(updated, section.twoRace, data, "passengerTwoRace");
-        updated = this.write(updated, section.twoRestraintDevice, data, "passengerTwoRestraintDevice");
-        updated = this.write(updated, section.twoSafetyEquipment, data, "passengerTwoSafetyEquipment");
-        updated = this.write(updated, section.twoSeatingLocation, data, "passengerTwoSeatingLocation");
-        updated = this.write(updated, section.twoSex, data, "passengerTwoSex");
+    /** Returns the collection with each record written onto the row at its own index; a record past the last row is dropped, and a row the records don't reach is left alone. */
+    private populatePassengers(passengers: SectionCollection<PassengersSectionModel>, records: ReadonlyArray<ITR310PassengerData> = []): SectionCollection<PassengersSectionModel> {
+        let updated = passengers;
 
-        return this.write(updated, section.twoUnitNumber, data, "passengerTwoUnitNumber");
+        records.forEach((record, index) => {
+            const section = <PassengersSectionModel | undefined>updated.getSections<PassengersSectionModel>()[index];
+
+            if (section) {
+                updated = updated.replace(index, this.populatePassenger(section, record));
+            }
+        });
+
+        return updated;
+    }
+
+    /** Returns a new passenger row with the given record applied to it. */
+    private populatePassenger(section: PassengersSectionModel, data: ITR310PassengerData): PassengersSectionModel {
+        let updated = this.write(section, section.airBagDeployment, data, "airBagDeployment");
+        updated = this.write(updated, section.dateOfBirth, data, "dateOfBirth");
+        updated = this.write(updated, section.ejection, data, "ejection");
+        updated = this.write(updated, section.headInjury, data, "headInjury");
+        updated = this.write(updated, section.injuryStatus, data, "injuryStatus");
+        updated = this.write(updated, section.medicalFacilityTransport, data, "medicalFacilityTransport");
+        updated = this.write(updated, section.nameAndAddress, data, "nameAndAddress");
+        updated = this.write(updated, section.personNumber, data, "personNumber");
+        updated = this.write(updated, section.race, data, "race");
+        updated = this.write(updated, section.restraintDevice, data, "restraintDevice");
+        updated = this.write(updated, section.safetyEquipment, data, "safetyEquipment");
+        updated = this.write(updated, section.seatingLocation, data, "seatingLocation");
+        updated = this.write(updated, section.sex, data, "sex");
+
+        return this.write(updated, section.unitNumber, data, "unitNumber");
     }
 
     private extractPersonOfficer(section: PersonOfficerSectionModel, data: FormValues<ITR310PersonData>): void {
@@ -1105,123 +1023,62 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
         return this.write(section, section.content, data, "diagramContent", readOnlyFields);
     }
 
-    private extractAdditionalPassengers(section: AdditionalPassengersSectionModel, data: FormValues<ITR310Data>): void {
-        this.read(data, "additionalPassengerFourAirBagDeployment", section.getFourAirBagDeployment());
-        this.read(data, "additionalPassengerFourDateOfBirth", section.getFourDateOfBirth());
-        this.read(data, "additionalPassengerFourEjection", section.getFourEjection());
-        this.read(data, "additionalPassengerFourHeadInjury", section.getFourHeadInjury());
-        this.read(data, "additionalPassengerFourInjuryStatus", section.getFourInjuryStatus());
-        this.read(data, "additionalPassengerFourMedicalFacilityTransport", section.getFourMedicalFacilityTransport());
-        this.read(data, "additionalPassengerFourNameAndAddress", section.getFourNameAndAddress());
-        this.read(data, "additionalPassengerFourPersonNumber", section.getFourPersonNumber());
-        this.read(data, "additionalPassengerFourRace", section.getFourRace());
-        this.read(data, "additionalPassengerFourRestraintDevice", section.getFourRestraintDevice());
-        this.read(data, "additionalPassengerFourSafetyEquipment", section.getFourSafetyEquipment());
-        this.read(data, "additionalPassengerFourSeatingLocation", section.getFourSeatingLocation());
-        this.read(data, "additionalPassengerFourSex", section.getFourSex());
-        this.read(data, "additionalPassengerFourUnitNumber", section.getFourUnitNumber());
-        this.read(data, "additionalPassengerOneAirBagDeployment", section.getOneAirBagDeployment());
-        this.read(data, "additionalPassengerOneDateOfBirth", section.getOneDateOfBirth());
-        this.read(data, "additionalPassengerOneEjection", section.getOneEjection());
-        this.read(data, "additionalPassengerOneHeadInjury", section.getOneHeadInjury());
-        this.read(data, "additionalPassengerOneInjuryStatus", section.getOneInjuryStatus());
-        this.read(data, "additionalPassengerOneMedicalFacilityTransport", section.getOneMedicalFacilityTransport());
-        this.read(data, "additionalPassengerOneNameAndAddress", section.getOneNameAndAddress());
-        this.read(data, "additionalPassengerOnePersonNumber", section.getOnePersonNumber());
-        this.read(data, "additionalPassengerOneRace", section.getOneRace());
-        this.read(data, "additionalPassengerOneRestraintDevice", section.getOneRestraintDevice());
-        this.read(data, "additionalPassengerOneSafetyEquipment", section.getOneSafetyEquipment());
-        this.read(data, "additionalPassengerOneSeatingLocation", section.getOneSeatingLocation());
-        this.read(data, "additionalPassengerOneSex", section.getOneSex());
-        this.read(data, "additionalPassengerOneUnitNumber", section.getOneUnitNumber());
-        this.read(data, "additionalPassengerThreeAirBagDeployment", section.getThreeAirBagDeployment());
-        this.read(data, "additionalPassengerThreeDateOfBirth", section.getThreeDateOfBirth());
-        this.read(data, "additionalPassengerThreeEjection", section.getThreeEjection());
-        this.read(data, "additionalPassengerThreeHeadInjury", section.getThreeHeadInjury());
-        this.read(data, "additionalPassengerThreeInjuryStatus", section.getThreeInjuryStatus());
-        this.read(data, "additionalPassengerThreeMedicalFacilityTransport", section.getThreeMedicalFacilityTransport());
-        this.read(data, "additionalPassengerThreeNameAndAddress", section.getThreeNameAndAddress());
-        this.read(data, "additionalPassengerThreePersonNumber", section.getThreePersonNumber());
-        this.read(data, "additionalPassengerThreeRace", section.getThreeRace());
-        this.read(data, "additionalPassengerThreeRestraintDevice", section.getThreeRestraintDevice());
-        this.read(data, "additionalPassengerThreeSafetyEquipment", section.getThreeSafetyEquipment());
-        this.read(data, "additionalPassengerThreeSeatingLocation", section.getThreeSeatingLocation());
-        this.read(data, "additionalPassengerThreeSex", section.getThreeSex());
-        this.read(data, "additionalPassengerThreeUnitNumber", section.getThreeUnitNumber());
-        this.read(data, "additionalPassengerTwoAirBagDeployment", section.getTwoAirBagDeployment());
-        this.read(data, "additionalPassengerTwoDateOfBirth", section.getTwoDateOfBirth());
-        this.read(data, "additionalPassengerTwoEjection", section.getTwoEjection());
-        this.read(data, "additionalPassengerTwoHeadInjury", section.getTwoHeadInjury());
-        this.read(data, "additionalPassengerTwoInjuryStatus", section.getTwoInjuryStatus());
-        this.read(data, "additionalPassengerTwoMedicalFacilityTransport", section.getTwoMedicalFacilityTransport());
-        this.read(data, "additionalPassengerTwoNameAndAddress", section.getTwoNameAndAddress());
-        this.read(data, "additionalPassengerTwoPersonNumber", section.getTwoPersonNumber());
-        this.read(data, "additionalPassengerTwoRace", section.getTwoRace());
-        this.read(data, "additionalPassengerTwoRestraintDevice", section.getTwoRestraintDevice());
-        this.read(data, "additionalPassengerTwoSafetyEquipment", section.getTwoSafetyEquipment());
-        this.read(data, "additionalPassengerTwoSeatingLocation", section.getTwoSeatingLocation());
-        this.read(data, "additionalPassengerTwoSex", section.getTwoSex());
-        this.read(data, "additionalPassengerTwoUnitNumber", section.getTwoUnitNumber());
+    /** Returns one entry per additional passenger row, in row order. Always reports all four, blank or not. */
+    private extractAdditionalPassengers(passengers: SectionCollection<AdditionalPassengersSectionModel>): ReadonlyArray<ITR310PassengerData> {
+        return passengers.getSections<AdditionalPassengersSectionModel>().map(section => {
+            const data: FormValues<ITR310PassengerData> = {};
+
+            this.read(data, "airBagDeployment", section.getAirBagDeployment());
+            this.read(data, "dateOfBirth", section.getDateOfBirth());
+            this.read(data, "ejection", section.getEjection());
+            this.read(data, "headInjury", section.getHeadInjury());
+            this.read(data, "injuryStatus", section.getInjuryStatus());
+            this.read(data, "medicalFacilityTransport", section.getMedicalFacilityTransport());
+            this.read(data, "nameAndAddress", section.getNameAndAddress());
+            this.read(data, "personNumber", section.getPersonNumber());
+            this.read(data, "race", section.getRace());
+            this.read(data, "restraintDevice", section.getRestraintDevice());
+            this.read(data, "safetyEquipment", section.getSafetyEquipment());
+            this.read(data, "seatingLocation", section.getSeatingLocation());
+            this.read(data, "sex", section.getSex());
+            this.read(data, "unitNumber", section.getUnitNumber());
+
+            return data as ITR310PassengerData;
+        });
     }
 
-    private populateAdditionalPassengers(section: AdditionalPassengersSectionModel, data: ITR310Data, readOnlyFields?: ReadOnlyFields<ITR310Data>): AdditionalPassengersSectionModel {
-        let updated = this.write(section, section.fourAirBagDeployment, data, "additionalPassengerFourAirBagDeployment", readOnlyFields);
-        updated = this.write(updated, section.fourDateOfBirth, data, "additionalPassengerFourDateOfBirth", readOnlyFields);
-        updated = this.write(updated, section.fourEjection, data, "additionalPassengerFourEjection", readOnlyFields);
-        updated = this.write(updated, section.fourHeadInjury, data, "additionalPassengerFourHeadInjury", readOnlyFields);
-        updated = this.write(updated, section.fourInjuryStatus, data, "additionalPassengerFourInjuryStatus", readOnlyFields);
-        updated = this.write(updated, section.fourMedicalFacilityTransport, data, "additionalPassengerFourMedicalFacilityTransport", readOnlyFields);
-        updated = this.write(updated, section.fourNameAndAddress, data, "additionalPassengerFourNameAndAddress", readOnlyFields);
-        updated = this.write(updated, section.fourPersonNumber, data, "additionalPassengerFourPersonNumber", readOnlyFields);
-        updated = this.write(updated, section.fourRace, data, "additionalPassengerFourRace", readOnlyFields);
-        updated = this.write(updated, section.fourRestraintDevice, data, "additionalPassengerFourRestraintDevice", readOnlyFields);
-        updated = this.write(updated, section.fourSafetyEquipment, data, "additionalPassengerFourSafetyEquipment", readOnlyFields);
-        updated = this.write(updated, section.fourSeatingLocation, data, "additionalPassengerFourSeatingLocation", readOnlyFields);
-        updated = this.write(updated, section.fourSex, data, "additionalPassengerFourSex", readOnlyFields);
-        updated = this.write(updated, section.fourUnitNumber, data, "additionalPassengerFourUnitNumber", readOnlyFields);
-        updated = this.write(updated, section.oneAirBagDeployment, data, "additionalPassengerOneAirBagDeployment", readOnlyFields);
-        updated = this.write(updated, section.oneDateOfBirth, data, "additionalPassengerOneDateOfBirth", readOnlyFields);
-        updated = this.write(updated, section.oneEjection, data, "additionalPassengerOneEjection", readOnlyFields);
-        updated = this.write(updated, section.oneHeadInjury, data, "additionalPassengerOneHeadInjury", readOnlyFields);
-        updated = this.write(updated, section.oneInjuryStatus, data, "additionalPassengerOneInjuryStatus", readOnlyFields);
-        updated = this.write(updated, section.oneMedicalFacilityTransport, data, "additionalPassengerOneMedicalFacilityTransport", readOnlyFields);
-        updated = this.write(updated, section.oneNameAndAddress, data, "additionalPassengerOneNameAndAddress", readOnlyFields);
-        updated = this.write(updated, section.onePersonNumber, data, "additionalPassengerOnePersonNumber", readOnlyFields);
-        updated = this.write(updated, section.oneRace, data, "additionalPassengerOneRace", readOnlyFields);
-        updated = this.write(updated, section.oneRestraintDevice, data, "additionalPassengerOneRestraintDevice", readOnlyFields);
-        updated = this.write(updated, section.oneSafetyEquipment, data, "additionalPassengerOneSafetyEquipment", readOnlyFields);
-        updated = this.write(updated, section.oneSeatingLocation, data, "additionalPassengerOneSeatingLocation", readOnlyFields);
-        updated = this.write(updated, section.oneSex, data, "additionalPassengerOneSex", readOnlyFields);
-        updated = this.write(updated, section.oneUnitNumber, data, "additionalPassengerOneUnitNumber", readOnlyFields);
-        updated = this.write(updated, section.threeAirBagDeployment, data, "additionalPassengerThreeAirBagDeployment", readOnlyFields);
-        updated = this.write(updated, section.threeDateOfBirth, data, "additionalPassengerThreeDateOfBirth", readOnlyFields);
-        updated = this.write(updated, section.threeEjection, data, "additionalPassengerThreeEjection", readOnlyFields);
-        updated = this.write(updated, section.threeHeadInjury, data, "additionalPassengerThreeHeadInjury", readOnlyFields);
-        updated = this.write(updated, section.threeInjuryStatus, data, "additionalPassengerThreeInjuryStatus", readOnlyFields);
-        updated = this.write(updated, section.threeMedicalFacilityTransport, data, "additionalPassengerThreeMedicalFacilityTransport", readOnlyFields);
-        updated = this.write(updated, section.threeNameAndAddress, data, "additionalPassengerThreeNameAndAddress", readOnlyFields);
-        updated = this.write(updated, section.threePersonNumber, data, "additionalPassengerThreePersonNumber", readOnlyFields);
-        updated = this.write(updated, section.threeRace, data, "additionalPassengerThreeRace", readOnlyFields);
-        updated = this.write(updated, section.threeRestraintDevice, data, "additionalPassengerThreeRestraintDevice", readOnlyFields);
-        updated = this.write(updated, section.threeSafetyEquipment, data, "additionalPassengerThreeSafetyEquipment", readOnlyFields);
-        updated = this.write(updated, section.threeSeatingLocation, data, "additionalPassengerThreeSeatingLocation", readOnlyFields);
-        updated = this.write(updated, section.threeSex, data, "additionalPassengerThreeSex", readOnlyFields);
-        updated = this.write(updated, section.threeUnitNumber, data, "additionalPassengerThreeUnitNumber", readOnlyFields);
-        updated = this.write(updated, section.twoAirBagDeployment, data, "additionalPassengerTwoAirBagDeployment", readOnlyFields);
-        updated = this.write(updated, section.twoDateOfBirth, data, "additionalPassengerTwoDateOfBirth", readOnlyFields);
-        updated = this.write(updated, section.twoEjection, data, "additionalPassengerTwoEjection", readOnlyFields);
-        updated = this.write(updated, section.twoHeadInjury, data, "additionalPassengerTwoHeadInjury", readOnlyFields);
-        updated = this.write(updated, section.twoInjuryStatus, data, "additionalPassengerTwoInjuryStatus", readOnlyFields);
-        updated = this.write(updated, section.twoMedicalFacilityTransport, data, "additionalPassengerTwoMedicalFacilityTransport", readOnlyFields);
-        updated = this.write(updated, section.twoNameAndAddress, data, "additionalPassengerTwoNameAndAddress", readOnlyFields);
-        updated = this.write(updated, section.twoPersonNumber, data, "additionalPassengerTwoPersonNumber", readOnlyFields);
-        updated = this.write(updated, section.twoRace, data, "additionalPassengerTwoRace", readOnlyFields);
-        updated = this.write(updated, section.twoRestraintDevice, data, "additionalPassengerTwoRestraintDevice", readOnlyFields);
-        updated = this.write(updated, section.twoSafetyEquipment, data, "additionalPassengerTwoSafetyEquipment", readOnlyFields);
-        updated = this.write(updated, section.twoSeatingLocation, data, "additionalPassengerTwoSeatingLocation", readOnlyFields);
-        updated = this.write(updated, section.twoSex, data, "additionalPassengerTwoSex", readOnlyFields);
+    /** Returns the collection with each record written onto the row at its own index; a record past the last row is dropped, and a row the records don't reach is left alone. */
+    private populateAdditionalPassengers(passengers: SectionCollection<AdditionalPassengersSectionModel>, records: ReadonlyArray<ITR310PassengerData> = []): SectionCollection<AdditionalPassengersSectionModel> {
+        let updated = passengers;
 
-        return this.write(updated, section.twoUnitNumber, data, "additionalPassengerTwoUnitNumber", readOnlyFields);
+        records.forEach((record, index) => {
+            const section = <AdditionalPassengersSectionModel | undefined>updated.getSections<AdditionalPassengersSectionModel>()[index];
+
+            if (section) {
+                updated = updated.replace(index, this.populateAdditionalPassenger(section, record));
+            }
+        });
+
+        return updated;
+    }
+
+    /** Returns a new additional passenger row with the given record applied to it. */
+    private populateAdditionalPassenger(section: AdditionalPassengersSectionModel, data: ITR310PassengerData): AdditionalPassengersSectionModel {
+        let updated = this.write(section, section.airBagDeployment, data, "airBagDeployment");
+        updated = this.write(updated, section.dateOfBirth, data, "dateOfBirth");
+        updated = this.write(updated, section.ejection, data, "ejection");
+        updated = this.write(updated, section.headInjury, data, "headInjury");
+        updated = this.write(updated, section.injuryStatus, data, "injuryStatus");
+        updated = this.write(updated, section.medicalFacilityTransport, data, "medicalFacilityTransport");
+        updated = this.write(updated, section.nameAndAddress, data, "nameAndAddress");
+        updated = this.write(updated, section.personNumber, data, "personNumber");
+        updated = this.write(updated, section.race, data, "race");
+        updated = this.write(updated, section.restraintDevice, data, "restraintDevice");
+        updated = this.write(updated, section.safetyEquipment, data, "safetyEquipment");
+        updated = this.write(updated, section.seatingLocation, data, "seatingLocation");
+        updated = this.write(updated, section.sex, data, "sex");
+
+        return this.write(updated, section.unitNumber, data, "unitNumber");
     }
 
     private extractNarrativeOfficer(section: NarrativeOfficerSectionModel, data: FormValues<ITR310Data>): void {

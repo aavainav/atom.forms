@@ -7,6 +7,7 @@ import { CollisionPageModel } from "./collision-page/collision-page";
 import { NarrativePageModel } from "./narrative-page/narrative-page";
 import { PersonPageModel } from "./person-page/person-page";
 import { UnitPageModel } from "./unit-page/unit-page";
+import { WitnessSectionModel } from "./collision-page/witness-section";
 
 export interface ITR310Form extends IForm {
 }
@@ -204,13 +205,14 @@ export class TR310FormModel extends CrashForm<ITR310Data> implements ITR310FormM
 
     /** Builds the common contract's witnesses from the three rows the collision page carries, skipping the unfilled ones. */
     private getWitnessData(): ICrash["witnesses"] {
-        const witness = this.getCollisionPage().getWitnessSection();
-
-        return [
-            { witnessId: "1", firstName: text(witness.getOneFirstName()), lastName: text(witness.getOneLastName()), middleName: text(witness.getOneMiddleInitial()) },
-            { witnessId: "2", firstName: text(witness.getTwoFirstName()), lastName: text(witness.getTwoLastName()), middleName: text(witness.getTwoMiddleInitial()) },
-            { witnessId: "3", firstName: text(witness.getThreeFirstName()), lastName: text(witness.getThreeLastName()), middleName: text(witness.getThreeMiddleInitial()) }
-        ].filter(entry => entry.firstName || entry.lastName);
+        return this.getCollisionPage().getWitnessSection().getSections<WitnessSectionModel>()
+            .map((witness, index) => ({
+                witnessId: String(index + 1),
+                firstName: text(witness.getFirstName()),
+                lastName: text(witness.getLastName()),
+                middleName: text(witness.getMiddleInitial())
+            }))
+            .filter(entry => entry.firstName || entry.lastName);
     }
 
     /** Returns a form with the given collision field set, threading the change back up through the page collection. */

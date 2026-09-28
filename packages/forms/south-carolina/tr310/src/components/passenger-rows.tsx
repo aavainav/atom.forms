@@ -1,12 +1,12 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { FieldDefinition, FieldModel, IOptionValue, OptionFieldModel, SectionModel, StringFieldModel, TValueType, FFormStackPanel } from "@forms/core";
+import { FieldDefinition, ISectionBinding, IOptionValue, OptionFieldModel, SectionModel, StringFieldModel, FFormStackPanel } from "@forms/core";
 
 import { ITR310Service } from "../services";
 import { CodeBox, TextField } from "./fields";
 
-/** The fourteen columns one passenger row carries. The person and narrative pages print the same row under different names -- passengers and additional passengers -- with matching accessors, so both hand their own field definitions to this one renderer. */
-export interface IPassengerRow {
+/** The fourteen columns one passenger row carries. The person and narrative pages print the same row under different section models but matching field names, so both hand this one renderer a binding per row. */
+export interface IPassengerRowFields {
     readonly airBagDeployment: FieldDefinition<OptionFieldModel>;
     readonly dateOfBirth: FieldDefinition<StringFieldModel>;
     readonly ejection: FieldDefinition<OptionFieldModel>;
@@ -23,17 +23,13 @@ export interface IPassengerRow {
     readonly unitNumber: FieldDefinition<StringFieldModel>;
 }
 
-interface IPassengerRowsProps {
-    /** The rows to render, in the order the form prints them. */
-    readonly rows: ReadonlyArray<IPassengerRow>;
-    /** The section holding the rows, which the current field values are read from. */
-    readonly section: SectionModel;
-
-    onChange: (definition: FieldDefinition<FieldModel<TValueType>>, value: TValueType) => void;
+interface IPassengerRowsProps<TSection extends SectionModel & IPassengerRowFields> {
+    /** One binding per row, in the order the form prints them. */
+    readonly rows: ReadonlyArray<ISectionBinding<TSection>>;
 }
 
-/** Renders a block of passenger rows, one line per passenger, as the form prints them. */
-export const PassengerRows = ({ rows, section, onChange }: IPassengerRowsProps): React.JSX.Element => {
+/** Renders a block of passenger rows, one line per passenger, as the form prints them -- each row bound to its own section instance. */
+export function PassengerRows<TSection extends SectionModel & IPassengerRowFields>({ rows }: IPassengerRowsProps<TSection>): React.JSX.Element {
     const tr310Service = useService<ITR310Service>(ITR310Service);
 
     const loadAirBagOptions = useCallback(() => tr310Service.getAirBagDeploymentOptions(), [tr310Service]);
@@ -45,102 +41,40 @@ export const PassengerRows = ({ rows, section, onChange }: IPassengerRowsProps):
     const loadSafetyEquipmentOptions = useCallback(() => tr310Service.getSafetyEquipmentUseOptions(), [tr310Service]);
     const loadTransportOptions = useCallback(() => tr310Service.getMedicalFacilityTransportOptions(), [tr310Service]);
 
-    const coded = (definition: FieldDefinition<OptionFieldModel>, load: () => Promise<Array<IOptionValue>>): React.JSX.Element => (
-        <CodeBox
-            field={section.get<OptionFieldModel>(definition)}
-            label={section.get<OptionFieldModel>(definition).label}
-            load={load}
-            borderEdges={["top", "left"]}
-            onChange={(value) => onChange(definition, value)}
-        />
-    );
-
     return (
         <>
-            {rows.map((row, index) => (
-                <FFormStackPanel key={index} height={44} direction="horizontal">
-                    <TextField field={section.get<StringFieldModel>(row.personNumber)} width={70} borderEdges={["top", "left"]} onChange={(value) => onChange(row.personNumber, value)} />
-                    <TextField field={section.get<StringFieldModel>(row.unitNumber)} width={60} borderEdges={["top", "left"]} onChange={(value) => onChange(row.unitNumber, value)} />
-                    <TextField field={section.get<StringFieldModel>(row.nameAndAddress)} width={260} borderEdges={["top", "left"]} onChange={(value) => onChange(row.nameAndAddress, value)} />
-                    <TextField field={section.get<StringFieldModel>(row.dateOfBirth)} width={90} borderEdges={["top", "left"]} onChange={(value) => onChange(row.dateOfBirth, value)} />
-                    {coded(row.injuryStatus, loadInjuryOptions)}
-                    {coded(row.sex, loadGenderOptions)}
-                    <TextField field={section.get<StringFieldModel>(row.race)} width={54} borderEdges={["top", "left"]} onChange={(value) => onChange(row.race, value)} />
-                    <TextField field={section.get<StringFieldModel>(row.seatingLocation)} width={54} borderEdges={["top", "left"]} onChange={(value) => onChange(row.seatingLocation, value)} />
-                    {coded(row.ejection, loadEjectionOptions)}
-                    {coded(row.medicalFacilityTransport, loadTransportOptions)}
-                    {coded(row.airBagDeployment, loadAirBagOptions)}
-                    {coded(row.safetyEquipment, loadSafetyEquipmentOptions)}
-                    {coded(row.restraintDevice, loadRestraintOptions)}
-                    {coded(row.headInjury, loadHeadInjuryOptions)}
-                </FFormStackPanel>
-            ))}
+            {rows.map((row, index) => {
+                const section = row.get();
+
+                const coded = (definition: FieldDefinition<OptionFieldModel>, load: () => Promise<Array<IOptionValue>>): React.JSX.Element => (
+                    <CodeBox
+                        field={section.get<OptionFieldModel>(definition)}
+                        label={section.get<OptionFieldModel>(definition).label}
+                        load={load}
+                        borderEdges={["top", "left"]}
+                        onChange={(value) => row.setValue(definition, value)}
+                    />
+                );
+
+                return (
+                    <FFormStackPanel key={index} height={44} direction="horizontal">
+                        <TextField field={section.get<StringFieldModel>(section.personNumber)} width={70} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.personNumber, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.unitNumber)} width={60} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.unitNumber, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.nameAndAddress)} width={260} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.nameAndAddress, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.dateOfBirth)} width={90} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.dateOfBirth, value)} />
+                        {coded(section.injuryStatus, loadInjuryOptions)}
+                        {coded(section.sex, loadGenderOptions)}
+                        <TextField field={section.get<StringFieldModel>(section.race)} width={54} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.race, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.seatingLocation)} width={54} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.seatingLocation, value)} />
+                        {coded(section.ejection, loadEjectionOptions)}
+                        {coded(section.medicalFacilityTransport, loadTransportOptions)}
+                        {coded(section.airBagDeployment, loadAirBagOptions)}
+                        {coded(section.safetyEquipment, loadSafetyEquipmentOptions)}
+                        {coded(section.restraintDevice, loadRestraintOptions)}
+                        {coded(section.headInjury, loadHeadInjuryOptions)}
+                    </FFormStackPanel>
+                );
+            })}
         </>
     );
-};
-
-/** Builds the four rows a passengers section carries from the accessors both such sections expose. */
-export function toPassengerRows(section: {
-    readonly oneAirBagDeployment: FieldDefinition<OptionFieldModel>; readonly oneDateOfBirth: FieldDefinition<StringFieldModel>;
-    readonly oneEjection: FieldDefinition<OptionFieldModel>; readonly oneHeadInjury: FieldDefinition<OptionFieldModel>;
-    readonly oneInjuryStatus: FieldDefinition<OptionFieldModel>; readonly oneMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-    readonly oneNameAndAddress: FieldDefinition<StringFieldModel>; readonly onePersonNumber: FieldDefinition<StringFieldModel>;
-    readonly oneRace: FieldDefinition<StringFieldModel>; readonly oneRestraintDevice: FieldDefinition<OptionFieldModel>;
-    readonly oneSafetyEquipment: FieldDefinition<OptionFieldModel>; readonly oneSeatingLocation: FieldDefinition<StringFieldModel>;
-    readonly oneSex: FieldDefinition<OptionFieldModel>; readonly oneUnitNumber: FieldDefinition<StringFieldModel>;
-
-    readonly twoAirBagDeployment: FieldDefinition<OptionFieldModel>; readonly twoDateOfBirth: FieldDefinition<StringFieldModel>;
-    readonly twoEjection: FieldDefinition<OptionFieldModel>; readonly twoHeadInjury: FieldDefinition<OptionFieldModel>;
-    readonly twoInjuryStatus: FieldDefinition<OptionFieldModel>; readonly twoMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-    readonly twoNameAndAddress: FieldDefinition<StringFieldModel>; readonly twoPersonNumber: FieldDefinition<StringFieldModel>;
-    readonly twoRace: FieldDefinition<StringFieldModel>; readonly twoRestraintDevice: FieldDefinition<OptionFieldModel>;
-    readonly twoSafetyEquipment: FieldDefinition<OptionFieldModel>; readonly twoSeatingLocation: FieldDefinition<StringFieldModel>;
-    readonly twoSex: FieldDefinition<OptionFieldModel>; readonly twoUnitNumber: FieldDefinition<StringFieldModel>;
-
-    readonly threeAirBagDeployment: FieldDefinition<OptionFieldModel>; readonly threeDateOfBirth: FieldDefinition<StringFieldModel>;
-    readonly threeEjection: FieldDefinition<OptionFieldModel>; readonly threeHeadInjury: FieldDefinition<OptionFieldModel>;
-    readonly threeInjuryStatus: FieldDefinition<OptionFieldModel>; readonly threeMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-    readonly threeNameAndAddress: FieldDefinition<StringFieldModel>; readonly threePersonNumber: FieldDefinition<StringFieldModel>;
-    readonly threeRace: FieldDefinition<StringFieldModel>; readonly threeRestraintDevice: FieldDefinition<OptionFieldModel>;
-    readonly threeSafetyEquipment: FieldDefinition<OptionFieldModel>; readonly threeSeatingLocation: FieldDefinition<StringFieldModel>;
-    readonly threeSex: FieldDefinition<OptionFieldModel>; readonly threeUnitNumber: FieldDefinition<StringFieldModel>;
-
-    readonly fourAirBagDeployment: FieldDefinition<OptionFieldModel>; readonly fourDateOfBirth: FieldDefinition<StringFieldModel>;
-    readonly fourEjection: FieldDefinition<OptionFieldModel>; readonly fourHeadInjury: FieldDefinition<OptionFieldModel>;
-    readonly fourInjuryStatus: FieldDefinition<OptionFieldModel>; readonly fourMedicalFacilityTransport: FieldDefinition<OptionFieldModel>;
-    readonly fourNameAndAddress: FieldDefinition<StringFieldModel>; readonly fourPersonNumber: FieldDefinition<StringFieldModel>;
-    readonly fourRace: FieldDefinition<StringFieldModel>; readonly fourRestraintDevice: FieldDefinition<OptionFieldModel>;
-    readonly fourSafetyEquipment: FieldDefinition<OptionFieldModel>; readonly fourSeatingLocation: FieldDefinition<StringFieldModel>;
-    readonly fourSex: FieldDefinition<OptionFieldModel>; readonly fourUnitNumber: FieldDefinition<StringFieldModel>;
-}): ReadonlyArray<IPassengerRow> {
-    return [
-        {
-            airBagDeployment: section.oneAirBagDeployment, dateOfBirth: section.oneDateOfBirth, ejection: section.oneEjection,
-            headInjury: section.oneHeadInjury, injuryStatus: section.oneInjuryStatus, medicalFacilityTransport: section.oneMedicalFacilityTransport,
-            nameAndAddress: section.oneNameAndAddress, personNumber: section.onePersonNumber, race: section.oneRace,
-            restraintDevice: section.oneRestraintDevice, safetyEquipment: section.oneSafetyEquipment,
-            seatingLocation: section.oneSeatingLocation, sex: section.oneSex, unitNumber: section.oneUnitNumber
-        },
-        {
-            airBagDeployment: section.twoAirBagDeployment, dateOfBirth: section.twoDateOfBirth, ejection: section.twoEjection,
-            headInjury: section.twoHeadInjury, injuryStatus: section.twoInjuryStatus, medicalFacilityTransport: section.twoMedicalFacilityTransport,
-            nameAndAddress: section.twoNameAndAddress, personNumber: section.twoPersonNumber, race: section.twoRace,
-            restraintDevice: section.twoRestraintDevice, safetyEquipment: section.twoSafetyEquipment,
-            seatingLocation: section.twoSeatingLocation, sex: section.twoSex, unitNumber: section.twoUnitNumber
-        },
-        {
-            airBagDeployment: section.threeAirBagDeployment, dateOfBirth: section.threeDateOfBirth, ejection: section.threeEjection,
-            headInjury: section.threeHeadInjury, injuryStatus: section.threeInjuryStatus, medicalFacilityTransport: section.threeMedicalFacilityTransport,
-            nameAndAddress: section.threeNameAndAddress, personNumber: section.threePersonNumber, race: section.threeRace,
-            restraintDevice: section.threeRestraintDevice, safetyEquipment: section.threeSafetyEquipment,
-            seatingLocation: section.threeSeatingLocation, sex: section.threeSex, unitNumber: section.threeUnitNumber
-        },
-        {
-            airBagDeployment: section.fourAirBagDeployment, dateOfBirth: section.fourDateOfBirth, ejection: section.fourEjection,
-            headInjury: section.fourHeadInjury, injuryStatus: section.fourInjuryStatus, medicalFacilityTransport: section.fourMedicalFacilityTransport,
-            nameAndAddress: section.fourNameAndAddress, personNumber: section.fourPersonNumber, race: section.fourRace,
-            restraintDevice: section.fourRestraintDevice, safetyEquipment: section.fourSafetyEquipment,
-            seatingLocation: section.fourSeatingLocation, sex: section.fourSex, unitNumber: section.fourUnitNumber
-        }
-    ];
 }

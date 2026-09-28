@@ -12,10 +12,10 @@ repeating pages, and read its mapper before writing one that has to create pages
 
 | Page | Cardinality | Sections |
 | --- | --- | --- |
-| `collision-page` | once | 14: header, collision, route, base-intersection, second-intersection, coordinates, trafficway, barrier, conditions, harmful-event, junction, work-zone, witness, collision-officer |
-| `person-page` | **one per person involved** | 11: person-header, person, driver-license, driver-actions, occupant, non-motorist, injury, safety-equipment, alcohol-drugs, passengers, person-officer |
+| `collision-page` | once | 14: header, collision, route, base-intersection, second-intersection, coordinates, trafficway, barrier, conditions, harmful-event, junction, work-zone, witness (a 3-row section collection), collision-officer |
+| `person-page` | **one per person involved** | 11: person-header, person, driver-license, driver-actions, occupant, non-motorist, injury, safety-equipment, alcohol-drugs, passengers (a 4-row section collection), person-officer |
 | `unit-page` | **one per unit involved** | 11: unit-header, vehicle, insurance, owner, travel, damage, unit-type, events, roadway, violations, unit-officer |
-| `narrative-page` | once | 5: narrative-header, narrative, diagram, additional-passengers, narrative-officer |
+| `narrative-page` | once | 5: narrative-header, narrative, diagram, additional-passengers (a 4-row section collection), narrative-officer |
 
 A form opens with one of each. The four groups render as **one continuous tab strip** in printed order; the person
 and unit groups carry the add/delete affordances.
@@ -26,15 +26,15 @@ Dropzones: `PersonPagePersonDropzone` (person page); `UnitPageVehicleDropzone`, 
 
 | Path | Contents |
 | --- | --- |
-| [src/models/tr310-form-schema.ts](src/models/tr310-form-schema.ts) | **~1,105 lines.** The whole definition tree. Grep for `readonly <name>Fields` to find a section's field block rather than reading it through. |
+| [src/models/tr310-form-schema.ts](src/models/tr310-form-schema.ts) | **~904 lines.** The whole definition tree. Grep for `readonly <name>Fields` to find a section's field block rather than reading it through. |
 | [src/models/tr310-rules.ts](src/models/tr310-rules.ts) | `createRuleCollection(schema)`, ~165 lines. |
 | [src/models/tr310-form.ts](src/models/tr310-form.ts) | `TR310FormModel extends CrashForm`. Page accessors, `getCrashData()`, and the date/time stamping. |
 | [src/models/<page>/](src/models/) | Page model + one file per section + `dropzones/`. |
 | [src/components/fields.tsx](src/components/fields.tsx) | **Shared building blocks — use these, don't hand-roll.** `CodeBox`, `CodeLegend`, `CodedField`, `TextField`, `useOptions`. |
-| [src/components/passenger-rows.tsx](src/components/passenger-rows.tsx) | `IPassengerRow` (14 columns) + the renderer. The person page and narrative page print the same row under different names and share this. |
+| [src/components/passenger-rows.tsx](src/components/passenger-rows.tsx) | `IPassengerRowFields` (14 columns) + the renderer. The person page and narrative page print the same row shape under different section models and share this, one `ISectionBinding` per row. |
 | [src/components/<page>/](src/components/) | One `.tsx` per section, mirroring the models tree. |
-| [src/mapping/tr310-data.ts](src/mapping/tr310-data.ts) | ~712 lines. `ITR310PersonData`, `ITR310UnitData`, and `ITR310Data` (the flat collision+narrative fields plus `persons?` and `units?` arrays). Every doc comment names the printed box label and its section. |
-| [src/mapping/tr310-mapper.ts](src/mapping/tr310-mapper.ts) | ~1,241 lines. `populate` is **async**. |
+| [src/mapping/tr310-data.ts](src/mapping/tr310-data.ts) | ~490 lines. `ITR310PassengerData` (one row), `ITR310WitnessData` (one row), `ITR310PersonData`, `ITR310UnitData`, and `ITR310Data` (the flat collision+narrative fields plus `persons?`, `units?`, `witnesses?` and `additionalPassengers?` arrays). Every doc comment names the printed box label and its section. |
+| [src/mapping/tr310-mapper.ts](src/mapping/tr310-mapper.ts) | ~1,098 lines. `populate` is **async**. |
 | [src/services/tr310.ts](src/services/tr310.ts) | ~467 lines: 3 `apply*Dropzone` plus a `get*Options` per value list. |
 | [src/value-lists.ts](src/value-lists.ts) | `TR310ValueListId` (55 entries) + `tr310ValueLists`. |
 | [src/generated/](src/generated/) · [data/](data/) | 55 generated modules + 55 source JSON files + `lists.json`. |
@@ -50,6 +50,30 @@ Pages **beyond** the end of `data.persons` / `data.units` are **left alone, not 
 units than the form holds never silently discards a page an officer added.
 
 Read side: `data.persons = form.getPersonPages().map(page => this.extractPersonRecord(page))`.
+
+## Section collections — a fixed set of rows, not a page
+
+Three sections print as a small fixed block of identical rows rather than one row each: the person page's
+`passengersSection` (4 rows), the narrative page's `additionalPassengersSection` (4 rows, for passengers past the
+first four), and the collision page's `witnessSection` (3 rows). Each is a `SectionCollectionDefinition<...>`
+(`@forms/core`) with a `count`, not a `SectionDefinition`. Unlike a repeating *page*, a section collection has no
+add/remove: going past four passengers on a person means using the narrative page's own four additional-passenger
+rows, not growing the collection past what the form prints.
+
+The section model (`PassengersSectionModel`, `AdditionalPassengersSectionModel`, `WitnessSectionModel`) declares its
+columns once (`personNumber`, `unitNumber`, ... / `type`, `firstName`, ...); the collection creates `count`
+independent instances of that one model, so field names never carry a `one`/`two`/`three`/`four` prefix. Passengers
+and additional passengers share one `ITR310PassengerData` shape in the contract, since both rows print the same
+columns; witnesses have their own `ITR310WitnessData`. The mapper's `extract*`/`populate*` pair for each maps
+`getSections()`/`replace(index, ...)` instead of reading/writing numbered fields directly -- always reporting every
+row on extract (blank or not), and on populate dropping a record past the last row while leaving a row the records
+don't reach untouched, the same rule `populatePersonPages` already uses for pages.
+
+On the component side, `binding.getSectionCollection(page.xSection)` returns an `ISectionCollectionBinding`;
+`.getSection(index)` hands back an ordinary `ISectionBinding` for that one row. `passenger-rows.tsx`'s `PassengerRows`
+takes one such binding per row and reads its section's own field definitions directly (`section.personNumber`, not a
+per-row-prefixed one) -- the witness section renders its three rows the same way, inline in its own component rather
+than through a shared renderer, since witness is only used in one place.
 
 ## Value lists
 
@@ -144,3 +168,12 @@ component → an `extract`/`populate` pair in the mapper's per-page block.
 **Add a page type**: page model + its sections → `DefinitionFactory.page` in the schema → `TR310FormModel`
 (`readonly xPage`, `getXPageCollection()`, and `getXPages()` if it repeats) → a group in `tr310-form.tsx` → for a
 repeating page, an `ITR310XData` array on the contract plus `addPages` handling in `populate`.
+
+**Add a fixed-count repeating section** (like passengers or witnesses): `DefinitionFactory.sectionCollection` in
+place of `.section` in the schema, with a `count` → the section model's own field properties drop their
+`one`/`two`/`three`/`four` prefix, since the collection instantiates one independent copy per row → the page model's
+accessor returns `SectionCollection<TSection>` instead of the section model directly → the page component binds it
+with `binding.getSectionCollection(page.xSection)` and hands each row's own `.getSection(index)` binding down → the
+contract carries it as one array field (`ReadonlyArray<...>`, sized to `count` on extract) → the mapper's
+`extract`/`populate` pair loops `getSections()`/`replace(index, ...)` instead of reading/writing numbered fields
+directly.

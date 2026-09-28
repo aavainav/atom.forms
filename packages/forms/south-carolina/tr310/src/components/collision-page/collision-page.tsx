@@ -43,7 +43,7 @@ export default function CollisionPage({ controllers, binding }: ICollisionPagePr
             <HarmfulEventSection binding={binding.getSection(page.harmfulEventSection)} />
             <JunctionSection binding={binding.getSection(page.junctionSection)} />
             <WorkZoneSection binding={binding.getSection(page.workZoneSection)} />
-            <WitnessSection binding={binding.getSection(page.witnessSection)} />
+            <WitnessSection binding={binding.getSectionCollection(page.witnessSection)} />
             <CollisionOfficerSection binding={binding.getSection(page.collisionOfficerSection)} />
         </>
     );

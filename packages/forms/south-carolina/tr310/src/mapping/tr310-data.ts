@@ -1,5 +1,37 @@
 import { IOptionValue } from "@forms/core";
 
+/** Represents one passenger row, shared by the person page's passenger rows and the narrative page's additional passenger rows. */
+export interface ITR310PassengerData {
+    /** "ABD" */
+    readonly airBagDeployment?: IOptionValue;
+    /** "DOB" */
+    readonly dateOfBirth?: string;
+    /** "EJECT" */
+    readonly ejection?: IOptionValue;
+    /** "HI" */
+    readonly headInjury?: IOptionValue;
+    /** "INJ" */
+    readonly injuryStatus?: IOptionValue;
+    /** "TRANS" */
+    readonly medicalFacilityTransport?: IOptionValue;
+    /** "Name & Address" */
+    readonly nameAndAddress?: string;
+    /** "Person #" */
+    readonly personNumber?: string;
+    /** "Race" */
+    readonly race?: string;
+    /** "RD" */
+    readonly restraintDevice?: IOptionValue;
+    /** "SE" */
+    readonly safetyEquipment?: IOptionValue;
+    /** "SL" */
+    readonly seatingLocation?: string;
+    /** "Sex" */
+    readonly sex?: IOptionValue;
+    /** "Unit #" */
+    readonly unitNumber?: string;
+}
+
 /** Represents one person page of the report - a driver or a non-motorist, together with the passengers riding with them. */
 export interface ITR310PersonData {
     /** "Alcohol Test Status", from the alcohol drugs section of the person page. */
@@ -58,118 +90,8 @@ export interface ITR310PersonData {
     readonly occupantRestraintDevice?: IOptionValue;
     /** "Person Seating Location-SL", from the occupant section of the person page. */
     readonly occupantSeatingLocation?: string;
-    /** "ABD", from the passengers section of the person page. */
-    readonly passengerFourAirBagDeployment?: IOptionValue;
-    /** "DOB", from the passengers section of the person page. */
-    readonly passengerFourDateOfBirth?: string;
-    /** "EJECT", from the passengers section of the person page. */
-    readonly passengerFourEjection?: IOptionValue;
-    /** "HI", from the passengers section of the person page. */
-    readonly passengerFourHeadInjury?: IOptionValue;
-    /** "INJ", from the passengers section of the person page. */
-    readonly passengerFourInjuryStatus?: IOptionValue;
-    /** "TRANS", from the passengers section of the person page. */
-    readonly passengerFourMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the passengers section of the person page. */
-    readonly passengerFourNameAndAddress?: string;
-    /** "Person #", from the passengers section of the person page. */
-    readonly passengerFourPersonNumber?: string;
-    /** "Race", from the passengers section of the person page. */
-    readonly passengerFourRace?: string;
-    /** "RD", from the passengers section of the person page. */
-    readonly passengerFourRestraintDevice?: IOptionValue;
-    /** "SE", from the passengers section of the person page. */
-    readonly passengerFourSafetyEquipment?: IOptionValue;
-    /** "SL", from the passengers section of the person page. */
-    readonly passengerFourSeatingLocation?: string;
-    /** "Sex", from the passengers section of the person page. */
-    readonly passengerFourSex?: IOptionValue;
-    /** "Unit #", from the passengers section of the person page. */
-    readonly passengerFourUnitNumber?: string;
-    /** "ABD", from the passengers section of the person page. */
-    readonly passengerOneAirBagDeployment?: IOptionValue;
-    /** "DOB", from the passengers section of the person page. */
-    readonly passengerOneDateOfBirth?: string;
-    /** "EJECT", from the passengers section of the person page. */
-    readonly passengerOneEjection?: IOptionValue;
-    /** "HI", from the passengers section of the person page. */
-    readonly passengerOneHeadInjury?: IOptionValue;
-    /** "INJ", from the passengers section of the person page. */
-    readonly passengerOneInjuryStatus?: IOptionValue;
-    /** "TRANS", from the passengers section of the person page. */
-    readonly passengerOneMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the passengers section of the person page. */
-    readonly passengerOneNameAndAddress?: string;
-    /** "Person #", from the passengers section of the person page. */
-    readonly passengerOnePersonNumber?: string;
-    /** "Race", from the passengers section of the person page. */
-    readonly passengerOneRace?: string;
-    /** "RD", from the passengers section of the person page. */
-    readonly passengerOneRestraintDevice?: IOptionValue;
-    /** "SE", from the passengers section of the person page. */
-    readonly passengerOneSafetyEquipment?: IOptionValue;
-    /** "SL", from the passengers section of the person page. */
-    readonly passengerOneSeatingLocation?: string;
-    /** "Sex", from the passengers section of the person page. */
-    readonly passengerOneSex?: IOptionValue;
-    /** "Unit #", from the passengers section of the person page. */
-    readonly passengerOneUnitNumber?: string;
-    /** "ABD", from the passengers section of the person page. */
-    readonly passengerThreeAirBagDeployment?: IOptionValue;
-    /** "DOB", from the passengers section of the person page. */
-    readonly passengerThreeDateOfBirth?: string;
-    /** "EJECT", from the passengers section of the person page. */
-    readonly passengerThreeEjection?: IOptionValue;
-    /** "HI", from the passengers section of the person page. */
-    readonly passengerThreeHeadInjury?: IOptionValue;
-    /** "INJ", from the passengers section of the person page. */
-    readonly passengerThreeInjuryStatus?: IOptionValue;
-    /** "TRANS", from the passengers section of the person page. */
-    readonly passengerThreeMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the passengers section of the person page. */
-    readonly passengerThreeNameAndAddress?: string;
-    /** "Person #", from the passengers section of the person page. */
-    readonly passengerThreePersonNumber?: string;
-    /** "Race", from the passengers section of the person page. */
-    readonly passengerThreeRace?: string;
-    /** "RD", from the passengers section of the person page. */
-    readonly passengerThreeRestraintDevice?: IOptionValue;
-    /** "SE", from the passengers section of the person page. */
-    readonly passengerThreeSafetyEquipment?: IOptionValue;
-    /** "SL", from the passengers section of the person page. */
-    readonly passengerThreeSeatingLocation?: string;
-    /** "Sex", from the passengers section of the person page. */
-    readonly passengerThreeSex?: IOptionValue;
-    /** "Unit #", from the passengers section of the person page. */
-    readonly passengerThreeUnitNumber?: string;
-    /** "ABD", from the passengers section of the person page. */
-    readonly passengerTwoAirBagDeployment?: IOptionValue;
-    /** "DOB", from the passengers section of the person page. */
-    readonly passengerTwoDateOfBirth?: string;
-    /** "EJECT", from the passengers section of the person page. */
-    readonly passengerTwoEjection?: IOptionValue;
-    /** "HI", from the passengers section of the person page. */
-    readonly passengerTwoHeadInjury?: IOptionValue;
-    /** "INJ", from the passengers section of the person page. */
-    readonly passengerTwoInjuryStatus?: IOptionValue;
-    /** "TRANS", from the passengers section of the person page. */
-    readonly passengerTwoMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the passengers section of the person page. */
-    readonly passengerTwoNameAndAddress?: string;
-    /** "Person #", from the passengers section of the person page. */
-    readonly passengerTwoPersonNumber?: string;
-    /** "Race", from the passengers section of the person page. */
-    readonly passengerTwoRace?: string;
-    /** "RD", from the passengers section of the person page. */
-    readonly passengerTwoRestraintDevice?: IOptionValue;
-    /** "SE", from the passengers section of the person page. */
-    readonly passengerTwoSafetyEquipment?: IOptionValue;
-    /** "SL", from the passengers section of the person page. */
-    readonly passengerTwoSeatingLocation?: string;
-    /** "Sex", from the passengers section of the person page. */
-    readonly passengerTwoSex?: IOptionValue;
-    /** "Unit #", from the passengers section of the person page. */
-    readonly passengerTwoUnitNumber?: string;
+    /** One entry per passenger row on the person page (always four, blank rows included). A row the data omits, when populating, is left as it stands. */
+    readonly passengers?: ReadonlyArray<ITR310PassengerData>;
     /** "Current Address (Number and Street)", from the person section of the person page. */
     readonly personAddress?: string;
     /** "City", from the person section of the person page. */
@@ -374,6 +296,32 @@ export interface ITR310UnitData {
     readonly violationTwoTicketNumber?: string;
 }
 
+/** Represents one witness or property owner row, on the collision page. */
+export interface ITR310WitnessData {
+    /** "W/P" */
+    readonly type?: string;
+    /** "First Name" */
+    readonly firstName?: string;
+    /** "MI" */
+    readonly middleInitial?: string;
+    /** "Last Name" */
+    readonly lastName?: string;
+    /** "Address" */
+    readonly address?: string;
+    /** "City" */
+    readonly city?: string;
+    /** "State" */
+    readonly state?: IOptionValue;
+    /** "Zip Code" */
+    readonly zipCode?: string;
+    /** "Telephone" */
+    readonly telephone?: string;
+    /** "Prop. Dmg. Amount" */
+    readonly propertyDamageAmount?: string;
+    /** "Prop. Dmg. Description" */
+    readonly propertyDamageDescription?: string;
+}
+
 /**
  * Represents the data contract for the SC TR-310 traffic collision report.
  *
@@ -381,118 +329,6 @@ export interface ITR310UnitData {
  * each per page the report holds, and are carried as arrays in page order.
  */
 export interface ITR310Data {
-    /** "ABD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourAirBagDeployment?: IOptionValue;
-    /** "DOB", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourDateOfBirth?: string;
-    /** "EJECT", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourEjection?: IOptionValue;
-    /** "HI", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourHeadInjury?: IOptionValue;
-    /** "INJ", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourInjuryStatus?: IOptionValue;
-    /** "TRANS", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourNameAndAddress?: string;
-    /** "Person #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourPersonNumber?: string;
-    /** "Race", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourRace?: string;
-    /** "RD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourRestraintDevice?: IOptionValue;
-    /** "SE", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourSafetyEquipment?: IOptionValue;
-    /** "SL", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourSeatingLocation?: string;
-    /** "Sex", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourSex?: IOptionValue;
-    /** "Unit #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerFourUnitNumber?: string;
-    /** "ABD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneAirBagDeployment?: IOptionValue;
-    /** "DOB", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneDateOfBirth?: string;
-    /** "EJECT", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneEjection?: IOptionValue;
-    /** "HI", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneHeadInjury?: IOptionValue;
-    /** "INJ", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneInjuryStatus?: IOptionValue;
-    /** "TRANS", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneNameAndAddress?: string;
-    /** "Person #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOnePersonNumber?: string;
-    /** "Race", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneRace?: string;
-    /** "RD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneRestraintDevice?: IOptionValue;
-    /** "SE", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneSafetyEquipment?: IOptionValue;
-    /** "SL", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneSeatingLocation?: string;
-    /** "Sex", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneSex?: IOptionValue;
-    /** "Unit #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerOneUnitNumber?: string;
-    /** "ABD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeAirBagDeployment?: IOptionValue;
-    /** "DOB", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeDateOfBirth?: string;
-    /** "EJECT", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeEjection?: IOptionValue;
-    /** "HI", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeHeadInjury?: IOptionValue;
-    /** "INJ", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeInjuryStatus?: IOptionValue;
-    /** "TRANS", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeNameAndAddress?: string;
-    /** "Person #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreePersonNumber?: string;
-    /** "Race", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeRace?: string;
-    /** "RD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeRestraintDevice?: IOptionValue;
-    /** "SE", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeSafetyEquipment?: IOptionValue;
-    /** "SL", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeSeatingLocation?: string;
-    /** "Sex", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeSex?: IOptionValue;
-    /** "Unit #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerThreeUnitNumber?: string;
-    /** "ABD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoAirBagDeployment?: IOptionValue;
-    /** "DOB", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoDateOfBirth?: string;
-    /** "EJECT", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoEjection?: IOptionValue;
-    /** "HI", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoHeadInjury?: IOptionValue;
-    /** "INJ", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoInjuryStatus?: IOptionValue;
-    /** "TRANS", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoMedicalFacilityTransport?: IOptionValue;
-    /** "Name & Address", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoNameAndAddress?: string;
-    /** "Person #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoPersonNumber?: string;
-    /** "Race", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoRace?: string;
-    /** "RD", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoRestraintDevice?: IOptionValue;
-    /** "SE", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoSafetyEquipment?: IOptionValue;
-    /** "SL", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoSeatingLocation?: string;
-    /** "Sex", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoSex?: IOptionValue;
-    /** "Unit #", from the additional passengers section of the narrative page. */
-    readonly additionalPassengerTwoUnitNumber?: string;
     /** "Type of Intersection", from the barrier section of the collision page. */
     readonly barrierIntersectionType?: IOptionValue;
     /** "Barrier Type", from the barrier section of the collision page. */
@@ -633,72 +469,8 @@ export interface ITR310Data {
     readonly trafficwayDirection?: IOptionValue;
     /** "Trafficway Divided", from the trafficway section of the collision page. */
     readonly trafficwayDivided?: IOptionValue;
-    /** "Address", from the witness section of the collision page. */
-    readonly witnessOneAddress?: string;
-    /** "City", from the witness section of the collision page. */
-    readonly witnessOneCity?: string;
-    /** "First Name", from the witness section of the collision page. */
-    readonly witnessOneFirstName?: string;
-    /** "Last Name", from the witness section of the collision page. */
-    readonly witnessOneLastName?: string;
-    /** "MI", from the witness section of the collision page. */
-    readonly witnessOneMiddleInitial?: string;
-    /** "Prop. Dmg. Amount", from the witness section of the collision page. */
-    readonly witnessOnePropertyDamageAmount?: string;
-    /** "Prop. Dmg. Description", from the witness section of the collision page. */
-    readonly witnessOnePropertyDamageDescription?: string;
-    /** "State", from the witness section of the collision page. */
-    readonly witnessOneState?: IOptionValue;
-    /** "Telephone", from the witness section of the collision page. */
-    readonly witnessOneTelephone?: string;
-    /** "W/P", from the witness section of the collision page. */
-    readonly witnessOneType?: string;
-    /** "Zip Code", from the witness section of the collision page. */
-    readonly witnessOneZipCode?: string;
-    /** "Address", from the witness section of the collision page. */
-    readonly witnessThreeAddress?: string;
-    /** "City", from the witness section of the collision page. */
-    readonly witnessThreeCity?: string;
-    /** "First Name", from the witness section of the collision page. */
-    readonly witnessThreeFirstName?: string;
-    /** "Last Name", from the witness section of the collision page. */
-    readonly witnessThreeLastName?: string;
-    /** "MI", from the witness section of the collision page. */
-    readonly witnessThreeMiddleInitial?: string;
-    /** "Prop. Dmg. Amount", from the witness section of the collision page. */
-    readonly witnessThreePropertyDamageAmount?: string;
-    /** "Prop. Dmg. Description", from the witness section of the collision page. */
-    readonly witnessThreePropertyDamageDescription?: string;
-    /** "State", from the witness section of the collision page. */
-    readonly witnessThreeState?: IOptionValue;
-    /** "Telephone", from the witness section of the collision page. */
-    readonly witnessThreeTelephone?: string;
-    /** "W/P", from the witness section of the collision page. */
-    readonly witnessThreeType?: string;
-    /** "Zip Code", from the witness section of the collision page. */
-    readonly witnessThreeZipCode?: string;
-    /** "Address", from the witness section of the collision page. */
-    readonly witnessTwoAddress?: string;
-    /** "City", from the witness section of the collision page. */
-    readonly witnessTwoCity?: string;
-    /** "First Name", from the witness section of the collision page. */
-    readonly witnessTwoFirstName?: string;
-    /** "Last Name", from the witness section of the collision page. */
-    readonly witnessTwoLastName?: string;
-    /** "MI", from the witness section of the collision page. */
-    readonly witnessTwoMiddleInitial?: string;
-    /** "Prop. Dmg. Amount", from the witness section of the collision page. */
-    readonly witnessTwoPropertyDamageAmount?: string;
-    /** "Prop. Dmg. Description", from the witness section of the collision page. */
-    readonly witnessTwoPropertyDamageDescription?: string;
-    /** "State", from the witness section of the collision page. */
-    readonly witnessTwoState?: IOptionValue;
-    /** "Telephone", from the witness section of the collision page. */
-    readonly witnessTwoTelephone?: string;
-    /** "W/P", from the witness section of the collision page. */
-    readonly witnessTwoType?: string;
-    /** "Zip Code", from the witness section of the collision page. */
-    readonly witnessTwoZipCode?: string;
+    /** One entry per witness or property owner row on the collision page (always three, blank rows included). A row the data omits, when populating, is left as it stands. */
+    readonly witnesses?: ReadonlyArray<ITR310WitnessData>;
     /** "Crash in Work Zone", from the work zone section of the collision page. */
     readonly workZoneCrashLocation?: IOptionValue;
     /** "Law Enforcement in Work Zone", from the work zone section of the collision page. */
@@ -713,4 +485,6 @@ export interface ITR310Data {
     readonly persons?: ReadonlyArray<ITR310PersonData>;
     /** One entry per unit page, in page order. A unit the data does not mention leaves that page as it stands. */
     readonly units?: ReadonlyArray<ITR310UnitData>;
+    /** One entry per additional passenger row on the narrative page (always four, blank rows included), for passengers past the first four on the person page. A row the data omits, when populating, is left as it stands. */
+    readonly additionalPassengers?: ReadonlyArray<ITR310PassengerData>;
 }

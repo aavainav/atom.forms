@@ -25,7 +25,7 @@ export default function NarrativePage({ controllers, binding }: INarrativePagePr
             <NarrativeHeaderSection binding={binding.getSection(page.narrativeHeaderSection)} />
             <NarrativeSection binding={binding.getSection(page.narrativeSection)} />
             <DiagramSection binding={binding.getSection(page.diagramSection)} />
-            <AdditionalPassengersSection binding={binding.getSection(page.additionalPassengersSection)} />
+            <AdditionalPassengersSection binding={binding.getSectionCollection(page.additionalPassengersSection)} />
             <NarrativeOfficerSection binding={binding.getSection(page.narrativeOfficerSection)} />
         </>
     );

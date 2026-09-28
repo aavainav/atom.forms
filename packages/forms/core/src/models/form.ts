@@ -227,15 +227,18 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
 
         for (const pageDefinition of this.getChildDefinitions()) {
             this.getPagesFor(pageDefinition).forEach((page, pageOrdinal) => {
-                for (const sectionDefinition of pageDefinition.children) {
-                    const section = page.get<SectionModel>(sectionDefinition as SectionDefinition);
+                for (const sectionDefinition of pageDefinition.children as Array<SectionDefinition | SectionCollectionDefinition>) {
+                    const value = page.get<SectionModel | SectionCollection<SectionModel>>(sectionDefinition);
+                    const sections = value instanceof SectionCollection ? value.getSections<SectionModel>() : [value];
 
-                    for (const fieldDefinition of sectionDefinition.children) {
-                        if (fieldDefinition instanceof FieldDefinition) {
-                            const id = section.get<FieldModel<TValueType>>(fieldDefinition).id;
+                    for (const section of sections) {
+                        for (const fieldDefinition of sectionDefinition.children) {
+                            if (fieldDefinition instanceof FieldDefinition) {
+                                const id = section.get<FieldModel<TValueType>>(fieldDefinition).id;
 
-                            if (id) {
-                                placements.set(id, { definition: fieldDefinition, pageId: page.id!, pageOrdinal });
+                                if (id) {
+                                    placements.set(id, { definition: fieldDefinition, pageId: page.id!, pageOrdinal });
+                                }
                             }
                         }
                     }

@@ -53,6 +53,19 @@ async function mount(mode: FormMode, dataManager?: Partial<IReportViewerDataMana
     return container;
 }
 
+/** Polls the container, giving pending microtasks a chance each time, until the selector appears or the budget runs out -- so a slow lazy import needs only as long as it actually takes, up to a generous ceiling, rather than a flat wait that a loaded machine can outrun. */
+async function waitForElement(container: HTMLElement, selector: string, timeoutMs = 3000, intervalMs = 30): Promise<Element | null> {
+    const deadline = Date.now() + timeoutMs;
+    let element = container.querySelector(selector);
+
+    while (!element && Date.now() < deadline) {
+        await act(async () => { await new Promise(resolve => setTimeout(resolve, intervalMs)); });
+        element = container.querySelector(selector);
+    }
+
+    return element;
+}
+
 const host = { read: async () => undefined, readPresets: async () => [] };
 
 afterEach(() => {
@@ -63,7 +76,9 @@ afterEach(() => {
 describe("PanelManager", () => {
     describe("the presets panel", () => {
         it("is mounted for an editable report when the host has presets to give", async () => {
-            expect((await mount("editable", host)).querySelector("#presets__offcanvas")).not.toBeNull();
+            const container = await mount("editable", host);
+
+            expect(await waitForElement(container, "#presets__offcanvas")).not.toBeNull();
         });
 
         it("is not mounted when the host has no way to read presets", async () => {

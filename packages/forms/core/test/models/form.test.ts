@@ -2,8 +2,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { FieldModel, TValueType } from "../../src/models/field";
 import type { PageCollection } from "../../src/models/page-collection";
-import type { SectionModel } from "../../src/models/section";
-import type { StringFieldModel } from "../../src/models/string-field";
+import { DefinitionFactory, defineFields } from "../../src/models/definition-factory";
+import { FormModel } from "../../src/models/form";
+import { PageModel } from "../../src/models/page";
+import { SectionCollection } from "../../src/models/section-collection";
+import { SectionModel } from "../../src/models/section";
+import { StringFieldModel } from "../../src/models/string-field";
 import { RequiredFieldRule } from "../../src/models/validation/rules/required-field-rule";
 import { RuleCollection } from "../../src/models/validation/rule-collection";
 import { RuleIssueCollection } from "../../src/models/validation/rule-issue-collection";
@@ -176,6 +180,42 @@ describe("FormModel", () => {
             const fieldCount = withTwo.getPages().length * (Object.keys(violatorFields).length + Object.keys(chargeFields).length);
 
             expect(withTwo.getFieldPlacements().size).toBe(fieldCount);
+        });
+
+        describe("a section collection", () => {
+            class TestRowsForm extends FormModel<any> { }
+            class TestRowsPage extends PageModel { }
+            class TestRowSection extends SectionModel { }
+
+            const rowsForm = DefinitionFactory.form("test-placements-rows-form", TestRowsForm, {});
+            const rowsPage = DefinitionFactory.page("rows-page", rowsForm, TestRowsPage);
+            const rowsDefinition = DefinitionFactory.sectionCollection("rows", rowsPage, TestRowSection, 3);
+            const rowFields = defineFields(rowsDefinition, {
+                name: { label: "Name", ctor: StringFieldModel }
+            });
+
+            it("places every row's own field, not just the first", async () => {
+                const rowsFormInstance = await new TestRowsForm().initialize();
+                const page = rowsFormInstance.getPages()[0];
+                const rows = page.get<SectionCollection<TestRowSection>>(rowsDefinition).getSections<TestRowSection>();
+                const placements = rowsFormInstance.getFieldPlacements();
+
+                rows.forEach(row => {
+                    const field = row.get<StringFieldModel>(rowFields.name);
+
+                    expect(placements.get(field.id!)).toMatchObject({ definition: rowFields.name, pageId: page.id, pageOrdinal: 0 });
+                });
+            });
+
+            it("gives each row's field its own distinct id", async () => {
+                const rowsFormInstance = await new TestRowsForm().initialize();
+                const page = rowsFormInstance.getPages()[0];
+                const rows = page.get<SectionCollection<TestRowSection>>(rowsDefinition).getSections<TestRowSection>();
+                const ids = rows.map(row => row.get<StringFieldModel>(rowFields.name).id);
+
+                expect(new Set(ids).size).toBe(3);
+                expect(rowsFormInstance.getFieldPlacements().size).toBe(3);
+            });
         });
     });
 

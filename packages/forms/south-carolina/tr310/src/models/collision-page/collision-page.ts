@@ -1,4 +1,4 @@
-import { FormModel, PageModel, SectionDefinition } from "@forms/core";
+import { FormModel, PageModel, SectionCollection, SectionCollectionDefinition, SectionDefinition } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 import { HeaderSectionModel } from "./header-section";
 import { CollisionSectionModel } from "./collision-section";
@@ -37,7 +37,7 @@ export class CollisionPageModel extends PageModel implements ICollisionPageModel
     public readonly harmfulEventSection: SectionDefinition<HarmfulEventSectionModel> = this.schema.harmfulEventSection;
     public readonly junctionSection: SectionDefinition<JunctionSectionModel> = this.schema.junctionSection;
     public readonly workZoneSection: SectionDefinition<WorkZoneSectionModel> = this.schema.workZoneSection;
-    public readonly witnessSection: SectionDefinition<WitnessSectionModel> = this.schema.witnessSection;
+    public readonly witnessSection: SectionCollectionDefinition<WitnessSectionModel> = this.schema.witnessSection;
     public readonly collisionOfficerSection: SectionDefinition<CollisionOfficerSectionModel> = this.schema.collisionOfficerSection;
 
     public getHeaderSection(): HeaderSectionModel { return this.get<HeaderSectionModel>(this.headerSection); }
@@ -52,6 +52,6 @@ export class CollisionPageModel extends PageModel implements ICollisionPageModel
     public getHarmfulEventSection(): HarmfulEventSectionModel { return this.get<HarmfulEventSectionModel>(this.harmfulEventSection); }
     public getJunctionSection(): JunctionSectionModel { return this.get<JunctionSectionModel>(this.junctionSection); }
     public getWorkZoneSection(): WorkZoneSectionModel { return this.get<WorkZoneSectionModel>(this.workZoneSection); }
-    public getWitnessSection(): WitnessSectionModel { return this.get<WitnessSectionModel>(this.witnessSection); }
+    public getWitnessSection(): SectionCollection<WitnessSectionModel> { return this.get<SectionCollection<WitnessSectionModel>>(this.witnessSection); }
     public getCollisionOfficerSection(): CollisionOfficerSectionModel { return this.get<CollisionOfficerSectionModel>(this.collisionOfficerSection); }
 }

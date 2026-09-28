@@ -175,41 +175,19 @@ export interface ITR310FormSchema extends ISchema {
         readonly workZoneLawEnforcement: FieldDefinition<OptionFieldModel>;
     };
 
-    readonly witnessSection: SectionDefinition<WitnessSectionModel>;
+    readonly witnessSection: SectionCollectionDefinition<WitnessSectionModel>;
     readonly witnessFields: {
-        readonly witnessOneType: FieldDefinition<StringFieldModel>;
-        readonly witnessOneFirstName: FieldDefinition<StringFieldModel>;
-        readonly witnessOneMiddleInitial: FieldDefinition<StringFieldModel>;
-        readonly witnessOneLastName: FieldDefinition<StringFieldModel>;
-        readonly witnessOneAddress: FieldDefinition<StringFieldModel>;
-        readonly witnessOneCity: FieldDefinition<StringFieldModel>;
-        readonly witnessOneState: FieldDefinition<OptionFieldModel>;
-        readonly witnessOneZipCode: FieldDefinition<StringFieldModel>;
-        readonly witnessOneTelephone: FieldDefinition<StringFieldModel>;
-        readonly witnessOnePropertyDamageAmount: FieldDefinition<StringFieldModel>;
-        readonly witnessOnePropertyDamageDescription: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoType: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoFirstName: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoMiddleInitial: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoLastName: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoAddress: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoCity: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoState: FieldDefinition<OptionFieldModel>;
-        readonly witnessTwoZipCode: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoTelephone: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoPropertyDamageAmount: FieldDefinition<StringFieldModel>;
-        readonly witnessTwoPropertyDamageDescription: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeType: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeFirstName: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeMiddleInitial: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeLastName: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeAddress: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeCity: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeState: FieldDefinition<OptionFieldModel>;
-        readonly witnessThreeZipCode: FieldDefinition<StringFieldModel>;
-        readonly witnessThreeTelephone: FieldDefinition<StringFieldModel>;
-        readonly witnessThreePropertyDamageAmount: FieldDefinition<StringFieldModel>;
-        readonly witnessThreePropertyDamageDescription: FieldDefinition<StringFieldModel>;
+        readonly type: FieldDefinition<StringFieldModel>;
+        readonly firstName: FieldDefinition<StringFieldModel>;
+        readonly middleInitial: FieldDefinition<StringFieldModel>;
+        readonly lastName: FieldDefinition<StringFieldModel>;
+        readonly address: FieldDefinition<StringFieldModel>;
+        readonly city: FieldDefinition<StringFieldModel>;
+        readonly state: FieldDefinition<OptionFieldModel>;
+        readonly zipCode: FieldDefinition<StringFieldModel>;
+        readonly telephone: FieldDefinition<StringFieldModel>;
+        readonly propertyDamageAmount: FieldDefinition<StringFieldModel>;
+        readonly propertyDamageDescription: FieldDefinition<StringFieldModel>;
     };
 
     readonly collisionOfficerSection: SectionDefinition<CollisionOfficerSectionModel>;
@@ -611,41 +589,20 @@ export class TR310FormSchema extends Schema implements ITR310FormSchema {
         workZoneLawEnforcement: { label: "Law Enforcement in Work Zone", ctor: OptionFieldModel }
     });
 
-    readonly witnessSection: SectionDefinition<WitnessSectionModel> = DefinitionFactory.section<WitnessSectionModel>("witness-section", this.collisionPage, WitnessSectionModel);
+    // three rows, matching the three the paper form prints
+    readonly witnessSection: SectionCollectionDefinition<WitnessSectionModel> = DefinitionFactory.sectionCollection<WitnessSectionModel>("witness-section", this.collisionPage, WitnessSectionModel, 3);
     readonly witnessFields = defineFields(this.witnessSection, {
-        witnessOneType: { label: "W/P", ctor: StringFieldModel },
-        witnessOneFirstName: { label: "First Name", ctor: StringFieldModel },
-        witnessOneMiddleInitial: { label: "MI", ctor: StringFieldModel },
-        witnessOneLastName: { label: "Last Name", ctor: StringFieldModel },
-        witnessOneAddress: { label: "Address", ctor: StringFieldModel },
-        witnessOneCity: { label: "City", ctor: StringFieldModel },
-        witnessOneState: { label: "State", ctor: OptionFieldModel },
-        witnessOneZipCode: { label: "Zip Code", ctor: StringFieldModel },
-        witnessOneTelephone: { label: "Telephone", ctor: StringFieldModel },
-        witnessOnePropertyDamageAmount: { label: "Prop. Dmg. Amount", ctor: StringFieldModel },
-        witnessOnePropertyDamageDescription: { label: "Prop. Dmg. Description", ctor: StringFieldModel },
-        witnessTwoType: { label: "W/P", ctor: StringFieldModel },
-        witnessTwoFirstName: { label: "First Name", ctor: StringFieldModel },
-        witnessTwoMiddleInitial: { label: "MI", ctor: StringFieldModel },
-        witnessTwoLastName: { label: "Last Name", ctor: StringFieldModel },
-        witnessTwoAddress: { label: "Address", ctor: StringFieldModel },
-        witnessTwoCity: { label: "City", ctor: StringFieldModel },
-        witnessTwoState: { label: "State", ctor: OptionFieldModel },
-        witnessTwoZipCode: { label: "Zip Code", ctor: StringFieldModel },
-        witnessTwoTelephone: { label: "Telephone", ctor: StringFieldModel },
-        witnessTwoPropertyDamageAmount: { label: "Prop. Dmg. Amount", ctor: StringFieldModel },
-        witnessTwoPropertyDamageDescription: { label: "Prop. Dmg. Description", ctor: StringFieldModel },
-        witnessThreeType: { label: "W/P", ctor: StringFieldModel },
-        witnessThreeFirstName: { label: "First Name", ctor: StringFieldModel },
-        witnessThreeMiddleInitial: { label: "MI", ctor: StringFieldModel },
-        witnessThreeLastName: { label: "Last Name", ctor: StringFieldModel },
-        witnessThreeAddress: { label: "Address", ctor: StringFieldModel },
-        witnessThreeCity: { label: "City", ctor: StringFieldModel },
-        witnessThreeState: { label: "State", ctor: OptionFieldModel },
-        witnessThreeZipCode: { label: "Zip Code", ctor: StringFieldModel },
-        witnessThreeTelephone: { label: "Telephone", ctor: StringFieldModel },
-        witnessThreePropertyDamageAmount: { label: "Prop. Dmg. Amount", ctor: StringFieldModel },
-        witnessThreePropertyDamageDescription: { label: "Prop. Dmg. Description", ctor: StringFieldModel }
+        type: { label: "W/P", ctor: StringFieldModel },
+        firstName: { label: "First Name", ctor: StringFieldModel },
+        middleInitial: { label: "MI", ctor: StringFieldModel },
+        lastName: { label: "Last Name", ctor: StringFieldModel },
+        address: { label: "Address", ctor: StringFieldModel },
+        city: { label: "City", ctor: StringFieldModel },
+        state: { label: "State", ctor: OptionFieldModel },
+        zipCode: { label: "Zip Code", ctor: StringFieldModel },
+        telephone: { label: "Telephone", ctor: StringFieldModel },
+        propertyDamageAmount: { label: "Prop. Dmg. Amount", ctor: StringFieldModel },
+        propertyDamageDescription: { label: "Prop. Dmg. Description", ctor: StringFieldModel }
     });
 
     readonly collisionOfficerSection: SectionDefinition<CollisionOfficerSectionModel> = DefinitionFactory.section<CollisionOfficerSectionModel>("collision-officer-section", this.collisionPage, CollisionOfficerSectionModel);

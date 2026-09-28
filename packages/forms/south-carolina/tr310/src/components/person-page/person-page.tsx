@@ -49,7 +49,7 @@ export default function PersonPage({ controllers, binding }: IPersonPageProps): 
             <InjurySection binding={binding.getSection(page.injurySection)} />
             <SafetyEquipmentSection binding={binding.getSection(page.safetyEquipmentSection)} />
             <AlcoholDrugsSection binding={binding.getSection(page.alcoholDrugsSection)} />
-            <PassengersSection binding={binding.getSection(page.passengersSection)} />
+            <PassengersSection binding={binding.getSectionCollection(page.passengersSection)} />
             <PersonOfficerSection binding={binding.getSection(page.personOfficerSection)} />
         </>
     );

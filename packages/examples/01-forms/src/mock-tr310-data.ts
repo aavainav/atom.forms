@@ -72,25 +72,30 @@ export const mockTR310Records: Record<string, ITR310Data> = {
 
         workZoneRelated: { value: "2", description: "NO" },
 
-        witnessOneType: "W",
-        witnessOneFirstName: "Dana",
-        witnessOneMiddleInitial: "L",
-        witnessOneLastName: "Ferrell",
-        witnessOneAddress: "118 Blossom St",
-        witnessOneCity: "Columbia",
-        witnessOneState: { value: "SC", description: "SOUTH CAROLINA" },
-        witnessOneZipCode: "29201",
-        witnessOneTelephone: "803-555-0141",
-
-        witnessTwoType: "P",
-        witnessTwoFirstName: "Marcus",
-        witnessTwoLastName: "Oyelaran",
-        witnessTwoAddress: "1400 Gervais St",
-        witnessTwoCity: "Columbia",
-        witnessTwoState: { value: "SC", description: "SOUTH CAROLINA" },
-        witnessTwoZipCode: "29201",
-        witnessTwoPropertyDamageAmount: "850",
-        witnessTwoPropertyDamageDescription: "Wrought iron fence, approx 12 ft",
+        witnesses: [
+            {
+                type: "W",
+                firstName: "Dana",
+                middleInitial: "L",
+                lastName: "Ferrell",
+                address: "118 Blossom St",
+                city: "Columbia",
+                state: { value: "SC", description: "SOUTH CAROLINA" },
+                zipCode: "29201",
+                telephone: "803-555-0141"
+            },
+            {
+                type: "P",
+                firstName: "Marcus",
+                lastName: "Oyelaran",
+                address: "1400 Gervais St",
+                city: "Columbia",
+                state: { value: "SC", description: "SOUTH CAROLINA" },
+                zipCode: "29201",
+                propertyDamageAmount: "850",
+                propertyDamageDescription: "Wrought iron fence, approx 12 ft"
+            }
+        ],
 
         collisionOfficerName: "A Vainavicz",
         collisionOfficerRank: "SGT",
@@ -147,18 +152,22 @@ export const mockTR310Records: Record<string, ITR310Data> = {
                 alcoholDrugsAlcoholTestStatus: { value: "1", description: "TEST NOT GIVEN" },
                 alcoholDrugsDrugTestStatus: { value: "1", description: "TEST NOT GIVEN" },
 
-                passengerOnePersonNumber: "3",
-                passengerOneUnitNumber: "1",
-                passengerOneNameAndAddress: "Whitfield, Alice - 902 Rosewood Dr, Columbia SC",
-                passengerOneDateOfBirth: "1990-11-02",
-                passengerOneInjuryStatus: { value: "1", description: "POSSIBLE INJURY" },
-                passengerOneSex: { value: "F", description: "FEMALE" },
-                passengerOneRace: "W",
-                passengerOneSeatingLocation: "22",
-                passengerOneEjection: { value: "1", description: "NOT EJECTED" },
-                passengerOneMedicalFacilityTransport: { value: "11", description: "EMS GROUND" },
-                passengerOneAirBagDeployment: { value: "00", description: "NOT DEPLOYED" },
-                passengerOneRestraintDevice: { value: "13", description: "SHOULDER & LAP BELT" },
+                passengers: [
+                    {
+                        personNumber: "3",
+                        unitNumber: "1",
+                        nameAndAddress: "Whitfield, Alice - 902 Rosewood Dr, Columbia SC",
+                        dateOfBirth: "1990-11-02",
+                        injuryStatus: { value: "1", description: "POSSIBLE INJURY" },
+                        sex: { value: "F", description: "FEMALE" },
+                        race: "W",
+                        seatingLocation: "22",
+                        ejection: { value: "1", description: "NOT EJECTED" },
+                        medicalFacilityTransport: { value: "11", description: "EMS GROUND" },
+                        airBagDeployment: { value: "00", description: "NOT DEPLOYED" },
+                        restraintDevice: { value: "13", description: "SHOULDER & LAP BELT" }
+                    }
+                ],
 
                 personOfficerName: "A Vainavicz",
                 personOfficerRank: "SGT",
