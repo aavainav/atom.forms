@@ -18,17 +18,7 @@ interface IFormViewerOptionsProps {
     readonly user?: IActor;
 }
 
-/**
- * The functionality options rendered at the bottom of the report viewer.
- *
- * The bar renders whatever `getOptions` returns, already filtered and ordered, with no special-casing here. Each
- * option loads lazily behind a suspense boundary with no fallback -- a late-appearing option reads better than a
- * row of placeholders.
- *
- * `showModal`/`onError` are handed down rather than reached for, since some options render from packages below the
- * report viewer that can't resolve its services. The modal specifically must open at the viewer's root: this bar
- * is `position-fixed`, a stacking context that would paint a modal under the body's own backdrop.
- */
+/** The functionality options rendered at the bottom left of the report viewer, stacked vertically rather than in a row. */
 export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onError, user }: IFormViewerOptionsProps): React.JSX.Element => {
     const modalService = useService<IModalService>(IModalService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -38,9 +28,9 @@ export const ReportViewerOptions = ({ catalogItem, controllers, dataManager, onE
     const options = reportViewerService.getOptions(form, dataManager);
 
     return (
-        <div id="report-viewer-options" className="d-flex position-fixed bottom-0 end-0 m-4">
+        <div id="report-viewer-options" className="d-flex flex-column position-fixed bottom-0 start-0 m-4">
             {options.map(({ id, title, Component }, index) => (
-                <div key={id} className={index === 0 ? "" : "ms-2"}>
+                <div key={id} className={index === 0 ? "" : "mt-2"}>
                     <Suspense fallback={null}>
                         <Component
                             catalogItem={catalogItem}
