@@ -6,11 +6,12 @@
         "doc": [
             "The violations an S438 can be written for.",
             "",
-            "A STARTER SET, not the authoritative list. The SCDPS publishes no machine-readable violation code list",
-            "with the S438, so these are the Title 56 sections the ticket is most often written under, and both the",
-            "point values and the court-appearance flags need checking against the current Code before an agency",
-            "writes tickets from them. An agency serving its own list registers over `sc-s438:violation`, which",
-            "replaces this outright."
+            "Generated from South Carolina's own statute code list (Title 1 through Title 63), not hand-curated per",
+            "entry. Only the ~2% of rows the state's own list publishes a point value for carry `points`; every other",
+            "row leaves it unset rather than asserting a false zero, since most of these statutes are outside the",
+            "point schedule entirely rather than a zero-point offense. `requiresCourtAppearance` is never set here --",
+            "that determination needs legal review this generation step cannot supply. An agency serving its own list",
+            "registers over `sc-s438:violation`, which replaces this outright."
         ]
     }
 ]
