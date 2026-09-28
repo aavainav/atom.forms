@@ -22,6 +22,9 @@
     box-shadow: none;
     break-inside: avoid;
     margin-bottom: 0;
+    // print measures and scales the whole `.f-print` block itself (`--f-print-scale`), so a page's own on-screen
+    // auto-fit scale is neutralized here rather than compounding with it
+    zoom: 1;
 }
 
 @media print {

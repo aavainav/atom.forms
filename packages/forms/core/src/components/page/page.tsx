@@ -5,6 +5,7 @@ import { FIcon } from "../icon";
 import { FWatermark } from "../watermark";
 
 import { FormType } from "../../models/form";
+import { usePageScale } from "../../hooks/use-page-scale";
 import { buildClasses } from "../../utils/class-names";
 
 interface IFPageProps {
@@ -31,11 +32,19 @@ function getPageClassNames(formType: FormType): Array<string> {
 
 /** Defines the page component. This component wraps the actual page of a form, allowing for functionality to modify pages. */
 export const FPage = ({ formType, watermark, children, onAddPage, onDeletePage }: React.PropsWithChildren<IFPageProps>): React.JSX.Element => {
+    const pageRef = React.useRef<HTMLDivElement>(null);
+    const scale = usePageScale(pageRef);
+
     return (
         // the page is a printed document rather than app chrome: it is white paper with a dark border whichever
         // theme the app is rendered in, so the color mode is pinned here and every control on the page stays
         // legible against it while the chrome around it follows the day/night toggle
-        <div data-bs-theme="light" className={buildClasses(...getPageClassNames(formType))}>
+        <div
+            ref={pageRef}
+            data-bs-theme="light"
+            className={buildClasses(...getPageClassNames(formType))}
+            style={{ "--f-page-scale": scale } as React.CSSProperties}
+        >
             {onDeletePage && (
                 <div className="d-flex justify-content-end mb-2">
                     <FButton type="button" className="btn btn-danger" onClick={onDeletePage}>

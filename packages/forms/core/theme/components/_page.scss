@@ -17,4 +17,6 @@
     padding: variables.$page-padding;
     // the page is the containing block for its watermark, which is stamped corner to corner across it
     position: relative;
+    // shrinks the whole page, fields included, to fit whatever width is available; computed in `usePageScale`
+    zoom: var(--f-page-scale, 1);
 }

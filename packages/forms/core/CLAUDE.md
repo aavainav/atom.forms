@@ -370,6 +370,25 @@ either color mode — so when the host flips the document to dark, the attribute
 rendered on it stays legible. Anything painting page chrome should keep that in mind rather than reaching for a
 theme-aware color.
 
+**`FPage` also auto-fits itself to whatever width it's given**, since every state form's page is a fixed pixel width
+(`.f-crash.f-page { width: 1024px !important; }` etc. in `theme/components/_page.scss`) built to match the printed
+form, and that alone is most of a small screen — a toughbook, say. `usePageScale` (`src/hooks/use-page-scale.ts`)
+measures the page against its own parent element on every resize (`ResizeObserver`) and answers a factor applied as
+`--f-page-scale`, consumed by `zoom: var(--f-page-scale, 1);` on `.f-page` itself. `zoom`, not `transform: scale`, is
+deliberate: it changes the *used values* of the whole subtree, so the shrunk page's layout box, click regions, and
+every field's real size all agree — nothing needs separate coordinate compensation the way a transform would.
+Scaling is one-way (`Math.min(..., 1)`): a page already narrower than its container is never blown up. It bottoms
+out at `minScale` (0.7) rather than shrinking indefinitely, past which the container scrolls horizontally instead —
+below that, individual fields start becoming uncomfortably small to read or tap. Because the natural width differs
+by form type, `usePageScale` recovers it by dividing the page's own current measurement by whatever scale it last
+applied, rather than trusting a hardcoded constant — this also means repeated resizes converge instead of
+compounding, since each measurement backs out its own previous effect first.
+
+This runs **only** on screen. `.f-print .f-page` (`theme/components/_print.scss`) forces `zoom: 1`, so a page's
+on-screen auto-fit scale never compounds with `--f-print-scale` — print already measures and scales the whole
+`.f-print` block itself (see `@forms/printing`'s `PrintService.getScale`, the pattern `usePageScale` mirrors for the
+screen case).
+
 `FOffCanvas` takes a `placement` of `"start"` (the default, where the validation panel sits) or `"end"`. Two panels
 that can be open at once need different edges, or they cover each other. It is plain markup with no backdrop and
 no portal, so it has to be rendered somewhere that is not itself a stacking context — which is why
