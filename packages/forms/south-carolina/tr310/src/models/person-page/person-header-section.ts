@@ -1,4 +1,4 @@
-import { FieldDefinition, FormModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
+import { FieldDefinition, FormModel, HiddenFieldModel, ISection, OptionFieldModel, SectionModel, StringFieldModel } from "@forms/core";
 import { TR310FormSchema } from "../tr310-form-schema";
 
 export interface IPersonHeaderSection extends ISection {
@@ -15,9 +15,12 @@ export class PersonHeaderSectionModel extends SectionModel implements IPersonHea
     public readonly unitNumber: FieldDefinition<StringFieldModel> = this.schema.personHeaderFields.personHeaderUnitNumber;
     public readonly personType: FieldDefinition<OptionFieldModel> = this.schema.personHeaderFields.personHeaderPersonType;
     public readonly crashReportNumber: FieldDefinition<StringFieldModel> = this.schema.personHeaderFields.personHeaderCrashReportNumber;
+    /** Identifies this person page across saves. Hidden -- no component binds to it. */
+    public readonly personId: FieldDefinition<HiddenFieldModel> = this.schema.personHeaderFields.personHeaderPersonId;
 
     public getPersonNumber(): StringFieldModel { return this.get<StringFieldModel>(this.personNumber); }
     public getUnitNumber(): StringFieldModel { return this.get<StringFieldModel>(this.unitNumber); }
     public getPersonType(): OptionFieldModel { return this.get<OptionFieldModel>(this.personType); }
     public getCrashReportNumber(): StringFieldModel { return this.get<StringFieldModel>(this.crashReportNumber); }
+    public getPersonId(): HiddenFieldModel { return this.get<HiddenFieldModel>(this.personId); }
 }

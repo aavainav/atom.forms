@@ -555,6 +555,7 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
 
     private extractPersonHeader(section: PersonHeaderSectionModel, data: FormValues<ITR310PersonData>): void {
         this.read(data, "personHeaderCrashReportNumber", section.getCrashReportNumber());
+        this.read(data, "personHeaderPersonId", section.getPersonId());
         this.read(data, "personHeaderPersonNumber", section.getPersonNumber());
         this.read(data, "personHeaderPersonType", section.getPersonType());
         this.read(data, "personHeaderUnitNumber", section.getUnitNumber());
@@ -562,6 +563,8 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
 
     private populatePersonHeader(section: PersonHeaderSectionModel, data: ITR310PersonData): PersonHeaderSectionModel {
         let updated = this.write(section, section.crashReportNumber, data, "personHeaderCrashReportNumber");
+        // a record saved before this field existed carries none, so the page keeps the id it was just stamped with
+        updated = this.write(updated, section.personId, data, "personHeaderPersonId");
         updated = this.write(updated, section.personNumber, data, "personHeaderPersonNumber");
         updated = this.write(updated, section.personType, data, "personHeaderPersonType");
 
@@ -853,12 +856,15 @@ export class TR310Mapper extends FormMapper<TR310FormModel, ITR310Data> {
     private extractUnitHeader(section: UnitHeaderSectionModel, data: FormValues<ITR310UnitData>): void {
         this.read(data, "unitHeaderCrashReportNumber", section.getCrashReportNumber());
         this.read(data, "unitHeaderFr10Number", section.getFr10Number());
+        this.read(data, "unitHeaderUnitId", section.getUnitId());
         this.read(data, "unitHeaderUnitNumber", section.getUnitNumber());
     }
 
     private populateUnitHeader(section: UnitHeaderSectionModel, data: ITR310UnitData): UnitHeaderSectionModel {
         let updated = this.write(section, section.crashReportNumber, data, "unitHeaderCrashReportNumber");
         updated = this.write(updated, section.fr10Number, data, "unitHeaderFr10Number");
+        // a record saved before this field existed carries none, so the page keeps the id it was just stamped with
+        updated = this.write(updated, section.unitId, data, "unitHeaderUnitId");
 
         return this.write(updated, section.unitNumber, data, "unitHeaderUnitNumber");
     }

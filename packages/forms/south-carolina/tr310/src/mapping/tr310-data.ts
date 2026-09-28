@@ -182,6 +182,8 @@ export interface ITR310PersonData {
     readonly personFirstName?: string;
     /** "SCDPS Crash Report Number", from the person header section of the person page. */
     readonly personHeaderCrashReportNumber?: string;
+    /** Identifies this person page across saves. From the person header section, but hidden -- not printed, and not the "Person #" the officer writes. */
+    readonly personHeaderPersonId?: string;
     /** "Person #", from the person header section of the person page. */
     readonly personHeaderPersonNumber?: string;
     /** "Person Type", from the person header section of the person page. */
@@ -316,6 +318,8 @@ export interface ITR310UnitData {
     readonly unitHeaderCrashReportNumber?: string;
     /** "FR-10 #", from the unit header section of the unit page. */
     readonly unitHeaderFr10Number?: string;
+    /** Identifies this unit page across saves. From the unit header section, but hidden -- not printed, and not the "Unit #" the officer writes. */
+    readonly unitHeaderUnitId?: string;
     /** "Unit #", from the unit header section of the unit page. */
     readonly unitHeaderUnitNumber?: string;
     /** "CJA #", from the unit officer section of the unit page. */

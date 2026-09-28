@@ -1,7 +1,7 @@
 import type { ITR310Data, ITR310PersonData, ITR310UnitData } from "../../src/mapping/tr310-data";
 
 /**
- * A value for every field the TR-310 contract publishes -- 347 of them across the three interfaces.
+ * A value for every field the TR-310 contract publishes -- 349 of them across the three interfaces.
  *
  * Generated from `src/mapping/tr310-data.ts` and then checked in, because this is the only form whose contract is
  * too large to keep by hand and still trust. Each value is derived from its own field name, so a mapper that
@@ -102,6 +102,7 @@ export const person: Required<ITR310PersonData> = {
     personDateOfBirth: "personDateOfBirth",
     personFirstName: "personFirstName",
     personHeaderCrashReportNumber: "personHeaderCrashReportNumber",
+    personHeaderPersonId: "personHeaderPersonId",
     personHeaderPersonNumber: "personHeaderPersonNumber",
     personHeaderPersonType: { value: "personHeaderPersonType-v", description: "personHeaderPersonType-d" },
     personHeaderUnitNumber: "personHeaderUnitNumber",
@@ -170,6 +171,7 @@ export const unit: Required<ITR310UnitData> = {
     travelSpeedRelated: { value: "travelSpeedRelated-v", description: "travelSpeedRelated-d" },
     unitHeaderCrashReportNumber: "unitHeaderCrashReportNumber",
     unitHeaderFr10Number: "unitHeaderFr10Number",
+    unitHeaderUnitId: "unitHeaderUnitId",
     unitHeaderUnitNumber: "unitHeaderUnitNumber",
     unitOfficerCjaNumber: "unitOfficerCjaNumber",
     unitOfficerInternalAgency: "unitOfficerInternalAgency",

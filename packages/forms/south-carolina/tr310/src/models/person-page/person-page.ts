@@ -35,13 +35,14 @@ export class PersonPageModel extends PageModel implements IPersonPageModel {
     public readonly passengersSection: SectionDefinition<PassengersSectionModel> = this.schema.passengersSection;
     public readonly personOfficerSection: SectionDefinition<PersonOfficerSectionModel> = this.schema.personOfficerSection;
 
-    /** Initializes the page and registers its dropzone. */
+    /** Initializes the page, registers its dropzone, and stamps it with an id of its own that survives every save. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
         page = page.setDropzone(new PersonPagePersonDropzone(page, this.schema));
 
-        return page;
+        const header = page.get<PersonHeaderSectionModel>(page.personHeaderSection);
+        return page.set(page.personHeaderSection, header.set(header.personId, header.getPersonId().setValue(crypto.randomUUID())));
     }
 
     public getPersonHeaderSection(): PersonHeaderSectionModel { return this.get<PersonHeaderSectionModel>(this.personHeaderSection); }

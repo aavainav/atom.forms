@@ -21,6 +21,9 @@ export interface ITR310FormModel extends ITR310Form {
 /** The code the report uses for a yes answer on its yes/no/unknown boxes. */
 const yes = "1";
 
+/** The code `personHeaderPersonType` carries for a driver, matching `tr310-rules.ts`'s own constant. */
+const driver = "1";
+
 /** Formats a date as the `YYYY-MM-DD` the report's date boxes carry. */
 function formatDate(date: Date): string {
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -168,18 +171,21 @@ export class TR310FormModel extends CrashForm<ITR310Data> implements ITR310FormM
         const owner = page.getOwnerSection();
         const unitNumber = text(page.getUnitHeaderSection().getUnitNumber());
 
-        const driver = this.getPersonPages()
-            .find(person => text(person.getPersonHeaderSection().getUnitNumber()) === unitNumber)
+        const driverSection = this.getPersonPages()
+            .find(person => {
+                const header = person.getPersonHeaderSection();
+                return text(header.getUnitNumber()) === unitNumber && header.getPersonType().getValue().value === driver;
+            })
             ?.getPersonSection();
 
         return {
             unitId: unitNumber,
             unitType: page.getUnitTypeSection().getUnit().getValue().description,
-            driverFirstName: driver ? text(driver.getFirstName()) : "",
-            driverLastName: driver ? text(driver.getLastName()) : "",
-            driverMiddleName: driver && text(driver.getMiddleName()),
-            driverDateOfBirth: driver && text(driver.getDateOfBirth()),
-            driverGender: driver?.getSex().getValue().description,
+            driverFirstName: driverSection ? text(driverSection.getFirstName()) : "",
+            driverLastName: driverSection ? text(driverSection.getLastName()) : "",
+            driverMiddleName: driverSection && text(driverSection.getMiddleName()),
+            driverDateOfBirth: driverSection && text(driverSection.getDateOfBirth()),
+            driverGender: driverSection?.getSex().getValue().description,
             ownerFirstName: text(owner.getFirstName()),
             ownerLastName: text(owner.getLastName()),
             ownerMiddleName: text(owner.getMiddleName()),

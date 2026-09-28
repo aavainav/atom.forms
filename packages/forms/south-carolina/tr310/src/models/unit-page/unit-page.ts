@@ -36,14 +36,15 @@ export class UnitPageModel extends PageModel implements IUnitPageModel {
     public readonly violationsSection: SectionDefinition<ViolationsSectionModel> = this.schema.violationsSection;
     public readonly unitOfficerSection: SectionDefinition<UnitOfficerSectionModel> = this.schema.unitOfficerSection;
 
-    /** Initializes the page and registers its dropzones. */
+    /** Initializes the page, registers its dropzones, and stamps it with an id of its own that survives every save. */
     public async initialize(): Promise<this> {
         let page = await super.initialize();
 
         page = page.setDropzone(new UnitPageVehicleDropzone(page, this.schema));
         page = page.setDropzone(new UnitPageOwnerDropzone(page, this.schema));
 
-        return page;
+        const header = page.get<UnitHeaderSectionModel>(page.unitHeaderSection);
+        return page.set(page.unitHeaderSection, header.set(header.unitId, header.getUnitId().setValue(crypto.randomUUID())));
     }
 
     public getUnitHeaderSection(): UnitHeaderSectionModel { return this.get<UnitHeaderSectionModel>(this.unitHeaderSection); }

@@ -90,6 +90,22 @@ immutable model.
 - `setCrashNumber` **returns the form unchanged** — the SCDPS report number is assigned by the state and arrives
   with the host's data.
 
+## `personHeaderPersonId` / `unitHeaderUnitId` — a hidden id that survives a save
+
+Every person and unit page needed an id of its own that outlives a reload, so the *same* person keeps the *same* id
+after every save instead of getting a fresh random one each time. Rather than reach into `Entity.id`, each carries an
+ordinary hidden field: `HiddenFieldModel` (`@forms/core`), a field type that behaves exactly like a string field --
+the distinct type is what marks it as one no component should ever bind to, so it can't be wired into the UI by
+accident. `PersonPageModel`/`UnitPageModel.initialize()` stamp it with `crypto.randomUUID()` the moment the page is
+created, the same way the form's own `initialize()` self-stamps its date, time and ticket number. From there it's an
+ordinary field: `extractPersonHeader`/`extractUnitHeader` read it, `populatePersonHeader`/`populateUnitHeader` write
+it, through the same `this.read`/`this.write` every other field goes through. A record saved before this field
+existed carries none, so the standard "a field the data omits keeps its current value" rule leaves the page's freshly
+stamped id alone -- nothing breaks, there's just nothing yet to restore.
+
+Nothing reads this id yet; it only makes a page's identity durable across a reload, which the next piece of work
+(relating a person to a unit by reference instead of a typed number) needs to exist first.
+
 ## `getCrashData()` vs `ITR310Data`
 
 Two different contracts, don't confuse them:

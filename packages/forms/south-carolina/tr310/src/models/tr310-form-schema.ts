@@ -9,6 +9,7 @@ import {
     Schema,
     SectionDefinition,
     BooleanFieldModel,
+    HiddenFieldModel,
     NumberFieldModel,
     OptionFieldModel,
     StringFieldModel
@@ -228,6 +229,7 @@ export interface ITR310FormSchema extends ISchema {
         readonly personHeaderUnitNumber: FieldDefinition<StringFieldModel>;
         readonly personHeaderPersonType: FieldDefinition<OptionFieldModel>;
         readonly personHeaderCrashReportNumber: FieldDefinition<StringFieldModel>;
+        readonly personHeaderPersonId: FieldDefinition<HiddenFieldModel>;
     };
 
     readonly personSection: SectionDefinition<PersonSectionModel>;
@@ -381,6 +383,7 @@ export interface ITR310FormSchema extends ISchema {
         readonly unitHeaderUnitNumber: FieldDefinition<StringFieldModel>;
         readonly unitHeaderFr10Number: FieldDefinition<StringFieldModel>;
         readonly unitHeaderCrashReportNumber: FieldDefinition<StringFieldModel>;
+        readonly unitHeaderUnitId: FieldDefinition<HiddenFieldModel>;
     };
 
     readonly vehicleSection: SectionDefinition<VehicleSectionModel>;
@@ -747,7 +750,9 @@ export class TR310FormSchema extends Schema implements ITR310FormSchema {
         personHeaderPersonNumber: { label: "Person #", ctor: StringFieldModel },
         personHeaderUnitNumber: { label: "Unit #", ctor: StringFieldModel },
         personHeaderPersonType: { label: "Person Type", ctor: OptionFieldModel },
-        personHeaderCrashReportNumber: { label: "SCDPS Crash Report Number", ctor: StringFieldModel }
+        personHeaderCrashReportNumber: { label: "SCDPS Crash Report Number", ctor: StringFieldModel },
+        // stamped once in PersonPageModel.initialize() so a person keeps the same id across every save
+        personHeaderPersonId: { label: "Person Id", ctor: HiddenFieldModel }
     });
 
     readonly personSection: SectionDefinition<PersonSectionModel> = DefinitionFactory.section<PersonSectionModel>("person-section", this.personPage, PersonSectionModel);
@@ -902,7 +907,9 @@ export class TR310FormSchema extends Schema implements ITR310FormSchema {
     readonly unitHeaderFields = defineFields(this.unitHeaderSection, {
         unitHeaderUnitNumber: { label: "Unit #", ctor: StringFieldModel },
         unitHeaderFr10Number: { label: "FR-10 #", ctor: StringFieldModel },
-        unitHeaderCrashReportNumber: { label: "SCDPS Crash Report Number", ctor: StringFieldModel }
+        unitHeaderCrashReportNumber: { label: "SCDPS Crash Report Number", ctor: StringFieldModel },
+        // stamped once in UnitPageModel.initialize() so a unit keeps the same id across every save
+        unitHeaderUnitId: { label: "Unit Id", ctor: HiddenFieldModel }
     });
 
     readonly vehicleSection: SectionDefinition<VehicleSectionModel> = DefinitionFactory.section<VehicleSectionModel>("vehicle-section", this.unitPage, VehicleSectionModel);

@@ -122,6 +122,7 @@ export type { FieldDescriptor } from "./models/definition-factory";
 export { Entity } from "./models/entity";
 export { FieldModel } from "./models/field";
 export { BooleanFieldModel } from "./models/boolean-field";
+export { HiddenFieldModel } from "./models/hidden-field";
 export { NumberFieldModel } from "./models/number-field";
 export { StringFieldModel } from "./models/string-field";
 export { OptionFieldModel } from "./models/option-field";
