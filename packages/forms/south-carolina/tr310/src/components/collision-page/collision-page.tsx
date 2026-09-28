@@ -1,5 +1,5 @@
 import React from "react";
-import { IControllerManager, IPageBinding } from "@forms/core";
+import { IControllerManager, IPageBinding, FFormStackPanel } from "@forms/core";
 
 import { CollisionPageModel } from "../../models/collision-page/collision-page";
 
@@ -33,10 +33,17 @@ export default function CollisionPage({ controllers, binding }: ICollisionPagePr
         <>
             <HeaderSection binding={binding.getSection(page.headerSection)} />
             <CollisionSection binding={binding.getSection(page.collisionSection)} />
-            <RouteSection binding={binding.getSection(page.routeSection)} />
-            <BaseIntersectionSection binding={binding.getSection(page.baseIntersectionSection)} />
-            <SecondIntersectionSection binding={binding.getSection(page.secondIntersectionSection)} />
-            <CoordinatesSection binding={binding.getSection(page.coordinatesSection)} />
+            {/* the route/intersection boxes and the GPS coordinates sit in the same vertical span on the paper form, side
+                by side rather than each running the full width; the collision section above them is too wide to join them
+                in the same row without narrowing its own fields, so it keeps its own row */}
+            <FFormStackPanel direction="horizontal">
+                <FFormStackPanel direction="vertical">
+                    <RouteSection binding={binding.getSection(page.routeSection)} />
+                    <BaseIntersectionSection binding={binding.getSection(page.baseIntersectionSection)} />
+                    <SecondIntersectionSection binding={binding.getSection(page.secondIntersectionSection)} />
+                </FFormStackPanel>
+                <CoordinatesSection binding={binding.getSection(page.coordinatesSection)} />
+            </FFormStackPanel>
             <TrafficwaySection binding={binding.getSection(page.trafficwaySection)} />
             <BarrierSection binding={binding.getSection(page.barrierSection)} />
             <ConditionsSection binding={binding.getSection(page.conditionsSection)} />

@@ -15,7 +15,7 @@ runs `tsc -b && vite build` here after lerna has built every package it depends 
 | --- | --- |
 | [index.html](index.html) | The vite entry document. Its `<script src>` must match the entry file's name. |
 | [src/main.ts](src/main.ts) | The app's startup: one `WorkbenchBootstrapper.start` call listing every bootstrapper. **The file every new form is registered in.** |
-| [src/form-routes.ts](src/form-routes.ts) | `formRoutes` — identity → path for every catalog form this app routes to. Read twice: to register the routes, and by the home page to build its menu. |
+| [src/form-routes.ts](src/form-routes.ts) | `formRoutes` — identity → path for every catalog form this app routes to. Read twice: to register the routes, and by the home page to build its menu. `disabledForms` marks a form deliberately left out, with why. |
 | [src/forms/](src/forms/) | `FormsModule` registers one route per `formRoutes` entry, all pointing at `form-route-page.tsx` — **the one route component every catalog form is rendered by.** |
 | [src/example-data.ts](src/example-data.ts) | The host data boundary: `createExampleDataManager(identity, searchParams, setSearchParams, keepsHistory)`, the fixture-per-identity table, and the sessionStorage round trip. A plain function, not a module or a service. |
 | [src/example-held-reports.ts](src/example-held-reports.ts) · [example-actors.ts](src/example-actors.ts) | The report each form holds for `?record=held`: its own id, status, workflow history, audit history and comments, told for one person or another. And the Futurama actors (Fry the officer, Hermes the reviewer, Judge Whitey) the stories, the sandbox pages and the workflow demo share. |
@@ -58,7 +58,9 @@ The user is **Fry, the officer**, so the workflow buttons and the audit's `by` a
 `/` lists every catalog form and demo as a link into its route. It reads `IFormCatalogService.getLatestVersions()`
 for the title, description and version and joins each against [src/form-routes.ts](src/form-routes.ts). A catalog
 form with no entry there is still listed, greyed out and marked "no route registered", so registering a form's
-bootstrapper without adding a route shows up as a visible gap rather than a silently missing row.
+bootstrapper without adding a route shows up as a visible gap rather than a silently missing row. A form left out
+on purpose -- one still under construction -- is listed in `disabledForms` there instead, which swaps that generic
+label for its own reason (e.g. "Under construction"), so a deliberate absence doesn't read as an accidental one.
 
 Beneath each form it lists the templates the host offers for starting one, indented, as links to `?template=<id>`
 (asked of the same data manager the form's route uses, through `readTemplates`). The form's own row starts the default

@@ -5,7 +5,7 @@ import { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
 import { FAsyncLoader, FListGroup, FListGroupItem } from "@forms/core";
 
 import { createExampleDataManager } from "../example-data";
-import { getFormRoutePath } from "../form-routes";
+import { getFormDisabledReason, getFormRoutePath } from "../form-routes";
 
 /** The sandbox demos. These are not catalog forms, so unlike the forms they carry their own title and description. */
 const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: string; readonly title: string }> = [
@@ -45,6 +45,8 @@ interface IHomeLinkProps {
     /** Sets a row apart from the ones around it, as a template is beneath the form it starts. */
     readonly className?: string;
     readonly description?: string;
+    /** Why the form has no route, when that's deliberate rather than a gap -- shown in place of "no route registered". */
+    readonly disabledReason?: string;
     /** The route to navigate to. A catalog form with no entry in the app's route table has none, and lists as unreachable. */
     readonly path?: string;
     readonly title: string;
@@ -61,11 +63,13 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
 
     for (const catalogItem of Array.from(catalogItems.values()).sort((a, b) => a.name.localeCompare(b.name))) {
         const path = getFormRoutePath(catalogItem.name);
+        const disabledReason = getFormDisabledReason(catalogItem.name);
         const templates = await createExampleDataManager(catalogItem, new URLSearchParams(), () => undefined)?.readTemplates?.() ?? [];
         const standard = templates.find(entry => entry.isDefault);
 
         links.push({
             description: catalogItem.description,
+            disabledReason,
             // starts every form new rather than mid-way through whatever was last saved for it -- from the host's
             // default template when it has one, or else as the form makes it; the "Load test data" option is how
             // to fill one in once it's open
@@ -76,7 +80,7 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
 
         // the default is what the form's own row starts, so it is not listed a second time
         for (const template of templates.filter(entry => entry !== standard)) {
-            links.push({ className: "ps-5", description: template.description, path: path && `${path}?template=${encodeURIComponent(template.id)}`, title: template.title });
+            links.push({ className: "ps-5", description: template.description, disabledReason, path: path && `${path}?template=${encodeURIComponent(template.id)}`, title: template.title });
         }
     }
 
@@ -88,7 +92,7 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
  * react-router without reloading the app. A modified click is left to the browser, so ctrl/cmd/shift still open the
  * route in a new tab or window the way they would on any other link.
  */
-function HomeLink({ className, description, path, title, version }: IHomeLinkProps): React.JSX.Element {
+function HomeLink({ className, description, disabledReason, path, title, version }: IHomeLinkProps): React.JSX.Element {
     const navigate = useNavigate();
 
     const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
@@ -107,7 +111,7 @@ function HomeLink({ className, description, path, title, version }: IHomeLinkPro
                     {title}
                     {version && <span className="badge text-bg-light fw-normal ms-2">v{version}</span>}
                 </span>
-                <span className="text-muted small font-monospace">{path ?? "no route registered"}</span>
+                <span className="text-muted small">{path ? <span className="font-monospace">{path}</span> : (disabledReason ?? "no route registered")}</span>
             </div>
             {description && <div className="text-muted small">{description}</div>}
         </FListGroupItem>

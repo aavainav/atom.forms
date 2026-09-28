@@ -1,0 +1,4 @@
+// a disabled row (e.g. a catalog form with no route yet) reads as unavailable rather than a plain item
+.list-group-item.disabled {
+    background-color: var(--bs-tertiary-bg);
+}

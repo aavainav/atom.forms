@@ -3,7 +3,7 @@ import { useService } from "@common/react";
 import { FieldDefinition, ISectionBinding, IOptionValue, OptionFieldModel, SectionModel, StringFieldModel, FFormStackPanel } from "@forms/core";
 
 import { ITR310Service } from "../services";
-import { CodeBox, TextField } from "./fields";
+import { CodeBox, ColumnHeader, TextField } from "./fields";
 
 /** The fourteen columns one passenger row carries. The person and narrative pages print the same row under different section models but matching field names, so both hand this one renderer a binding per row. */
 export interface IPassengerRowFields {
@@ -41,16 +41,34 @@ export function PassengerRows<TSection extends SectionModel & IPassengerRowField
     const loadSafetyEquipmentOptions = useCallback(() => tr310Service.getSafetyEquipmentUseOptions(), [tr310Service]);
     const loadTransportOptions = useCallback(() => tr310Service.getMedicalFacilityTransportOptions(), [tr310Service]);
 
+    const headerSection = rows[0].get();
+
     return (
         <>
+            <FFormStackPanel direction="horizontal">
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.personNumber).label} width={70} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.unitNumber).label} width={60} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.nameAndAddress).label} width={260} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.dateOfBirth).label} width={90} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.injuryStatus).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.sex).label} width={44} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.race).label} width={54} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.seatingLocation).label} width={54} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.ejection).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.medicalFacilityTransport).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.airBagDeployment).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.safetyEquipment).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.restraintDevice).label} width={44} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.headInjury).label} width={44} />
+            </FFormStackPanel>
             {rows.map((row, index) => {
                 const section = row.get();
 
                 const coded = (definition: FieldDefinition<OptionFieldModel>, load: () => Promise<Array<IOptionValue>>): React.JSX.Element => (
                     <CodeBox
                         field={section.get<OptionFieldModel>(definition)}
-                        label={section.get<OptionFieldModel>(definition).label}
                         load={load}
+                        showLabel={false}
                         borderEdges={["top", "left"]}
                         onChange={(value) => row.setValue(definition, value)}
                     />
@@ -58,14 +76,14 @@ export function PassengerRows<TSection extends SectionModel & IPassengerRowField
 
                 return (
                     <FFormStackPanel key={index} height={44} direction="horizontal">
-                        <TextField field={section.get<StringFieldModel>(section.personNumber)} width={70} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.personNumber, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.unitNumber)} width={60} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.unitNumber, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.nameAndAddress)} width={260} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.nameAndAddress, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.dateOfBirth)} width={90} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.dateOfBirth, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.personNumber)} width={70} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.personNumber, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.unitNumber)} width={60} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.unitNumber, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.nameAndAddress)} width={260} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.nameAndAddress, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.dateOfBirth)} width={90} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.dateOfBirth, value)} />
                         {coded(section.injuryStatus, loadInjuryOptions)}
                         {coded(section.sex, loadGenderOptions)}
-                        <TextField field={section.get<StringFieldModel>(section.race)} width={54} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.race, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.seatingLocation)} width={54} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.seatingLocation, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.race)} width={54} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.race, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.seatingLocation)} width={54} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.seatingLocation, value)} />
                         {coded(section.ejection, loadEjectionOptions)}
                         {coded(section.medicalFacilityTransport, loadTransportOptions)}
                         {coded(section.airBagDeployment, loadAirBagOptions)}

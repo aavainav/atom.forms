@@ -14,6 +14,7 @@ export { FFieldControl } from "./components/field-control";
 
 export { FFieldSelect } from "./components/field-select";
 export { FFieldTextArea } from "./components/field-textarea";
+export { FNumberField, FSelectField, FTextField } from "./components/fields";
 
 export { FForm } from "./components/form";
 export { FFieldInput } from "./components/field-input";

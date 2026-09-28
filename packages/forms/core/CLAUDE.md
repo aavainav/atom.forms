@@ -341,6 +341,15 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.
+- `src/components/fields/` holds `FTextField`, `FNumberField` and `FSelectField` -- one file each -- the compound
+  boxes bound directly to a field model (`field.label`/`getIsEnabled()`/`getHasError()`/`getValue()`/`id` read
+  straight off it, `FFieldControl` and the raw control wired together underneath) rather than a caller wiring
+  `FFieldControl` and `FFieldInput`/`FFieldSelect` by hand. Each takes `showLabel` (default true) so a caller can
+  suppress the label for a row inside a table that prints its column labels once, in a header row above it, instead
+  of on every row. Every form package used to hand-roll this pairing, or keep a near-duplicate `TextBox`/`NumberBox`/
+  `SelectBox` trio in its own `fields.tsx` -- these three are that pairing, generalized. A form-specific name or
+  default (TR-310's `CodeBox`, pinned to a 44px width and `valueOnly` format; ok-traffic's `YesNoBox`, pinned to its
+  Y/N list) stays local as a thin wrapper over `FSelectField` rather than moving here.
 - Review: `FComment` (author, time, text, and its children as its actions) and `FCommentMarker` (a button in a
   control's corner: a count, or an invitation to add the first comment). Presentational only -- `@forms/review` owns
   what they show. A marker sits in the corner of a control, so the control has to be positioned; `_comment.scss`

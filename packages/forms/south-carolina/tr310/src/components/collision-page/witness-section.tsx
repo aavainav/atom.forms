@@ -4,7 +4,7 @@ import { IOptionValue, ISectionCollectionBinding, OptionFieldModel, StringFieldM
 
 import { WitnessSectionModel } from "../../models/collision-page/witness-section";
 import { ITR310Service } from "../../services";
-import { TextField } from "../fields";
+import { ColumnHeader, TextField } from "../fields";
 
 interface IWitnessSectionProps {
     /** Binds the three witness rows to the form controller, supplying each row's current values and applying changes back to the form. */
@@ -17,23 +17,37 @@ export const WitnessSection = ({ binding }: IWitnessSectionProps): React.JSX.Ele
     const loadStateOptions = useCallback(() => tr310Service.getStateOptions(), [tr310Service]);
 
     const rows = binding.get().getSections<WitnessSectionModel>().map((_, index) => binding.getSection(index));
+    const headerSection = rows[0].get();
 
     return (
         <FSection>
             <FLabel fontSize="6" textAlignment="center"><span className="fw-bold">WITNESS (W) or PROPERTY OWNER (P)</span></FLabel>
+            <FFormStackPanel direction="horizontal">
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.type).label} width={40} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.firstName).label} width={100} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.middleInitial).label} width={36} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.lastName).label} width={100} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.address).label} width={130} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.city).label} width={100} />
+                <ColumnHeader label={headerSection.get<OptionFieldModel>(headerSection.state).label} width={60} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.zipCode).label} width={70} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.telephone).label} width={100} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.propertyDamageAmount).label} width={90} />
+                <ColumnHeader label={headerSection.get<StringFieldModel>(headerSection.propertyDamageDescription).label} width={130} />
+            </FFormStackPanel>
             {rows.map((row, index) => {
                 const section = row.get();
                 const state = section.get<OptionFieldModel>(section.state);
 
                 return (
                     <FFormStackPanel key={index} height={44} direction="horizontal">
-                        <TextField field={section.get<StringFieldModel>(section.type)} width={40} maxlength={1} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.type, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.firstName)} width={100} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.firstName, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.middleInitial)} width={36} maxlength={1} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.middleInitial, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.lastName)} width={100} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.lastName, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.address)} width={130} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.address, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.city)} width={100} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.city, value)} />
-                        <FFieldControl width={60} label={state.label} labelFor={state.id} borderEdges={["top", "left"]}>
+                        <TextField field={section.get<StringFieldModel>(section.type)} width={40} maxlength={1} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.type, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.firstName)} width={100} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.firstName, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.middleInitial)} width={36} maxlength={1} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.middleInitial, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.lastName)} width={100} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.lastName, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.address)} width={130} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.address, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.city)} width={100} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.city, value)} />
+                        <FFieldControl width={60} labelFor={state.id} borderEdges={["top", "left"]}>
                             <FFieldSelect
                                 id={state.id}
                                 disabled={!state.getIsEnabled()}
@@ -45,10 +59,10 @@ export const WitnessSection = ({ binding }: IWitnessSectionProps): React.JSX.Ele
                                 onChange={(value) => row.setValue(section.state, value as IOptionValue)}
                             />
                         </FFieldControl>
-                        <TextField field={section.get<StringFieldModel>(section.zipCode)} width={70} maxlength={10} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.zipCode, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.telephone)} width={100} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.telephone, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.propertyDamageAmount)} width={90} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.propertyDamageAmount, value)} />
-                        <TextField field={section.get<StringFieldModel>(section.propertyDamageDescription)} width={130} borderEdges={["top", "left", "right"]} onChange={(value) => row.setValue(section.propertyDamageDescription, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.zipCode)} width={70} maxlength={10} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.zipCode, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.telephone)} width={100} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.telephone, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.propertyDamageAmount)} width={90} showLabel={false} borderEdges={["top", "left"]} onChange={(value) => row.setValue(section.propertyDamageAmount, value)} />
+                        <TextField field={section.get<StringFieldModel>(section.propertyDamageDescription)} width={130} showLabel={false} borderEdges={["top", "left", "right"]} onChange={(value) => row.setValue(section.propertyDamageDescription, value)} />
                     </FFormStackPanel>
                 );
             })}

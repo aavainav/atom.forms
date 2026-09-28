@@ -44,6 +44,8 @@ interface ICodeBoxProps {
     readonly borderEdges?: FControlBorderEdges;
     /** Closes the box on top of whatever the field itself says, for a box another answer on the form has made moot. */
     readonly disabled?: boolean;
+    /** Whether the label is shown; true by default, false for a row inside a table that prints its column labels once, in a header row above it. */
+    readonly showLabel?: boolean;
     /** Exact width in pixels; wide enough for a two-digit code by default. */
     readonly width?: number;
 
@@ -54,8 +56,8 @@ interface ICodeBoxProps {
  * One of the report's code boxes. The box shows the code alone, as the printed form does, while the menu it
  * opens shows each code with its description so the officer need not read the legend to choose.
  */
-export const CodeBox = ({ disabled, field, load, label, borderEdges, width = codeBoxWidth, onChange }: ICodeBoxProps): React.JSX.Element => (
-    <FFieldControl width={width} label={label} labelFor={field.id} borderEdges={borderEdges}>
+export const CodeBox = ({ disabled, field, load, label, showLabel = true, borderEdges, width = codeBoxWidth, onChange }: ICodeBoxProps): React.JSX.Element => (
+    <FFieldControl width={width} label={showLabel ? label : undefined} labelFor={field.id} borderEdges={borderEdges}>
         <FFieldSelect
             id={field.id}
             disabled={disabled || !field.getIsEnabled()}
@@ -131,6 +133,8 @@ interface ITextFieldProps {
     readonly label?: string;
     /** The maximum number of characters the box accepts. */
     readonly maxlength?: number;
+    /** Whether the label is shown; true by default, false for a row inside a table that prints its column labels once, in a header row above it. */
+    readonly showLabel?: boolean;
     /** Exact width in pixels. */
     readonly width?: number;
 
@@ -138,8 +142,8 @@ interface ITextFieldProps {
 }
 
 /** One of the report's write-in boxes, labelled the way the form labels it. */
-export const TextField = ({ field, borderEdges, height, label, maxlength, width, onChange }: ITextFieldProps): React.JSX.Element => (
-    <FFieldControl width={width} height={height} label={label ?? field.label} labelFor={field.id} borderEdges={borderEdges}>
+export const TextField = ({ field, borderEdges, height, label, maxlength, showLabel = true, width, onChange }: ITextFieldProps): React.JSX.Element => (
+    <FFieldControl width={width} height={height} label={showLabel ? (label ?? field.label) : undefined} labelFor={field.id} borderEdges={borderEdges}>
         <FFieldInput
             id={field.id}
             disabled={!field.getIsEnabled()}
@@ -149,4 +153,18 @@ export const TextField = ({ field, borderEdges, height, label, maxlength, width,
             onChange={onChange}
         />
     </FFieldControl>
+);
+
+interface IColumnHeaderProps {
+    /** The column's label. */
+    readonly label: string;
+    /** Exact width in pixels, matching the data cell beneath it. */
+    readonly width: number;
+}
+
+/** A column's label alone, sized to match the data cell beneath it -- the shared header row printed once above a block of repeating rows, in place of each row restating it. */
+export const ColumnHeader = ({ label, width }: IColumnHeaderProps): React.JSX.Element => (
+    <div style={{ width, flexShrink: 0 }}>
+        <FLabel fontSize="6" textAlignment="center">{label}</FLabel>
+    </div>
 );
