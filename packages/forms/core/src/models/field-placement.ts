@@ -9,4 +9,6 @@ export interface IFieldPlacement {
     readonly pageId: string;
     /** Which of the page definition's pages this is, counting from zero. */
     readonly pageOrdinal: number;
+    /** Which of a section collection's repeated instances this is, counting from zero. Always 0 for a field in an ordinary section. */
+    readonly sectionOrdinal: number;
 }

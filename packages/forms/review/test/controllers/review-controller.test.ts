@@ -112,6 +112,21 @@ describe("ReviewController", () => {
             expect(controller.getComments(firstName)).toEqual([onField]);
             expect(controller.getComments(lastName)).toEqual([]);
         });
+
+        /** Every row of a section collection shares one field name and one section name, so the ordinal is the only thing telling them apart. */
+        it("keeps a section collection's repeated instances apart, so a comment on one does not show on another", () => {
+            const { controller } = review({
+                placements: new Map([
+                    ["row-1", placement("first-name", { isCollection: true, sectionOrdinal: 0 })],
+                    ["row-2", placement("first-name", { isCollection: true, sectionOrdinal: 1 })]
+                ])
+            });
+
+            const onRowOne = controller.add(controller.locateField("row-1")!, "Check this row.");
+
+            expect(controller.getFieldComments("row-1")).toEqual([onRowOne]);
+            expect(controller.getFieldComments("row-2")).toEqual([]);
+        });
     });
 
     describe("setResolved", () => {
@@ -276,7 +291,7 @@ describe("ReviewController", () => {
             });
 
             expect(controller.describeTarget({ level: "page", page: "person-page", pageOrdinal: 1 })).toBe("Person 2");
-            expect(controller.describeTarget({ field: "first-name", level: "field", page: "person-page", pageOrdinal: 1, section: "person" }))
+            expect(controller.describeTarget({ field: "first-name", level: "field", page: "person-page", pageOrdinal: 1, section: "person", sectionOrdinal: 0 }))
                 .toBe("Person 2 > Person details > First name");
         });
 
@@ -289,10 +304,28 @@ describe("ReviewController", () => {
             expect(controller.describeTarget(firstName)).toBe("Person > Person details > First name");
         });
 
+        it("says which of a section collection's repeated instances a target is in", () => {
+            const { controller } = review({
+                placements: new Map([["field-1", placement("first-name", { isCollection: true, sectionOrdinal: 1 })]])
+            });
+
+            expect(controller.describeTarget({ level: "section", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 1 })).toBe("Person > Person details 2");
+            expect(controller.describeTarget({ field: "first-name", level: "field", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 1 }))
+                .toBe("Person > Person details 2 > First name");
+        });
+
+        it("does not number an ordinary section, which never repeats within its page", () => {
+            const { controller } = review({
+                placements: new Map([["field-1", placement("first-name")]])
+            });
+
+            expect(controller.describeTarget(firstName)).toBe("Person > Person details > First name");
+        });
+
         it("falls back to the names a comment was made with when its definitions have gone", () => {
             const { controller } = review();
 
-            expect(controller.describeTarget({ field: "gone", level: "field", page: "person-page", pageOrdinal: 0, section: "person" })).toBe("person-page > person > gone");
+            expect(controller.describeTarget({ field: "gone", level: "field", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 0 })).toBe("person-page > person > gone");
             expect(controller.describeTarget({ level: "page", page: "removed-page", pageOrdinal: 0 })).toBe("removed-page");
         });
     });

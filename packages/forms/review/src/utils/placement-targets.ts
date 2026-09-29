@@ -10,8 +10,8 @@ export function getPlacementTargets(placement: IFieldPlacement): Record<"field" 
     const pageOrdinal = section.isShared ? 0 : placement.pageOrdinal;
 
     return {
-        field: { field: placement.definition.name, level: "field", page: page.name, pageOrdinal, section: section.name },
+        field: { field: placement.definition.name, level: "field", page: page.name, pageOrdinal, section: section.name, sectionOrdinal: placement.sectionOrdinal },
         page: { level: "page", page: page.name, pageOrdinal: placement.pageOrdinal },
-        section: { level: "section", page: page.name, pageOrdinal, section: section.name }
+        section: { level: "section", page: page.name, pageOrdinal, section: section.name, sectionOrdinal: placement.sectionOrdinal }
     };
 }

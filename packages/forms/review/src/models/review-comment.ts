@@ -6,10 +6,10 @@ import type { IActor } from "@forms/core";
  * does not, and -- for a page that repeats -- which of its pages, counting from zero.
  */
 export type ReviewTarget =
-    | { readonly field: string; readonly level: "field"; readonly page: string; readonly pageOrdinal: number; readonly section: string }
+    | { readonly field: string; readonly level: "field"; readonly page: string; readonly pageOrdinal: number; readonly section: string; readonly sectionOrdinal: number }
     | { readonly level: "form" }
     | { readonly level: "page"; readonly page: string; readonly pageOrdinal: number }
-    | { readonly level: "section"; readonly page: string; readonly pageOrdinal: number; readonly section: string };
+    | { readonly level: "section"; readonly page: string; readonly pageOrdinal: number; readonly section: string; readonly sectionOrdinal: number };
 
 /** A reviewer's comment on a report. */
 export interface IReviewComment {
@@ -31,12 +31,12 @@ export interface IReviewComment {
 export function getTargetKey(target: ReviewTarget): string {
     switch (target.level) {
         case "field":
-            return JSON.stringify([target.level, target.page, target.pageOrdinal, target.section, target.field]);
+            return JSON.stringify([target.level, target.page, target.pageOrdinal, target.section, target.sectionOrdinal, target.field]);
         case "form":
             return JSON.stringify([target.level]);
         case "page":
             return JSON.stringify([target.level, target.page, target.pageOrdinal]);
         case "section":
-            return JSON.stringify([target.level, target.page, target.pageOrdinal, target.section]);
+            return JSON.stringify([target.level, target.page, target.pageOrdinal, target.section, target.sectionOrdinal]);
     }
 }

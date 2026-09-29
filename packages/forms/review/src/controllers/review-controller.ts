@@ -134,7 +134,8 @@ export class ReviewController extends Controller implements IReviewController {
         const titles = [isNumbered ? `${page.title} ${target.pageOrdinal + 1}` : page.title];
 
         if (target.level !== "page") {
-            titles.push(section.title);
+            // a section collection (the only kind of section with a `count`) repeats within the one page, so its instances need telling apart the same way a repeating page's do
+            titles.push("count" in section ? `${section.title} ${target.sectionOrdinal + 1}` : section.title);
         }
 
         if (target.level === "field") {

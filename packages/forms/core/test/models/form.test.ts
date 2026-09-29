@@ -163,7 +163,8 @@ describe("FormModel", () => {
             expect(form.getFieldPlacements().get(field.id!)).toEqual({
                 definition: chargeFields.offenseDescription,
                 pageId: form.getPages()[0].id,
-                pageOrdinal: 0
+                pageOrdinal: 0,
+                sectionOrdinal: 0
             });
         });
 
@@ -200,10 +201,10 @@ describe("FormModel", () => {
                 const rows = page.get<SectionCollection<TestRowSection>>(rowsDefinition).getSections<TestRowSection>();
                 const placements = rowsFormInstance.getFieldPlacements();
 
-                rows.forEach(row => {
+                rows.forEach((row, sectionOrdinal) => {
                     const field = row.get<StringFieldModel>(rowFields.name);
 
-                    expect(placements.get(field.id!)).toMatchObject({ definition: rowFields.name, pageId: page.id, pageOrdinal: 0 });
+                    expect(placements.get(field.id!)).toMatchObject({ definition: rowFields.name, pageId: page.id, pageOrdinal: 0, sectionOrdinal });
                 });
             });
 

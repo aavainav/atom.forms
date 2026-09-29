@@ -1,8 +1,9 @@
 import React from "react";
-import { IControllerManager, FButton, FComment, FLabel } from "@forms/core";
+import { IControllerManager, FButton, FLabel } from "@forms/core";
 
 import { getReviewController } from "../controllers";
 import { IReviewComment } from "../models";
+import { ResolvableComment } from "./resolvable-comment";
 
 interface IReviewEntryProps {
     /** The comment to display. */
@@ -32,16 +33,7 @@ export const ReviewEntry = ({ comment, controllers, onNavigate }: IReviewEntryPr
             {destination
                 ? <FButton type="button" variant="link" size="small" text={location} onClick={navigate} />
                 : <FLabel>{location}</FLabel>}
-            <FComment at={comment.at} author={comment.author.name} isResolved={comment.isResolved} text={comment.text}>
-                {review.canResolve && (
-                    <FButton
-                        variant="outline-secondary"
-                        size="small"
-                        text={comment.isResolved ? "Reopen" : "Resolve"}
-                        onClick={() => review.setResolved(comment.id, !comment.isResolved)}
-                    />
-                )}
-            </FComment>
+            <ResolvableComment comment={comment} controllers={controllers} />
         </>
     );
 }

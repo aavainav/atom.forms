@@ -9,19 +9,22 @@ const fieldLabels: Readonly<Record<string, string>> = { "first-name": "First nam
 const sectionTitles: Readonly<Record<string, string>> = { person: "Person details", vehicle: "Vehicle" };
 
 export interface IPlacementOptions {
+    /** Whether the stub section carries a `count`, the one property that tells a section collection's apart from an ordinary section's. */
+    readonly isCollection?: boolean;
     readonly isShared?: boolean;
     readonly pageId?: string;
     readonly pageOrdinal?: number;
     readonly sectionName?: string;
+    readonly sectionOrdinal?: number;
 }
 
 /** Stands in for a placement: the controller reads only names, titles, whether the section is shared, and the page. */
 export function placement(fieldName: string, options: IPlacementOptions = {}): IFieldPlacement {
-    const { isShared = false, pageId = "page-1", pageOrdinal = 0, sectionName = "person" } = options;
+    const { isCollection = false, isShared = false, pageId = "page-1", pageOrdinal = 0, sectionName = "person", sectionOrdinal = 0 } = options;
     const page = { name: "person-page", title: "Person" };
-    const section = { getPageDefinition: () => page, isShared, name: sectionName, title: sectionTitles[sectionName] };
+    const section = { getPageDefinition: () => page, isShared, name: sectionName, title: sectionTitles[sectionName], ...(isCollection ? { count: 1 } : {}) };
 
-    return { definition: { getSectionDefinition: () => section, label: fieldLabels[fieldName], name: fieldName }, pageId, pageOrdinal } as IFieldPlacement;
+    return { definition: { getSectionDefinition: () => section, label: fieldLabels[fieldName], name: fieldName }, pageId, pageOrdinal, sectionOrdinal } as IFieldPlacement;
 }
 
 /** Three fields on one page: two in the person section and one in the vehicle section. */
@@ -31,10 +34,10 @@ export const placements = new Map<string, IFieldPlacement>([
     ["field-3", placement("make", { sectionName: "vehicle" })]
 ]);
 
-export const firstName: ReviewTarget = { field: "first-name", level: "field", page: "person-page", pageOrdinal: 0, section: "person" };
-export const lastName: ReviewTarget = { field: "last-name", level: "field", page: "person-page", pageOrdinal: 0, section: "person" };
-export const person: ReviewTarget = { level: "section", page: "person-page", pageOrdinal: 0, section: "person" };
-export const vehicle: ReviewTarget = { level: "section", page: "person-page", pageOrdinal: 0, section: "vehicle" };
+export const firstName: ReviewTarget = { field: "first-name", level: "field", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 0 };
+export const lastName: ReviewTarget = { field: "last-name", level: "field", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 0 };
+export const person: ReviewTarget = { level: "section", page: "person-page", pageOrdinal: 0, section: "person", sectionOrdinal: 0 };
+export const vehicle: ReviewTarget = { level: "section", page: "person-page", pageOrdinal: 0, section: "vehicle", sectionOrdinal: 0 };
 export const personPage: ReviewTarget = { level: "page", page: "person-page", pageOrdinal: 0 };
 export const report: ReviewTarget = { level: "form" };
 

@@ -40,9 +40,13 @@ export const ReviewPanel = ({ controllers, isOpen, showModal, onClose }: IReview
                 )}
                 {ordered.length === 0
                     ? <FLabel margin={{ top: 16 }}>No comments yet.</FLabel>
-                    : ordered.map(comment => (
-                        <ReviewEntry key={comment.id} comment={comment} controllers={controllers} onNavigate={onClose} />
-                    ))}
+                    : (
+                        <div className="f-comment-list">
+                            {ordered.map(comment => (
+                                <ReviewEntry key={comment.id} comment={comment} controllers={controllers} onNavigate={onClose} />
+                            ))}
+                        </div>
+                    )}
             </FOffCanvas.Body>
         </FOffCanvas>
     );
