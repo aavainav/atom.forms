@@ -15,16 +15,16 @@ export const gaUtcViolationLists: ReadonlyArray<IViolationListDefinition> = [
     {
         id: GAUTCValueViolationListId.violation,
         load: async () => [
-            { code: "40-6-181", category: "Speed", statute: "40-6-181", description: "Speeding", points: 0 },
-            { code: "40-6-20", category: "Moving violation", statute: "40-6-20", description: "Failure to obey a traffic control device", points: 3 },
-            { code: "40-6-21", category: "Moving violation", statute: "40-6-21", description: "Running a red light", points: 3 },
-            { code: "40-6-49", category: "Moving violation", statute: "40-6-49", description: "Following too closely", points: 3 },
-            { code: "40-6-391", category: "Impaired driving", statute: "40-6-391", description: "Driving under the influence", points: 0, requiresCourtAppearance: true },
-            { code: "40-5-20", category: "Licence & registration", statute: "40-5-20", description: "Driving without a licence", points: 0, requiresCourtAppearance: true },
-            { code: "40-5-121", category: "Licence & registration", statute: "40-5-121", description: "Driving while licence suspended", points: 0, requiresCourtAppearance: true },
-            { code: "40-6-241", category: "Moving violation", statute: "40-6-241", description: "Distracted driving", points: 1 },
-            { code: "40-8-76.1", category: "Occupant safety", statute: "40-8-76.1", description: "Failure to wear a seat belt", points: 0 },
-            { code: "40-6-10", category: "Insurance", statute: "40-6-10", description: "Operating a vehicle without insurance", points: 0, requiresCourtAppearance: true }
+            { id: "speeding", code: "40-6-181", category: "Speed", statute: "40-6-181", description: "Speeding", points: 0 },
+            { id: "failure-to-obey-a-traffic-control-device", code: "40-6-20", category: "Moving violation", statute: "40-6-20", description: "Failure to obey a traffic control device", points: 3 },
+            { id: "running-a-red-light", code: "40-6-21", category: "Moving violation", statute: "40-6-21", description: "Running a red light", points: 3 },
+            { id: "following-too-closely", code: "40-6-49", category: "Moving violation", statute: "40-6-49", description: "Following too closely", points: 3 },
+            { id: "driving-under-the-influence", code: "40-6-391", category: "Impaired driving", statute: "40-6-391", description: "Driving under the influence", points: 0, requiresCourtAppearance: true },
+            { id: "driving-without-a-licence", code: "40-5-20", category: "Licence & registration", statute: "40-5-20", description: "Driving without a licence", points: 0, requiresCourtAppearance: true },
+            { id: "driving-while-licence-suspended", code: "40-5-121", category: "Licence & registration", statute: "40-5-121", description: "Driving while licence suspended", points: 0, requiresCourtAppearance: true },
+            { id: "distracted-driving", code: "40-6-241", category: "Moving violation", statute: "40-6-241", description: "Distracted driving", points: 1 },
+            { id: "failure-to-wear-a-seat-belt", code: "40-8-76.1", category: "Occupant safety", statute: "40-8-76.1", description: "Failure to wear a seat belt", points: 0 },
+            { id: "operating-a-vehicle-without-insurance", code: "40-6-10", category: "Insurance", statute: "40-6-10", description: "Operating a vehicle without insurance", points: 0, requiresCourtAppearance: true }
         ]
     }
 ];

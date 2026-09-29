@@ -15,16 +15,16 @@ export const okTrafficViolationLists: ReadonlyArray<IViolationListDefinition> = 
     {
         id: OKTrafficViolationListId.violation,
         load: async () => [
-            { code: "32-51", category: "Speed", statute: "32-51", description: "Speeding", fine: 172, isLocalOrdinance: true },
-            { code: "32-56", category: "Moving violation", statute: "32-56", description: "Failure to stop at a stop sign", fine: 172, isLocalOrdinance: true },
-            { code: "32-57", category: "Moving violation", statute: "32-57", description: "Running a red light", fine: 172, isLocalOrdinance: true },
-            { code: "32-62", category: "Moving violation", statute: "32-62", description: "Following too closely", fine: 172, isLocalOrdinance: true },
-            { code: "32-70", category: "Moving violation", statute: "32-70", description: "Failure to yield the right of way", fine: 172, isLocalOrdinance: true },
-            { code: "32-101", category: "Impaired driving", statute: "32-101", description: "Driving under the influence", isLocalOrdinance: true, requiresCourtAppearance: true },
-            { code: "32-120", category: "Licence & registration", statute: "32-120", description: "Driving without a valid licence", fine: 222, isLocalOrdinance: true },
-            { code: "32-125", category: "Insurance", statute: "32-125", description: "Driving without insurance", fine: 272, isLocalOrdinance: true, requiresCourtAppearance: true },
-            { code: "32-140", category: "Occupant safety", statute: "32-140", description: "Failure to wear a seat belt", fine: 20, isLocalOrdinance: true },
-            { code: "32-160", category: "Moving violation", statute: "32-160", description: "Careless driving", fine: 222, isLocalOrdinance: true }
+            { id: "speeding", code: "32-51", category: "Speed", statute: "32-51", description: "Speeding", fine: 172, isLocalOrdinance: true },
+            { id: "failure-to-stop-at-a-stop-sign", code: "32-56", category: "Moving violation", statute: "32-56", description: "Failure to stop at a stop sign", fine: 172, isLocalOrdinance: true },
+            { id: "running-a-red-light", code: "32-57", category: "Moving violation", statute: "32-57", description: "Running a red light", fine: 172, isLocalOrdinance: true },
+            { id: "following-too-closely", code: "32-62", category: "Moving violation", statute: "32-62", description: "Following too closely", fine: 172, isLocalOrdinance: true },
+            { id: "failure-to-yield-the-right-of-way", code: "32-70", category: "Moving violation", statute: "32-70", description: "Failure to yield the right of way", fine: 172, isLocalOrdinance: true },
+            { id: "driving-under-the-influence", code: "32-101", category: "Impaired driving", statute: "32-101", description: "Driving under the influence", isLocalOrdinance: true, requiresCourtAppearance: true },
+            { id: "driving-without-a-valid-licence", code: "32-120", category: "Licence & registration", statute: "32-120", description: "Driving without a valid licence", fine: 222, isLocalOrdinance: true },
+            { id: "driving-without-insurance", code: "32-125", category: "Insurance", statute: "32-125", description: "Driving without insurance", fine: 272, isLocalOrdinance: true, requiresCourtAppearance: true },
+            { id: "failure-to-wear-a-seat-belt", code: "32-140", category: "Occupant safety", statute: "32-140", description: "Failure to wear a seat belt", fine: 20, isLocalOrdinance: true },
+            { id: "careless-driving", code: "32-160", category: "Moving violation", statute: "32-160", description: "Careless driving", fine: 222, isLocalOrdinance: true }
         ]
     }
 ];

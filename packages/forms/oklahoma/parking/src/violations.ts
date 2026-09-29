@@ -15,16 +15,16 @@ export const okParkingViolationLists: ReadonlyArray<IViolationListDefinition> = 
     {
         id: OKParkingViolationListId.violation,
         load: async () => [
-            { code: "32-201", category: "Prohibited zone", statute: "32-201", description: "Parking in a prohibited zone", fine: 25, isLocalOrdinance: true },
-            { code: "32-202", category: "Metered parking", statute: "32-202", description: "Overtime parking at a metered space", fine: 20, isLocalOrdinance: true },
-            { code: "32-203", category: "Safety hazard", statute: "32-203", description: "Parking in a fire lane", fine: 50, isLocalOrdinance: true },
-            { code: "32-204", category: "Safety hazard", statute: "32-204", description: "Parking within 15 feet of a fire hydrant", fine: 50, isLocalOrdinance: true },
-            { code: "32-205", category: "Accessible parking", statute: "32-205", description: "Parking in a disabled space without a permit", fine: 200, isLocalOrdinance: true },
-            { code: "32-206", category: "Obstruction", statute: "32-206", description: "Blocking a driveway", fine: 35, isLocalOrdinance: true },
-            { code: "32-207", category: "Obstruction", statute: "32-207", description: "Parking on a sidewalk", fine: 35, isLocalOrdinance: true },
-            { code: "32-208", category: "Obstruction", statute: "32-208", description: "Double parking", fine: 35, isLocalOrdinance: true },
-            { code: "32-209", category: "Prohibited zone", statute: "32-209", description: "Parking against the flow of traffic", fine: 25, isLocalOrdinance: true },
-            { code: "32-210", category: "Prohibited zone", statute: "32-210", description: "Parking in a loading zone", fine: 30, isLocalOrdinance: true }
+            { id: "parking-in-a-prohibited-zone", code: "32-201", category: "Prohibited zone", statute: "32-201", description: "Parking in a prohibited zone", fine: 25, isLocalOrdinance: true },
+            { id: "overtime-parking-at-a-metered-space", code: "32-202", category: "Metered parking", statute: "32-202", description: "Overtime parking at a metered space", fine: 20, isLocalOrdinance: true },
+            { id: "parking-in-a-fire-lane", code: "32-203", category: "Safety hazard", statute: "32-203", description: "Parking in a fire lane", fine: 50, isLocalOrdinance: true },
+            { id: "parking-within-15-feet-of-a-fire-hydrant", code: "32-204", category: "Safety hazard", statute: "32-204", description: "Parking within 15 feet of a fire hydrant", fine: 50, isLocalOrdinance: true },
+            { id: "parking-in-a-disabled-space-without-a-permit", code: "32-205", category: "Accessible parking", statute: "32-205", description: "Parking in a disabled space without a permit", fine: 200, isLocalOrdinance: true },
+            { id: "blocking-a-driveway", code: "32-206", category: "Obstruction", statute: "32-206", description: "Blocking a driveway", fine: 35, isLocalOrdinance: true },
+            { id: "parking-on-a-sidewalk", code: "32-207", category: "Obstruction", statute: "32-207", description: "Parking on a sidewalk", fine: 35, isLocalOrdinance: true },
+            { id: "double-parking", code: "32-208", category: "Obstruction", statute: "32-208", description: "Double parking", fine: 35, isLocalOrdinance: true },
+            { id: "parking-against-the-flow-of-traffic", code: "32-209", category: "Prohibited zone", statute: "32-209", description: "Parking against the flow of traffic", fine: 25, isLocalOrdinance: true },
+            { id: "parking-in-a-loading-zone", code: "32-210", category: "Prohibited zone", statute: "32-210", description: "Parking in a loading zone", fine: 30, isLocalOrdinance: true }
         ]
     }
 ];
