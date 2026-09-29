@@ -3,7 +3,7 @@
 Catalog identity: **name `"S438 Citation Form"`, version `"1.0"`**. Sandbox route `sc/s438`, which the host owns. Module name `s438-citation-form`.
 Form type `"citation"` (extends `CitationForm`).
 
-The simplest of the citation packages: two page types, no value lists. Reach for this one as the template for
+The simplest of the citation packages: three page types, no value lists. Reach for this one as the template for
 putting the violation selector on a form — it is where that pattern was worked out first.
 
 ## Structure
@@ -13,14 +13,25 @@ front-page   9 sections: header, violator, vehicle, owner, court, violation,
                          violation-location, arresting-officer, footer
              repeats: one front page per violation the citation is written for
 notice-page  0 sections (static printed notice text)
+trial-page   10 sections: header (void, notes), violator, vehicle, owner, court, violation,
+                          violation-location, arresting-officer (+ bail received), court-information, footer
+             one per citation: the court's copy of the ticket
 ```
+
+**The trial page holds its own copy of everything.** Its top half mirrors the front page's sections, but as separate
+`trial-*` definitions, models, components and `trial*` data-contract fields -- nothing is copied across from the front
+page, so the two can differ. It is not repeated per charge, and the issued lock does not touch it: the court fills in
+its court-information block after the citation is issued. "Same as Original" is a checkbox only; it does not fill in
+the charge convicted of.
 
 **Every section but `violation` is `{ isShared: true }`.** The S438 prints one charge per ticket, so a stop
 producing three charges produces three front pages, and the violator, vehicle, owner, court, location and officer
 boxes read the same on all of them — a write to any of those fans out to every page. Only the violation section
 differs. The violation *location* is shared: one stop happens in one place.
 
-4 dropzones, all on the front page: violator (person), owner (person), vehicle, violation.
+8 dropzones: violator (person), owner (person), vehicle and violation on the front page, and the same four on the
+trial page. The trial page's violation dropzone does **not** lock the boxes it fills, unlike the front page's -- the
+trial copy has no page to delete to take a charge off, so typing over it must stay possible.
 
 ## Files
 
@@ -32,10 +43,11 @@ differs. The violation *location* is shared: one stop happens in one place.
 | [src/models/s438-form.ts](src/models/s438-form.ts) | `S438FormModel extends CitationForm`. |
 | [src/models/front-page/](src/models/front-page/) | `front-page.ts` + one file per section + `dropzones/`. |
 | [src/models/notice-page/notice-page.ts](src/models/notice-page/notice-page.ts) | Sectionless page model. |
-| [src/components/](src/components/) | `s438-citation-form.tsx` (root) and `front-page/`+`notice-page/` mirroring the models tree. |
+| [src/models/trial-page/](src/models/trial-page/) | `trial-page.ts` + one file per section + `dropzones/`. Class names are `Trial`-prefixed; file names mirror `front-page/`. |
+| [src/components/](src/components/) | `s438-citation-form.tsx` (root) and `front-page/`, `notice-page/` and `trial-page/` mirroring the models tree. The trial page's sections use core's `FTextField`/`FNumberField` wrappers, plus a local `CheckboxField` for its tick boxes. |
 | [src/mapping/s438-data.ts](src/mapping/s438-data.ts) | `IS438Data` — flat, every field optional, plus `additionalViolations` for the charges beyond the first. `IS438ViolationData` is the per-page half. |
 | [src/mapping/s438-mapper.ts](src/mapping/s438-mapper.ts) | `S438Mapper extends FormMapper<S438FormModel, IS438Data>`. `populate` is **async**, since the front page repeats and creating one means awaiting `initialize`. |
-| [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — four `apply*Dropzone` methods plus `applyViolations`. No value-list methods; this form has no option fields. |
+| [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — four `apply*Dropzone` methods for the front page, four `applyTrial*Dropzone` for the trial page, plus `applyViolations`. No value-list methods; this form has no option fields. |
 | [src/violations.ts](src/violations.ts) · [data/](data/) · [src/generated/](src/generated/) | The `sc-s438:violation` list. |
 
 ## Notable specifics

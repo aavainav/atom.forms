@@ -26,6 +26,17 @@ import { ViolationSectionModel } from "./front-page/violation-section";
 import { ViolationLocationSectionModel } from "./front-page/violation-location-section";
 import { ArrestingOfficerSectionModel } from "./front-page/arresting-officer-section";
 import { FooterSectionModel } from "./front-page/footer-section";
+import { TrialPageModel } from "./trial-page/trial-page";
+import { TrialArrestingOfficerSectionModel } from "./trial-page/arresting-officer-section";
+import { TrialCourtInformationSectionModel } from "./trial-page/court-information-section";
+import { TrialCourtSectionModel } from "./trial-page/court-section";
+import { TrialFooterSectionModel } from "./trial-page/footer-section";
+import { TrialHeaderSectionModel } from "./trial-page/header-section";
+import { TrialOwnerSectionModel } from "./trial-page/owner-section";
+import { TrialVehicleSectionModel } from "./trial-page/vehicle-section";
+import { TrialViolationLocationSectionModel } from "./trial-page/violation-location-section";
+import { TrialViolationSectionModel } from "./trial-page/violation-section";
+import { TrialViolatorSectionModel } from "./trial-page/violator-section";
 
 export interface IS438FormSchema extends ISchema {
     readonly frontPage: PageDefinition<FrontPageModel>;
@@ -131,6 +142,148 @@ export interface IS438FormSchema extends ISchema {
     };
 
     readonly noticePage: PageDefinition<NoticePageModel>;
+
+    readonly trialPage: PageDefinition<TrialPageModel>;
+
+    readonly trialHeaderSection: SectionDefinition<TrialHeaderSectionModel>;
+    readonly trialHeaderFields: {
+        readonly trialHeaderNotes: FieldDefinition<StringFieldModel>;
+        readonly trialHeaderVoid: FieldDefinition<BooleanFieldModel>;
+    };
+
+    readonly trialViolatorSection: SectionDefinition<TrialViolatorSectionModel>;
+    readonly trialViolatorFields: {
+        readonly trialViolatorFirstName: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorMiddleName: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorLastName: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorStreetAddress: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorCity: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorState: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorZipCode: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorDriverLicenseState: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorDriverLicenseNumber: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorDriverLicenseClass: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorCommercialDriverLicenseYes: FieldDefinition<BooleanFieldModel>;
+        readonly trialViolatorCommercialDriverLicenseNo: FieldDefinition<BooleanFieldModel>;
+        readonly trialViolatorRace: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorSex: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorDateOfBirth: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorHeight: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorWeight: FieldDefinition<NumberFieldModel>;
+        readonly trialViolatorHairColor: FieldDefinition<StringFieldModel>;
+        readonly trialViolatorEyeColor: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialVehicleSection: SectionDefinition<TrialVehicleSectionModel>;
+    readonly trialVehicleFields: {
+        readonly trialVehicleLicenseNumber: FieldDefinition<StringFieldModel>;
+        readonly trialVehicleLicenseState: FieldDefinition<StringFieldModel>;
+        readonly trialVehicleMake: FieldDefinition<StringFieldModel>;
+        readonly trialVehicleYear: FieldDefinition<NumberFieldModel>;
+        readonly trialVehicleAuto: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleBicycle: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleCombination: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleCommercialVehicle: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleHazardousMaterials: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleMoped: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleMotorcycle: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehiclePedestrian: FieldDefinition<BooleanFieldModel>;
+        readonly trialVehicleOther: FieldDefinition<BooleanFieldModel>;
+    };
+
+    readonly trialOwnerSection: SectionDefinition<TrialOwnerSectionModel>;
+    readonly trialOwnerFields: {
+        readonly trialOwnerFirstName: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerMiddleName: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerLastName: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerStreetAddress: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerCity: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerState: FieldDefinition<StringFieldModel>;
+        readonly trialOwnerZipCode: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialCourtSection: SectionDefinition<TrialCourtSectionModel>;
+    readonly trialCourtFields: {
+        readonly trialCourtName: FieldDefinition<StringFieldModel>;
+        readonly trialCourtStreetAddress: FieldDefinition<StringFieldModel>;
+        readonly trialCourtDateOfTrial: FieldDefinition<StringFieldModel>;
+        readonly trialCourtTimeOfTrial: FieldDefinition<StringFieldModel>;
+        readonly trialCourtCity: FieldDefinition<StringFieldModel>;
+        readonly trialCourtState: FieldDefinition<StringFieldModel>;
+        readonly trialCourtZipCode: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialViolationSection: SectionDefinition<TrialViolationSectionModel>;
+    readonly trialViolationFields: {
+        readonly trialViolationSectionNumber: FieldDefinition<StringFieldModel>;
+        readonly trialViolationDescription: FieldDefinition<StringFieldModel>;
+        readonly trialViolationCourtAppearanceRequiredYes: FieldDefinition<BooleanFieldModel>;
+        readonly trialViolationCourtAppearanceRequiredNo: FieldDefinition<BooleanFieldModel>;
+        readonly trialViolationDateOfViolation: FieldDefinition<StringFieldModel>;
+        readonly trialViolationTimeOfViolation: FieldDefinition<StringFieldModel>;
+        readonly trialViolationScPoints: FieldDefinition<NumberFieldModel>;
+        readonly trialViolationBloodAlcoholLevel: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel>;
+    readonly trialViolationLocationFields: {
+        readonly trialViolationLocation: FieldDefinition<StringFieldModel>;
+        readonly trialViolationLocationCounty: FieldDefinition<StringFieldModel>;
+        readonly trialViolationLocationLatitude: FieldDefinition<StringFieldModel>;
+        readonly trialViolationLocationLongitude: FieldDefinition<StringFieldModel>;
+        readonly trialViolationLocationCity: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialArrestingOfficerSection: SectionDefinition<TrialArrestingOfficerSectionModel>;
+    readonly trialArrestingOfficerFields: {
+        readonly trialArrestingOfficerName: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerRank: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerSccjaOfficerNumber: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerBailDeposited: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerDateOfArrest: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerBondAmountRequested: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerDateBailReceived: FieldDefinition<StringFieldModel>;
+        readonly trialArrestingOfficerBailReceivedBy: FieldDefinition<StringFieldModel>;
+    };
+
+    readonly trialCourtInformationSection: SectionDefinition<TrialCourtInformationSectionModel>;
+    readonly trialCourtInformationFields: {
+        readonly trialCourtInformationCaseBeforeMagistrate: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCaseBeforeMunicipalCourt: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCaseBeforeCircuitCourt: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCaseBeforeFamilyCourt: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCaseBeforeFederalCourt: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCourtIfDifferent: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationTrialByJudge: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationTrialByJury: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationDefendantDidNotAppear: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationDefendantAppeared: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationDispositionDate: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationNolleProssed: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationGuilty: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationForfeitedBond: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationNotGuilty: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationPledNoloContendere: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationDeterminedBac: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationChargeConvictedOf: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationSameAsOriginal: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationScPoints: FieldDefinition<NumberFieldModel>;
+        readonly trialCourtInformationJail: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationSuspend: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationFine: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationAmountCollected: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationAmountSuspended: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationCommittedTo: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationVehicleSearched: FieldDefinition<BooleanFieldModel>;
+        readonly trialCourtInformationCertifiedCorrect: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationCertifiedDate: FieldDefinition<StringFieldModel>;
+        readonly trialCourtInformationArrestResultOfCollision: FieldDefinition<BooleanFieldModel>;
+    };
+
+    readonly trialFooterSection: SectionDefinition<TrialFooterSectionModel>;
+    readonly trialFooterFields: {
+        readonly trialFooterTicketNumber: FieldDefinition<StringFieldModel>;
+    };
 
     readonly ruleCollection: RuleCollection;
 }
@@ -242,6 +395,150 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
     });
 
     readonly noticePage: PageDefinition<NoticePageModel> = DefinitionFactory.page<NoticePageModel>("notice-page", this.formDefinition, NoticePageModel);
+
+    // the court's copy of the ticket: one for the whole citation, holding its own copy of everything the front page
+    // prints, plus the court's disposition
+    readonly trialPage: PageDefinition<TrialPageModel> = DefinitionFactory.page<TrialPageModel>("trial-page", this.formDefinition, TrialPageModel);
+
+    readonly trialHeaderSection: SectionDefinition<TrialHeaderSectionModel> = DefinitionFactory.section<TrialHeaderSectionModel>("trial-header-section", this.trialPage, TrialHeaderSectionModel);
+    readonly trialHeaderFields = defineFields(this.trialHeaderSection, {
+        trialHeaderNotes: { label: "Notes", ctor: StringFieldModel },
+        trialHeaderVoid: { label: "Void", ctor: BooleanFieldModel }
+    });
+
+    readonly trialViolatorSection: SectionDefinition<TrialViolatorSectionModel> = DefinitionFactory.section<TrialViolatorSectionModel>("trial-violator-section", this.trialPage, TrialViolatorSectionModel);
+    readonly trialViolatorFields = defineFields(this.trialViolatorSection, {
+        trialViolatorFirstName: { label: "First Name", ctor: StringFieldModel },
+        trialViolatorMiddleName: { label: "Middle Name", ctor: StringFieldModel },
+        trialViolatorLastName: { label: "Last Name", ctor: StringFieldModel },
+        trialViolatorStreetAddress: { label: "Street Address", ctor: StringFieldModel },
+        trialViolatorCity: { label: "City", ctor: StringFieldModel },
+        trialViolatorState: { label: "State", ctor: StringFieldModel },
+        trialViolatorZipCode: { label: "Zip Code", ctor: StringFieldModel },
+        trialViolatorDriverLicenseState: { label: "DL State", ctor: StringFieldModel },
+        trialViolatorDriverLicenseNumber: { label: "Driver License No.", ctor: StringFieldModel },
+        trialViolatorDriverLicenseClass: { label: "Class", ctor: StringFieldModel },
+        trialViolatorCommercialDriverLicenseYes: { label: "Yes", ctor: BooleanFieldModel },
+        trialViolatorCommercialDriverLicenseNo: { label: "No", ctor: BooleanFieldModel },
+        trialViolatorRace: { label: "Race", ctor: StringFieldModel },
+        trialViolatorSex: { label: "Sex", ctor: StringFieldModel },
+        trialViolatorDateOfBirth: { label: "Date of Birth", ctor: StringFieldModel },
+        trialViolatorHeight: { label: "Height", ctor: StringFieldModel },
+        trialViolatorWeight: { label: "Weight", ctor: NumberFieldModel },
+        trialViolatorHairColor: { label: "Hair Color", ctor: StringFieldModel },
+        trialViolatorEyeColor: { label: "Eye Color", ctor: StringFieldModel }
+    });
+
+    readonly trialVehicleSection: SectionDefinition<TrialVehicleSectionModel> = DefinitionFactory.section<TrialVehicleSectionModel>("trial-vehicle-section", this.trialPage, TrialVehicleSectionModel);
+    readonly trialVehicleFields = defineFields(this.trialVehicleSection, {
+        trialVehicleLicenseNumber: { label: "License Number", ctor: StringFieldModel },
+        trialVehicleLicenseState: { label: "License State", ctor: StringFieldModel },
+        trialVehicleMake: { label: "Make", ctor: StringFieldModel },
+        trialVehicleYear: { label: "Year", ctor: NumberFieldModel },
+        trialVehicleAuto: { label: "Auto", ctor: BooleanFieldModel },
+        trialVehicleBicycle: { label: "Bicycle", ctor: BooleanFieldModel },
+        trialVehicleCombination: { label: "Comb.", ctor: BooleanFieldModel },
+        trialVehicleCommercialVehicle: { label: "Comm. Veh.", ctor: BooleanFieldModel },
+        trialVehicleHazardousMaterials: { label: "Haz. Mt.", ctor: BooleanFieldModel },
+        trialVehicleMoped: { label: "Moped", ctor: BooleanFieldModel },
+        trialVehicleMotorcycle: { label: "Mtrcycl.", ctor: BooleanFieldModel },
+        trialVehiclePedestrian: { label: "Pedestrian", ctor: BooleanFieldModel },
+        trialVehicleOther: { label: "Other", ctor: BooleanFieldModel }
+    });
+
+    readonly trialOwnerSection: SectionDefinition<TrialOwnerSectionModel> = DefinitionFactory.section<TrialOwnerSectionModel>("trial-owner-section", this.trialPage, TrialOwnerSectionModel);
+    readonly trialOwnerFields = defineFields(this.trialOwnerSection, {
+        trialOwnerFirstName: { label: "First Name", ctor: StringFieldModel },
+        trialOwnerMiddleName: { label: "Middle Name", ctor: StringFieldModel },
+        trialOwnerLastName: { label: "Last Name", ctor: StringFieldModel },
+        trialOwnerStreetAddress: { label: "Street Address", ctor: StringFieldModel },
+        trialOwnerCity: { label: "City", ctor: StringFieldModel },
+        trialOwnerState: { label: "State", ctor: StringFieldModel },
+        trialOwnerZipCode: { label: "Zip Code", ctor: StringFieldModel }
+    });
+
+    readonly trialCourtSection: SectionDefinition<TrialCourtSectionModel> = DefinitionFactory.section<TrialCourtSectionModel>("trial-court-section", this.trialPage, TrialCourtSectionModel);
+    readonly trialCourtFields = defineFields(this.trialCourtSection, {
+        trialCourtName: { label: "Name of Trial Court", ctor: StringFieldModel },
+        trialCourtStreetAddress: { label: "Street Address", ctor: StringFieldModel },
+        trialCourtDateOfTrial: { label: "Date of Trial", ctor: StringFieldModel },
+        trialCourtTimeOfTrial: { label: "Time of Trial", ctor: StringFieldModel },
+        trialCourtCity: { label: "City", ctor: StringFieldModel },
+        trialCourtState: { label: "State", ctor: StringFieldModel },
+        trialCourtZipCode: { label: "Zip Code", ctor: StringFieldModel }
+    });
+
+    readonly trialViolationSection: SectionDefinition<TrialViolationSectionModel> = DefinitionFactory.section<TrialViolationSectionModel>("trial-violation-section", this.trialPage, TrialViolationSectionModel);
+    readonly trialViolationFields = defineFields(this.trialViolationSection, {
+        trialViolationSectionNumber: { label: "Violation Section No.", ctor: StringFieldModel },
+        trialViolationDescription: { label: "Violation - Court Appearance Required", ctor: StringFieldModel },
+        trialViolationCourtAppearanceRequiredYes: { label: "Yes", ctor: BooleanFieldModel },
+        trialViolationCourtAppearanceRequiredNo: { label: "No", ctor: BooleanFieldModel },
+        trialViolationDateOfViolation: { label: "Date of Violation", ctor: StringFieldModel },
+        trialViolationTimeOfViolation: { label: "Time of Viol.", ctor: StringFieldModel },
+        trialViolationScPoints: { label: "SC Points", ctor: NumberFieldModel },
+        trialViolationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel }
+    });
+
+    readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel> = DefinitionFactory.section<TrialViolationLocationSectionModel>("trial-violation-location-section", this.trialPage, TrialViolationLocationSectionModel);
+    readonly trialViolationLocationFields = defineFields(this.trialViolationLocationSection, {
+        trialViolationLocation: { label: "Violation Location", ctor: StringFieldModel },
+        trialViolationLocationCounty: { label: "County", ctor: StringFieldModel },
+        trialViolationLocationLatitude: { label: "Latitude", ctor: StringFieldModel },
+        trialViolationLocationLongitude: { label: "Longitude", ctor: StringFieldModel },
+        trialViolationLocationCity: { label: "City", ctor: StringFieldModel }
+    });
+
+    readonly trialArrestingOfficerSection: SectionDefinition<TrialArrestingOfficerSectionModel> = DefinitionFactory.section<TrialArrestingOfficerSectionModel>("trial-arresting-officer-section", this.trialPage, TrialArrestingOfficerSectionModel);
+    readonly trialArrestingOfficerFields = defineFields(this.trialArrestingOfficerSection, {
+        trialArrestingOfficerName: { label: "Name and Rank of Arresting Officer", ctor: StringFieldModel },
+        trialArrestingOfficerRank: { label: "Rank", ctor: StringFieldModel },
+        trialArrestingOfficerSccjaOfficerNumber: { label: "SCCJA Officer Number", ctor: StringFieldModel },
+        trialArrestingOfficerBailDeposited: { label: "Bail Deposited", ctor: StringFieldModel },
+        trialArrestingOfficerDateOfArrest: { label: "Date of Arrest", ctor: StringFieldModel },
+        trialArrestingOfficerBondAmountRequested: { label: "Bond Amount Requested", ctor: StringFieldModel },
+        trialArrestingOfficerDateBailReceived: { label: "Date Bail Rec'd", ctor: StringFieldModel },
+        trialArrestingOfficerBailReceivedBy: { label: "By", ctor: StringFieldModel }
+    });
+
+    readonly trialCourtInformationSection: SectionDefinition<TrialCourtInformationSectionModel> = DefinitionFactory.section<TrialCourtInformationSectionModel>("trial-court-information-section", this.trialPage, TrialCourtInformationSectionModel);
+    readonly trialCourtInformationFields = defineFields(this.trialCourtInformationSection, {
+        trialCourtInformationCaseBeforeMagistrate: { label: "Magistrate", ctor: BooleanFieldModel },
+        trialCourtInformationCaseBeforeMunicipalCourt: { label: "Mun. Court", ctor: BooleanFieldModel },
+        trialCourtInformationCaseBeforeCircuitCourt: { label: "Circuit Court", ctor: BooleanFieldModel },
+        trialCourtInformationCaseBeforeFamilyCourt: { label: "Family Court", ctor: BooleanFieldModel },
+        trialCourtInformationCaseBeforeFederalCourt: { label: "Federal Court", ctor: BooleanFieldModel },
+        trialCourtInformationCourtIfDifferent: { label: "Name of the Trial Court if Different from Above", ctor: StringFieldModel },
+        trialCourtInformationTrialByJudge: { label: "Trial Judge", ctor: BooleanFieldModel },
+        trialCourtInformationTrialByJury: { label: "Jury", ctor: BooleanFieldModel },
+        trialCourtInformationDefendantDidNotAppear: { label: "Did Not Appear", ctor: BooleanFieldModel },
+        trialCourtInformationDefendantAppeared: { label: "Appeared", ctor: BooleanFieldModel },
+        trialCourtInformationDispositionDate: { label: "Disposition Date", ctor: StringFieldModel },
+        trialCourtInformationNolleProssed: { label: "Nolle Prossed", ctor: BooleanFieldModel },
+        trialCourtInformationGuilty: { label: "Guilty", ctor: BooleanFieldModel },
+        trialCourtInformationForfeitedBond: { label: "Forfeited Bond", ctor: BooleanFieldModel },
+        trialCourtInformationNotGuilty: { label: "Not Guilty", ctor: BooleanFieldModel },
+        trialCourtInformationPledNoloContendere: { label: "Pled Nolo Contendere", ctor: BooleanFieldModel },
+        trialCourtInformationDeterminedBac: { label: "Determined BAC", ctor: BooleanFieldModel },
+        trialCourtInformationChargeConvictedOf: { label: "Charge Convicted Of", ctor: StringFieldModel },
+        trialCourtInformationSameAsOriginal: { label: "Same as Original", ctor: BooleanFieldModel },
+        trialCourtInformationScPoints: { label: "SC Points", ctor: NumberFieldModel },
+        trialCourtInformationJail: { label: "Jail", ctor: StringFieldModel },
+        trialCourtInformationSuspend: { label: "Suspend", ctor: StringFieldModel },
+        trialCourtInformationFine: { label: "Fine", ctor: StringFieldModel },
+        trialCourtInformationAmountCollected: { label: "Amt. Collected", ctor: StringFieldModel },
+        trialCourtInformationAmountSuspended: { label: "Amt. Suspended", ctor: StringFieldModel },
+        trialCourtInformationCommittedTo: { label: "Committed To", ctor: StringFieldModel },
+        trialCourtInformationVehicleSearched: { label: "Vehicle Searched", ctor: BooleanFieldModel },
+        trialCourtInformationCertifiedCorrect: { label: "Certified Correct", ctor: StringFieldModel },
+        trialCourtInformationCertifiedDate: { label: "Date", ctor: StringFieldModel },
+        trialCourtInformationArrestResultOfCollision: { label: "Arrest as Result of Collision", ctor: BooleanFieldModel }
+    });
+
+    readonly trialFooterSection: SectionDefinition<TrialFooterSectionModel> = DefinitionFactory.section<TrialFooterSectionModel>("trial-footer-section", this.trialPage, TrialFooterSectionModel);
+    readonly trialFooterFields = defineFields(this.trialFooterSection, {
+        trialFooterTicketNumber: { label: "Ticket #", ctor: StringFieldModel }
+    });
 
     readonly ruleCollection: RuleCollection = new RuleCollection([
         new RequiredFieldRule(this.violatorFields.violatorFirstName),

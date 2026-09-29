@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ControllerManager, FormModel, PageCollection } from "@forms/core";
-import type { IViolation } from "@forms/violations";
+import { IViolation } from "@forms/violations";
 
-import type { FrontPageModel } from "../../src/models/front-page/front-page";
+import { createForm } from "../fixtures/form";
+
+import { FrontPageModel } from "../../src/models/front-page/front-page";
+import { TrialPageModel } from "../../src/models/trial-page/trial-page";
+import { TrialPageOwnerDropzone } from "../../src/models/trial-page/dropzones/trial-page-owner-dropzone";
+import { TrialPageVehicleDropzone } from "../../src/models/trial-page/dropzones/trial-page-vehicle-dropzone";
+import { TrialPageViolationDropzone } from "../../src/models/trial-page/dropzones/trial-page-violation-dropzone";
+import { TrialPageViolatorDropzone } from "../../src/models/trial-page/dropzones/trial-page-violator-dropzone";
+
 import { S438CitationService } from "../../src/services/s438-citation";
 import { S438FormModel } from "../../src/models/s438-form";
 import { S438FormSchema } from "../../src/models/s438-form-schema";
-import { createForm } from "../fixtures/form";
 
 const schema = FormModel.getSchema<S438FormSchema>(S438FormModel);
 
@@ -101,6 +108,58 @@ describe("S438CitationService", () => {
             await service.applyViolations(controllers, [firstOffense], S438FormModel);
 
             expect(service.getAppliedViolations(controllers, [firstOffense, secondOffense], S438FormModel)).toEqual([firstOffense]);
+        });
+    });
+
+    describe("the trial page's dropzones", () => {
+        const person = { firstName: "James", middleName: "Robert", lastName: "Whitfield", address: "412 Meeting Street", city: "Charleston", state: "SC", zipCode: "29403" };
+
+        function getTrialPage(): TrialPageModel {
+            return controllers.getFormController<S438FormModel>().form.getTrialPageCollection().getFirstPage<TrialPageModel>();
+        }
+
+        it("writes a dropped person onto the trial page's violator section", () => {
+            const page = getTrialPage();
+            const section = service.applyTrialViolatorDropzone(page, page.getDropzone(TrialPageViolatorDropzone).onDrop(person)).getViolatorSection();
+
+            expect(section.getFirstName().getValue()).toBe("James");
+            expect(section.getLastName().getValue()).toBe("Whitfield");
+            expect(section.getZipCode().getValue()).toBe("29403");
+        });
+
+        it("writes a dropped person onto the trial page's owner section", () => {
+            const page = getTrialPage();
+            const section = service.applyTrialOwnerDropzone(page, page.getDropzone(TrialPageOwnerDropzone).onDrop(person)).getOwnerSection();
+
+            expect(section.getFirstName().getValue()).toBe("James");
+            expect(section.getStreetAddress().getValue()).toBe("412 Meeting Street");
+        });
+
+        it("writes a dropped vehicle onto the trial page's vehicle section", () => {
+            const page = getTrialPage();
+            const section = service.applyTrialVehicleDropzone(page, page.getDropzone(TrialPageVehicleDropzone).onDrop({ make: "Toyota", model: "Camry", year: 2021 })).getVehicleSection();
+
+            expect(section.getMake().getValue()).toBe("Toyota");
+            expect(section.getYear().getValue()).toBe(2021);
+        });
+
+        /** Nothing takes the trial copy's charge off it but typing over it, so, unlike the front page's, its boxes are left open. */
+        it("writes a dropped violation onto the trial page's violation section and leaves the boxes open", () => {
+            const page = getTrialPage();
+            const dropped = page.getDropzone(TrialPageViolationDropzone).onDrop({ code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 });
+            const section = service.applyTrialViolationDropzone(page, dropped).getViolationSection();
+
+            expect(section.getSectionNumber().getValue()).toBe("56-5-2930");
+            expect(section.getDescription().getValue()).toBe("Failure to yield");
+            expect(section.getScPoints().getValue()).toBe(4);
+            expect(section.getSectionNumber().getIsEnabled()).toBe(true);
+        });
+
+        it("leaves the front page alone", () => {
+            const page = getTrialPage();
+            service.applyTrialViolatorDropzone(page, page.getDropzone(TrialPageViolatorDropzone).onDrop(person));
+
+            expect(getFrontPage().getViolatorSection().getFirstName().getValue()).toBe("");
         });
     });
 });

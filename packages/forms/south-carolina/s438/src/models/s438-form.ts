@@ -5,6 +5,7 @@ import { S438ViolationListId } from "../violations";
 import type { S438FormSchema } from "./s438-form-schema";
 import { FrontPageModel } from "./front-page/front-page";
 import { NoticePageModel } from "./notice-page/notice-page";
+import { TrialPageModel } from "./trial-page/trial-page";
 
 export interface IS438Form extends IForm {
 }
@@ -12,6 +13,7 @@ export interface IS438Form extends IForm {
 export interface IS438FormModel extends IS438Form {
     readonly frontPage: PageDefinition<FrontPageModel>;
     readonly noticePage: PageDefinition<NoticePageModel>;
+    readonly trialPage: PageDefinition<TrialPageModel>;
 }
 
 /** Formats a date as the `MM/DD/YYYY` the citation's date boxes carry. */
@@ -22,7 +24,7 @@ function formatDate(date: Date): string {
     return `${month}/${day}/${date.getFullYear()}`;
 }
 
-/** Represents the S438 form model, providing access to its schema and its front and notice pages. */
+/** Represents the S438 form model, providing access to its schema and its front, notice and trial pages. */
 export class S438FormModel extends CitationForm<IS438Data> implements IS438Form {
     public readonly name: string = CATALOG_IDENTITY.name;
     public readonly description: string = CATALOG_IDENTITY.description;
@@ -34,6 +36,7 @@ export class S438FormModel extends CitationForm<IS438Data> implements IS438Form 
     private schema: S438FormSchema = FormModel.getSchema<S438FormSchema>(S438FormModel);
     public readonly frontPage: PageDefinition<FrontPageModel> = this.schema.frontPage;
     public readonly noticePage: PageDefinition<NoticePageModel> = this.schema.noticePage;
+    public readonly trialPage: PageDefinition<TrialPageModel> = this.schema.trialPage;
 
     /**
      * The citation workflow with its lock changed. In South Carolina the officer may correct an issued citation until
@@ -64,6 +67,11 @@ export class S438FormModel extends CitationForm<IS438Data> implements IS438Form 
     /** Retrieves the collection of notice pages for the form. */
     public getNoticePageCollection(): PageCollection {
         return this.get<PageCollection>(this.noticePage);
+    }
+
+    /** Retrieves the collection of trial pages for the form, which holds the citation's one court copy. */
+    public getTrialPageCollection(): PageCollection {
+        return this.get<PageCollection>(this.trialPage);
     }
 
     /** Returns a form with today's date stamped as the date of violation, and that box closed to editing. */
