@@ -71,7 +71,7 @@ export const ReportDataOption = ({ controllers, title }: IReportViewerOptionProp
     };
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="report-data-button" variant="light" type="button" onClick={showDialog}>
                 <FIcon icon="braces" />
             </FButton>

@@ -71,7 +71,7 @@ export const PrintOption = ({ catalogItem, controllers, title, showModal, onErro
     };
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="print-button" variant="light" type="button" onClick={showDialog}>
                 <FIcon icon="printer" />
             </FButton>

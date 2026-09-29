@@ -15,7 +15,7 @@ export const ReviewOption = ({ controllers, title }: IReportViewerOptionProps): 
     useReviewComments(review);
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="review-button" variant="light" type="button" onClick={() => reviewService.togglePanel()}>
                 <FIcon icon="chat-left-text" />
                 {review.openCount > 0 && <FBadge variant="danger" pill overlay label="open">{review.openCount}</FBadge>}

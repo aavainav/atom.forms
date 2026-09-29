@@ -113,7 +113,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
     };
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="new-form-button" variant="light" type="button" onClick={handleNewForm}>
                 <FIcon icon="file-earmark-plus" />
             </FButton>

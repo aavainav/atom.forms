@@ -22,7 +22,7 @@ export const ValidateOption = ({ controllers, title }: IReportViewerOptionProps)
     };
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="validate-button" variant="light" type="button" onClick={handleValidate}>
                 <FIcon icon="shield-check" />
             </FButton>

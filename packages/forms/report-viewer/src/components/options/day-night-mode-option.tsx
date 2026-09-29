@@ -17,7 +17,7 @@ export const DayNightModeOption = ({ title }: IReportViewerOptionProps): React.J
     }, [themeService]);
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="day-night-mode-button" variant="light" type="button" onClick={() => themeService.toggleTheme()}>
                 <FIcon icon={theme === "dark" ? "sun" : "moon-stars"} />
             </FButton>

@@ -9,7 +9,7 @@ export const PresetsOption = ({ title }: IReportViewerOptionProps): React.JSX.El
     const presetSelectorService = useService<IPresetSelectorService>(IPresetSelectorService);
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="presets-button" variant="light" type="button" onClick={() => presetSelectorService.openSelector()}>
                 <FIcon icon="bookmark-star" />
             </FButton>

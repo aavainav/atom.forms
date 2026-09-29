@@ -26,7 +26,7 @@ export const ViolationsOption = ({ catalogItem, controllers, title }: IViolation
     const binding = violationService.getBinding(catalogItem);
 
     return (
-        <FTooltip title={title} placement="top">
+        <FTooltip title={title} placement="right">
             <FButton id="violations-button" variant="light" type="button" disabled={!!binding && isViolationsClosed(form, binding)} onClick={() => violationSelectorService.openSelector()}>
                 <FIcon icon="card-checklist" />
             </FButton>
