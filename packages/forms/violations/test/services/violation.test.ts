@@ -5,8 +5,8 @@ import type { IViolationBinding } from "../../src/models/violation-binding";
 import { ViolationService } from "../../src/services/violation";
 
 const violations: ReadonlyArray<IViolation> = [
-    { code: "56-5-1520", description: "Speeding", category: "Speed" },
-    { code: "56-1-20", description: "Driving without a licence", category: "Licence" }
+    { id: "speeding", code: "56-5-1520", description: "Speeding", category: "Speed" },
+    { id: "no-license", code: "56-1-20", description: "Driving without a licence", category: "Licence" }
 ];
 
 function binding(listId: string = "sc-s438:violation"): IViolationBinding {
@@ -35,9 +35,9 @@ describe("ViolationService", () => {
         /** An agency serves its own current code list by registering over the id the bundled one used. */
         it("replaces a list registered under an id already in use", async () => {
             service.registerList({ id: "sc-s438:violation", load: () => Promise.resolve(violations) });
-            service.registerList({ id: "sc-s438:violation", load: () => Promise.resolve([{ code: "X", description: "Replaced" }]) });
+            service.registerList({ id: "sc-s438:violation", load: () => Promise.resolve([{ id: "x", code: "X", description: "Replaced" }]) });
 
-            expect(await service.getViolations("sc-s438:violation")).toEqual([{ code: "X", description: "Replaced" }]);
+            expect(await service.getViolations("sc-s438:violation")).toEqual([{ id: "x", code: "X", description: "Replaced" }]);
         });
 
         it("drops what it had already loaded under a replaced id", async () => {

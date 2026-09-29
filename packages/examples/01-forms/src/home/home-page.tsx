@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { useService } from "@common/react";
 import { IFormCatalogItem, IFormCatalogService } from "@forms/catalog";
-import { FAsyncLoader, FListGroup, FListGroupItem } from "@forms/core";
+import { FAsyncLoader, FIcon, FListGroup, FListGroupItem } from "@forms/core";
 
 import { createExampleDataManager } from "../example-data";
 import { getFormDisabledReason, getFormRoutePath } from "../form-routes";
@@ -52,6 +52,8 @@ interface IHomeLinkProps {
     readonly description?: string;
     /** Why the form has no route, when that's deliberate rather than a gap -- shown in place of "no route registered". */
     readonly disabledReason?: string;
+    /** Marks a row as a template a report can start from, rather than a form's own row, which is what earns it the report icon. */
+    readonly isTemplate?: boolean;
     /** The route to navigate to. A catalog form with no entry in the app's route table has none, and lists as unreachable. */
     readonly path?: string;
     readonly title: string;
@@ -85,7 +87,7 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
 
         // the default is what the form's own row starts, so it is not listed a second time
         for (const template of templates.filter(entry => entry !== standard)) {
-            links.push({ className: "ps-5", description: template.description, disabledReason, path: path && `${path}?template=${encodeURIComponent(template.id)}`, title: template.title });
+            links.push({ className: "ps-5", description: template.description, disabledReason, isTemplate: true, path: path && `${path}?template=${encodeURIComponent(template.id)}`, title: template.title });
         }
     }
 
@@ -97,7 +99,7 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
  * react-router without reloading the app. A modified click is left to the browser, so ctrl/cmd/shift still open the
  * route in a new tab or window the way they would on any other link.
  */
-function HomeLink({ className, description, disabledReason, path, title, version }: IHomeLinkProps): React.JSX.Element {
+function HomeLink({ className, description, disabledReason, isTemplate, path, title, version }: IHomeLinkProps): React.JSX.Element {
     const navigate = useNavigate();
 
     const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
@@ -113,6 +115,7 @@ function HomeLink({ className, description, disabledReason, path, title, version
         <FListGroupItem className={className} disabled={!path} href={path} onClick={path ? handleClick : undefined}>
             <div className="d-flex justify-content-between align-items-center">
                 <span className="fw-semibold">
+                    {isTemplate && <span className="me-2"><FIcon icon="file-earmark-text" size="sm" /></span>}
                     {title}
                     {version && <span className="badge text-bg-light fw-normal ms-2">v{version}</span>}
                 </span>

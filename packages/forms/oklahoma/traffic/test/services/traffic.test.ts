@@ -34,7 +34,7 @@ describe("OKTrafficService", () => {
          * not registered" the instant either method runs. That is exactly the regression this guards.
          */
         it("resolves the schema and writes the chosen violation onto the form's first page", async () => {
-            const violation: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const violation: IViolation = { id: "speeding", code: "11-11-101", description: "Speeding", statute: "11-11-101" };
 
             await service.applyViolations(controllers, [violation], OKTrafficFormModel);
 
@@ -48,9 +48,9 @@ describe("OKTrafficService", () => {
         });
 
         it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
-            const first: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
-            const second: IViolation = { code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
-            const third: IViolation = { code: "11-11-103", description: "Following too closely", statute: "11-11-103" };
+            const first: IViolation = { id: "speeding", code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const second: IViolation = { id: "reckless-driving", code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
+            const third: IViolation = { id: "following-too-closely", code: "11-11-103", description: "Following too closely", statute: "11-11-103" };
 
             await service.applyViolations(controllers, [first, second, third], OKTrafficFormModel);
 
@@ -63,8 +63,8 @@ describe("OKTrafficService", () => {
         });
 
         it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
-            const first: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
-            const second: IViolation = { code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
+            const first: IViolation = { id: "speeding", code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const second: IViolation = { id: "reckless-driving", code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
 
             await service.applyViolations(controllers, [first], OKTrafficFormModel);
             await service.applyViolations(controllers, [second], OKTrafficFormModel);
@@ -83,8 +83,8 @@ describe("OKTrafficService", () => {
         });
 
         it("narrows to the violations already carried on the form", async () => {
-            const applied: IViolation = { code: "11-11-101", description: "Speeding", statute: "11-11-101" };
-            const notApplied: IViolation = { code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
+            const applied: IViolation = { id: "speeding", code: "11-11-101", description: "Speeding", statute: "11-11-101" };
+            const notApplied: IViolation = { id: "reckless-driving", code: "11-11-102", description: "Reckless driving", statute: "11-11-102" };
 
             await service.applyViolations(controllers, [applied], OKTrafficFormModel);
 

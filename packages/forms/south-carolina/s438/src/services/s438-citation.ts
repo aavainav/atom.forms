@@ -129,11 +129,14 @@ export class S438CitationService implements IS438CitationService {
         const formSchema = FormModel.getSchema<S438FormSchema>(formCtor);
         const pages = controllers.getFormController().form.get<PageCollection>(formSchema.frontPage).getPages<FrontPageModel>();
 
-        // the citation prints the statute as its violation section number, so that is what identifies a charge
-        // once it is on the form; a violation with no statute of its own was written under its code
-        const carried = new Set(pages.map(page => page.getViolationSection().getSectionNumber().getValue()).filter(Boolean));
+        // the statute alone can't tell two same-coded offense variants apart (1st/2nd/3rd offense print the same
+        // code), but the description is written onto the page right alongside it, so the pair together is what
+        // identifies which charge is actually carried
+        const carried = new Set(pages
+            .map(page => `${page.getViolationSection().getSectionNumber().getValue()}::${page.getViolationSection().getDescription().getValue()}`)
+            .filter(key => key !== "::"));
 
-        return violations.filter(violation => carried.has(violation.statute ?? violation.code));
+        return violations.filter(violation => carried.has(`${violation.statute ?? violation.code}::${violation.description}`));
     }
 
     applyViolatorDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel {

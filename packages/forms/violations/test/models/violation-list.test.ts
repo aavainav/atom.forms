@@ -8,11 +8,11 @@ import { toViolations } from "../../src/models/violation";
 const definition: IViolationListDefinition = { id: "sc-s438:violation", load: () => Promise.resolve([]) };
 
 const violations: ReadonlyArray<IViolation> = [
-    { code: "56-5-1520", description: "Speeding", category: "Speed", statute: "56-5-1520", fine: 81.25, points: 2 },
-    { code: "56-5-2930", description: "Driving under the influence", category: "Impaired", statute: "56-5-2930" },
-    { code: "56-1-20", description: "Driving without a licence", category: "Licence", statute: "56-1-20" },
-    { code: "56-5-1535", description: "Speeding in a work zone", category: "Speed", statute: "56-5-1535" },
-    { code: "LOC-1", description: "Parking on a sidewalk", isLocalOrdinance: true }
+    { id: "speeding", code: "56-5-1520", description: "Speeding", category: "Speed", statute: "56-5-1520", fine: 81.25, points: 2 },
+    { id: "dui", code: "56-5-2930", description: "Driving under the influence", category: "Impaired", statute: "56-5-2930" },
+    { id: "no-license", code: "56-1-20", description: "Driving without a licence", category: "Licence", statute: "56-1-20" },
+    { id: "work-zone-speeding", code: "56-5-1535", description: "Speeding in a work zone", category: "Speed", statute: "56-5-1535" },
+    { id: "sidewalk-parking", code: "LOC-1", description: "Parking on a sidewalk", isLocalOrdinance: true }
 ];
 
 function list(rows: ReadonlyArray<IViolation> = violations): ViolationList {
@@ -42,8 +42,8 @@ describe("ViolationList", () => {
         /** A legacy code list carries genuine duplicates, and the earlier one is where a linear search would stop. */
         it("answers the first match when a code repeats", () => {
             const duplicated = list([
-                { code: "A", description: "First" },
-                { code: "A", description: "Second" }
+                { id: "a-first", code: "A", description: "First" },
+                { id: "a-second", code: "A", description: "Second" }
             ]);
 
             expect(duplicated.findByCode("A")?.description).toBe("First");
@@ -57,7 +57,7 @@ describe("ViolationList", () => {
 
         /** A list carrying no categories is one the selector cannot offer a category filter for. */
         it("answers nothing for a list that files nothing under a category", () => {
-            expect(list([{ code: "A", description: "First" }]).getCategories()).toEqual([]);
+            expect(list([{ id: "a", code: "A", description: "First" }]).getCategories()).toEqual([]);
         });
 
         it("leaves out a violation that carries no category of its own", () => {
@@ -99,8 +99,8 @@ describe("ViolationList", () => {
          */
         it("puts matches whose code starts with the term ahead of the rest", () => {
             const ranked = list([
-                { code: "999", description: "Mentions 56-5 in the text" },
-                { code: "56-5-1520", description: "Speeding" }
+                { id: "mentions", code: "999", description: "Mentions 56-5 in the text" },
+                { id: "speeding", code: "56-5-1520", description: "Speeding" }
             ]);
 
             expect(ranked.search("56-5").map(violation => violation.code)).toEqual(["56-5-1520", "999"]);
@@ -108,8 +108,8 @@ describe("ViolationList", () => {
 
         it("treats a statute prefix the same way as a code prefix", () => {
             const ranked = list([
-                { code: "B", description: "Mentions 12-34 in the text" },
-                { code: "A", description: "Something else", statute: "12-34" }
+                { id: "b", code: "B", description: "Mentions 12-34 in the text" },
+                { id: "a", code: "A", description: "Something else", statute: "12-34" }
             ]);
 
             expect(ranked.search("12-34").map(violation => violation.code)).toEqual(["A", "B"]);
@@ -134,11 +134,12 @@ describe("ViolationList", () => {
 
 describe("toViolations", () => {
     it("expands a minimal row into a violation", () => {
-        expect(toViolations([["A", "Speeding"]])).toEqual([{ code: "A", description: "Speeding" }]);
+        expect(toViolations([["id-a", "A", "Speeding"]])).toEqual([{ id: "id-a", code: "A", description: "Speeding" }]);
     });
 
     it("expands a full row into every field", () => {
-        expect(toViolations([["A", "Speeding", "Speed", "56-5-1520", 81.25, 2, false, true]])).toEqual([{
+        expect(toViolations([["id-a", "A", "Speeding", "Speed", "56-5-1520", 81.25, 2, false, true]])).toEqual([{
+            id: "id-a",
             code: "A",
             description: "Speeding",
             category: "Speed",
@@ -155,16 +156,16 @@ describe("toViolations", () => {
      * a fine gets the same answer from a generated row as from a hand-registered one.
      */
     it("leaves an absent field off entirely rather than setting it undefined", () => {
-        const [violation] = toViolations([["A", "Speeding"]]);
+        const [violation] = toViolations([["id-a", "A", "Speeding"]]);
 
         expect("fine" in violation).toBe(false);
         expect("category" in violation).toBe(false);
-        expect(Object.keys(violation)).toEqual(["code", "description"]);
+        expect(Object.keys(violation)).toEqual(["id", "code", "description"]);
     });
 
     /** A gap before a later field is held open with an undefined, which must not become a key either. */
     it("keeps a held-open gap off the violation while carrying the field after it", () => {
-        const [violation] = toViolations([["A", "Speeding", undefined, undefined, 81.25]]);
+        const [violation] = toViolations([["id-a", "A", "Speeding", undefined, undefined, 81.25]]);
 
         expect(violation.fine).toBe(81.25);
         expect("category" in violation).toBe(false);
@@ -172,7 +173,7 @@ describe("toViolations", () => {
     });
 
     it("keeps a false flag, which is not the same as an absent one", () => {
-        const [violation] = toViolations([["A", "Speeding", undefined, undefined, undefined, undefined, false]]);
+        const [violation] = toViolations([["id-a", "A", "Speeding", undefined, undefined, undefined, undefined, false]]);
 
         expect(violation.isLocalOrdinance).toBe(false);
         expect("isLocalOrdinance" in violation).toBe(true);

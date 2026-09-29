@@ -33,6 +33,7 @@ const defaults = {
 
 /** The row fields in the order `ViolationRow` declares them, with the type each has to be. */
 const fields = [
+    { name: "id", type: "string", required: true },
     { name: "code", type: "string", required: true },
     { name: "description", type: "string", required: true },
     { name: "category", type: "string" },

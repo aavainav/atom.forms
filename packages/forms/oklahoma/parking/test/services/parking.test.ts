@@ -34,7 +34,7 @@ describe("OKParkingService", () => {
          * not registered" the instant either method runs. That is exactly the regression this guards.
          */
         it("resolves the schema and writes the chosen violation onto the form's first page", async () => {
-            const violation: IViolation = { code: "18-100", description: "No parking zone" };
+            const violation: IViolation = { id: "no-parking-zone", code: "18-100", description: "No parking zone" };
 
             await service.applyViolations(controllers, [violation], OKParkingFormModel);
 
@@ -48,9 +48,9 @@ describe("OKParkingService", () => {
         });
 
         it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
-            const first: IViolation = { code: "18-100", description: "No parking zone" };
-            const second: IViolation = { code: "18-101", description: "Expired meter" };
-            const third: IViolation = { code: "18-102", description: "Blocking a fire lane" };
+            const first: IViolation = { id: "no-parking-zone", code: "18-100", description: "No parking zone" };
+            const second: IViolation = { id: "expired-meter", code: "18-101", description: "Expired meter" };
+            const third: IViolation = { id: "blocking-a-fire-lane", code: "18-102", description: "Blocking a fire lane" };
 
             await service.applyViolations(controllers, [first, second, third], OKParkingFormModel);
 
@@ -63,8 +63,8 @@ describe("OKParkingService", () => {
         });
 
         it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
-            const first: IViolation = { code: "18-100", description: "No parking zone" };
-            const second: IViolation = { code: "18-101", description: "Expired meter" };
+            const first: IViolation = { id: "no-parking-zone", code: "18-100", description: "No parking zone" };
+            const second: IViolation = { id: "expired-meter", code: "18-101", description: "Expired meter" };
 
             await service.applyViolations(controllers, [first], OKParkingFormModel);
             await service.applyViolations(controllers, [second], OKParkingFormModel);
@@ -83,8 +83,8 @@ describe("OKParkingService", () => {
         });
 
         it("narrows to the violations already carried on the form", async () => {
-            const applied: IViolation = { code: "18-100", description: "No parking zone" };
-            const notApplied: IViolation = { code: "18-101", description: "Expired meter" };
+            const applied: IViolation = { id: "no-parking-zone", code: "18-100", description: "No parking zone" };
+            const notApplied: IViolation = { id: "expired-meter", code: "18-101", description: "Expired meter" };
 
             await service.applyViolations(controllers, [applied], OKParkingFormModel);
 

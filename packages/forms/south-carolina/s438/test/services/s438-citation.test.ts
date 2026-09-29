@@ -31,7 +31,7 @@ describe("S438CitationService", () => {
          * assertion below is unreachable if the wrong constructor is wired through from `module.ts`.
          */
         it("resolves the schema and writes the chosen violation onto the form's first page", async () => {
-            const violation: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
+            const violation: IViolation = { id: "dui", code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
 
             await service.applyViolations(controllers, [violation], S438FormModel);
 
@@ -46,9 +46,9 @@ describe("S438CitationService", () => {
         });
 
         it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
-            const first: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
-            const second: IViolation = { code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750", points: 6 };
-            const third: IViolation = { code: "56-5-1520", description: "Speeding", statute: "56-5-1520", points: 2 };
+            const first: IViolation = { id: "dui", code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
+            const second: IViolation = { id: "blue-light", code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750", points: 6 };
+            const third: IViolation = { id: "speeding", code: "56-5-1520", description: "Speeding", statute: "56-5-1520", points: 2 };
 
             await service.applyViolations(controllers, [first, second, third], S438FormModel);
 
@@ -61,8 +61,8 @@ describe("S438CitationService", () => {
         });
 
         it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
-            const first: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930" };
-            const second: IViolation = { code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750" };
+            const first: IViolation = { id: "dui", code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930" };
+            const second: IViolation = { id: "blue-light", code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750" };
 
             await service.applyViolations(controllers, [first], S438FormModel);
             await service.applyViolations(controllers, [second], S438FormModel);
@@ -81,12 +81,26 @@ describe("S438CitationService", () => {
         });
 
         it("narrows to the violations already carried on the form", async () => {
-            const applied: IViolation = { code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930" };
-            const notApplied: IViolation = { code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750" };
+            const applied: IViolation = { id: "dui", code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930" };
+            const notApplied: IViolation = { id: "blue-light", code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750" };
 
             await service.applyViolations(controllers, [applied], S438FormModel);
 
             expect(service.getAppliedViolations(controllers, [applied, notApplied], S438FormModel)).toEqual([applied]);
+        });
+
+        /**
+         * Some statutes repeat across offense-count variants that print the same code but a different description
+         * (1st/2nd/3rd offense). The statute alone can't tell them apart once one is on the form; the description,
+         * which is written right alongside it, is what does.
+         */
+        it("does not treat a different violation sharing the same statute as already applied", async () => {
+            const firstOffense: IViolation = { id: "first-offense", code: "02-17-0030", description: "Failure to file; 1st offense", statute: "02-17-0030" };
+            const secondOffense: IViolation = { id: "second-offense", code: "02-17-0030", description: "Failure to file; 2nd offense", statute: "02-17-0030" };
+
+            await service.applyViolations(controllers, [firstOffense], S438FormModel);
+
+            expect(service.getAppliedViolations(controllers, [firstOffense, secondOffense], S438FormModel)).toEqual([firstOffense]);
         });
     });
 });

@@ -7,23 +7,23 @@ import { IViolation } from "../models";
 const maxVisibleItems = 50;
 
 interface IViolationListProps {
-    /** The codes the citation already carries; these rows are ticked and locked, and count against `maxSelected`. */
+    /** The ids of the violations the citation already carries; these rows are ticked and locked, and count against `maxSelected`. */
     readonly applied: ReadonlySet<string>;
     /** The drag-and-drop controller belonging to the form, so a row can be dragged onto it. */
     readonly controller: IDragAndDropController;
-    /** The codes the current user has favorited on this list. */
+    /** The ids of the violations the current user has favorited on this list. */
     readonly favorites: ReadonlySet<string>;
-    /** How many codes may be ticked at once, applied and selected together; once reached, the unticked rows stop accepting picks. */
+    /** How many rows may be ticked at once, applied and selected together; once reached, the unticked rows stop accepting picks. */
     readonly maxSelected: number;
-    /** The codes ticked here but not yet on the citation. */
+    /** The ids of the violations ticked here but not yet on the citation. */
     readonly selected: ReadonlySet<string>;
     /** The violations to offer, already ordered by the search that produced them. */
     readonly violations: ReadonlyArray<IViolation>;
 
-    /** Invoked with the code whose ticked state changed. */
-    readonly onToggle: (code: string) => void;
-    /** Invoked with the code whose favorited state changed. */
-    readonly onToggleFavorite: (code: string) => void;
+    /** Invoked with the id of the violation whose ticked state changed. */
+    readonly onToggle: (id: string) => void;
+    /** Invoked with the id of the violation whose favorited state changed. */
+    readonly onToggleFavorite: (id: string) => void;
 }
 
 /** Narrows the violations to those in the category, if one is chosen, and then to those matching the term. */
@@ -47,7 +47,7 @@ function sortFavoritesFirst(violations: ReadonlyArray<IViolation>, favorites: Re
         return violations;
     }
 
-    return [...violations].sort((a, b) => Number(favorites.has(b.code)) - Number(favorites.has(a.code)));
+    return [...violations].sort((a, b) => Number(favorites.has(b.id)) - Number(favorites.has(a.id)));
 }
 
 /** The distinct categories the given violations are filed under, alphabetically. */
@@ -128,36 +128,30 @@ export function ViolationSelectionList({ applied, controller, favorites, maxSele
                 : (
                     <FListGroup id="violation-list">
                         {visible.map((violation) => {
-                            const isApplied = applied.has(violation.code);
-                            const isChecked = isApplied || selected.has(violation.code);
+                            const isApplied = applied.has(violation.id);
+                            const isChecked = isApplied || selected.has(violation.id);
 
                             return (
                             <FDraggableItem
-                                key={violation.code}
+                                key={violation.id}
                                 controller={controller}
-                                // a violation already on the citation cannot be dragged either: the row is locked
-                                // against a second tick, and dropping it onto another page would put the same
-                                // charge on the citation twice by the one route the tick does not cover
                                 disabled={isApplied}
-                                itemData={{ id: violation.code, type: "violation", data: violation }}>
+                                itemData={{ id: violation.id, type: "violation", data: violation }}>
                                 <FListGroupCheckbox
-                                    id={`violation-${violation.code}`}
+                                    id={`violation-${violation.id}`}
                                     checked={isChecked}
-                                    // a violation already on the citation is locked here: the panel only ever adds,
-                                    // and the way to take a charge off is to delete the page carrying it, which
-                                    // frees the row again
                                     disabled={isApplied || (isSelectionFull && !isChecked)}
-                                    onChange={() => onToggle(violation.code)}>
+                                    onChange={() => onToggle(violation.id)}>
                                     <div className="ms-2">
                                         <div className="d-flex align-items-center justify-content-between">
                                             <div className="fw-bold">{violation.statute ?? violation.code}</div>
                                             <i
-                                                id={`violation-favorite-${violation.code}`}
-                                                className={`bi ${favorites.has(violation.code) ? "bi-star-fill" : "bi-star"} text-warning`}
+                                                id={`violation-favorite-${violation.id}`}
+                                                className={`bi ${favorites.has(violation.id) ? "bi-star-fill" : "bi-star"} text-warning`}
                                                 style={{ cursor: "pointer" }}
                                                 role="button"
-                                                aria-label={favorites.has(violation.code) ? "Remove from favorites" : "Add to favorites"}
-                                                onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleFavorite(violation.code); }}
+                                                aria-label={favorites.has(violation.id) ? "Remove from favorites" : "Add to favorites"}
+                                                onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleFavorite(violation.id); }}
                                             />
                                         </div>
                                         <div className="small text-muted">{violation.description}</div>

@@ -16,8 +16,8 @@ import { createBinding, createStubForm } from "../fixtures/stub-form";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const violations: ReadonlyArray<IViolation> = [
-    { code: "56-5-1520", description: "Speeding" },
-    { code: "56-1-20", description: "Driving without a licence" }
+    { id: "speeding", code: "56-5-1520", description: "Speeding" },
+    { id: "no-license", code: "56-1-20", description: "Driving without a licence" }
 ];
 
 const mounted: Array<() => void> = [];
@@ -45,7 +45,7 @@ async function mountWithATick(form: FormModel<any>, controllers: ControllerManag
 
     act(() => { selector.openSelector(); });
     await act(async () => { release(); await Promise.resolve(); });
-    act(() => container.querySelector<HTMLElement>("#violation-56-5-1520")!.click());
+    act(() => container.querySelector<HTMLElement>("#violation-speeding")!.click());
 
     return { add: () => container.querySelector<HTMLButtonElement>("#violations-add-button")!, apply, container, controllers, onError };
 }
@@ -88,25 +88,25 @@ describe("ViolationsPanel", () => {
     describe("favorites", () => {
         it("shows a violation already favorited in the user's preferences as starred", async () => {
             const controllers = new ControllerManager();
-            controllers.setPreferences({ violationFavorites: { list: ["56-1-20"] } });
+            controllers.setPreferences({ violationFavorites: { list: ["no-license"] } });
 
             const { container } = await mountWithATick(createStubForm(), controllers);
 
-            expect(container.querySelector("#violation-favorite-56-1-20")!.className).toContain("bi-star-fill");
-            expect(container.querySelector("#violation-favorite-56-5-1520")!.className).not.toContain("bi-star-fill");
+            expect(container.querySelector("#violation-favorite-no-license")!.className).toContain("bi-star-fill");
+            expect(container.querySelector("#violation-favorite-speeding")!.className).not.toContain("bi-star-fill");
         });
 
         it("adds a violation to the user's preferences when its star is clicked", async () => {
             const { container, controllers } = await mountWithATick(createStubForm());
 
-            act(() => container.querySelector<HTMLElement>("#violation-favorite-56-1-20")!.click());
+            act(() => container.querySelector<HTMLElement>("#violation-favorite-no-license")!.click());
 
-            expect(controllers.preferences).toEqual({ violationFavorites: { list: ["56-1-20"] } });
+            expect(controllers.preferences).toEqual({ violationFavorites: { list: ["no-license"] } });
         });
 
         it("fills the star in immediately, on the same click that favorites it", async () => {
             const { container } = await mountWithATick(createStubForm());
-            const star = container.querySelector<HTMLElement>("#violation-favorite-56-1-20")!;
+            const star = container.querySelector<HTMLElement>("#violation-favorite-no-license")!;
 
             expect(star.className).not.toContain("bi-star-fill");
             act(() => star.click());
@@ -116,39 +116,39 @@ describe("ViolationsPanel", () => {
 
         it("removes a violation from the user's preferences when its star is clicked again", async () => {
             const controllers = new ControllerManager();
-            controllers.setPreferences({ violationFavorites: { list: ["56-1-20"] } });
+            controllers.setPreferences({ violationFavorites: { list: ["no-license"] } });
 
             const { container } = await mountWithATick(createStubForm(), controllers);
-            act(() => container.querySelector<HTMLElement>("#violation-favorite-56-1-20")!.click());
+            act(() => container.querySelector<HTMLElement>("#violation-favorite-no-license")!.click());
 
             expect(controllers.preferences).toEqual({ violationFavorites: { list: [] } });
         });
 
         it("leaves another list's favorites untouched", async () => {
             const controllers = new ControllerManager();
-            controllers.setPreferences({ violationFavorites: { "another-list": ["99-9-9999"] } });
+            controllers.setPreferences({ violationFavorites: { "another-list": ["some-other-id"] } });
 
             const { container } = await mountWithATick(createStubForm(), controllers);
-            act(() => container.querySelector<HTMLElement>("#violation-favorite-56-1-20")!.click());
+            act(() => container.querySelector<HTMLElement>("#violation-favorite-no-license")!.click());
 
-            expect(controllers.preferences).toEqual({ violationFavorites: { "another-list": ["99-9-9999"], list: ["56-1-20"] } });
+            expect(controllers.preferences).toEqual({ violationFavorites: { "another-list": ["some-other-id"], list: ["no-license"] } });
         });
 
         it("sorts a favorited violation ahead of the rest of the list", async () => {
             const controllers = new ControllerManager();
-            // 56-1-20 is the second violation in the unfiltered list, so this is only true once it is favorited
-            controllers.setPreferences({ violationFavorites: { list: ["56-1-20"] } });
+            // no-license is the second violation in the unfiltered list, so this is only true once it is favorited
+            controllers.setPreferences({ violationFavorites: { list: ["no-license"] } });
 
             const { container } = await mountWithATick(createStubForm(), controllers);
-            const codes = [...container.querySelectorAll("#violation-list .list-group-item")].map(item => item.id.replace("violation-", ""));
+            const ids = [...container.querySelectorAll("#violation-list .list-group-item")].map(item => item.id.replace("violation-", ""));
 
-            expect(codes[0]).toBe("56-1-20");
+            expect(ids[0]).toBe("no-license");
         });
 
         it("does not toggle the violation itself when its star is clicked", async () => {
             const { add, apply, container } = await mountWithATick(createStubForm());
 
-            act(() => container.querySelector<HTMLElement>("#violation-favorite-56-1-20")!.click());
+            act(() => container.querySelector<HTMLElement>("#violation-favorite-no-license")!.click());
             await act(async () => add().click());
 
             // only the row already ticked before the star was clicked was applied

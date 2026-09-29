@@ -38,7 +38,7 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
     const form = useForm(controllers.getFormController());
 
     const applied = useMemo(
-        () => new Set((binding && violations.length ? binding.getApplied(controllers, violations) : []).map(violation => violation.code)),
+        () => new Set((binding && violations.length ? binding.getApplied(controllers, violations) : []).map(violation => violation.id)),
         [binding, controllers, violations, form]);
 
     // `controllers.preferences` is a plain property, not something a re-render follows on its own, so the favorited
@@ -77,33 +77,33 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
         return () => { isCurrent = false; };
     }, [isOpen, binding, violationService, onError]);
 
-    const toggle = useCallback((code: string) => {
+    const toggle = useCallback((id: string) => {
         // a violation already on the citation is ticked and locked, and is taken off only by deleting its page
-        if (applied.has(code)) {
+        if (applied.has(id)) {
             return;
         }
 
         setSelected(current => {
-            if (!current.has(code) && applied.size + current.size >= maxSelectedViolations) {
+            if (!current.has(id) && applied.size + current.size >= maxSelectedViolations) {
                 // the list disables its unticked rows at the cap, so this only catches a pick that got past that
                 return current;
             }
 
             const next = new Set(current);
-            next.has(code) ? next.delete(code) : next.add(code);
+            next.has(id) ? next.delete(id) : next.add(id);
 
             return next;
         });
     }, [applied]);
 
-    const toggleFavorite = useCallback((code: string) => {
+    const toggleFavorite = useCallback((id: string) => {
         if (!binding) {
             return;
         }
 
         const current = controllers.preferences ?? emptyPreferences;
         const existing = current.violationFavorites[binding.listId] ?? [];
-        const updated = existing.includes(code) ? existing.filter(favorite => favorite !== code) : [...existing, code];
+        const updated = existing.includes(id) ? existing.filter(favorite => favorite !== id) : [...existing, id];
 
         controllers.setPreferences({ ...current, violationFavorites: { ...current.violationFavorites, [binding.listId]: updated } });
         setFavorites(new Set(updated));
@@ -124,7 +124,7 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
         // second time would write a second page for a charge it already carries. they are handed over in the order
         // the list offers them rather than the order they were ticked in, so the pages come out in the order an
         // officer reading the panel would expect
-        const chosen = violations.filter(violation => selected.has(violation.code) && !applied.has(violation.code));
+        const chosen = violations.filter(violation => selected.has(violation.id) && !applied.has(violation.id));
         if (!chosen.length) {
             return;
         }

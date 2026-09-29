@@ -1,5 +1,7 @@
 /** Represents one violation a citation can be written for. */
 export interface IViolation {
+    /** A stable identifier for this specific violation. */
+    readonly id: string;
     /** The agency's own code for the violation, as the citation prints it. */
     readonly code: string;
     /** The violation as it reads on the citation. */
@@ -26,14 +28,9 @@ export interface IViolation {
     readonly statute?: string;
 }
 
-/**
- * The compact row a generated violation list is emitted as.
- *
- * Fields are ordered by how often they're filled in, not by importance -- a row trims to its last present field,
- * and a gap before that needs an `undefined` placeholder. Category sits third since nearly every categorised row
- * carries one; placing it later would cost extra placeholders on most rows.
- */
+/** The compact row a generated violation list is emitted as */
 export type ViolationRow = readonly [
+    id: string,
     code: string,
     description: string,
     category?: string,
@@ -46,8 +43,8 @@ export type ViolationRow = readonly [
 
 /** Expands the rows a generated violation list is emitted as into violations. */
 export function toViolations(rows: ReadonlyArray<ViolationRow>): Array<IViolation> {
-    return rows.map(([code, description, category, statute, fine, points, isLocalOrdinance, requiresCourtAppearance]) => {
-        const violation: Record<string, unknown> = { code, description };
+    return rows.map(([id, code, description, category, statute, fine, points, isLocalOrdinance, requiresCourtAppearance]) => {
+        const violation: Record<string, unknown> = { id, code, description };
 
         // an absent field is left off rather than written as undefined, so a form asking whether the violation
         // carries a fine gets the same answer from a generated row and a hand-registered one

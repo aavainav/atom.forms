@@ -34,7 +34,7 @@ describe("GAUTCService", () => {
          * not registered" the instant either method runs. That is exactly the regression this guards.
          */
         it("resolves the schema and writes the chosen violation onto the form's first page", async () => {
-            const violation: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const violation: IViolation = { id: "speeding", code: "40-6-181", description: "Speeding", statute: "40-6-181" };
 
             await service.applyViolations(controllers, [violation], GAUTCFormModel);
 
@@ -48,9 +48,9 @@ describe("GAUTCService", () => {
         });
 
         it("adds a page for each violation beyond the first, writing each onto its own page", async () => {
-            const first: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
-            const second: IViolation = { code: "40-6-391", description: "DUI", statute: "40-6-391" };
-            const third: IViolation = { code: "40-6-48", description: "Following too closely", statute: "40-6-48" };
+            const first: IViolation = { id: "speeding", code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const second: IViolation = { id: "dui", code: "40-6-391", description: "DUI", statute: "40-6-391" };
+            const third: IViolation = { id: "following-too-closely", code: "40-6-48", description: "Following too closely", statute: "40-6-48" };
 
             await service.applyViolations(controllers, [first, second, third], GAUTCFormModel);
 
@@ -63,8 +63,8 @@ describe("GAUTCService", () => {
         });
 
         it("adds to the citation on a later call rather than overwriting the violation already on it", async () => {
-            const first: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
-            const second: IViolation = { code: "40-6-391", description: "DUI", statute: "40-6-391" };
+            const first: IViolation = { id: "speeding", code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const second: IViolation = { id: "dui", code: "40-6-391", description: "DUI", statute: "40-6-391" };
 
             await service.applyViolations(controllers, [first], GAUTCFormModel);
             await service.applyViolations(controllers, [second], GAUTCFormModel);
@@ -83,8 +83,8 @@ describe("GAUTCService", () => {
         });
 
         it("narrows to the violations already carried on the form", async () => {
-            const applied: IViolation = { code: "40-6-181", description: "Speeding", statute: "40-6-181" };
-            const notApplied: IViolation = { code: "40-6-391", description: "DUI", statute: "40-6-391" };
+            const applied: IViolation = { id: "speeding", code: "40-6-181", description: "Speeding", statute: "40-6-181" };
+            const notApplied: IViolation = { id: "dui", code: "40-6-391", description: "DUI", statute: "40-6-391" };
 
             await service.applyViolations(controllers, [applied], GAUTCFormModel);
 
