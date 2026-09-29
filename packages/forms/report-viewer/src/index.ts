@@ -9,5 +9,5 @@ export type { AuditRecord, IAuditFormIdentity } from "@forms/audit";
 // so a host can keep comments beside a record without depending on @forms/review
 export type { IReviewComment, ReviewTarget } from "@forms/review";
 
-// so a host can say who is using a report without reaching into core for the type
-export type { IActor } from "@forms/core";
+// so a host can say who is using a report, or read what onPreferencesChanged raises, without reaching into core
+export type { IActor, IUserPreferences } from "@forms/core";

@@ -135,6 +135,7 @@ export type { ISectionCollection } from "./models/section-collection";
 export { SectionCollection } from "./models/section-collection";
 export { PageModel } from "./models/page";
 export { knownStatuses, FormModel } from "./models/form";
+export { emptyPreferences } from "./models/user-preferences";
 export { FormMapper } from "./mapping/form-mapper";
 
 export { Dropzone } from "./models/import/dropzone";
@@ -182,6 +183,8 @@ export { isRecord } from "./utils/is-record";
 export { schema as ImportablePersonSchema, validateImportablePerson } from "./models/import/importable-person";
 export { schema as ImportableVehicleSchema, validateImportableVehicle } from "./models/import/importable-vehicle";
 export { schema as ImportableViolationSchema, validateImportableViolation } from "./models/import/importable-violation";
+
+export { userPreferenceSchema } from "./schemas/user-preference";
 
 export { citationWorkflow, CitationForm } from "./models/citation-form";
 export { crashWorkflow, CrashForm } from "./models/crash-form";

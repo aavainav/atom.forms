@@ -368,6 +368,33 @@ describe("ReportViewerForm", () => {
 
             expect(localStorage.getItem(`report-viewer:preferences:${rivera.id}`)).toBeNull();
         });
+
+        it("raises onPreferencesChanged for a later change when none was given", async () => {
+            const { controllers, ref } = mount({ user: rivera });
+            await settle();
+
+            const raised: Array<IUserPreferences> = [];
+            ref.current!.onPreferencesChanged(updated => raised.push(updated));
+
+            const updated: IUserPreferences = { violationFavorites: { "sc-s438:violation": ["56-05-1520(G)(4)"] } };
+            act(() => controllers.setPreferences(updated));
+
+            expect(raised).toEqual([updated]);
+        });
+
+        it("raises onPreferencesChanged for a later change even when a preferences value was given", async () => {
+            const given: IUserPreferences = { violationFavorites: {} };
+            const { controllers, ref } = mount({ user: rivera, preferences: given });
+            await settle();
+
+            const raised: Array<IUserPreferences> = [];
+            ref.current!.onPreferencesChanged(updated => raised.push(updated));
+
+            const updated: IUserPreferences = { violationFavorites: { "sc-s438:violation": ["56-05-1520(G)(4)"] } };
+            act(() => controllers.setPreferences(updated));
+
+            expect(raised).toEqual([updated]);
+        });
     });
 
     describe("saving what is raised", () => {

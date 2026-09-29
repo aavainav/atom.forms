@@ -8,3 +8,6 @@ export interface IUserPreferences {
     /** The violation codes an officer has starred, per violation list id, for quicker reach in a long list. */
     readonly violationFavorites: Readonly<Record<string, ReadonlyArray<string>>>;
 }
+
+/** Nothing favorited or otherwise set -- what a new user starts with, and what a corrupted or unreadable stored value falls back to. */
+export const emptyPreferences: IUserPreferences = { violationFavorites: {} };

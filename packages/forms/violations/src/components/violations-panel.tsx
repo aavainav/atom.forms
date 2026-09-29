@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useService } from "@common/react";
 import { IFormCatalogItem } from "@forms/catalog";
-import { useForm, IControllerManager, FButton, FOffCanvas } from "@forms/core";
+import { emptyPreferences, useForm, IControllerManager, FButton, FOffCanvas } from "@forms/core";
 
 import { ViolationSelectionList } from "./violation-selection-list";
 import { isViolationsClosed, IViolation } from "../models";
@@ -101,7 +101,7 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
             return;
         }
 
-        const current = controllers.preferences ?? { violationFavorites: {} };
+        const current = controllers.preferences ?? emptyPreferences;
         const existing = current.violationFavorites[binding.listId] ?? [];
         const updated = existing.includes(code) ? existing.filter(favorite => favorite !== code) : [...existing, code];
 

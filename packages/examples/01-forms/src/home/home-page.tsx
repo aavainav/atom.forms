@@ -25,6 +25,11 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         title: "Form Mode"
     },
     {
+        description: "Star a violation in the S438's selector and see the value IReportViewerComponent.onPreferencesChanged raises, listed live beside it.",
+        path: "/demo/preferences",
+        title: "Preferences"
+    },
+    {
         description: "Apply a preset to a report under way, or save one of your own: what it sets, what it leaves alone and why, with the audit records it raises listed beside it.",
         path: "/demo/presets",
         title: "Presets"

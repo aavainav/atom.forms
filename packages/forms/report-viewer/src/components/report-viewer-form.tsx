@@ -1,7 +1,19 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo } from "react";
 import { useService } from "@common/react";
+import { EventEmitter, IEvent } from "@common/event-emitter";
 import { useAuditRecorder } from "@forms/audit";
-import { useFormController, IActor, IControllerManager, IReportData, IRuleIssue, IUserPreferences, ControllerManager, FormMode } from "@forms/core";
+import { 
+    emptyPreferences, 
+    useFormController, 
+    userPreferenceSchema, 
+    IActor, 
+    IControllerManager, 
+    IReportData, 
+    IRuleIssue, 
+    IUserPreferences, 
+    ControllerManager, 
+    FormMode 
+} from "@forms/core";
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
@@ -12,8 +24,6 @@ import { ValidationManager } from "./validation";
 import { WorkflowActions } from "./workflow";
 import { useAuditWriter } from "../hooks";
 import { IInitialForm, ILocalStorageService, IModalService, INotificationService, IReportBundle, IReportViewerDataManager, IReportViewerService } from "../services";
-
-const emptyPreferences: IUserPreferences = { violationFavorites: {} };
 
 /**
  * The imperative surface a host can reach through a ref on `ReportViewer`/`ReportViewerForm`, for the handful of
@@ -31,6 +41,9 @@ export interface IReportViewerComponent {
     getIsDirty(): boolean;
     /** Runs the form's validation rules and returns the issues found, without changing anything the user sees. */
     validate(): ReadonlyArray<IRuleIssue>;
+
+    /** Raised whenever a feature changes the current user's preferences, and once on load with the initial value. Given a `preferences` value, persisting the update is the host's own responsibility; without one, it fires alongside the default save to the browser's own storage. */
+    readonly onPreferencesChanged: IEvent<IUserPreferences>;
 }
 
 interface IReportViewerFormProps {
@@ -73,33 +86,38 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
 
     const controller = useFormController(formControllers, initialState);
 
+    const preferencesChanged = useMemo(() => new EventEmitter<IUserPreferences>("report-viewer-form:preferences-changed"), []);
+
     // what the host held for the report goes in before paint and before any writer subscribes, once for each form it
     // is given; not during render, since a mounted component subscribed to the comments would be updated mid-render
     useLayoutEffect(() => {
         reportViewerService.restoreHistory(formControllers, initialForm);
     }, [formControllers, initialForm, reportViewerService]);
 
-    // given preferences are used as-is, with no storage of our own to keep in sync -- a host that supplies its own
-    // owns however it wants a later change persisted. without one, they come from and are kept saved to this
-    // browser's own storage, so favorites (and the like) survive a reload without a host needing to do anything.
+    // handles reading preferences from a local storage and the emitting any changes so hosts can get any updates.
     useLayoutEffect(() => {
-        if (preferences) {
-            formControllers.setPreferences(preferences);
-            return;
-        }
-
         const key = `report-viewer:preferences:${user?.id ?? "anonymous"}`;
         let isCurrent = true;
 
-        localStorageService.read<IUserPreferences>(key).then(stored => {
-            if (isCurrent) {
-                formControllers.setPreferences(stored ?? emptyPreferences);
-            }
-        });
+        if (preferences) {
+            formControllers.setPreferences(preferences);
+        } else {
+            localStorageService.read(key, userPreferenceSchema).then(stored => {
+                if (isCurrent) {
+                    formControllers.setPreferences(stored ?? emptyPreferences);
+                }
+            });
+        }
 
         const listener = formControllers.onPreferencesChanged(updated => {
-            if (updated) {
-                localStorageService.write(key, updated);
+            if (!updated) {
+                return;
+            }
+
+            preferencesChanged.emit(updated);
+
+            if (!preferences) {
+                localStorageService.write(key, updated, userPreferenceSchema);
             }
         });
 
@@ -107,7 +125,7 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             isCurrent = false;
             listener.remove();
         };
-    }, [formControllers, localStorageService, preferences, user?.id]);
+    }, [formControllers, localStorageService, preferences, preferencesChanged, user?.id]);
 
     useAuditRecorder(formControllers);
 
@@ -121,8 +139,9 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
             rulesController.validate();
 
             return rulesController.getIssueCollection().getIssues();
-        }
-    }), [controller, dataManager, formControllers, reportViewerService]);
+        },
+        onPreferencesChanged: preferencesChanged.event
+    }), [controller, dataManager, formControllers, preferencesChanged, reportViewerService]);
 
     const confirmDeletePage = useCallback(() => new Promise<boolean>(resolve =>
         modalService.showConfirmModal({

@@ -18,6 +18,7 @@
     "dependencies": {
         "@common/event-emitter": "1.0.0",
         "@common/react": "1.0.0",
+        "@common/zod": "1.0.0",
         "@forms/audit": "1.0.0",
         "@forms/catalog": "1.0.0",
         "@forms/core": "1.0.0",
