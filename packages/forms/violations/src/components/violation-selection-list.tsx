@@ -7,18 +7,23 @@ import { IViolation } from "../models";
 const maxVisibleItems = 50;
 
 interface IViolationListProps {
-    /** The drag-and-drop controller belonging to the form, so a row can be dragged onto it. */
-    readonly controller: IDragAndDropController;
-    /** The violations to offer, already ordered by the search that produced them. */
-    readonly violations: ReadonlyArray<IViolation>;
     /** The codes the citation already carries; these rows are ticked and locked, and count against `maxSelected`. */
     readonly applied: ReadonlySet<string>;
-    /** The codes ticked here but not yet on the citation. */
-    readonly selected: ReadonlySet<string>;
+    /** The drag-and-drop controller belonging to the form, so a row can be dragged onto it. */
+    readonly controller: IDragAndDropController;
+    /** The codes the current user has favorited on this list. */
+    readonly favorites: ReadonlySet<string>;
     /** How many codes may be ticked at once, applied and selected together; once reached, the unticked rows stop accepting picks. */
     readonly maxSelected: number;
+    /** The codes ticked here but not yet on the citation. */
+    readonly selected: ReadonlySet<string>;
+    /** The violations to offer, already ordered by the search that produced them. */
+    readonly violations: ReadonlyArray<IViolation>;
+
     /** Invoked with the code whose ticked state changed. */
     readonly onToggle: (code: string) => void;
+    /** Invoked with the code whose favorited state changed. */
+    readonly onToggleFavorite: (code: string) => void;
 }
 
 /** Narrows the violations to those in the category, if one is chosen, and then to those matching the term. */
@@ -36,6 +41,15 @@ function filter(violations: ReadonlyArray<IViolation>, term: string, category: s
         || (violation.statute?.toLowerCase().includes(match) ?? false));
 }
 
+/** Puts a favorited violation ahead of the rest, so a long list still surfaces one quickly; order is otherwise unchanged. */
+function sortFavoritesFirst(violations: ReadonlyArray<IViolation>, favorites: ReadonlySet<string>): ReadonlyArray<IViolation> {
+    if (favorites.size === 0) {
+        return violations;
+    }
+
+    return [...violations].sort((a, b) => Number(favorites.has(b.code)) - Number(favorites.has(a.code)));
+}
+
 /** The distinct categories the given violations are filed under, alphabetically. */
 function toCategories(violations: ReadonlyArray<IViolation>): Array<string> {
     const distinct = new Set<string>();
@@ -50,13 +64,15 @@ function toCategories(violations: ReadonlyArray<IViolation>): Array<string> {
 }
 
 /** Renders the searchable list of violations, each row tickable and draggable. */
-export function ViolationSelectionList({ controller, violations, applied, selected, maxSelected, onToggle }: IViolationListProps): React.JSX.Element {
+export function ViolationSelectionList({ applied, controller, favorites, maxSelected, selected, violations, onToggle, onToggleFavorite }: IViolationListProps): React.JSX.Element {
     const [searchTerm, setSearchTerm] = useState("");
     const [category, setCategory] = useState("");
 
     const categories = useMemo(() => toCategories(violations), [violations]);
 
-    const matches = useMemo(() => filter(violations, searchTerm, category), [violations, searchTerm, category]);
+    const matches = useMemo(
+        () => sortFavoritesFirst(filter(violations, searchTerm, category), favorites),
+        [violations, searchTerm, category, favorites]);
     const visible = matches.slice(0, maxVisibleItems);
     const isSelectionFull = applied.size + selected.size >= maxSelected;
 
@@ -133,7 +149,17 @@ export function ViolationSelectionList({ controller, violations, applied, select
                                     disabled={isApplied || (isSelectionFull && !isChecked)}
                                     onChange={() => onToggle(violation.code)}>
                                     <div className="ms-2">
-                                        <div className="fw-bold">{violation.statute ?? violation.code}</div>
+                                        <div className="d-flex align-items-center justify-content-between">
+                                            <div className="fw-bold">{violation.statute ?? violation.code}</div>
+                                            <i
+                                                id={`violation-favorite-${violation.code}`}
+                                                className={`bi ${favorites.has(violation.code) ? "bi-star-fill" : "bi-star"} text-warning`}
+                                                style={{ cursor: "pointer" }}
+                                                role="button"
+                                                aria-label={favorites.has(violation.code) ? "Remove from favorites" : "Add to favorites"}
+                                                onClick={(event) => { event.preventDefault(); event.stopPropagation(); onToggleFavorite(violation.code); }}
+                                            />
+                                        </div>
                                         <div className="small text-muted">{violation.description}</div>
                                         {isApplied && <div className="small fst-italic">On the citation</div>}
                                         {/* the category is shown only while it is not what narrowed the list, since

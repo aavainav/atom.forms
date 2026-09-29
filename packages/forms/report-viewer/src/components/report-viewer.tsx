@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react";
 import { useService } from "@common/react";
-import { IActor, IFormIdentity, IReportData, FAsyncLoader, FLoadingIndicator, FormMode } from "@forms/core";
+import { IActor, IFormIdentity, IReportData, IUserPreferences, FAsyncLoader, FLoadingIndicator, FormMode } from "@forms/core";
 
 import { IReportViewerComponent, ReportViewerForm } from "./report-viewer-form";
 import { IInitialForm, IReportViewerDataManager, IReportViewerService } from "../services";
@@ -11,6 +11,8 @@ import "@forms/core/theme/_main.scss";
 export interface IReportViewerSettings {
     /** How the form's fields and editing affordances behave. Defaults to "editable". */
     readonly mode?: FormMode;
+    /** The current user's own settings -- favorites, and the like. Without one, they're loaded from and saved to the browser's own storage, keyed by `user`'s id. Given one, it is used as-is and never written back here -- persisting a later change is the host's own responsibility. */
+    readonly preferences?: IUserPreferences;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
     /** Who is using the report: the audit records and the review comments are attributed to them. A reviewable form without one shows its comments but cannot add any. */
@@ -55,6 +57,7 @@ function ReportViewerInner<TData extends object = IReportData>(
                         initialForm={initialForm}
                         dataManager={dataManager}
                         mode={settings?.mode ?? "editable"}
+                        preferences={settings?.preferences}
                         showOptions={settings?.showOptions}
                         user={settings?.user}
                     />

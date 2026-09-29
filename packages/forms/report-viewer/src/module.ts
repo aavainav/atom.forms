@@ -8,6 +8,7 @@ import { WorkflowModule } from "@forms/workflow";
 import { IModule, IModuleConfigurator, IServiceRegistration, SingletonServiceFactory } from "@shrub/core";
 
 import {
+    ILocalStorageService,
     IModalService,
     INotificationService,
     IPresetSelectorService,
@@ -17,6 +18,7 @@ import {
     IReviewService,
     IThemeService,
     IValidationService,
+    LocalStorageService,
     ModalService,
     NotificationService,
     PresetSelectorService,
@@ -41,6 +43,7 @@ export class ReportViewerModule implements IModule {
     readonly dependencies = [AuditModule, FormCatalogModule, ValueListsModule, ViolationsModule, PrintingModule, WorkflowModule];
 
     configureServices(registration: IServiceRegistration): void {
+        registration.register<ILocalStorageService, LocalStorageService>(ILocalStorageService, LocalStorageService);
         registration.register<IModalService, ModalService>(IModalService, ModalService);
         registration.register<INotificationService, NotificationService>(INotificationService, NotificationService);
         registration.register<IPresetSelectorService, PresetSelectorService>(IPresetSelectorService, PresetSelectorService);

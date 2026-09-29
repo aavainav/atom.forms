@@ -5,7 +5,7 @@ import { ServicesContext } from "@common/react";
 import { AuditService, IAuditService, getAuditController } from "@forms/audit";
 import type { AuditRecord } from "@forms/audit";
 import { ControllerManager } from "@forms/core";
-import type { IActor, FormMode, FormModel, FormStatus } from "@forms/core";
+import type { IActor, FormMode, FormModel, FormStatus, IUserPreferences } from "@forms/core";
 import { getReviewController } from "@forms/review";
 import type { IReviewComment } from "@forms/review";
 import { IWorkflowService, WorkflowService } from "@forms/workflow";
@@ -13,6 +13,7 @@ import type { IServiceCollection } from "@shrub/core";
 
 import { ReportViewerForm } from "../../src/components/report-viewer-form";
 import type { IReportViewerComponent } from "../../src/components/report-viewer-form";
+import { ILocalStorageService, LocalStorageService } from "../../src/services/local-storage";
 import { IModalService, ModalService } from "../../src/services/modal";
 import { INotificationService, NotificationService } from "../../src/services/notification";
 import { IReportViewerService, ReportViewerService } from "../../src/services/report-viewer";
@@ -60,6 +61,7 @@ interface IMountOptions {
     readonly mode?: FormMode;
     /** An option to register, which is rendered when the options bar is shown. */
     readonly option?: IReportViewerOption;
+    readonly preferences?: IUserPreferences;
     readonly showOptions?: boolean;
     /** Where the report stands, which is what a reviewer's comments depend on: draft when omitted. */
     readonly status?: FormStatus;
@@ -78,6 +80,7 @@ function mount(options: IMountOptions = {}) {
 
     const registry = new Map<unknown, unknown>([
         [IAuditService, new AuditService()],
+        [ILocalStorageService, new LocalStorageService()],
         [IModalService, new ModalService()],
         [INotificationService, new NotificationService()],
         [IReportViewerService, reportViewerService],
@@ -108,6 +111,7 @@ function mount(options: IMountOptions = {}) {
             dataManager: options.dataManager as IReportViewerDataManager<any>,
             initialForm: form,
             mode,
+            preferences: options.preferences,
             showOptions: options.showOptions,
             user: options.user
         }));
@@ -130,6 +134,7 @@ async function settle(): Promise<void> {
 afterEach(() => {
     mounted.splice(0).forEach(unmount => unmount());
     document.body.innerHTML = "";
+    localStorage.clear();
 });
 
 describe("ReportViewerForm", () => {
@@ -311,6 +316,57 @@ describe("ReportViewerForm", () => {
         it("lets a reviewer comment only while the report is in review", () => {
             expect(mount({ mode: "reviewable", status: "draft", user: rivera }).review.canComment).toBe(false);
             expect(mount({ mode: "reviewable", status: "rejected", user: rivera }).review.canComment).toBe(false);
+        });
+    });
+
+    describe("preferences", () => {
+        it("starts empty when nothing is stored and none is given", async () => {
+            const { controllers } = mount({ user: rivera });
+            await settle();
+
+            expect(controllers.preferences).toEqual({ violationFavorites: {} });
+        });
+
+        it("loads what is stored for the user, keyed by their id", async () => {
+            const stored: IUserPreferences = { violationFavorites: { "sc-s438:violation": ["56-05-2930(A)"] } };
+            localStorage.setItem(`report-viewer:preferences:${rivera.id}`, JSON.stringify(stored));
+
+            const { controllers } = mount({ user: rivera });
+            await settle();
+
+            expect(controllers.preferences).toEqual(stored);
+        });
+
+        it("keeps a given value as-is, without reading from storage", async () => {
+            localStorage.setItem(`report-viewer:preferences:${rivera.id}`, JSON.stringify({ violationFavorites: { stored: ["X"] } }));
+            const given: IUserPreferences = { violationFavorites: { given: ["Y"] } };
+
+            const { controllers } = mount({ user: rivera, preferences: given });
+            await settle();
+
+            expect(controllers.preferences).toEqual(given);
+        });
+
+        it("persists a later change when none was given", async () => {
+            const { controllers } = mount({ user: rivera });
+            await settle();
+
+            const updated: IUserPreferences = { violationFavorites: { "sc-s438:violation": ["56-05-1520(G)(4)"] } };
+            act(() => controllers.setPreferences(updated));
+            await settle();
+
+            expect(JSON.parse(localStorage.getItem(`report-viewer:preferences:${rivera.id}`)!)).toEqual(updated);
+        });
+
+        it("does not persist a later change back to storage when one was given", async () => {
+            const given: IUserPreferences = { violationFavorites: {} };
+            const { controllers } = mount({ user: rivera, preferences: given });
+            await settle();
+
+            act(() => controllers.setPreferences({ violationFavorites: { "sc-s438:violation": ["56-05-1520(G)(4)"] } }));
+            await settle();
+
+            expect(localStorage.getItem(`report-viewer:preferences:${rivera.id}`)).toBeNull();
         });
     });
 

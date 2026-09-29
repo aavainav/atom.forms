@@ -41,6 +41,12 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
         () => new Set((binding && violations.length ? binding.getApplied(controllers, violations) : []).map(violation => violation.code)),
         [binding, controllers, violations, form]);
 
+    // `controllers.preferences` is a plain property, not something a re-render follows on its own, so the favorited
+    // codes are tracked here and updated directly by `toggleFavorite` rather than read fresh off the controllers
+    // on every render
+    const [favorites, setFavorites] = useState<ReadonlySet<string>>(
+        () => new Set(binding ? controllers.preferences?.violationFavorites[binding.listId] ?? [] : []));
+
     const close = useCallback(() => {
         setIsOpen(false);
         setSelected(new Set<string>());
@@ -90,6 +96,19 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
         });
     }, [applied]);
 
+    const toggleFavorite = useCallback((code: string) => {
+        if (!binding) {
+            return;
+        }
+
+        const current = controllers.preferences ?? { violationFavorites: {} };
+        const existing = current.violationFavorites[binding.listId] ?? [];
+        const updated = existing.includes(code) ? existing.filter(favorite => favorite !== code) : [...existing, code];
+
+        controllers.setPreferences({ ...current, violationFavorites: { ...current.violationFavorites, [binding.listId]: updated } });
+        setFavorites(new Set(updated));
+    }, [binding, controllers]);
+
     const add = async (): Promise<void> => {
         if (!binding) {
             return;
@@ -129,12 +148,14 @@ export function ViolationsPanel({ catalogItem, controllers, onError }: IViolatio
             <FOffCanvas.Header borderVisibility="visible" onClose={close}><h5>Violations</h5></FOffCanvas.Header>
             <FOffCanvas.Body>
                 <ViolationSelectionList
-                    controller={controllers.getDragAndDropController()}
-                    violations={violations}
                     applied={applied}
-                    selected={selected}
+                    controller={controllers.getDragAndDropController()}
+                    favorites={favorites}
                     maxSelected={maxSelectedViolations}
+                    selected={selected}
+                    violations={violations}
                     onToggle={toggle}
+                    onToggleFavorite={toggleFavorite}
                 />
             </FOffCanvas.Body>
             <div className="f-offcanvas__footer d-flex align-items-center justify-content-between border-top p-3">

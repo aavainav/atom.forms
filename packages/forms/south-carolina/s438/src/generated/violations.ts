@@ -13,11 +13,6 @@ import type { ViolationRow } from "@forms/violations";
  * registers over `sc-s438:violation`, which replaces this outright.
  */
 export const violations: ReadonlyArray<ViolationRow> = [
-    ["00-00-0000", "Criminal offenses under magistrate jurisdiction only (use only where no specific code)", "Miscellaneous", "00-00-0000"],
-    ["00-00-0000", "Traffic offenses under magistrate jurisdiction only (use only where no specific code)", "Miscellaneous", "00-00-0000"],
-    ["00-00-0000", "Violation of city ordinance (use state code if possible)", "Municipal", "00-00-0000"],
-    ["00-00-0000", "Violation of city traffic ordinance (use state code if possible)", "Municipal", "00-00-0000"],
-    ["00-00-0000", "Temporary offense", "Temporary", "00-00-0000"],
     ["01-01-0980", "Failure to comply with state personnel data reporting requirements", "Reporting", "01-01-0980"],
     ["01-07-0400", "Circuit solicitors disabled by intoxication", "Solicitor", "01-07-0400"],
     ["01-11-0026(A)", "Misuse of funds from the local government division", "Public", "01-11-0026(A)"],

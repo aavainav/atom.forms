@@ -1,9 +1,4 @@
 [
-    { "code": "00-00-0000", "category": "Miscellaneous", "statute": "00-00-0000", "description": "Criminal offenses under magistrate jurisdiction only (use only where no specific code)" },
-    { "code": "00-00-0000", "category": "Miscellaneous", "statute": "00-00-0000", "description": "Traffic offenses under magistrate jurisdiction only (use only where no specific code)" },
-    { "code": "00-00-0000", "category": "Municipal", "statute": "00-00-0000", "description": "Violation of city ordinance (use state code if possible)" },
-    { "code": "00-00-0000", "category": "Municipal", "statute": "00-00-0000", "description": "Violation of city traffic ordinance (use state code if possible)" },
-    { "code": "00-00-0000", "category": "Temporary", "statute": "00-00-0000", "description": "Temporary offense" },
     { "code": "01-01-0980", "category": "Reporting", "statute": "01-01-0980", "description": "Failure to comply with state personnel data reporting requirements" },
     { "code": "01-07-0400", "category": "Solicitor", "statute": "01-07-0400", "description": "Circuit solicitors disabled by intoxication" },
     { "code": "01-11-0026(A)", "category": "Public", "statute": "01-11-0026(A)", "description": "Misuse of funds from the local government division" },

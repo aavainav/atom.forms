@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo } from "react";
 import { useService } from "@common/react";
 import { useAuditRecorder } from "@forms/audit";
-import { useFormController, IActor, IControllerManager, IReportData, IRuleIssue, ControllerManager, FormMode } from "@forms/core";
+import { useFormController, IActor, IControllerManager, IReportData, IRuleIssue, IUserPreferences, ControllerManager, FormMode } from "@forms/core";
 
 import { ModalManager } from "./modal";
 import { NotificationManager } from "./notification";
@@ -11,7 +11,9 @@ import { ReviewManager } from "./review";
 import { ValidationManager } from "./validation";
 import { WorkflowActions } from "./workflow";
 import { useAuditWriter } from "../hooks";
-import { IInitialForm, IModalService, INotificationService, IReportBundle, IReportViewerDataManager, IReportViewerService } from "../services";
+import { IInitialForm, ILocalStorageService, IModalService, INotificationService, IReportBundle, IReportViewerDataManager, IReportViewerService } from "../services";
+
+const emptyPreferences: IUserPreferences = { violationFavorites: {} };
 
 /**
  * The imperative surface a host can reach through a ref on `ReportViewer`/`ReportViewerForm`, for the handful of
@@ -40,6 +42,8 @@ interface IReportViewerFormProps {
     readonly initialForm: IInitialForm;
     /** The mode with which the form is being viewed in. */
     readonly mode: FormMode;
+    /** The current user's own settings. Without one, they're loaded from and saved to the browser's own storage, keyed by `user`'s id. Given one, it is used as-is and never written back here -- persisting a later change is the host's own responsibility. */
+    readonly preferences?: IUserPreferences;
     /** Whether the options bar is rendered beneath the form. */
     readonly showOptions?: boolean;
     /** Who is using the report: the audit records and the review comments are attributed to them. A reviewable form without one shows its comments but cannot add any. */
@@ -51,7 +55,8 @@ interface IReportViewerFormProps {
  * loading the form itself; a host needing shared controllers or a mutation of the loaded model calls
  * `IReportViewerService.loadForm` and renders this directly, so both paths wire a form up identically.
  */
-export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, showOptions, user }, ref) {
+export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewerFormProps>(function ReportViewerForm({ controllers, initialForm, dataManager, mode, preferences, showOptions, user }, ref) {
+    const localStorageService = useService<ILocalStorageService>(ILocalStorageService);
     const modalService = useService<IModalService>(IModalService);
     const notificationService = useService<INotificationService>(INotificationService);
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
@@ -73,6 +78,36 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
     useLayoutEffect(() => {
         reportViewerService.restoreHistory(formControllers, initialForm);
     }, [formControllers, initialForm, reportViewerService]);
+
+    // given preferences are used as-is, with no storage of our own to keep in sync -- a host that supplies its own
+    // owns however it wants a later change persisted. without one, they come from and are kept saved to this
+    // browser's own storage, so favorites (and the like) survive a reload without a host needing to do anything.
+    useLayoutEffect(() => {
+        if (preferences) {
+            formControllers.setPreferences(preferences);
+            return;
+        }
+
+        const key = `report-viewer:preferences:${user?.id ?? "anonymous"}`;
+        let isCurrent = true;
+
+        localStorageService.read<IUserPreferences>(key).then(stored => {
+            if (isCurrent) {
+                formControllers.setPreferences(stored ?? emptyPreferences);
+            }
+        });
+
+        const listener = formControllers.onPreferencesChanged(updated => {
+            if (updated) {
+                localStorageService.write(key, updated);
+            }
+        });
+
+        return () => {
+            isCurrent = false;
+            listener.remove();
+        };
+    }, [formControllers, localStorageService, preferences, user?.id]);
 
     useAuditRecorder(formControllers);
 

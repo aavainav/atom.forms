@@ -11,6 +11,7 @@ import { IPrintController } from "./print-controller";
 import { IActor } from "../models/actor";
 import { FormModel } from "../models/form";
 import { FormArrival } from "../models/form-arrival";
+import { IUserPreferences } from "../models/user-preferences";
 import { RuleCollection } from "../models/validation/rule-collection";
 import { IRulesController, RulesController } from "../models/validation/rules-controller";
 
@@ -42,6 +43,10 @@ export interface IControllerManager {
     readonly onControllerChanged: IEvent<IControllerChangedEventArgs>;
     /** Raised when a manager that was closed is shown again, as when the browser restores its page from the cache. */
     readonly onOpened: IEvent<void>;
+    /** Raised whenever `setPreferences` is called, with the value it was set to. `@forms/report-viewer` listens for this to persist a change, so a caller past that point never has to reach for storage itself. */
+    readonly onPreferencesChanged: IEvent<IUserPreferences | undefined>;
+    /** The current user's own settings, carried across every report they open. `@forms/report-viewer` resolves it (from a host's own store, or its own default) and sets it before a form is loaded. */
+    readonly preferences: IUserPreferences | undefined;
     /** Who is using the report, as the host said, or undefined when it did not. Controllers read it when they act, so set it before a form is loaded for what the load records to carry it. */
     readonly user: IActor | undefined;
 
@@ -82,6 +87,8 @@ export interface IControllerManager {
     retain(): void;
     /** Sets how the form about to be shown arrived. */
     setArrival(arrival: FormArrival | undefined): void;
+    /** Sets the current user's own settings. */
+    setPreferences(preferences: IUserPreferences | undefined): void;
     /** Sets who is using the report. */
     setUser(user: IActor | undefined): void;
 
@@ -98,9 +105,11 @@ export class ControllerManager implements IControllerManager {
     private readonly attachments = new Map<string, () => void>();
     private readonly controllers: Map<string, [IController, IEventListener]> = new Map<string, [IController, IEventListener]>();
     private readonly _opened = new EventEmitter<void>("controller-manager:opened");
+    private readonly _preferencesChanged = new EventEmitter<IUserPreferences | undefined>("controller-manager:preferences-changed");
     private isClosed = false;
     private retained = 0;
     private _arrival?: FormArrival;
+    private _preferences?: IUserPreferences;
     private _user?: IActor;
 
     get arrival(): FormArrival | undefined {
@@ -121,6 +130,14 @@ export class ControllerManager implements IControllerManager {
 
     get onOpened(): IEvent<void> {
         return this._opened.event;
+    }
+
+    get onPreferencesChanged(): IEvent<IUserPreferences | undefined> {
+        return this._preferencesChanged.event;
+    }
+
+    get preferences(): IUserPreferences | undefined {
+        return this._preferences;
     }
 
     get user(): IActor | undefined {
@@ -261,6 +278,11 @@ export class ControllerManager implements IControllerManager {
 
     public setArrival(arrival: FormArrival | undefined): void {
         this._arrival = arrival;
+    }
+
+    public setPreferences(preferences: IUserPreferences | undefined): void {
+        this._preferences = preferences;
+        this._preferencesChanged.emit(preferences);
     }
 
     public setUser(user: IActor | undefined): void {
