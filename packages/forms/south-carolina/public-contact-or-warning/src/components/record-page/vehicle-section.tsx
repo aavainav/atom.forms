@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, FBorder, FFieldCheckbox, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection, setOptionWithDependents } from "@forms/core";
+import { setOptionWithDependents, ISectionBinding, FBorder, FCheckboxField, FFormStackPanel, FNumberField, FSection, FSelectField, FTextField } from "@forms/core";
 
 import { VehicleSectionModel } from "../../models/record-page/vehicle-section";
 import { IPublicContactOrWarningService } from "../../services";
@@ -14,13 +14,7 @@ interface IVehicleSectionProps {
 export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Element => {
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
-
-    const licenseNumber = section.getLicenseNumber();
-    const state = section.getState();
-    const make = section.getMake();
     const model = section.getModel();
-    const year = section.getYear();
-    const cmv = section.getCmv();
 
     const loadStateOptions = useCallback(() => publicContactOrWarningService.getStateOptions(), [publicContactOrWarningService]);
     const loadMakeOptions = useCallback(() => publicContactOrWarningService.getVehicleMakeOptions(), [publicContactOrWarningService]);
@@ -29,7 +23,7 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
     // dependency is the `parentValue` handed to the model select below: the chosen make's code reaches the loader
     // as its argument and goes into the select's cache key, so the loader is not rebuilt when the make changes
     // and no field has to carry any notion of another field.
-    const makeCode = make.getValue().value;
+    const makeCode = section.getMake().getValue().value;
     const loadModelOptions = useCallback(
         (parentValue?: string) => publicContactOrWarningService.getVehicleModelOptions(parentValue ?? ""),
         [publicContactOrWarningService]);
@@ -41,77 +35,35 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
     return (
         <FSection>
             <FFormStackPanel direction="horizontal" height={44}>
-                <FFieldControl borderEdges={["top"]} label={licenseNumber.label} labelFor={licenseNumber.id} width={173}>
-                    <FFieldInput
-                        id={licenseNumber.id}
-                        disabled={!licenseNumber.getIsEnabled()}
-                        invalid={licenseNumber.getHasError()}
-                        value={licenseNumber.getValue()}
-                        onChange={(value) => binding.setValue(section.licenseNumber, value)}
-                    />
-                </FFieldControl>
-                <FFieldControl borderEdges={["left", "top"]} label={state.label} labelFor={state.id} width={85}>
-                    <FFieldSelect
-                        id={state.id}
-                        disabled={!state.getIsEnabled()}
-                        format="valueOnly"
-                        invalid={state.getHasError()}
-                        options={loadStateOptions}
-                        searchable
-                        value={state.getValue()}
-                        onChange={(value) => binding.setValue(section.state, value as IOptionValue)}
-                    />
-                </FFieldControl>
-                <FFieldControl borderEdges={["left", "top"]} label={make.label} labelFor={make.id} width={150}>
-                    <FFieldSelect
-                        id={make.id}
-                        disabled={!make.getIsEnabled()}
-                        format="valueOnly"
-                        invalid={make.getHasError()}
-                        options={loadMakeOptions}
-                        searchable
-                        value={make.getValue()}
-                        onChange={(value) => setMake(value as IOptionValue)}
-                    />
-                </FFieldControl>
-                <FFieldControl borderEdges={["left", "top"]} label={year.label} labelFor={year.id} width={65}>
-                    <FFieldInput
-                        id={year.id}
-                        disabled={!year.getIsEnabled()}
-                        invalid={year.getHasError()}
-                        value={year.getValue()}
-                        onChange={(value) => binding.setValue(section.year, value === "" ? null : Number(value))}
-                    />
-                </FFieldControl>
+                <FTextField field={section.getLicenseNumber()} borderEdges={["top"]} width={173} onChange={(value) => binding.setValue(section.licenseNumber, value)} />
+                <FSelectField
+                    field={section.getState()}
+                    load={loadStateOptions}
+                    borderEdges={["left", "top"]}
+                    format="valueOnly"
+                    width={85}
+                    onChange={(value) => binding.setValue(section.state, value)}
+                />
+                <FSelectField field={section.getMake()} load={loadMakeOptions} borderEdges={["left", "top"]} format="valueOnly" width={150} onChange={setMake} />
+                <FNumberField field={section.getYear()} borderEdges={["left", "top"]} width={65} onChange={(value) => binding.setValue(section.year, value)} />
                 <FBorder borderEdges={["left", "top"]} contentJustify="center" height={44} width={115}>
-                    <FFieldCheckbox
-                        id={cmv.id}
-                        checked={cmv.getValue() as boolean}
-                        disabled={!cmv.getIsEnabled()}
-                        invalid={cmv.getHasError()}
-                        label={cmv.label}
-                        onChange={(checked) => binding.setValue(section.cmv, checked)}
-                    />
+                    <FCheckboxField field={section.getCmv()} onChange={(checked) => binding.setValue(section.cmv, checked)} />
                 </FBorder>
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal" height={44}>
-                <FFieldControl borderEdges={["top"]} label={model.label} labelFor={model.id} width={588}>
-                    <FFieldSelect
-                        id={model.id}
-                        // a model only means anything underneath a make, so the field stays shut until one is
-                        // chosen - which also keeps the model list from being fetched at all until then
-                        disabled={!makeCode || !model.getIsEnabled()}
-                        format="descriptionOnly"
-                        invalid={model.getHasError()}
-                        options={loadModelOptions}
-                        parentValue={makeCode}
-                        placeholder={makeCode ? "Select..." : "Select a make first"}
-                        showPlaceholderWhenDisabled={model.getIsEnabled()}
-                        searchable
-                        value={model.getValue()}
-                        onChange={(value) => binding.setValue(section.model, value as IOptionValue)}
-                    />
-                </FFieldControl>
+                <FSelectField
+                    field={model}
+                    load={loadModelOptions}
+                    borderEdges={["top"]}
+                    // a model only means anything underneath a make, so the field stays shut until one is
+                    // chosen - which also keeps the model list from being fetched at all until then
+                    disabled={!makeCode}
+                    parentValue={makeCode}
+                    placeholder={makeCode ? "Select..." : "Select a make first"}
+                    showPlaceholderWhenDisabled={model.getIsEnabled()}
+                    width={588}
+                    onChange={(value) => binding.setValue(section.model, value)}
+                />
             </FFormStackPanel>
         </FSection>
     );

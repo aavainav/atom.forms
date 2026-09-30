@@ -20,7 +20,9 @@ record-page  9 sections: agency, person, route, stop, vehicle, officer,
 ```
 
 11 section components for 9 sections — `person-race-section.tsx` and `latitude-longitude-section.tsx` both bind to
-the **person** section, splitting it visually to match the printed form.
+the **person** section, splitting it visually to match the printed form. Every box is drawn with the core field
+wrappers (`FTextField`, `FNumberField`, `FSelectField`, `FCheckboxField`) at pixel widths. Component tests live in
+`test/components/record-page/`, one per section, mounted with `test/fixtures/mount.ts`, which stubs the service.
 
 2 dropzones: `RecordPagePersonDropzone`, `RecordPageVehicleDropzone`.
 
@@ -59,7 +61,7 @@ Also drawn from `@forms/value-lists`: `ValueListId.state`, `vehicleMake`, `vehic
 The one dependent select on this form, and the whole of the dependency is two lines:
 
 - **UI** ([components/record-page/vehicle-section.tsx](src/components/record-page/vehicle-section.tsx)): the model
-  `FFieldSelect` gets `parentValue={make.getValue().value}`, which reaches the loader as its argument and joins the
+  `FSelectField` gets `parentValue={makeCode}`, which reaches the loader as its argument and joins the
   cache key. No field carries any notion of another field.
 - **Clearing**: `setOptionWithDependents(binding, section.make, [section.model])` moves both in one update, so the
   record is never momentarily holding a model belonging to a make it no longer has.

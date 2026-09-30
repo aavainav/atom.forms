@@ -1,5 +1,5 @@
 import React from "react";
-import { ISectionBinding, FBorder, FFieldControl, FFieldInput, FFormStackPanel, FSection, FLabel } from "@forms/core";
+import { ISectionBinding, FBorder, FFormStackPanel, FLabel, FSection, FTextField } from "@forms/core";
 
 import { PersonSectionModel } from "../../models/record-page/person-section";
 
@@ -11,8 +11,6 @@ interface ILatitudeLongitudeSectionProps {
 /** Defines the latitude/longitude section of the public contact/warning record. */
 export const LatitudeLongitudeSection = ({ binding }: ILatitudeLongitudeSectionProps): React.JSX.Element => {
     const section = binding.get();
-    const latitude = section.getLatitude();
-    const longitude = section.getLongitude();
 
     return (
         <FSection>
@@ -21,31 +19,27 @@ export const LatitudeLongitudeSection = ({ binding }: ILatitudeLongitudeSectionP
                     <FBorder borderEdges={["left", "top"]} height={22} width={100}>
                         <FLabel fontSize="6" textAlignment="center">LATITUDE</FLabel>
                     </FBorder>
-                    <FFieldControl borderEdges={["left", "top"]} height={22} label={latitude.label} labelFor={latitude.id} width={107}>
-                        <FFieldInput
-                            id={latitude.id}
-                            disabled={!latitude.getIsEnabled()}
-                            invalid={latitude.getHasError()}
-                            padding={{ start: 5, top: 0, end: 0, bottom: 0 }}
-                            value={latitude.getValue()}
-                            onChange={(value) => binding.setValue(section.latitude, value)}
-                        />
-                    </FFieldControl>
+                    <FTextField
+                        field={section.getLatitude()}
+                        borderEdges={["left", "top"]}
+                        height={22}
+                        inputPadding={{ start: 5, top: 0, end: 0, bottom: 0 }}
+                        width={107}
+                        onChange={(value) => binding.setValue(section.latitude, value)}
+                    />
                 </FFormStackPanel>
                 <FFormStackPanel direction="horizontal">
                     <FBorder borderEdges={["left", "top"]} height={22} width={100}>
                         <FLabel fontSize="6" textAlignment="center">LONGITUDE</FLabel>
                     </FBorder>
-                    <FFieldControl borderEdges={["left", "top"]} height={22} label={longitude.label} labelFor={longitude.id} width={107}>
-                        <FFieldInput
-                            id={longitude.id}
-                            disabled={!longitude.getIsEnabled()}
-                            invalid={longitude.getHasError()}
-                            padding={{ start: 5, top: 0, end: 0, bottom: 0 }}
-                            value={longitude.getValue()}
-                            onChange={(value) => binding.setValue(section.longitude, value)}
-                        />
-                    </FFieldControl>
+                    <FTextField
+                        field={section.getLongitude()}
+                        borderEdges={["left", "top"]}
+                        height={22}
+                        inputPadding={{ start: 5, top: 0, end: 0, bottom: 0 }}
+                        width={107}
+                        onChange={(value) => binding.setValue(section.longitude, value)}
+                    />
                 </FFormStackPanel>
             </FFormStackPanel>
         </FSection>

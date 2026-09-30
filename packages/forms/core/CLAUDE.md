@@ -342,12 +342,16 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.
 - `src/components/fields/` holds `FTextField`, `FNumberField`, `FSelectField` and `FCheckboxField` (a tick box with
-  its label beside it, taking an optional `label` override rather than `showLabel`) -- one file each -- the compound
+  its label beside it, taking an optional `label` override rather than `showLabel`, and `type="radio"` for one of a set)
+  -- one file each -- the compound
   boxes bound directly to a field model (`field.label`/`getIsEnabled()`/`getHasError()`/`getValue()`/`id` read
   straight off it, `FFieldControl` and the raw control wired together underneath) rather than a caller wiring
   `FFieldControl` and `FFieldInput`/`FFieldSelect` by hand. Each takes `showLabel` (default true) so a caller can
   suppress the label for a row inside a table that prints its column labels once, in a header row above it, instead
-  of on every row. Every form package used to hand-roll this pairing, or keep a near-duplicate `TextBox`/`NumberBox`/
+  of on every row. `FTextField` and `FSelectField` also take `border` (for a borderless box) and `inputPadding`, and
+  `FTextField` `inputMargin`, which style the control inside the box rather than the box itself. Both take
+  `disabled`, which closes the box on top of the field's own enabled state; `FSelectField` takes
+  `placeholder`, `showPlaceholderWhenDisabled` and `searchable` (true by default). Every form package used to hand-roll this pairing, or keep a near-duplicate `TextBox`/`NumberBox`/
   `SelectBox` trio in its own `fields.tsx` -- these three are that pairing, generalized. A form-specific name or
   default (TR-310's `CodeBox`, pinned to a 44px width and `valueOnly` format; ok-traffic's `YesNoBox`, pinned to its
   Y/N list) stays local as a thin wrapper over `FSelectField` rather than moving here.

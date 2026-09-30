@@ -37,6 +37,27 @@ describe("FSelectField", () => {
         expect(render({ field: field.setValue(alpha) })).toContain("Alpha");
     });
 
+    it("shows its placeholder while nothing is chosen", () => {
+        expect(render({ placeholder: "Select a make first" })).toContain("Select a make first");
+    });
+
+    it("keeps its placeholder while disabled only when told to", () => {
+        const closed = field.setIsEnabled(false);
+
+        expect(render({ field: closed, placeholder: "Select a make first" })).not.toContain("Select a make first");
+        expect(render({ field: closed, placeholder: "Select a make first", showPlaceholderWhenDisabled: true })).toContain("Select a make first");
+    });
+
+    it("offers a search box by default, and none when told not to", () => {
+        expect(render()).toContain("f-field-select__search");
+        expect(render({ searchable: false })).not.toContain("f-field-select__search");
+    });
+
+    it("hides the box's border when told to", () => {
+        expect(render({ border: "hidden" })).toContain("f-field-control position-relative border-dark border-0");
+        expect(render()).not.toContain("f-field-control position-relative border-dark border-0");
+    });
+
     it("shows just the value when told to", () => {
         const markup = render({ field: field.setValue(alpha), format: "valueOnly" });
 

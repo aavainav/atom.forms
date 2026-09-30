@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { useService } from "@common/react";
-import { IOptionValue, ISectionBinding, FFieldControl, FFieldInput, FFieldSelect, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FSection, FSelectField, FTextField } from "@forms/core";
 
 import { AgencySectionModel } from "../../models/record-page/agency-section";
 import { IPublicContactOrWarningService } from "../../services";
@@ -15,10 +15,6 @@ export const AgencySection = ({ binding }: IAgencySectionProps): React.JSX.Eleme
     const section = binding.get();
     const publicContactOrWarningService = useService<IPublicContactOrWarningService>(IPublicContactOrWarningService);
 
-    const agencyName = section.getAgencyName();
-    const city = section.getCity();
-    const county = section.getCounty();
-
     const loadCountyOptions = useCallback(() => publicContactOrWarningService.getCountyOptions(), [publicContactOrWarningService]);
 
     return (
@@ -28,39 +24,27 @@ export const AgencySection = ({ binding }: IAgencySectionProps): React.JSX.Eleme
                 <h4 className="fw-bold mb-0">PUBLIC CONTACT / WARNING</h4>
             </div>
             <FFormStackPanel direction="horizontal">
-                <FFieldControl border="hidden" label={agencyName.label} labelFor={agencyName.id} width={350}>
-                    <FFieldInput
-                        id={agencyName.id}
-                        disabled={!agencyName.getIsEnabled()}
-                        invalid={agencyName.getHasError()}
-                        value={agencyName.getValue()}
-                        onChange={(value) => binding.setValue(section.agencyName, value)}
-                    />
-                </FFieldControl>
+                <FTextField field={section.getAgencyName()} border="hidden" width={350} onChange={(value) => binding.setValue(section.agencyName, value)} />
                 <FFormStackPanel direction="vertical">
-                    <FFieldControl border="hidden" height={20} label={city.label} labelFor={city.id} width={200}>
-                        <FFieldInput
-                            id={city.id}
-                            disabled={!city.getIsEnabled()}
-                            invalid={city.getHasError()}
-                            margin={{ start: 40 }}
-                            padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
-                            value={city.getValue()}
-                            onChange={(value) => binding.setValue(section.city, value)}
-                        />
-                    </FFieldControl>
-                    <FFieldControl border="hidden" height={20} label={county.label} labelFor={county.id} width={240}>
-                        <FFieldSelect
-                            id={county.id}
-                            disabled={!county.getIsEnabled()}
-                            format="descriptionOnly"
-                            invalid={county.getHasError()}
-                            options={loadCountyOptions}
-                            padding={{ start: 0, top: 0, end: 0, bottom: 0 }}
-                            value={county.getValue()}
-                            onChange={(value) => binding.setValue(section.county, value as IOptionValue)}
-                        />
-                    </FFieldControl>
+                    <FTextField
+                        field={section.getCity()}
+                        border="hidden"
+                        height={20}
+                        inputMargin={{ start: 40 }}
+                        inputPadding={0}
+                        width={200}
+                        onChange={(value) => binding.setValue(section.city, value)}
+                    />
+                    <FSelectField
+                        field={section.getCounty()}
+                        load={loadCountyOptions}
+                        border="hidden"
+                        height={20}
+                        inputPadding={0}
+                        searchable={false}
+                        width={240}
+                        onChange={(value) => binding.setValue(section.county, value)}
+                    />
                 </FFormStackPanel>
             </FFormStackPanel>
         </FSection>

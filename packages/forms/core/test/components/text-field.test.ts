@@ -39,6 +39,24 @@ describe("FTextField", () => {
         expect(render({ showLabel: false })).not.toContain("<label");
     });
 
+    it("closes the box when told to, on top of whatever the field itself says", () => {
+        expect(render({ disabled: true })).toContain("disabled=\"\"");
+        expect(render()).not.toContain("disabled=\"\"");
+    });
+
+    /** The input itself is always borderless, so it is the box around it that is checked. */
+    it("hides the box's border when told to", () => {
+        expect(render({ border: "hidden" })).toContain("f-field-control position-relative border-dark border-0");
+        expect(render()).not.toContain("f-field-control position-relative border-dark border-0");
+    });
+
+    it("applies the input's own padding and margin", () => {
+        const markup = render({ inputMargin: { start: 40 }, inputPadding: 0 });
+
+        expect(markup).toContain("margin-inline-start:40px");
+        expect(markup).toContain("padding-inline-start:0");
+    });
+
     it("is identified by the field's own id", () => {
         expect(render()).toContain(`id="${field.id}"`);
         expect(render()).toContain(`for="${field.id}"`);

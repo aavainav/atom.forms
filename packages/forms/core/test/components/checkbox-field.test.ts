@@ -28,6 +28,11 @@ describe("FCheckboxField", () => {
         expect(render()).not.toContain("checked=\"\"");
     });
 
+    it("draws a checkbox by default, and a radio button when told to", () => {
+        expect(render()).toContain("type=\"checkbox\"");
+        expect(render({ type: "radio" })).toContain("type=\"radio\"");
+    });
+
     it("reflects the field's enabled and error state", () => {
         const markup = render({ field: field.setIsEnabled(false).setHasError(true) });
 
