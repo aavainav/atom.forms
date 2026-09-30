@@ -147,6 +147,6 @@ export interface IPublicContactOrWarningData {
     readonly vehicleModel?: IOptionValue;
     /** The state that licensed the vehicle, as a code and its name; required. */
     readonly vehicleState?: IOptionValue;
-    /** The model year of the vehicle; required. An unanswered year is left absent rather than reported as 0. */
-    readonly vehicleYear?: number;
+    /** The model year of the vehicle; required. An unanswered year is null. */
+    readonly vehicleYear?: number | null;
 }

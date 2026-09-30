@@ -23,7 +23,7 @@ export const HeaderSection = ({ binding }: IHeaderSectionProps): React.JSX.Eleme
                 <TextField field={section.getPageNumber()} width={60} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.pageNumber, value)} />
                 <TextField field={section.getPageCount()} width={60} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.pageCount, value)} />
                 <TextField field={section.getVersion()} width={60} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.version, value)} />
-                <TextField field={section.getUnitCount()} width={80} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.unitCount, Number(value))} />
+                <TextField field={section.getUnitCount()} width={80} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.unitCount, value === "" ? null : Number(value))} />
                 <TextField field={section.getCrashReportNumber()} width={220} borderEdges={["top", "left", "right"]} onChange={(value) => binding.setValue(section.crashReportNumber, value)} />
             </FFormStackPanel>
             <FFormStackPanel height={44} direction="horizontal">

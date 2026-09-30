@@ -43,7 +43,7 @@ export interface IGAUTCViolationData {
     /** Section II - the "Patrol Vehicle" half of the clocked-by pair. */
     readonly violationClockedByPatrolVehicle?: boolean;
     /** Section II - "MPH", the speed the violator was clocked at. */
-    readonly violationClockedSpeed?: number;
+    readonly violationClockedSpeed?: number | null;
     /** Section II - "Driver Requested Accuracy Check". */
     readonly violationDriverRequestedAccuracyCheck?: boolean;
     /** Section II - the "Laser" speed detection box. */
@@ -53,7 +53,7 @@ export interface IGAUTCViolationData {
     /** Section II - "Serial #" of the speed detection device. */
     readonly violationSerialNumber?: string;
     /** Section II - "Zone", the posted speed limit. */
-    readonly violationSpeedZone?: number;
+    readonly violationSpeedZone?: number | null;
     /** Section II - "2-Lane Road". */
     readonly violationTwoLaneRoad?: boolean;
     /** Section II - the "VASCAR" speed detection box. */
@@ -335,8 +335,8 @@ export interface IGAUTCData extends IGAUTCViolationData {
     readonly vehicleRegistrationState?: IOptionValue;
     /** Section I - the last two digits of the registration "Yr.". */
     readonly vehicleRegistrationYear?: string;
-    /** Section I - "Veh. Yr.". An unanswered year is left absent rather than reported as 0. */
-    readonly vehicleYear?: number;
+    /** Section I - "Veh. Yr.". An unanswered year is null. */
+    readonly vehicleYear?: number | null;
     /** Section I - the violator's "Current Address". */
     readonly violatorAddress?: string;
     /** Section I - the violator's "Apt.". */
@@ -377,8 +377,8 @@ export interface IGAUTCData extends IGAUTCViolationData {
     readonly violatorState?: IOptionValue;
     /** Section I - the violator's "(Suffix)", the second half of the printed last name box. */
     readonly violatorSuffix?: string;
-    /** Section I - the violator's "Weight" in lbs. An unanswered weight is left absent rather than reported as 0. */
-    readonly violatorWeight?: number;
+    /** Section I - the violator's "Weight" in lbs. An unanswered weight is null. */
+    readonly violatorWeight?: number | null;
     /** Section I - the violator's "Zip Code". */
     readonly violatorZipCode?: string;
 }

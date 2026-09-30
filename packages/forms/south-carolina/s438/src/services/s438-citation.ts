@@ -172,7 +172,7 @@ export class S438CitationService implements IS438CitationService {
                 const updated = section
                     .set(section.sectionNumber, lock(section.getSectionNumber().setValue(violation.statute ?? violation.code)))
                     .set(section.description, lock(section.getDescription().setValue(violation.description)))
-                    .set(section.scPoints, lock(section.getScPoints().setValue(violation.points ?? 0)))
+                    .set(section.scPoints, lock(section.getScPoints().setValue(violation.points ?? null)))
                     .set(section.courtAppearanceRequiredYes, lock(section.getCourtAppearanceRequiredYes().setValue(violation.requiresCourtAppearance === true)))
                     .set(section.courtAppearanceRequiredNo, lock(section.getCourtAppearanceRequiredNo().setValue(violation.requiresCourtAppearance === false)))
                     .set(section.dateOfViolation, section.getDateOfViolation().setValue(date))

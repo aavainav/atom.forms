@@ -78,11 +78,15 @@ describe("FormMapper", () => {
             expect("offenseDescription" in data).toBe(true);
         });
 
-        it("reports an untouched number field as zero rather than omitting it", () => {
-            expect(mapper.extract(form).fineAmount).toBe(0);
+        it("reports an untouched number field as null rather than omitting it", () => {
+            expect(mapper.extract(form).fineAmount).toBeNull();
         });
 
-        it("includes a number field once it holds a non-zero value", () => {
+        it("reports a real zero as zero, not as unanswered", () => {
+            expect(mapper.extract(setFieldValue(form, chargeSection, chargeFields.fineAmount, 0)).fineAmount).toBe(0);
+        });
+
+        it("includes a number field once it holds a value", () => {
             expect(mapper.extract(setFieldValue(form, chargeSection, chargeFields.fineAmount, 250)).fineAmount).toBe(250);
         });
 

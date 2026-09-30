@@ -41,10 +41,10 @@ function text(field: StringFieldModel): string {
 }
 
 /** Reads a number field as the single value it holds, for the same reason `text` does. */
-function count(field: NumberFieldModel): number {
+function count(field: NumberFieldModel): number | null {
     const value = field.getValue();
 
-    return Array.isArray(value) ? value[0] ?? 0 : value;
+    return Array.isArray(value) ? value[0] ?? null : value;
 }
 
 /** Represents the model for the South Carolina TR-310 traffic collision report. */

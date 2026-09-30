@@ -37,7 +37,7 @@ export const PaymentSection = ({ binding }: IPaymentSectionProps): React.JSX.Ele
                         disabled={!amountDue.getIsEnabled()}
                         invalid={amountDue.getHasError()}
                         value={amountDue.getValue()}
-                        onChange={(value) => binding.setValue(section.amountDue, Number(value))}
+                        onChange={(value) => binding.setValue(section.amountDue, value === "" ? null : Number(value))}
                     />
                 </FFieldControl>
             </FFormStackPanel>
@@ -60,7 +60,7 @@ export const PaymentSection = ({ binding }: IPaymentSectionProps): React.JSX.Ele
                         disabled={!increasedAmountDue.getIsEnabled()}
                         invalid={increasedAmountDue.getHasError()}
                         value={increasedAmountDue.getValue()}
-                        onChange={(value) => binding.setValue(section.increasedAmountDue, Number(value))}
+                        onChange={(value) => binding.setValue(section.increasedAmountDue, value === "" ? null : Number(value))}
                     />
                 </FFieldControl>
             </FFormStackPanel>

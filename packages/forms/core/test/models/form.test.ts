@@ -52,7 +52,7 @@ describe("FormModel", () => {
 
         it("creates every field on every section, at its type's default", () => {
             expect(getFieldValue(form, violatorSection, violatorFields.firstName).getValue()).toBe("");
-            expect(getFieldValue(form, chargeSection, chargeFields.fineAmount).getValue()).toBe(0);
+            expect(getFieldValue(form, chargeSection, chargeFields.fineAmount).getValue()).toBeNull();
         });
     });
 

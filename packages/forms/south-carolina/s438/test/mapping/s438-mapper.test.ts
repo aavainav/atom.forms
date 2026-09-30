@@ -238,7 +238,7 @@ describe("S438Mapper", () => {
             const extracted = mapper.extract(form);
 
             expect(extracted.violatorFirstName).toBe("");
-            expect(extracted.vehicleYear).toBe(0);
+            expect(extracted.vehicleYear).toBeNull();
         });
 
         /** A form the officer has not touched still carries the date and time of violation it stamped on itself. */
@@ -254,12 +254,12 @@ describe("S438Mapper", () => {
             expect(mapper.extract(form).footerTicketNumber).toBe("");
         });
 
-        /** An unanswered number field holds 0, and extract now reports that rather than omitting the key. */
-        it("reports an unanswered number as zero rather than omitting it", async () => {
+        /** An unanswered number field holds null, and extract reports that rather than omitting the key. */
+        it("reports an unanswered number as null rather than omitting it", async () => {
             const populated = await mapper.populate(form, { data: { violatorFirstName: "Dana" } });
 
-            expect(mapper.extract(populated).vehicleYear).toBe(0);
-            expect(mapper.extract(populated).violatorWeight).toBe(0);
+            expect(mapper.extract(populated).vehicleYear).toBeNull();
+            expect(mapper.extract(populated).violatorWeight).toBeNull();
         });
 
         it("reports no additional violations for a single-page citation", () => {

@@ -8,7 +8,7 @@ export interface IOptionValue {
     readonly description: string;
 }
 
-export type TValueType = string | number | boolean | string[] | number[] | boolean[] | IOptionValue;
+export type TValueType = string | number | boolean | string[] | number[] | boolean[] | IOptionValue | null;
 
 /** Describes the raw shape of a field, as provided to a `FieldModel` constructor. */
 export interface IField {

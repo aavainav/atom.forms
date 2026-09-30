@@ -154,12 +154,12 @@ describe("OKTrafficMapper", () => {
             expect(extracted.violationTime).toBeTruthy();
         });
 
-        it("reports an unanswered number as zero rather than omitting it", async () => {
+        it("reports an unanswered number as null rather than omitting it", async () => {
             const extracted = mapper.extract(await mapper.populate(form, { data: { defendantFirstName: "Dana" } }));
 
-            expect(extracted.vehicleYear).toBe(0);
-            expect(extracted.descriptionWeight).toBe(0);
-            expect(extracted.violationInformationActualSpeed).toBe(0);
+            expect(extracted.vehicleYear).toBeNull();
+            expect(extracted.descriptionWeight).toBeNull();
+            expect(extracted.violationInformationActualSpeed).toBeNull();
         });
 
         it("reports an unticked checkbox as false rather than omitting it", async () => {

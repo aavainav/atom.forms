@@ -15,13 +15,13 @@ export interface IS438ViolationData {
     /** The description of the violation. */
     readonly violationDescription?: string;
     /** The South Carolina points the violation carries. */
-    readonly violationScPoints?: number;
+    readonly violationScPoints?: number | null;
     /** The section number of the violation. */
     readonly violationSectionNumber?: string;
-    /** The recorded speed, for a speeding violation. An unanswered speed is reported as 0. */
-    readonly violationSpeed?: number;
-    /** The legal speed limit, for a speeding violation. An unanswered limit is reported as 0. */
-    readonly violationSpeedLimit?: number;
+    /** The recorded speed, for a speeding violation. An unanswered speed is null. */
+    readonly violationSpeed?: number | null;
+    /** The legal speed limit, for a speeding violation. An unanswered limit is null. */
+    readonly violationSpeedLimit?: number | null;
     /** The time of the violation. */
     readonly violationTimeOfViolation?: string;
 }
@@ -143,7 +143,7 @@ export interface IS438Data {
     /** Checked when the charge convicted of is the one the ticket was written for. Recorded as answered; it does not fill the charge in. */
     readonly trialCourtInformationSameAsOriginal?: boolean;
     /** The South Carolina points the conviction carries. */
-    readonly trialCourtInformationScPoints?: number;
+    readonly trialCourtInformationScPoints?: number | null;
     /** The part of the sentence suspended. */
     readonly trialCourtInformationSuspend?: string;
     /** Checked when the case was tried by the trial judge. */
@@ -207,7 +207,7 @@ export interface IS438Data {
     /** Checked when the violator was a pedestrian, on the trial copy. */
     readonly trialVehiclePedestrian?: boolean;
     /** The model year of the vehicle, as the trial copy records it. */
-    readonly trialVehicleYear?: number;
+    readonly trialVehicleYear?: number | null;
     /** The violator's blood alcohol level, as the trial copy records it. */
     readonly trialViolationBloodAlcoholLevel?: string;
     /** Checked when no court appearance is required, on the trial copy. */
@@ -229,13 +229,13 @@ export interface IS438Data {
     /** The longitude of the violation, as the trial copy records it. */
     readonly trialViolationLocationLongitude?: string;
     /** The South Carolina points the violation carries, as the trial copy records it. */
-    readonly trialViolationScPoints?: number;
+    readonly trialViolationScPoints?: number | null;
     /** The code section number of the violation, as the trial copy records it. */
     readonly trialViolationSectionNumber?: string;
     /** The recorded speed, as the trial copy records it. */
-    readonly trialViolationSpeed?: number;
+    readonly trialViolationSpeed?: number | null;
     /** The legal speed limit, as the trial copy records it. */
-    readonly trialViolationSpeedLimit?: number;
+    readonly trialViolationSpeedLimit?: number | null;
     /** The time of the violation, as the trial copy records it. */
     readonly trialViolationTimeOfViolation?: string;
     /** The city of the violator, as the trial copy records it. */
@@ -273,7 +273,7 @@ export interface IS438Data {
     /** The violator's street address, as the trial copy records it. */
     readonly trialViolatorStreetAddress?: string;
     /** The violator's weight, as the trial copy records it. */
-    readonly trialViolatorWeight?: number;
+    readonly trialViolatorWeight?: number | null;
     /** The violator's zip code, as the trial copy records it. */
     readonly trialViolatorZipCode?: string;
     /** Checked when the vehicle is an automobile. */
@@ -300,8 +300,8 @@ export interface IS438Data {
     readonly vehicleOther?: boolean;
     /** Checked when the violator was a pedestrian rather than in a vehicle. */
     readonly vehiclePedestrian?: boolean;
-    /** The model year of the vehicle. An unanswered year is left absent rather than reported as 0. */
-    readonly vehicleYear?: number;
+    /** The model year of the vehicle. An unanswered year is null. */
+    readonly vehicleYear?: number | null;
     /** The violator's blood alcohol level. */
     readonly violationBloodAlcoholLevel?: string;
     /** Checked when no court appearance is required for the violation. */
@@ -323,13 +323,13 @@ export interface IS438Data {
     /** The longitude of the violation. */
     readonly violationLocationLongitude?: string;
     /** The South Carolina points the violation carries. */
-    readonly violationScPoints?: number;
+    readonly violationScPoints?: number | null;
     /** The code section number of the violation. The form holds one violation, so a record carrying several supplies the one it is issued for. */
     readonly violationSectionNumber?: string;
-    /** The recorded speed, for a speeding violation. An unanswered speed is reported as 0. */
-    readonly violationSpeed?: number;
-    /** The legal speed limit, for a speeding violation. An unanswered limit is reported as 0. */
-    readonly violationSpeedLimit?: number;
+    /** The recorded speed, for a speeding violation. An unanswered speed is null. */
+    readonly violationSpeed?: number | null;
+    /** The legal speed limit, for a speeding violation. An unanswered limit is null. */
+    readonly violationSpeedLimit?: number | null;
     /** The time of the violation. */
     readonly violationTimeOfViolation?: string;
     /** The city of the violator. */
@@ -367,7 +367,7 @@ export interface IS438Data {
     /** The violator's street address. */
     readonly violatorStreetAddress?: string;
     /** The violator's weight. */
-    readonly violatorWeight?: number;
+    readonly violatorWeight?: number | null;
     /** The violator's zip code; at most 5 characters. */
     readonly violatorZipCode?: string;
 }

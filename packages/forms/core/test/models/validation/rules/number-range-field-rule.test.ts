@@ -6,8 +6,8 @@ import { StringFieldModel } from "../../../../src/models/string-field";
 import { stubRuleContext } from "../../../fixtures/rule-context";
 import { chargeFields, violatorFields } from "../../../fixtures/citation-form";
 
-function amount(value: number): NumberFieldModel {
-    return new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: "" }).setValue(value);
+function amount(value: number | null): NumberFieldModel {
+    return new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: null }).setValue(value);
 }
 
 describe("NumberRangeFieldRule", () => {
@@ -29,9 +29,14 @@ describe("NumberRangeFieldRule", () => {
             .toBe("This field is not within the allowed range of values.");
     });
 
-    /** An empty value is the required rule's concern -- and for a number field, zero is empty. */
-    it("skips an empty value, which for a number field means zero", () => {
-        expect(rule.validate(stubRuleContext(amount(0)))).toHaveLength(0);
+    /** An empty value is the required rule's concern. */
+    it("skips a blank number field", () => {
+        expect(rule.validate(stubRuleContext(amount(null)))).toHaveLength(0);
+    });
+
+    /** Zero is an answer like any other, so it is held to the range. */
+    it("checks a real zero against the range", () => {
+        expect(rule.validate(stubRuleContext(amount(0)))).toHaveLength(1);
     });
 
     /** A non-numeric value is the format rule's concern. */

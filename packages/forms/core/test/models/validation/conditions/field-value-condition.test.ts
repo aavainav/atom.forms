@@ -54,12 +54,13 @@ describe("FieldValueCondition", () => {
             expect(isNotEmpty.isSatisfied(stubRuleContext(new StringFieldModel(spec)))).toBe(false);
         });
 
-        /** A number field reads zero as empty, so the condition follows the field's own rule rather than a literal. */
-        it("follows the field's own notion of empty, so zero is empty for a number", () => {
+        /** The condition follows the field's own rule rather than a literal: a blank number is empty, and a real zero is not. */
+        it("follows the field's own notion of empty, so a blank number is empty and zero is not", () => {
             const isEmpty = new FieldValueCondition(chargeFields.fineAmount, ComparisonOperator.isEmpty);
-            const amount = new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: "" });
+            const amount = new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: null });
 
-            expect(isEmpty.isSatisfied(stubRuleContext(amount.setValue(0)))).toBe(true);
+            expect(isEmpty.isSatisfied(stubRuleContext(amount))).toBe(true);
+            expect(isEmpty.isSatisfied(stubRuleContext(amount.setValue(0)))).toBe(false);
             expect(isEmpty.isSatisfied(stubRuleContext(amount.setValue(50)))).toBe(false);
         });
     });

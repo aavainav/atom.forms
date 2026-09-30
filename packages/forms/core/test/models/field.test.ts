@@ -24,13 +24,14 @@ describe("StringFieldModel", () => {
 });
 
 describe("NumberFieldModel", () => {
-    it("defaults to zero", () => {
-        expect(new NumberFieldModel(spec).getValue()).toBe(0);
+    it("defaults to null", () => {
+        expect(new NumberFieldModel(spec).getValue()).toBeNull();
     });
 
-    /** Zero counts as empty, so an untouched number field reads as unanswered rather than as a vehicle year of 0. */
-    it("counts zero as empty", () => {
-        expect(new NumberFieldModel(spec).setValue(0).getIsEmpty()).toBe(true);
+    /** Only a blank is empty, so a real answer of zero is not taken for an unanswered field. */
+    it("counts null as empty, and a real zero as an answer", () => {
+        expect(new NumberFieldModel(spec).getIsEmpty()).toBe(true);
+        expect(new NumberFieldModel(spec).setValue(0).getIsEmpty()).toBe(false);
         expect(new NumberFieldModel(spec).setValue(5).getIsEmpty()).toBe(false);
     });
 
@@ -39,8 +40,8 @@ describe("NumberFieldModel", () => {
         expect(new NumberFieldModel(spec).setValue([0]).getIsEmpty()).toBe(false);
     });
 
-    it("resets to zero", () => {
-        expect(new NumberFieldModel(spec).setValue(5).setDefaultValue().getValue()).toBe(0);
+    it("resets to null", () => {
+        expect(new NumberFieldModel(spec).setValue(5).setDefaultValue().getValue()).toBeNull();
     });
 });
 
@@ -112,7 +113,7 @@ describe("field model construction", () => {
      */
     it("discards the value it was constructed with, falling back to the type's default", () => {
         expect(new StringFieldModel({ label: "L", name: "n", value: "abc" }).getValue()).toBe("");
-        expect(new NumberFieldModel({ label: "L", name: "n", value: 42 }).getValue()).toBe(0);
+        expect(new NumberFieldModel({ label: "L", name: "n", value: 42 }).getValue()).toBeNull();
         expect(new BooleanFieldModel({ label: "L", name: "n", value: true }).getValue()).toBe(false);
         expect(new OptionFieldModel({ label: "L", name: "n", value: { value: "A", description: "Alpha" } }).getValue())
             .toEqual({ value: "", description: "" });

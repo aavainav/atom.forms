@@ -271,7 +271,7 @@ export interface ITR310UnitData {
     /** "Model", from the vehicle section of the unit page. */
     readonly vehicleModel?: IOptionValue;
     /** "# Occupants", from the vehicle section of the unit page. */
-    readonly vehicleOccupantCount?: number;
+    readonly vehicleOccupantCount?: number | null;
     /** "Expires", from the vehicle section of the unit page. */
     readonly vehiclePlateExpires?: string;
     /** "Vehicle Plate Number", from the vehicle section of the unit page. */
@@ -281,7 +281,7 @@ export interface ITR310UnitData {
     /** "Unit Status", from the vehicle section of the unit page. */
     readonly vehicleStatus?: IOptionValue;
     /** "Year", from the vehicle section of the unit page. */
-    readonly vehicleYear?: number;
+    readonly vehicleYear?: number | null;
     /** "Charge", from the violations section of the unit page. */
     readonly violationOneCharge?: string;
     /** "SC Statute Number", from the violations section of the unit page. */
@@ -410,7 +410,7 @@ export interface ITR310Data {
     /** "Roadway Cleared", from the header section of the collision page. */
     readonly headerRoadwayCleared?: string;
     /** "# of Units", from the header section of the collision page. */
-    readonly headerUnitCount?: number;
+    readonly headerUnitCount?: number | null;
     /** "Ver", from the header section of the collision page. */
     readonly headerVersion?: string;
     /** "Contributing Factor - Roadway/Environment 1", from the junction section of the collision page. */

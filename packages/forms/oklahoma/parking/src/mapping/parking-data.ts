@@ -3,11 +3,11 @@ import { IOptionValue } from "@forms/core";
 /** The violation and payment boxes belonging to one violation, differing page to page. Date, time and location are held here alongside the code since the citation prints them in the same block; a ticket run writes the same three onto every page. */
 export interface IOKParkingViolationData {
     /** "Amount Due" if paid on or before the court date, from the payment section of the citation page. */
-    readonly paymentAmountDue?: number;
+    readonly paymentAmountDue?: number | null;
     /** The date the fine must be paid on or before, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
     readonly paymentDueDate?: string;
     /** "Amount Due" once the court date has passed, from the payment section of the citation page. */
-    readonly paymentIncreasedAmountDue?: number;
+    readonly paymentIncreasedAmountDue?: number | null;
     /** The date after which the increased amount applies, from the payment section of the citation page. Held as `YYYY-MM-DD`. */
     readonly paymentIncreasedDueDate?: string;
     /** "Code", from the violation section of the citation page. */
@@ -93,7 +93,7 @@ export interface IOKParkingData extends IOKParkingViolationData {
     /** "VIN", from the vehicle detail section of the detail page. */
     readonly vehicleVin?: string;
     /** "Veh Yr", from the vehicle detail section of the detail page. */
-    readonly vehicleYear?: number;
+    readonly vehicleYear?: number | null;
     /** "APPROVED", whether a warrant was recommended, from the warrant section of the complaint page. */
     readonly warrantApproved?: boolean;
     /** "Assistant Municipal Counselor" who approved the warrant, from the warrant section of the complaint page. */

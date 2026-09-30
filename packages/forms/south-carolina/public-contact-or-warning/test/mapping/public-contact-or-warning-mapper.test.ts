@@ -129,8 +129,8 @@ describe("PublicContactOrWarningMapper", () => {
             expect(extracted.natureSpeeding).toBe(false);
         });
 
-        it("reports an unanswered number as zero rather than omitting it", async () => {
-            expect(mapper.extract(await mapper.populate(form, { data: { personFirstName: "Dana" } })).vehicleYear).toBe(0);
+        it("reports an unanswered number as null rather than omitting it", async () => {
+            expect(mapper.extract(await mapper.populate(form, { data: { personFirstName: "Dana" } })).vehicleYear).toBeNull();
         });
 
         it("reports an unticked checkbox as false rather than omitting it", async () => {

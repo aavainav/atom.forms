@@ -52,7 +52,7 @@ export const VehicleDetailSection = ({ binding }: IVehicleDetailSectionProps): R
                         disabled={!year.getIsEnabled()}
                         invalid={year.getHasError()}
                         value={year.getValue()}
-                        onChange={(value) => binding.setValue(section.year, Number(value))}
+                        onChange={(value) => binding.setValue(section.year, value === "" ? null : Number(value))}
                     />
                 </FFieldControl>
                 <FFieldControl width={160} label={type.label} labelFor={type.id} borderEdges={["left", "top"]}>

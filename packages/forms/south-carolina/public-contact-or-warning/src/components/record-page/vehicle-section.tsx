@@ -80,7 +80,7 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
                         disabled={!year.getIsEnabled()}
                         invalid={year.getHasError()}
                         value={year.getValue()}
-                        onChange={(value) => binding.setValue(section.year, Number(value))}
+                        onChange={(value) => binding.setValue(section.year, value === "" ? null : Number(value))}
                     />
                 </FFieldControl>
                 <FBorder borderEdges={["left", "top"]} contentJustify="center" height={44} width={115}>

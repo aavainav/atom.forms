@@ -258,12 +258,12 @@ describe("GAUTCMapper", () => {
             });
         });
 
-        it("reports an unanswered number as zero rather than omitting it", async () => {
+        it("reports an unanswered number as null rather than omitting it", async () => {
             const extracted = mapper.extract(await mapper.populate(form, { data: { violatorFirstName: "Dana" } }));
 
-            expect(extracted.vehicleYear).toBe(0);
-            expect(extracted.violatorWeight).toBe(0);
-            expect(extracted.violationClockedSpeed).toBe(0);
+            expect(extracted.vehicleYear).toBeNull();
+            expect(extracted.violatorWeight).toBeNull();
+            expect(extracted.violationClockedSpeed).toBeNull();
         });
 
         /** This form answers with rows of checkboxes rather than coded boxes, so every one reports its own state. */

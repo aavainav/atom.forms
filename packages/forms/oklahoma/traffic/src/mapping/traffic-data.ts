@@ -3,7 +3,7 @@ import { IOptionValue } from "@forms/core";
 /** The violation, offense and violation-information boxes belonging to one charge, differing page to page. Date, time, county and location are held here alongside the codes since the citation prints them in the same block. */
 export interface IOKTrafficViolationData {
     /** "Amount Due", from the offense section of the complaint page. */
-    readonly offenseAmountDue?: number;
+    readonly offenseAmountDue?: number | null;
     /** "Amount Due If Paid On or Before", from the offense section of the complaint page. Held as `YYYY-MM-DD`. */
     readonly offenseDueDate?: string;
     /** "Offense Notes", from the offense section of the complaint page. */
@@ -15,7 +15,7 @@ export interface IOKTrafficViolationData {
     /** "On (date)", from the violation section of the complaint page. Held as `YYYY-MM-DD`. */
     readonly violationDate?: string;
     /** "Actual Spd", from the violation information section of the complaint page. */
-    readonly violationInformationActualSpeed?: number;
+    readonly violationInformationActualSpeed?: number | null;
     /** "HFS", from the violation information section of the complaint page. */
     readonly violationInformationHighFatalitySpeed?: IOptionValue;
     /** "Incident #", from the violation information section of the complaint page. */
@@ -27,7 +27,7 @@ export interface IOKTrafficViolationData {
     /** "Spd Det", from the violation information section of the complaint page. */
     readonly violationInformationSpeedDetection?: string;
     /** "Limit", from the violation information section of the complaint page. */
-    readonly violationInformationSpeedLimit?: number;
+    readonly violationInformationSpeedLimit?: number | null;
     /** "Is Block", from the violation section of the complaint page. */
     readonly violationIsBlock?: IOptionValue;
     /** "At or near (Location)", from the violation section of the complaint page. */
@@ -85,7 +85,7 @@ export interface IOKTrafficData extends IOKTrafficViolationData {
     /** "SEX", from the description section of the complaint page. */
     readonly descriptionSex?: IOptionValue;
     /** "WT" in pounds, from the description section of the complaint page. */
-    readonly descriptionWeight?: number;
+    readonly descriptionWeight?: number | null;
     /** "Citation Number" printed at the head of the complaint page. */
     readonly headerCitationNumber?: string;
     /** "CLASS", from the driver license section of the complaint page. */
@@ -187,7 +187,7 @@ export interface IOKTrafficData extends IOKTrafficViolationData {
     /** "VIN", from the vehicle section of the complaint page. */
     readonly vehicleVin?: string;
     /** "YR", from the vehicle section of the complaint page. */
-    readonly vehicleYear?: number;
+    readonly vehicleYear?: number | null;
     /** "APPROVED", whether a warrant was recommended, from the warrant section of the warrant page. */
     readonly warrantApproved?: boolean;
     /** "Assistant Municipal Counselor" who approved the warrant, from the warrant section of the warrant page. */

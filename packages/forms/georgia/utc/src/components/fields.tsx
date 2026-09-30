@@ -62,10 +62,10 @@ interface INumberBoxProps {
     /** Exact width in pixels. */
     readonly width?: number;
 
-    onChange: (value: number) => void;
+    onChange: (value: number | null) => void;
 }
 
-/** One of the citation's numeric boxes. The input hands back a string, so the value is converted on the way out. */
+/** One of the citation's numeric boxes. The input hands back a string, so the value is converted on the way out -- a cleared box to null. */
 export const NumberBox = ({ field, borderEdges, label, width, onChange }: INumberBoxProps): React.JSX.Element => (
     <FFieldControl width={width} label={label ?? field.label} labelFor={field.id} borderEdges={borderEdges}>
         <FFieldInput
@@ -74,7 +74,7 @@ export const NumberBox = ({ field, borderEdges, label, width, onChange }: INumbe
             disabled={!field.getIsEnabled()}
             invalid={field.getHasError()}
             value={field.getValue()}
-            onChange={(value) => onChange(Number(value))}
+            onChange={(value) => onChange(value === "" ? null : Number(value))}
         />
     </FFieldControl>
 );

@@ -98,11 +98,11 @@ describe("OKParkingMapper", () => {
             expect(extracted.violationTime).toBeTruthy();
         });
 
-        it("reports an unanswered number as zero rather than omitting it", async () => {
+        it("reports an unanswered number as null rather than omitting it", async () => {
             const extracted = mapper.extract(await mapper.populate(form, { data: { ownerFirstName: "Dana" } }));
 
-            expect(extracted.vehicleYear).toBe(0);
-            expect(extracted.paymentAmountDue).toBe(0);
+            expect(extracted.vehicleYear).toBeNull();
+            expect(extracted.paymentAmountDue).toBeNull();
         });
 
         it("reports an unticked checkbox as false rather than omitting it", async () => {

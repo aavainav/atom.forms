@@ -32,7 +32,7 @@ interface IUnit {
     readonly ownerZip?: string;
     readonly vehicleMake?: string;
     readonly vehicleModel?: string;
-    readonly vehicleYear?: number;
+    readonly vehicleYear?: number | null;
     readonly vehicleColor?: string; 
     readonly passengers: IPassenger[];
     readonly additionalProperties?: AdditionalProperties;

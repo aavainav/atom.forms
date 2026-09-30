@@ -83,7 +83,7 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
                     borderEdges={["top", "left"]}
                     onChange={(value) => binding.setValue(section.hitAndRun, value)}
                 />
-                <TextField field={section.getYear()} width={80} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.year, Number(value))} />
+                <TextField field={section.getYear()} width={80} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.year, value === "" ? null : Number(value))} />
                 <FFieldControl width={170} label={make.label} labelFor={make.id} borderEdges={["top", "left"]}>
                     <FFieldSelect
                         id={make.id}
@@ -114,7 +114,7 @@ export const VehicleSection = ({ binding }: IVehicleSectionProps): React.JSX.Ele
                     />
                 </FFieldControl>
                 <TextField field={section.getBodyType()} width={120} borderEdges={["top", "left"]} onChange={(value) => binding.setValue(section.bodyType, value)} />
-                <TextField field={section.getOccupantCount()} width={110} borderEdges={["top", "left", "right"]} onChange={(value) => binding.setValue(section.occupantCount, Number(value))} />
+                <TextField field={section.getOccupantCount()} width={110} borderEdges={["top", "left", "right"]} onChange={(value) => binding.setValue(section.occupantCount, value === "" ? null : Number(value))} />
             </FFormStackPanel>
         </FSection>
     );

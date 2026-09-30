@@ -37,11 +37,12 @@ describe("RequiredFieldRule", () => {
         expect(issues[0].severity).toBe(RuleIssueSeverity.warning);
     });
 
-    /** A number field reads zero as empty, so an untouched one is reported rather than passing as a valid 0. */
-    it("reports an untouched number field, since zero reads as empty", () => {
-        const field = new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: "" });
+    /** An untouched number field is blank, so it is reported; a real answer of zero is not. */
+    it("reports an untouched number field, and accepts a real zero", () => {
+        const field = new NumberFieldModel({ label: "Fine amount", name: "fine-amount", value: null });
 
         expect(new RequiredFieldRule(chargeFields.fineAmount).validate(stubRuleContext(field))).toHaveLength(1);
+        expect(new RequiredFieldRule(chargeFields.fineAmount).validate(stubRuleContext(field.setValue(0)))).toHaveLength(0);
         expect(new RequiredFieldRule(chargeFields.fineAmount).validate(stubRuleContext(field.setValue(50)))).toHaveLength(0);
     });
 

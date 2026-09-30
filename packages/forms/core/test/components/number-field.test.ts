@@ -21,7 +21,7 @@ function type(input: HTMLInputElement, value: string): void {
 
 describe("FNumberField", () => {
     type Props = Parameters<typeof FNumberField>[0];
-    const field = new NumberFieldModel({ label: "Weight", name: "weight", value: 0 });
+    const field = new NumberFieldModel({ label: "Weight", name: "weight", value: null });
     const render = (props: Partial<Props> = {}): string => renderToStaticMarkup(createElement(FNumberField, { field, onChange: () => {}, ...props }));
 
     it("shows the field's own label by default", () => {
@@ -48,6 +48,22 @@ describe("FNumberField", () => {
         type(container.querySelector("input")!, "42");
 
         expect(onChange).toHaveBeenCalledWith(42);
+        act(() => root.unmount());
+    });
+
+    it("shows a blank box for an unanswered field", () => {
+        expect(render()).toContain("value=\"\"");
+    });
+
+    it("hands back null when the box is cleared", () => {
+        const onChange = vi.fn();
+        const container = document.createElement("div");
+        const root = createRoot(container);
+
+        act(() => root.render(createElement(FNumberField, { field: field.setValue(42), onChange })));
+        type(container.querySelector("input")!, "");
+
+        expect(onChange).toHaveBeenCalledWith(null);
         act(() => root.unmount());
     });
 });

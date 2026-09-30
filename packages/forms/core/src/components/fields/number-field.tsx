@@ -16,10 +16,10 @@ interface IFNumberFieldProps {
     /** Exact width in pixels. */
     readonly width?: number;
 
-    onChange: (value: number) => void;
+    onChange: (value: number | null) => void;
 }
 
-/** A numeric write-in box bound directly to a field model. The input hands back a string, so the value is converted on the way out. */
+/** A numeric write-in box bound directly to a field model. The input hands back a string, so the value is converted on the way out -- a cleared box to null. */
 export default function FNumberField({ field, borderEdges, label, showLabel = true, width, onChange }: IFNumberFieldProps): React.JSX.Element {
     return (
         <FFieldControl width={width} label={showLabel ? (label ?? field.label) : undefined} labelFor={field.id} borderEdges={borderEdges}>
@@ -28,8 +28,8 @@ export default function FNumberField({ field, borderEdges, label, showLabel = tr
                 type="number"
                 disabled={!field.getIsEnabled()}
                 invalid={field.getHasError()}
-                value={field.getValue()}
-                onChange={(value) => onChange(Number(value))}
+                value={field.getValue() ?? ""}
+                onChange={(value) => onChange(value === "" ? null : Number(value))}
             />
         </FFieldControl>
     );
