@@ -254,6 +254,8 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "violationDescription", section.getDescription());
         this.read(data, "violationScPoints", section.getScPoints());
         this.read(data, "violationSectionNumber", section.getSectionNumber());
+        this.read(data, "violationSpeed", section.getSpeed());
+        this.read(data, "violationSpeedLimit", section.getSpeedLimit());
         this.read(data, "violationTimeOfViolation", section.getTimeOfViolation());
     }
 
@@ -279,6 +281,8 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         updated = this.write(updated, section.description, data, "violationDescription");
         updated = this.write(updated, section.scPoints, data, "violationScPoints");
         updated = this.write(updated, section.sectionNumber, data, "violationSectionNumber");
+        updated = this.write(updated, section.speed, data, "violationSpeed");
+        updated = this.write(updated, section.speedLimit, data, "violationSpeedLimit");
 
         return this.write(updated, section.timeOfViolation, data, "violationTimeOfViolation");
     }
@@ -466,6 +470,8 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "trialViolationDescription", section.getDescription());
         this.read(data, "trialViolationScPoints", section.getScPoints());
         this.read(data, "trialViolationSectionNumber", section.getSectionNumber());
+        this.read(data, "trialViolationSpeed", section.getSpeed());
+        this.read(data, "trialViolationSpeedLimit", section.getSpeedLimit());
         this.read(data, "trialViolationTimeOfViolation", section.getTimeOfViolation());
     }
 
@@ -477,6 +483,8 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         updated = this.write(updated, section.description, data, "trialViolationDescription", readOnlyFields);
         updated = this.write(updated, section.scPoints, data, "trialViolationScPoints", readOnlyFields);
         updated = this.write(updated, section.sectionNumber, data, "trialViolationSectionNumber", readOnlyFields);
+        updated = this.write(updated, section.speed, data, "trialViolationSpeed", readOnlyFields);
+        updated = this.write(updated, section.speedLimit, data, "trialViolationSpeedLimit", readOnlyFields);
 
         return this.write(updated, section.timeOfViolation, data, "trialViolationTimeOfViolation", readOnlyFields);
     }

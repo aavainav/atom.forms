@@ -14,7 +14,7 @@ export { FFieldControl } from "./components/field-control";
 
 export { FFieldSelect } from "./components/field-select";
 export { FFieldTextArea } from "./components/field-textarea";
-export { FNumberField, FSelectField, FTextField } from "./components/fields";
+export { FCheckboxField, FNumberField, FSelectField, FTextField } from "./components/fields";
 
 export { FForm } from "./components/form";
 export { FFieldInput } from "./components/field-input";
@@ -105,7 +105,7 @@ export type { IFormDefinition, FormDefinitionConstructor } from "./models/form-d
 
 export type { ICondition, Condition } from "./models/validation/condition";
 export type { IFieldRule, FieldRule } from "./models/validation/field-rule";
-export type { IRule, Rule } from "./models/validation/rule";
+export type { IRule } from "./models/validation/rule";
 export type { IRuleContext } from "./models/validation/rule-context";
 export type { IRuleIssue } from "./models/validation/rule-issue";
 export type { ICompositeCondition } from "./models/validation/conditions/composite-condition";
@@ -202,12 +202,13 @@ export { Schema } from "./models/schema";
 export { defineFields, DefinitionFactory } from "./models/definition-factory";
 
 export { LogicalOperator } from "./models/validation/logical-operator";
+export { Rule } from "./models/validation/rule";
 export { RuleCollection } from "./models/validation/rule-collection";
 export { RuleContext } from "./models/validation/rule-context";
 export { RuleIssueSeverity } from "./models/validation/rule-issue";
 export { RuleIssueCollection } from "./models/validation/rule-issue-collection";
 export type { IRulesController } from "./models/validation/rules-controller";
-export { RulesController } from "./models/validation/rules-controller";
+export { RegisterRule, RulesController } from "./models/validation/rules-controller";
 
 export { CompositeCondition } from "./models/validation/conditions/composite-condition";
 export { ComparisonOperator, FieldValueCondition } from "./models/validation/conditions/field-value-condition";

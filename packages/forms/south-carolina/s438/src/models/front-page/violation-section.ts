@@ -19,6 +19,8 @@ export class ViolationSectionModel extends SectionModel implements IViolationSec
     public readonly timeOfViolation: FieldDefinition<StringFieldModel> = this.schema.violationFields.violationTimeOfViolation;
     public readonly scPoints: FieldDefinition<NumberFieldModel> = this.schema.violationFields.violationScPoints;
     public readonly bloodAlcoholLevel: FieldDefinition<StringFieldModel> = this.schema.violationFields.violationBloodAlcoholLevel;
+    public readonly speed: FieldDefinition<NumberFieldModel> = this.schema.violationFields.violationSpeed;
+    public readonly speedLimit: FieldDefinition<NumberFieldModel> = this.schema.violationFields.violationSpeedLimit;
 
     public getSectionNumber(): StringFieldModel { return this.get<StringFieldModel>(this.sectionNumber); }
     public getDescription(): StringFieldModel { return this.get<StringFieldModel>(this.description); }
@@ -28,4 +30,6 @@ export class ViolationSectionModel extends SectionModel implements IViolationSec
     public getTimeOfViolation(): StringFieldModel { return this.get<StringFieldModel>(this.timeOfViolation); }
     public getScPoints(): NumberFieldModel { return this.get<NumberFieldModel>(this.scPoints); }
     public getBloodAlcoholLevel(): StringFieldModel { return this.get<StringFieldModel>(this.bloodAlcoholLevel); }
+    public getSpeed(): NumberFieldModel { return this.get<NumberFieldModel>(this.speed); }
+    public getSpeedLimit(): NumberFieldModel { return this.get<NumberFieldModel>(this.speedLimit); }
 }

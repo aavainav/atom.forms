@@ -23,6 +23,8 @@ const violation: Required<IS438ViolationData> = {
     violationDescription: "Failure to yield",
     violationScPoints: 4,
     violationSectionNumber: "56-5-2930",
+    violationSpeed: 45,
+    violationSpeedLimit: 35,
     violationTimeOfViolation: "14:05"
 };
 
@@ -129,6 +131,8 @@ const data: Required<IS438Data> = {
     trialViolationLocationLongitude: "-81.2362",
     trialViolationScPoints: 3,
     trialViolationSectionNumber: "56-5-1520",
+    trialViolationSpeed: 65,
+    trialViolationSpeedLimit: 55,
     trialViolationTimeOfViolation: "08:15",
     trialViolatorCity: "Lexington",
     trialViolatorCommercialDriverLicenseNo: true,
@@ -174,6 +178,8 @@ const data: Required<IS438Data> = {
     violationLocationLongitude: "-81.0348",
     violationScPoints: 2,
     violationSectionNumber: "56-5-1520",
+    violationSpeed: 70,
+    violationSpeedLimit: 55,
     violationTimeOfViolation: "13:42",
     violatorCity: "Columbia",
     violatorCommercialDriverLicenseNo: true,

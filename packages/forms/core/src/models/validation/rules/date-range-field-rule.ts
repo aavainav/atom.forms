@@ -1,5 +1,5 @@
-import type { FieldModel, TValueType } from "../../field";
-import type { FieldDefinition } from "../../field-definition";
+import { FieldModel, TValueType } from "../../field";
+import { FieldDefinition } from "../../field-definition";
 import { FieldRule, IFieldRule } from "../field-rule";
 import { RegisterRule } from "../rules-controller";
 import { IRuleIssue, RuleIssueSeverity } from "../rule-issue";
@@ -12,6 +12,8 @@ export interface IDateRange {
     readonly maximum?: Date;
     /** Whether the field may not hold a date later than the day validation runs. */
     readonly notInFuture?: boolean;
+    /** Whether the field must hold a date later than the day validation runs; today itself is refused. */
+    readonly inFuture?: boolean;
 }
 
 /** Defines a validation rule that enforces a range of allowed dates on a field's value. */
@@ -36,6 +38,11 @@ export class DateRangeFieldRule extends FieldRule implements IDateRangeFieldRule
     /** Creates a rule that rejects a date later than the day validation runs. */
     public static notInFuture(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleIssueSeverity): DateRangeFieldRule {
         return new DateRangeFieldRule(fieldDefinition, { notInFuture: true }, message, severity);
+    }
+
+    /** Creates a rule that rejects any date that is not later than the day validation runs. */
+    public static inFuture(fieldDefinition: FieldDefinition<FieldModel<TValueType>>, message?: string, severity?: RuleIssueSeverity): DateRangeFieldRule {
+        return new DateRangeFieldRule(fieldDefinition, { inFuture: true }, message, severity);
     }
 
     /** Creates a rule that rejects a date earlier than the given minimum. */
@@ -70,24 +77,34 @@ export class DateRangeFieldRule extends FieldRule implements IDateRangeFieldRule
             return true;
         }
 
-        return this.range.notInFuture === true && value.getTime() > DateRangeFieldRule.getToday().getTime();
+        const today = DateRangeFieldRule.getToday().getTime();
+
+        if (this.range.notInFuture === true && value.getTime() > today) {
+            return true;
+        }
+
+        return this.range.inFuture === true && value.getTime() <= today;
     }
 
     /**
-     * Parses a `YYYY-MM-DD` value at UTC midnight, returning undefined when the value is not a real date.
+     * Parses a `YYYY-MM-DD` or `MM/DD/YYYY` value at UTC midnight, returning undefined when the value is not a real
+     * date. The two cannot be mistaken for each other, so a form storing either needs no setting to say which.
      *
      * The parts are compared back against the parsed date because `Date.UTC` silently rolls over out-of-range
      * values, which would otherwise turn 2026-02-31 into 2026-03-03 and validate it.
      */
     private parseDate(value: string): Date | undefined {
-        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-        if (!match) {
+        const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        const us = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+        const parts = iso ? { year: iso[1], month: iso[2], day: iso[3] } : us ? { year: us[3], month: us[1], day: us[2] } : undefined;
+
+        if (!parts) {
             return undefined;
         }
 
-        const year = Number(match[1]);
-        const month = Number(match[2]);
-        const day = Number(match[3]);
+        const year = Number(parts.year);
+        const month = Number(parts.month);
+        const day = Number(parts.day);
 
         const date = new Date(Date.UTC(year, month - 1, day));
         const isRealDate = date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;

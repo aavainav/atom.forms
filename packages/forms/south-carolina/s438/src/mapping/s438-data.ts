@@ -18,6 +18,10 @@ export interface IS438ViolationData {
     readonly violationScPoints?: number;
     /** The section number of the violation. */
     readonly violationSectionNumber?: string;
+    /** The recorded speed, for a speeding violation. An unanswered speed is reported as 0. */
+    readonly violationSpeed?: number;
+    /** The legal speed limit, for a speeding violation. An unanswered limit is reported as 0. */
+    readonly violationSpeedLimit?: number;
     /** The time of the violation. */
     readonly violationTimeOfViolation?: string;
 }
@@ -228,6 +232,10 @@ export interface IS438Data {
     readonly trialViolationScPoints?: number;
     /** The code section number of the violation, as the trial copy records it. */
     readonly trialViolationSectionNumber?: string;
+    /** The recorded speed, as the trial copy records it. */
+    readonly trialViolationSpeed?: number;
+    /** The legal speed limit, as the trial copy records it. */
+    readonly trialViolationSpeedLimit?: number;
     /** The time of the violation, as the trial copy records it. */
     readonly trialViolationTimeOfViolation?: string;
     /** The city of the violator, as the trial copy records it. */
@@ -318,6 +326,10 @@ export interface IS438Data {
     readonly violationScPoints?: number;
     /** The code section number of the violation. The form holds one violation, so a record carrying several supplies the one it is issued for. */
     readonly violationSectionNumber?: string;
+    /** The recorded speed, for a speeding violation. An unanswered speed is reported as 0. */
+    readonly violationSpeed?: number;
+    /** The legal speed limit, for a speeding violation. An unanswered limit is reported as 0. */
+    readonly violationSpeedLimit?: number;
     /** The time of the violation. */
     readonly violationTimeOfViolation?: string;
     /** The city of the violator. */

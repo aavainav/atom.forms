@@ -1,5 +1,5 @@
 import React from "react";
-import { ISectionBinding, FFieldControl, FFieldInput, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FNumberField, FSection, FTextField } from "@forms/core";
 
 import { ViolationSectionModel } from "../../models/front-page/violation-section";
 
@@ -11,85 +11,21 @@ interface IViolationSectionProps {
 /** Defines the violation section for the front page of the S438 citation form. */
 export default function ViolationSection({ binding }: IViolationSectionProps): React.JSX.Element {
     const section = binding.get();
-    const sectionNumber = section.getSectionNumber();
-    const description = section.getDescription();
-    const dateOfViolation = section.getDateOfViolation();
-    const timeOfViolation = section.getTimeOfViolation();
-    const scPoints = section.getScPoints();
-    const bloodAlcoholLevel = section.getBloodAlcoholLevel();
 
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FFieldControl label={sectionNumber.label} labelFor={sectionNumber.id} borderEdges={["left", "top"]}>
-                        <FFieldInput
-                            id={sectionNumber.id}
-                            disabled={!sectionNumber.getIsEnabled()}
-                            invalid={sectionNumber.getHasError()}
-                            value={sectionNumber.getValue()}
-                            onChange={(value) => binding.setValue(section.sectionNumber, value)}
-                        />
-                    </FFieldControl>
-                </div>
-                <div className="w-100">
-                    <FFieldControl label={description.label} labelFor={description.id} borderEdges={["left", "top", "right"]}>
-                        <FFieldInput
-                            id={description.id}
-                            disabled={!description.getIsEnabled()}
-                            invalid={description.getHasError()}
-                            value={description.getValue()}
-                            onChange={(value) => binding.setValue(section.description, value)}
-                        />
-                    </FFieldControl>
-                </div>
+                <FTextField field={section.getSectionNumber()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.sectionNumber, value)} />
+                <FTextField field={section.getDescription()} width={392} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.description, value)} />
                 {/* courtAppearanceRequiredYes/No are not yet wired to an input */}
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FFieldControl label={dateOfViolation.label} labelFor={dateOfViolation.id} borderEdges={["left", "top"]}>
-                        <FFieldInput
-                            id={dateOfViolation.id}
-                            disabled={!dateOfViolation.getIsEnabled()}
-                            invalid={dateOfViolation.getHasError()}
-                            value={dateOfViolation.getValue()}
-                            onChange={(value) => binding.setValue(section.dateOfViolation, value)}
-                        />
-                    </FFieldControl>
-                </div>
-                <div className="w-100">
-                    <FFieldControl label={timeOfViolation.label} labelFor={timeOfViolation.id} borderEdges={["left", "top"]}>
-                        <FFieldInput
-                            id={timeOfViolation.id}
-                            disabled={!timeOfViolation.getIsEnabled()}
-                            invalid={timeOfViolation.getHasError()}
-                            value={timeOfViolation.getValue()}
-                            onChange={(value) => binding.setValue(section.timeOfViolation, value)}
-                        />
-                    </FFieldControl>
-                </div>
-                <div className="w-100">
-                    <FFieldControl label={scPoints.label} labelFor={scPoints.id} borderEdges={["left", "top"]}>
-                        <FFieldInput
-                            id={scPoints.id}
-                            disabled={!scPoints.getIsEnabled()}
-                            invalid={scPoints.getHasError()}
-                            value={scPoints.getValue()}
-                            onChange={(value) => binding.setValue(section.scPoints, Number(value))}
-                        />
-                    </FFieldControl>
-                </div>
-                <div className="w-100">
-                    <FFieldControl label={bloodAlcoholLevel.label} labelFor={bloodAlcoholLevel.id} borderEdges={["left", "top", "right"]}>
-                        <FFieldInput
-                            id={bloodAlcoholLevel.id}
-                            disabled={!bloodAlcoholLevel.getIsEnabled()}
-                            invalid={bloodAlcoholLevel.getHasError()}
-                            value={bloodAlcoholLevel.getValue()}
-                            onChange={(value) => binding.setValue(section.bloodAlcoholLevel, value)}
-                        />
-                    </FFieldControl>
-                </div>
+                <FTextField field={section.getDateOfViolation()} width={118} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfViolation, value)} />
+                <FTextField field={section.getTimeOfViolation()} width={100} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.timeOfViolation, value)} />
+                <FNumberField field={section.getSpeed()} width={80} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.speed, value)} />
+                <FNumberField field={section.getSpeedLimit()} width={80} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.speedLimit, value)} />
+                <FNumberField field={section.getScPoints()} width={90} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.scPoints, value)} />
+                <FTextField field={section.getBloodAlcoholLevel()} width={120} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bloodAlcoholLevel, value)} />
             </FFormStackPanel>
         </FSection>
     );

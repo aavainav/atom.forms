@@ -1,8 +1,9 @@
 import { act, createElement, ComponentType, ReactElement } from "react";
 import { createRoot } from "react-dom/client";
 import { vi, Mock } from "vitest";
-import { ISectionBinding, FieldDefinition, FieldModel, SectionDefinition, SectionModel, TValueType } from "@forms/core";
+import { ISectionBinding, FieldDefinition, FieldModel, PageModel, SectionDefinition, SectionModel, TValueType } from "@forms/core";
 
+import { FrontPageModel } from "../../src/models/front-page/front-page";
 import { TrialPageModel } from "../../src/models/trial-page/trial-page";
 import { createForm } from "./form";
 
@@ -31,20 +32,34 @@ export function unmountAll(): void {
     mounted.splice(0).forEach(unmount => unmount());
 }
 
-/** A trial section as mounted: its definition, the section instance it was drawn from, and what it wrote back. */
-export interface IMountedTrialSection<TSection extends SectionModel> {
+/** A section as mounted: its definition, the section instance it was drawn from, and what it wrote back. */
+export interface IMountedSection<TSection extends SectionModel> {
     readonly definition: SectionDefinition<TSection>;
     readonly section: TSection;
     readonly setValue: Mock<ISectionBinding<TSection>["setValue"]>;
 }
 
+type SectionComponent<TSection extends SectionModel> = ComponentType<{ binding: ISectionBinding<TSection> }>;
+
+/** Renders one of the front page's section components against that section of a real, freshly built form, recording what it writes back. */
+export async function mountFrontSection<TSection extends SectionModel>(
+    select: (page: FrontPageModel) => SectionDefinition<TSection>,
+    component: SectionComponent<TSection>): Promise<IMountedSection<TSection>> {
+    const page = (await createForm()).getFrontPageCollection().getFirstPage<FrontPageModel>();
+
+    return mountSection(page, select(page), component);
+}
+
 /** Renders one of the trial page's section components against that section of a real, freshly built form, recording what it writes back. */
 export async function mountTrialSection<TSection extends SectionModel>(
     select: (page: TrialPageModel) => SectionDefinition<TSection>,
-    component: ComponentType<{ binding: ISectionBinding<TSection> }>): Promise<IMountedTrialSection<TSection>> {
-    const form = await createForm();
-    const page = form.getTrialPageCollection().getFirstPage<TrialPageModel>();
-    const definition = select(page);
+    component: SectionComponent<TSection>): Promise<IMountedSection<TSection>> {
+    const page = (await createForm()).getTrialPageCollection().getFirstPage<TrialPageModel>();
+
+    return mountSection(page, select(page), component);
+}
+
+function mountSection<TSection extends SectionModel>(page: PageModel, definition: SectionDefinition<TSection>, component: SectionComponent<TSection>): IMountedSection<TSection> {
     const section = page.get<TSection>(definition);
     const setValue = vi.fn<ISectionBinding<TSection>["setValue"]>();
     const binding: ISectionBinding<TSection> = { sectionDefinition: definition, get: () => section, setValue, update: vi.fn() };

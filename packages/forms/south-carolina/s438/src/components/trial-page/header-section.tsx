@@ -1,8 +1,7 @@
 import React from "react";
-import { ISectionBinding, FFormStackPanel, FLabel, FSection, FTextField } from "@forms/core";
+import { ISectionBinding, FCheckboxField, FFormStackPanel, FLabel, FSection, FTextField } from "@forms/core";
 
 import { TrialHeaderSectionModel } from "../../models/trial-page/header-section";
-import CheckboxField from "./checkbox-field";
 
 interface ITrialHeaderSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
@@ -15,7 +14,7 @@ export default function TrialHeaderSection({ binding }: ITrialHeaderSectionProps
 
     return (
         <FSection>
-            <CheckboxField field={section.getVoid()} onChange={(checked) => binding.setValue(section.void, checked)} />
+            <FCheckboxField field={section.getVoid()} onChange={(checked) => binding.setValue(section.void, checked)} />
             <FFormStackPanel direction="horizontal">
                 <FTextField field={section.getNotes()} width={588} borderEdges={[]} onChange={(value) => binding.setValue(section.notes, value)} />
             </FFormStackPanel>

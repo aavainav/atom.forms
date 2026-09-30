@@ -19,6 +19,8 @@ export class TrialViolationSectionModel extends SectionModel implements ITrialVi
     public readonly timeOfViolation: FieldDefinition<StringFieldModel> = this.schema.trialViolationFields.trialViolationTimeOfViolation;
     public readonly scPoints: FieldDefinition<NumberFieldModel> = this.schema.trialViolationFields.trialViolationScPoints;
     public readonly bloodAlcoholLevel: FieldDefinition<StringFieldModel> = this.schema.trialViolationFields.trialViolationBloodAlcoholLevel;
+    public readonly speed: FieldDefinition<NumberFieldModel> = this.schema.trialViolationFields.trialViolationSpeed;
+    public readonly speedLimit: FieldDefinition<NumberFieldModel> = this.schema.trialViolationFields.trialViolationSpeedLimit;
 
     public getSectionNumber(): StringFieldModel { return this.get<StringFieldModel>(this.sectionNumber); }
     public getDescription(): StringFieldModel { return this.get<StringFieldModel>(this.description); }
@@ -28,4 +30,6 @@ export class TrialViolationSectionModel extends SectionModel implements ITrialVi
     public getTimeOfViolation(): StringFieldModel { return this.get<StringFieldModel>(this.timeOfViolation); }
     public getScPoints(): NumberFieldModel { return this.get<NumberFieldModel>(this.scPoints); }
     public getBloodAlcoholLevel(): StringFieldModel { return this.get<StringFieldModel>(this.bloodAlcoholLevel); }
+    public getSpeed(): NumberFieldModel { return this.get<NumberFieldModel>(this.speed); }
+    public getSpeedLimit(): NumberFieldModel { return this.get<NumberFieldModel>(this.speedLimit); }
 }

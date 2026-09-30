@@ -145,6 +145,70 @@ describe("the S438 rules", () => {
         });
     });
 
+    describe("dates", () => {
+        it("refuses a date of birth in the future", async () => {
+            expect(messagesOn(await validate({ violatorDateOfBirth: "01/01/2999" }), "violator-date-of-birth")).toContain("DOB cannot be in the future");
+            expect(messagesOn(await validate({ violatorDateOfBirth: "01/01/1990" }), "violator-date-of-birth")).not.toContain("DOB cannot be in the future");
+        });
+
+        it("requires the date of trial to be in the future", async () => {
+            expect(messagesOn(await validate({ courtDateOfTrial: "01/01/2000" }), "court-date-of-trial")).toContain("Date of trial must be in the future");
+            expect(messagesOn(await validate({ courtDateOfTrial: "01/01/2999" }), "court-date-of-trial")).toEqual([]);
+        });
+
+        /** The court records a disposition after the trial, by which time its date has passed. */
+        it("stops holding the trial copy's date of trial to the future once a disposition is recorded", async () => {
+            const field = "trial-court-date-of-trial";
+
+            expect(messagesOn(await validate({ trialCourtDateOfTrial: "01/01/2000" }), field)).toContain("Date of trial must be in the future");
+            expect(messagesOn(await validate({ trialCourtDateOfTrial: "01/01/2000", trialCourtInformationDispositionDate: "01/02/2000" }), field)).toEqual([]);
+        });
+    });
+
+    describe("Comb.", () => {
+        const message = "Choose two other vehicle types with Comb.";
+
+        it("needs two other vehicle types chosen with it", async () => {
+            expect(messagesOn(await validate({ trialVehicleCombination: true, trialVehicleAuto: true }), "trial-vehicle-combination")).toContain(message);
+            expect(messagesOn(await validate({ trialVehicleCombination: true, trialVehicleAuto: true, trialVehicleCommercialVehicle: true }), "trial-vehicle-combination")).toEqual([]);
+        });
+
+        it("asks nothing of the other types when it is not chosen", async () => {
+            expect(messagesOn(await validate({ trialVehicleAuto: true }), "trial-vehicle-combination")).toEqual([]);
+        });
+    });
+
+    describe("speeding", () => {
+        const message = "Violation Section Number does not conform to state speeding statutes";
+
+        it("requires both speeds for a speeding statute, and neither for another charge", async () => {
+            const speeding = await validate({ violationSectionNumber: "56-05-1520(G)(1)" });
+            expect(messagesOn(speeding, "violation-speed")).toContain("Recorded speed is required for a speeding violation");
+            expect(messagesOn(speeding, "violation-speed-limit")).toContain("Speed limit is required for a speeding violation");
+
+            expect(messagesOn(await validate({ violationSectionNumber: "56-05-2930" }), "violation-speed")).toEqual([]);
+        });
+
+        it.each([
+            ["56-05-1520(G)(1)", 10, 11],
+            ["56-05-1520(G)(2)", 11, 15],
+            ["56-05-1520(G)(3)", 15, 25],
+            ["56-05-1520(G)(4)", 25, 0]
+        ])("accepts a speed within %s's band, over by %i, and refuses one over by %i", async (statute, within, outside) => {
+            expect(messagesOn(await validate({ violationSectionNumber: statute, violationSpeed: 30 + within, violationSpeedLimit: 30 }), "violation-section-number")).not.toContain(message);
+            expect(messagesOn(await validate({ violationSectionNumber: statute, violationSpeed: 30 + outside, violationSpeedLimit: 30 }), "violation-section-number")).toContain(message);
+        });
+
+        it("refuses a recorded speed that is not over the limit", async () => {
+            expect(messagesOn(await validate({ violationSectionNumber: "56-05-1570(A)", violationSpeed: 55, violationSpeedLimit: 55 }), "violation-section-number")).toContain(message);
+            expect(messagesOn(await validate({ violationSectionNumber: "56-05-1570(A)", violationSpeed: 56, violationSpeedLimit: 55 }), "violation-section-number")).not.toContain(message);
+        });
+
+        it("checks the trial copy's speeds against its own statute", async () => {
+            expect(messagesOn(await validate({ trialViolationSectionNumber: "56-05-1520(G)(2)", trialViolationSpeed: 40, trialViolationSpeedLimit: 35 }), "trial-violation-section-number")).toContain(message);
+        });
+    });
+
     describe("the court's disposition", () => {
         /** The court fills this in, so a citation still in the officer's hands is not held up by it. */
         it("asks which court the case went before only once a disposition date is entered", async () => {

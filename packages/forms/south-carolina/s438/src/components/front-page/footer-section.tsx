@@ -1,5 +1,5 @@
 import React from "react";
-import { ISectionBinding, FFieldControl, FFieldInput, FFormStackPanel, FSection } from "@forms/core";
+import { ISectionBinding, FFormStackPanel, FSection, FTextField } from "@forms/core";
 
 import { FooterSectionModel } from "../../models/front-page/footer-section";
 
@@ -13,7 +13,6 @@ const smallTextStyle: React.CSSProperties = { fontSize: "0.65rem" };
 /** Defines the footer section for the front page of the S438 citation form. */
 export default function FooterSection({ binding }: IFooterSectionProps): React.JSX.Element {
     const section = binding.get();
-    const ticketNumber = section.getTicketNumber();
 
     return (
         <FSection>
@@ -34,17 +33,7 @@ export default function FooterSection({ binding }: IFooterSectionProps): React.J
                 <p className="text-uppercase m-0" style={smallTextStyle}>See important information on the reverse side of this ticket.</p>
             </div>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FFieldControl label={ticketNumber.label} labelFor={ticketNumber.id}>
-                        <FFieldInput
-                            id={ticketNumber.id}
-                            disabled={!ticketNumber.getIsEnabled()}
-                            invalid={ticketNumber.getHasError()}
-                            value={ticketNumber.getValue()}
-                            onChange={(value) => binding.setValue(section.ticketNumber, value)}
-                        />
-                    </FFieldControl>
-                </div>
+                <FTextField field={section.getTicketNumber()} width={588} onChange={(value) => binding.setValue(section.ticketNumber, value)} />
             </FFormStackPanel>
         </FSection>
     );

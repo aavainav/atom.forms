@@ -1,8 +1,7 @@
 import React from "react";
-import { ISectionBinding, FBorder, FFormStackPanel, FLabel, FNumberField, FSection, FTextField } from "@forms/core";
+import { ISectionBinding, FBorder, FCheckboxField, FFormStackPanel, FLabel, FNumberField, FSection, FTextField } from "@forms/core";
 
 import { TrialViolatorSectionModel } from "../../models/trial-page/violator-section";
-import CheckboxField from "./checkbox-field";
 
 interface ITrialViolatorSectionProps {
     /** Binds this section to the form controller, supplying its current values and applying changes back to the form. */
@@ -35,8 +34,8 @@ export default function TrialViolatorSection({ binding }: ITrialViolatorSectionP
                 <FBorder width={120} borderEdges={["left", "top", "right"]}>
                     <FLabel fontSize="6">CDL</FLabel>
                     <FBorder border="hidden" contentJustify="evenly">
-                        <CheckboxField field={section.getCommercialDriverLicenseYes()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseYes, checked)} />
-                        <CheckboxField field={section.getCommercialDriverLicenseNo()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseNo, checked)} />
+                        <FCheckboxField field={section.getCommercialDriverLicenseYes()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseYes, checked)} />
+                        <FCheckboxField field={section.getCommercialDriverLicenseNo()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseNo, checked)} />
                     </FBorder>
                 </FBorder>
             </FFormStackPanel>

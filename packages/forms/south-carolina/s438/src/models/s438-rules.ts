@@ -2,6 +2,7 @@ import {
     BooleanFieldModel,
     ComparisonOperator,
     CompositeCondition,
+    DateRangeFieldRule,
     FieldDefinition,
     FieldValueCondition,
     MaxLengthFieldRule,
@@ -15,6 +16,7 @@ import {
     StringFieldModel
 } from "@forms/core";
 import type { S438FormSchema } from "./s438-form-schema";
+import { speedingStatutes, SpeedingRule } from "./speeding-rule";
 
 /** Matches a date written `mm/dd/yyyy`, the format every date on the citation carries. */
 export const datePattern = /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/;
@@ -81,6 +83,7 @@ interface IVehicleFields {
     readonly make: FieldDefinition<StringFieldModel>;
     readonly year: FieldDefinition<NumberFieldModel>;
     readonly types: ReadonlyArray<FieldDefinition<BooleanFieldModel>>;
+    readonly combination: FieldDefinition<BooleanFieldModel>;
     readonly pedestrian: FieldDefinition<BooleanFieldModel>;
 }
 
@@ -113,6 +116,8 @@ interface IViolationFields {
     readonly dateOfViolation: FieldDefinition<StringFieldModel>;
     readonly timeOfViolation: FieldDefinition<StringFieldModel>;
     readonly bloodAlcoholLevel: FieldDefinition<StringFieldModel>;
+    readonly speed: FieldDefinition<NumberFieldModel>;
+    readonly speedLimit: FieldDefinition<NumberFieldModel>;
 }
 
 /** The violation location fields the rules read. */
@@ -136,6 +141,8 @@ interface IArrestingOfficerFields {
 interface ITicketOptions {
     readonly drawsRaceAndSex: boolean;
     readonly drawsVehicleTypes: boolean;
+    /** The copy's disposition date, if it has one: the court records a disposition after the trial, when the date of trial has passed, so that date must be in the future only until then. */
+    readonly dispositionDate?: FieldDefinition<StringFieldModel>;
 }
 
 /** Builds the validation rules for the SC S438 (Uniform Traffic Ticket): the front page's, the same again for the trial copy's own fields, and the court's. */
@@ -184,6 +191,7 @@ export function createRuleCollection(schema: S438FormSchema): RuleCollection {
             make: vehicle.vehicleMake,
             year: vehicle.vehicleYear,
             types: [vehicle.vehicleAuto, vehicle.vehicleBicycle, vehicle.vehicleCombination, vehicle.vehicleCommercialVehicle, vehicle.vehicleHazardousMaterials, vehicle.vehicleMoped, vehicle.vehicleMotorcycle, vehicle.vehiclePedestrian, vehicle.vehicleOther],
+            combination: vehicle.vehicleCombination,
             pedestrian: vehicle.vehiclePedestrian
         },
         owner: {
@@ -209,7 +217,9 @@ export function createRuleCollection(schema: S438FormSchema): RuleCollection {
             description: violation.violationDescription,
             dateOfViolation: violation.violationDateOfViolation,
             timeOfViolation: violation.violationTimeOfViolation,
-            bloodAlcoholLevel: violation.violationBloodAlcoholLevel
+            bloodAlcoholLevel: violation.violationBloodAlcoholLevel,
+            speed: violation.violationSpeed,
+            speedLimit: violation.violationSpeedLimit
         },
         location: {
             location: location.violationLocation,
@@ -255,6 +265,7 @@ export function createRuleCollection(schema: S438FormSchema): RuleCollection {
             make: trialVehicle.trialVehicleMake,
             year: trialVehicle.trialVehicleYear,
             types: [trialVehicle.trialVehicleAuto, trialVehicle.trialVehicleBicycle, trialVehicle.trialVehicleCombination, trialVehicle.trialVehicleCommercialVehicle, trialVehicle.trialVehicleHazardousMaterials, trialVehicle.trialVehicleMoped, trialVehicle.trialVehicleMotorcycle, trialVehicle.trialVehiclePedestrian, trialVehicle.trialVehicleOther],
+            combination: trialVehicle.trialVehicleCombination,
             pedestrian: trialVehicle.trialVehiclePedestrian
         },
         owner: {
@@ -280,7 +291,9 @@ export function createRuleCollection(schema: S438FormSchema): RuleCollection {
             description: trialViolation.trialViolationDescription,
             dateOfViolation: trialViolation.trialViolationDateOfViolation,
             timeOfViolation: trialViolation.trialViolationTimeOfViolation,
-            bloodAlcoholLevel: trialViolation.trialViolationBloodAlcoholLevel
+            bloodAlcoholLevel: trialViolation.trialViolationBloodAlcoholLevel,
+            speed: trialViolation.trialViolationSpeed,
+            speedLimit: trialViolation.trialViolationSpeedLimit
         },
         location: {
             location: trialLocation.trialViolationLocation,
@@ -296,7 +309,7 @@ export function createRuleCollection(schema: S438FormSchema): RuleCollection {
             bondAmountRequested: trialOfficer.trialArrestingOfficerBondAmountRequested
         },
         ticketNumber: schema.trialFooterFields.trialFooterTicketNumber
-    }, { drawsRaceAndSex: true, drawsVehicleTypes: true });
+    }, { drawsRaceAndSex: true, drawsVehicleTypes: true, dispositionDate: schema.trialCourtInformationFields.trialCourtInformationDispositionDate });
 
     return new RuleCollection([...front, ...trial, ...createCourtRules(schema)]);
 }
@@ -319,7 +332,7 @@ function createTicketRules(fields: ITicketFields, options: ITicketOptions): Arra
         ...createViolatorRules(fields.violator, options),
         ...createVehicleRules(fields.vehicle, options),
         ...createOwnerRules(fields.owner, fields.vehicle.pedestrian),
-        ...createCourtAddressRules(fields.court),
+        ...createCourtAddressRules(fields.court, options.dispositionDate),
         ...createViolationRules(fields.violation),
         ...createViolationLocationRules(fields.location),
         ...createArrestingOfficerRules(fields.officer),
@@ -357,6 +370,7 @@ function createViolatorRules(violator: IViolatorFields, options: ITicketOptions)
         new RequiredFieldRule(violator.commercialDriverLicenseYes, "CDL should be Yes when the driver license class is A, B or C").when(isCommercialClass),
         new RequiredFieldRule(violator.dateOfBirth, "DOB is required"),
         new PatternFieldRule(violator.dateOfBirth, datePattern, "DOB must be formatted mm/dd/yyyy"),
+        DateRangeFieldRule.notInFuture(violator.dateOfBirth, "DOB cannot be in the future"),
         new RequiredFieldRule(violator.height, "Height is required"),
         new PatternFieldRule(violator.height, heightPattern, "Height must be 2 or 3 digits, e.g. 74 or 602 for 6'2\""),
         new RequiredFieldRule(violator.weight, "Weight is required"),
@@ -392,7 +406,12 @@ function createVehicleRules(vehicle: IVehicleFields, options: ITicketOptions): A
     ];
 
     if (options.drawsVehicleTypes) {
-        rules.push(new RequiredSelectionRule(vehicle.types[0], vehicle.types, "At least one vehicle type is required"));
+        const otherTypes = vehicle.types.filter(type => type !== vehicle.combination);
+
+        rules.push(
+            new RequiredSelectionRule(vehicle.types[0], vehicle.types, "At least one vehicle type is required"),
+            RequiredSelectionRule.atLeast(vehicle.combination, otherTypes, 2, "Choose two other vehicle types with Comb.")
+                .when(new FieldValueCondition(vehicle.combination, ComparisonOperator.equals, true)));
     }
 
     return rules;
@@ -420,11 +439,14 @@ function createOwnerRules(owner: IOwnerFields, pedestrian: FieldDefinition<Boole
     ];
 }
 
-function createCourtAddressRules(court: ICourtFields): Array<Rule> {
+function createCourtAddressRules(court: ICourtFields, dispositionDate?: FieldDefinition<StringFieldModel>): Array<Rule> {
+    const trialDateInFuture = DateRangeFieldRule.inFuture(court.dateOfTrial, "Date of trial must be in the future");
+
     return [
         new MaxLengthFieldRule(court.courtName, 0, 50, "Name of trial court cannot be more than 50 characters"),
         new MaxLengthFieldRule(court.streetAddress, 0, 50, "Court street cannot be more than 50 characters"),
         new PatternFieldRule(court.dateOfTrial, datePattern, "Date of trial must be formatted mm/dd/yyyy"),
+        dispositionDate ? trialDateInFuture.when(new FieldValueCondition(dispositionDate, ComparisonOperator.isEmpty)) : trialDateInFuture,
         new PatternFieldRule(court.timeOfTrial, militaryTimePattern, "Time of trial must be in military format, hhmm"),
         new MaxLengthFieldRule(court.city, 0, 30, "Court city cannot be more than 30 characters"),
         new PatternFieldRule(court.state, /^SC$/, "Court address state code must be SC"),
@@ -433,7 +455,15 @@ function createCourtAddressRules(court: ICourtFields): Array<Rule> {
 }
 
 function createViolationRules(violation: IViolationFields): Array<Rule> {
+    const isSpeeding = CompositeCondition.any(...Object.keys(speedingStatutes).map(statute =>
+        new FieldValueCondition(violation.sectionNumber, ComparisonOperator.equals, statute)));
+
     return [
+        new RequiredFieldRule(violation.speed, "Recorded speed is required for a speeding violation").when(isSpeeding),
+        new NumberRangeFieldRule(violation.speed, 0, 999, "Recorded speed cannot be more than 3 digits"),
+        new RequiredFieldRule(violation.speedLimit, "Speed limit is required for a speeding violation").when(isSpeeding),
+        new NumberRangeFieldRule(violation.speedLimit, 0, 99, "Speed limit cannot be more than 2 digits"),
+        new SpeedingRule(violation.sectionNumber, violation.speed, violation.speedLimit),
         new MaxLengthFieldRule(violation.sectionNumber, 0, 30, "Violation section number cannot be more than 30 characters"),
         new PatternFieldRule(violation.sectionNumber, violationSectionPattern, "Violation section number must be a statute (xx-xx-xxxx) or an ordinance beginning ORD."),
         new MaxLengthFieldRule(violation.description, 0, 150, "Violation description cannot be more than 150 characters"),

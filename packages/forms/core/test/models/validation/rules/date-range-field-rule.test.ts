@@ -47,6 +47,32 @@ describe("DateRangeFieldRule", () => {
         });
     });
 
+    describe("inFuture", () => {
+        function pinToday(): void {
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date(2026, 5, 15, 9, 30));
+        }
+
+        it("accepts tomorrow", () => {
+            pinToday();
+
+            expect(DateRangeFieldRule.inFuture(violatorFields.dateOfBirth).validate(stubRuleContext(date("06/16/2026")))).toHaveLength(0);
+        });
+
+        /** "In the future" means after today, so a date of today itself is refused. */
+        it("reports today", () => {
+            pinToday();
+
+            expect(DateRangeFieldRule.inFuture(violatorFields.dateOfBirth).validate(stubRuleContext(date("06/15/2026")))).toHaveLength(1);
+        });
+
+        it("reports a date in the past", () => {
+            pinToday();
+
+            expect(DateRangeFieldRule.inFuture(violatorFields.dateOfBirth).validate(stubRuleContext(date("2026-01-01")))).toHaveLength(1);
+        });
+    });
+
     describe("notBefore", () => {
         const rule = DateRangeFieldRule.notBefore(violatorFields.dateOfBirth, new Date(Date.UTC(2000, 0, 1)));
 
@@ -68,10 +94,21 @@ describe("DateRangeFieldRule", () => {
             expect(rule.validate(stubRuleContext(new StringFieldModel(spec)))).toHaveLength(0);
         });
 
-        it("skips a value that is not in YYYY-MM-DD form", () => {
-            expect(rule.validate(stubRuleContext(date("01/01/1999")))).toHaveLength(0);
+        it("skips a value in neither YYYY-MM-DD nor MM/DD/YYYY form", () => {
             expect(rule.validate(stubRuleContext(date("1999-1-1")))).toHaveLength(0);
+            expect(rule.validate(stubRuleContext(date("1/1/1999")))).toHaveLength(0);
             expect(rule.validate(stubRuleContext(date("yesterday")))).toHaveLength(0);
+        });
+
+        /** A citation prints its dates MM/DD/YYYY and stores them that way; the two forms cannot be mistaken for each other. */
+        it("reads MM/DD/YYYY the same as YYYY-MM-DD", () => {
+            expect(rule.validate(stubRuleContext(date("12/31/1999")))).toHaveLength(1);
+            expect(rule.validate(stubRuleContext(date("01/01/2000")))).toHaveLength(0);
+        });
+
+        it("treats an MM/DD/YYYY date that does not exist as unparseable", () => {
+            expect(rule.validate(stubRuleContext(date("02/31/1999")))).toHaveLength(0);
+            expect(rule.validate(stubRuleContext(date("13/01/1999")))).toHaveLength(0);
         });
 
         /**

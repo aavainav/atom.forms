@@ -261,10 +261,10 @@ returns a copy gated by a `Condition`.
 | --- | --- |
 | `RequiredFieldRule` | Fires on an empty value. |
 | `MaxLengthFieldRule` | Takes min **and** max; message interpolates `{maxLength}`. Skips empty values. Measures a non-string value (e.g. a number) by its printed length. |
-| `NumberRangeFieldRule`, `DateRangeFieldRule` | Skip empty and unparseable values. `DateRangeFieldRule` statics: `notInFuture`, `notBefore`. Only parses `YYYY-MM-DD`. |
+| `NumberRangeFieldRule`, `DateRangeFieldRule` | Skip empty and unparseable values. `DateRangeFieldRule` statics: `notInFuture`, `inFuture` (after today; today itself is refused), `notBefore`. Parses `YYYY-MM-DD` and `MM/DD/YYYY`, which cannot be mistaken for each other. |
 | `PatternFieldRule` | Strips a global flag (`lastIndex` would leak between pages). Registers under `new.target.name`, so subclasses get their own name. |
 | `AlphanumericFieldRule` | A `PatternFieldRule` subclass. |
-| `RequiredSelectionRule` | At least one of a checkbox group; reports **once**, against the anchor field. |
+| `RequiredSelectionRule` | At least one of a checkbox group, or `atLeast(n, …)` of it; reports **once**, against the anchor field. |
 | `CompositeRule` | `LogicalOperator.and` reports every issue; `or` reports nothing if any rule passes. Statics `and`/`or`. Its rules need not share a field. |
 
 Conditions: `FieldValueCondition` (`equals`/`notEquals`/`isEmpty`/`isNotEmpty`; unwraps `IOptionValue` before
@@ -341,7 +341,8 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
 - Fields: `FFieldControl` (label + border chrome), `FFieldInput`, `FFieldSelect`, `FFieldCheckbox`,
   `FFieldTextArea` (a multi-line input that takes `label` for assistive technology and `margin`), `FLabel`,
   `FInputGroup`.
-- `src/components/fields/` holds `FTextField`, `FNumberField` and `FSelectField` -- one file each -- the compound
+- `src/components/fields/` holds `FTextField`, `FNumberField`, `FSelectField` and `FCheckboxField` (a tick box with
+  its label beside it, taking an optional `label` override rather than `showLabel`) -- one file each -- the compound
   boxes bound directly to a field model (`field.label`/`getIsEnabled()`/`getHasError()`/`getValue()`/`id` read
   straight off it, `FFieldControl` and the raw control wired together underneath) rather than a caller wiring
   `FFieldControl` and `FFieldInput`/`FFieldSelect` by hand. Each takes `showLabel` (default true) so a caller can

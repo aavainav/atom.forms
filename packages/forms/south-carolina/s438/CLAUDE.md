@@ -44,7 +44,7 @@ trial copy has no page to delete to take a charge off, so typing over it must st
 | [src/models/front-page/](src/models/front-page/) | `front-page.ts` + one file per section + `dropzones/`. |
 | [src/models/notice-page/notice-page.ts](src/models/notice-page/notice-page.ts) | Sectionless page model. |
 | [src/models/trial-page/](src/models/trial-page/) | `trial-page.ts` + one file per section + `dropzones/`. Class names are `Trial`-prefixed; file names mirror `front-page/`. |
-| [src/components/](src/components/) | `s438-citation-form.tsx` (root) and `front-page/`, `notice-page/` and `trial-page/` mirroring the models tree. The trial page's sections use core's `FTextField`/`FNumberField` wrappers, plus a local `CheckboxField` for its tick boxes, and size every box with a pixel `width` -- each row adds up to 588px, the 640px citation page less its padding and border. |
+| [src/components/](src/components/) | `s438-citation-form.tsx` (root) and `front-page/`, `notice-page/` and `trial-page/` mirroring the models tree. Both pages' sections use core's `FTextField`/`FNumberField`/`FCheckboxField` wrappers and size every box with a pixel `width` -- each row adds up to 588px, the 640px citation page less its padding and border. |
 | [src/mapping/s438-data.ts](src/mapping/s438-data.ts) | `IS438Data` — flat, every field optional, plus `additionalViolations` for the charges beyond the first. `IS438ViolationData` is the per-page half. |
 | [src/mapping/s438-mapper.ts](src/mapping/s438-mapper.ts) | `S438Mapper extends FormMapper<S438FormModel, IS438Data>`. `populate` is **async**, since the front page repeats and creating one means awaiting `initialize`. |
 | [src/services/s438-citation.ts](src/services/s438-citation.ts) | `IS438CitationService` — four `apply*Dropzone` methods for the front page, four `applyTrial*Dropzone` for the trial page, plus `applyViolations`. No value-list methods; this form has no option fields. |
@@ -55,23 +55,31 @@ trial copy has no page to delete to take a charge off, so typing over it must st
 - **Rules live in [src/models/s438-rules.ts](src/models/s438-rules.ts)** (`createRuleCollection(schema)`, like the other
   forms), taken from the agency's business-rules sheet. One `createTicketRules` builds the rules for a copy of the
   ticket from its fields, and is called for the front page and again for the trial copy's own fields; the court's
-  disposition rules are separate. Only rules expressible with core's existing rule types are there -- speed bands,
-  CDL auto-set, the none boxes, Same as Driver and pick-lists are still to do.
+  disposition rules are separate. Behaviours (CDL auto-set, the none boxes, Same as Driver) and pick-lists are
+  still to do.
+  - **[src/models/speeding-rule.ts](src/models/speeding-rule.ts)** is S438's own rule (core exports `Rule` and
+    `RegisterRule` for this). `speedingStatutes` maps each speeding statute, as the violation list writes it, to how
+    far over the limit it covers -- 56-5-1520(G)(1)-(4) in their bands, 56-5-1570(A) just over. The issue goes on the
+    section number. The two speed boxes (`violationSpeed`/`violationSpeedLimit`, per charge) are required for any of
+    those statutes, by an ordinary required rule gated on the same table. Matching is exact, so a statute typed
+    unpadded (`56-5-1520(G)(1)`) is not recognised as speeding.
+  - Comb. needs two other vehicle types (`RequiredSelectionRule.atLeast`), trial copy only like the other type rules.
+  - Birth date is `notInFuture`; date of trial is `inFuture` (after today). On the trial copy the trial date is held to
+    the future only until a disposition date is entered, since the court disposes of the case after the trial.
   - The front page does not draw race, sex or the vehicle types, so their rules apply to the trial copy only
     (`ITicketOptions`); a rule on a box that is never drawn could never be satisfied.
   - The violation section pattern checks only the statute's numbers up front (`xx-xx(x)-xxx(x)`, or `ORD.…`) and
     leaves the subsection suffix alone, since the violation list writes those every which way. A test holds every
     statute in the list to it.
   - "Case before" is required only once the court has entered a disposition date.
-  - Dates are `mm/dd/yyyy` and times military `hhmm`, by pattern. `DateRangeFieldRule` still reads only `YYYY-MM-DD`,
-    so "not in the future" / "in the future" checks wait on core.
+  - Dates are `mm/dd/yyyy` and times military `hhmm`, by pattern. `DateRangeFieldRule` reads `mm/dd/yyyy` as well as
+    `YYYY-MM-DD`.
 - **Form self-stamping.** `CitationForm.initialize()` chains `setDateOfViolation().setTimeOfViolation().setTicketNumber()`. Every
   `ICitationForm` setter returns `this` and threads its change back through the page collection via the private
   `setFrontPageValue(sectionDefinition, fieldDefinition, value, isEnabled)` helper — the same shape as
   `TR310FormModel.setCollisionValue`. A setter returning `void` here would have its work silently discarded, since
   the model is immutable.
-  - `setDateOfViolation` stamps `MM/DD/YYYY` (module-level `formatDate`) and **disables** the box. Note this is not
-    the `YYYY-MM-DD` that `DateRangeFieldRule` parses, so a date range rule would silently skip it.
+  - `setDateOfViolation` stamps `MM/DD/YYYY` (module-level `formatDate`) and **disables** the box.
   - `setTimeOfViolation` stamps military `hhmm` (`formatTime`) and leaves it editable, matching the time rule. The base `initialize()` calls it, so a new form starts with it.
   - `setIssuedDate` / `setIssuedTime` return the form unchanged — the citation has no boxes for them distinct from
     the arrest date and time of violation.

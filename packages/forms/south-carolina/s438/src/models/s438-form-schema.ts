@@ -114,6 +114,8 @@ export interface IS438FormSchema extends ISchema {
         readonly violationTimeOfViolation: FieldDefinition<StringFieldModel>;
         readonly violationScPoints: FieldDefinition<NumberFieldModel>;
         readonly violationBloodAlcoholLevel: FieldDefinition<StringFieldModel>;
+        readonly violationSpeed: FieldDefinition<NumberFieldModel>;
+        readonly violationSpeedLimit: FieldDefinition<NumberFieldModel>;
     };
 
     readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel>;
@@ -222,6 +224,8 @@ export interface IS438FormSchema extends ISchema {
         readonly trialViolationTimeOfViolation: FieldDefinition<StringFieldModel>;
         readonly trialViolationScPoints: FieldDefinition<NumberFieldModel>;
         readonly trialViolationBloodAlcoholLevel: FieldDefinition<StringFieldModel>;
+        readonly trialViolationSpeed: FieldDefinition<NumberFieldModel>;
+        readonly trialViolationSpeedLimit: FieldDefinition<NumberFieldModel>;
     };
 
     readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel>;
@@ -366,7 +370,9 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         violationDateOfViolation: { label: "Date of Violation", ctor: StringFieldModel },
         violationTimeOfViolation: { label: "Time of Viol.", ctor: StringFieldModel },
         violationScPoints: { label: "SC Points", ctor: NumberFieldModel },
-        violationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel }
+        violationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel },
+        violationSpeed: { label: "Speed", ctor: NumberFieldModel },
+        violationSpeedLimit: { label: "Limit", ctor: NumberFieldModel }
     });
 
     readonly violationLocationSection: SectionDefinition<ViolationLocationSectionModel> = DefinitionFactory.section<ViolationLocationSectionModel>("violation-location-section", this.frontPage, ViolationLocationSectionModel, { isShared: true });
@@ -476,7 +482,9 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialViolationDateOfViolation: { label: "Date of Violation", ctor: StringFieldModel },
         trialViolationTimeOfViolation: { label: "Time of Viol.", ctor: StringFieldModel },
         trialViolationScPoints: { label: "SC Points", ctor: NumberFieldModel },
-        trialViolationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel }
+        trialViolationBloodAlcoholLevel: { label: "Blood Alcohol Level", ctor: StringFieldModel },
+        trialViolationSpeed: { label: "Speed", ctor: NumberFieldModel },
+        trialViolationSpeedLimit: { label: "Limit", ctor: NumberFieldModel }
     });
 
     readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel> = DefinitionFactory.section<TrialViolationLocationSectionModel>("trial-violation-location-section", this.trialPage, TrialViolationLocationSectionModel);

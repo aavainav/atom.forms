@@ -68,6 +68,29 @@ describe("RequiredSelectionRule", () => {
         expect(rule.validate(stubRuleContextFor([]))).toHaveLength(0);
     });
 
+    describe("atLeast", () => {
+        const two = RequiredSelectionRule.atLeast(conditions.isClear, [conditions.isClear, conditions.isFoggy, conditions.isRaining], 2, "Pick two");
+
+        it("reports when fewer than the minimum are selected", () => {
+            const issues = two.validate(context(false, true, false));
+
+            expect(issues).toHaveLength(1);
+            expect(issues[0].message).toBe("Pick two");
+        });
+
+        it("reports nothing once the minimum is selected", () => {
+            expect(two.validate(context(true, true, false))).toHaveLength(0);
+            expect(two.validate(context(true, true, true))).toHaveLength(0);
+        });
+
+        it("refuses a minimum the group could never meet, or one below one", () => {
+            const group = [conditions.isClear, conditions.isFoggy];
+
+            expect(() => RequiredSelectionRule.atLeast(conditions.isClear, group, 3)).toThrowError();
+            expect(() => RequiredSelectionRule.atLeast(conditions.isClear, group, 0)).toThrowError();
+        });
+    });
+
     it("refuses to be built without any fields", () => {
         expect(() => new RequiredSelectionRule(conditions.isClear, []))
             .toThrowError("A required selection rule requires at least one field definition.");
