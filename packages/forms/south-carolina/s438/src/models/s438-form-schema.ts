@@ -5,16 +5,15 @@ import {
     DefinitionFactory,
     FieldDefinition,
     FormDefinition,
-    MaxLengthFieldRule,
     NumberFieldModel,
     PageDefinition,
-    RequiredFieldRule,
     RuleCollection,
     Schema,
     SectionDefinition,
     StringFieldModel
 } from "@forms/core";
 import { S438FormModel } from "./s438-form";
+import { createRuleCollection } from "./s438-rules";
 import { FrontPageModel } from "./front-page/front-page";
 import { NoticePageModel } from "./notice-page/notice-page";
 import { HeaderSectionModel } from "./front-page/header-section";
@@ -540,9 +539,5 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialFooterTicketNumber: { label: "Ticket #", ctor: StringFieldModel }
     });
 
-    readonly ruleCollection: RuleCollection = new RuleCollection([
-        new RequiredFieldRule(this.violatorFields.violatorFirstName),
-        new RequiredFieldRule(this.violatorFields.violatorLastName),
-        new MaxLengthFieldRule(this.violatorFields.violatorZipCode, 0, 5)
-    ]);
+    readonly ruleCollection: RuleCollection = createRuleCollection(this);
 }

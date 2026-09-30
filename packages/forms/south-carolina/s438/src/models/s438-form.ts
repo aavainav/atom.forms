@@ -24,6 +24,11 @@ function formatDate(date: Date): string {
     return `${month}/${day}/${date.getFullYear()}`;
 }
 
+/** Formats a time as the military `hhmm` the citation's time boxes carry. */
+function formatTime(date: Date): string {
+    return `${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
 /** Represents the S438 form model, providing access to its schema and its front, notice and trial pages. */
 export class S438FormModel extends CitationForm<IS438Data> implements IS438Form {
     public readonly name: string = CATALOG_IDENTITY.name;
@@ -103,7 +108,7 @@ export class S438FormModel extends CitationForm<IS438Data> implements IS438Form 
         return this.setFrontPageValue(
             this.schema.violationSection,
             this.schema.violationFields.violationTimeOfViolation,
-            new Date().toLocaleTimeString(),
+            formatTime(new Date()),
             true);
     }
 

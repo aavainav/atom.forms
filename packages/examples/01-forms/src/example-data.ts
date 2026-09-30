@@ -163,13 +163,13 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
                 title: "Speeding, 15 over",
                 description: "Fifteen miles per hour over the posted limit.",
                 presets: ["columbia-court"],
-                data: { violationDescription: "Speeding, 15 mph over posted limit", violationScPoints: 4, violationSectionNumber: "56-5-1520" }
+                data: { violationDescription: "Speeding, 15 mph over posted limit", violationScPoints: 4, violationSectionNumber: "56-05-1520" }
             },
             {
                 id: "stop-sign",
                 title: "Failure to stop at a stop sign",
                 presets: ["columbia-court"],
-                data: { violationDescription: "Failure to stop at a stop sign", violationSectionNumber: "56-5-2110" }
+                data: { violationDescription: "Failure to stop at a stop sign", violationSectionNumber: "56-05-2110" }
             }
         ],
         // the ticket number is the host's to give, so every new citation is dealt the next in the sequence, and it is

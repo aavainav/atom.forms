@@ -52,19 +52,27 @@ trial copy has no page to delete to take a charge off, so typing over it must st
 
 ## Notable specifics
 
-- Rules live **inline in the schema** as a `RuleCollection` literal (unlike the other two forms, which have a
-  separate `*-rules.ts` with a `createRuleCollection(schema)` factory). There are only three:
-  required first/last name, and a max-length 5 zip. If the rule set grows, extract it to
-  `src/models/s438-rules.ts` to match the other packages.
+- **Rules live in [src/models/s438-rules.ts](src/models/s438-rules.ts)** (`createRuleCollection(schema)`, like the other
+  forms), taken from the agency's business-rules sheet. One `createTicketRules` builds the rules for a copy of the
+  ticket from its fields, and is called for the front page and again for the trial copy's own fields; the court's
+  disposition rules are separate. Only rules expressible with core's existing rule types are there -- speed bands,
+  CDL auto-set, the none boxes, Same as Driver and pick-lists are still to do.
+  - The front page does not draw race, sex or the vehicle types, so their rules apply to the trial copy only
+    (`ITicketOptions`); a rule on a box that is never drawn could never be satisfied.
+  - The violation section pattern checks only the statute's numbers up front (`xx-xx(x)-xxx(x)`, or `ORD.…`) and
+    leaves the subsection suffix alone, since the violation list writes those every which way. A test holds every
+    statute in the list to it.
+  - "Case before" is required only once the court has entered a disposition date.
+  - Dates are `mm/dd/yyyy` and times military `hhmm`, by pattern. `DateRangeFieldRule` still reads only `YYYY-MM-DD`,
+    so "not in the future" / "in the future" checks wait on core.
 - **Form self-stamping.** `CitationForm.initialize()` chains `setDateOfViolation().setTimeOfViolation().setTicketNumber()`. Every
   `ICitationForm` setter returns `this` and threads its change back through the page collection via the private
   `setFrontPageValue(sectionDefinition, fieldDefinition, value, isEnabled)` helper — the same shape as
   `TR310FormModel.setCollisionValue`. A setter returning `void` here would have its work silently discarded, since
   the model is immutable.
   - `setDateOfViolation` stamps `MM/DD/YYYY` (module-level `formatDate`) and **disables** the box. Note this is not
-    the `YYYY-MM-DD` that `DateRangeFieldRule` parses; the form has no date rule today, but adding one means
-    changing the format too or it will silently skip validation.
-  - `setTimeOfViolation` stamps the time and leaves it editable. The base `initialize()` calls it, so a new form starts with it.
+    the `YYYY-MM-DD` that `DateRangeFieldRule` parses, so a date range rule would silently skip it.
+  - `setTimeOfViolation` stamps military `hhmm` (`formatTime`) and leaves it editable, matching the time rule. The base `initialize()` calls it, so a new form starts with it.
   - `setIssuedDate` / `setIssuedTime` return the form unchanged — the citation has no boxes for them distinct from
     the arrest date and time of violation.
 - **The workflow is South Carolina's own.** `S438FormModel.workflow` is `citationWorkflow.with({ id: "sc-citation", locks })`:
@@ -113,7 +121,8 @@ so a dragged violation is on the citation exactly as a chosen one is.
 
 **Add a field**: `defineFields` block in the schema → `IS438FormSchema` interface → the section model
 (`readonly x` definition + `getX()`) → the section component → `IS438Data` → the mapper's matching `extractX`/
-`populateX` pair (adjacent in the file, keep them in step) → a rule in the schema's `ruleCollection` if needed.
+`populateX` pair (adjacent in the file, keep them in step) → a rule in `s438-rules.ts` if needed (for a top-half field,
+in both the front page's and the trial copy's mapping passed to `createTicketRules`).
 
 **Add a section**: schema `DefinitionFactory.section` + `defineFields` → `src/models/front-page/<name>-section.ts` →
 `FrontPageModel` (`readonly xSection` + `getXSection()`) → `src/components/front-page/<name>-section.tsx` → render it

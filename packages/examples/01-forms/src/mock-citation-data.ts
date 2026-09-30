@@ -12,14 +12,14 @@ export const mockCitations: Record<string, IS438Data> = {
     full: {
         violatorCity: "Charleston",
         violatorCommercialDriverLicenseNo: true,
-        violatorDateOfBirth: "1988-03-14",
+        violatorDateOfBirth: "03/14/1988",
         violatorDriverLicenseClass: "D",
         violatorDriverLicenseNumber: "104938271",
         violatorDriverLicenseState: "SC",
-        violatorEyeColor: "BROWN",
+        violatorEyeColor: "BRO",
         violatorFirstName: "James",
-        violatorHairColor: "BLACK",
-        violatorHeight: "5'11\"",
+        violatorHairColor: "BLK",
+        violatorHeight: "511",
         violatorLastName: "Whitfield",
         violatorMiddleName: "Robert",
         violatorRace: "W",
@@ -32,7 +32,7 @@ export const mockCitations: Record<string, IS438Data> = {
         vehicleAuto: true,
         vehicleLicenseNumber: "SC 4471 KD",
         vehicleLicenseState: "SC",
-        vehicleMake: "Toyota",
+        vehicleMake: "TOYT",
         vehicleYear: 2021,
 
         ownerCity: "Charleston",
@@ -44,34 +44,35 @@ export const mockCitations: Record<string, IS438Data> = {
         ownerZipCode: "29403",
 
         courtCity: "Charleston",
-        courtDateOfTrial: "2026-10-14",
+        courtDateOfTrial: "10/14/2026",
         courtName: "Charleston Municipal Court",
         courtState: "SC",
         courtStreetAddress: "180 Lockwood Boulevard",
-        courtTimeOfTrial: "09:00",
+        courtTimeOfTrial: "0900",
         courtZipCode: "29403",
 
         violationCourtAppearanceRequiredNo: true,
         violationDescription: "Speeding, 15 mph over posted limit",
         violationScPoints: 4,
-        violationSectionNumber: "56-5-1520",
-        violationTimeOfViolation: "14:32",
+        violationSectionNumber: "56-05-1520",
+        violationTimeOfViolation: "1432",
 
         violationLocation: "Meeting Street at Calhoun Street",
         violationLocationCity: "Charleston",
-        violationLocationCounty: "CHARLESTON",
+        violationLocationCounty: "10",
         violationLocationLatitude: "32.78745",
         violationLocationLongitude: "-79.93594",
 
         arrestingOfficerName: "A Vainavicz",
         arrestingOfficerRank: "SGT",
-        arrestingOfficerSccjaOfficerNumber: "0000",
+        arrestingOfficerBailDeposited: "150",
+        arrestingOfficerSccjaOfficerNumber: "0000-0000",
 
         footerTicketNumber: "20260000012345"
     },
     minimal: {
         violatorCity: "Charleston",
-        violatorDateOfBirth: "1989-03-15",
+        violatorDateOfBirth: "03/15/1989",
         violatorFirstName: "Ana",
         violatorLastName: "Delgado",
         violatorSex: "F",
@@ -80,6 +81,6 @@ export const mockCitations: Record<string, IS438Data> = {
         violatorZipCode: "29401",
 
         violationDescription: "Failure to stop at a stop sign",
-        violationSectionNumber: "56-5-2110"
+        violationSectionNumber: "56-05-2110"
     }
 };
