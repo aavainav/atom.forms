@@ -15,34 +15,18 @@ export default function TrialArrestingOfficerSection({ binding }: ITrialArrestin
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getOfficerName()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.officerName, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getOfficerRank()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.officerRank, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getSccjaOfficerNumber()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.sccjaOfficerNumber, value)} />
-                </div>
+                <FTextField field={section.getOfficerName()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.officerName, value)} />
+                <FTextField field={section.getOfficerRank()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.officerRank, value)} />
+                <FTextField field={section.getSccjaOfficerNumber()} width={196} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.sccjaOfficerNumber, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getBailDeposited()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.bailDeposited, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getDateOfArrest()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfArrest, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getBondAmountRequested()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bondAmountRequested, value)} />
-                </div>
+                <FTextField field={section.getBailDeposited()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.bailDeposited, value)} />
+                <FTextField field={section.getDateOfArrest()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfArrest, value)} />
+                <FTextField field={section.getBondAmountRequested()} width={196} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bondAmountRequested, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-50">
-                    <FTextField field={section.getDateBailReceived()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateBailReceived, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getBailReceivedBy()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bailReceivedBy, value)} />
-                </div>
+                <FTextField field={section.getDateBailReceived()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateBailReceived, value)} />
+                <FTextField field={section.getBailReceivedBy()} width={392} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bailReceivedBy, value)} />
             </FFormStackPanel>
         </FSection>
     );

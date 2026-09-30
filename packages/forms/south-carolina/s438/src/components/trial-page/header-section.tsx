@@ -17,9 +17,7 @@ export default function TrialHeaderSection({ binding }: ITrialHeaderSectionProps
         <FSection>
             <CheckboxField field={section.getVoid()} onChange={(checked) => binding.setValue(section.void, checked)} />
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getNotes()} borderEdges={[]} onChange={(value) => binding.setValue(section.notes, value)} />
-                </div>
+                <FTextField field={section.getNotes()} width={588} borderEdges={[]} onChange={(value) => binding.setValue(section.notes, value)} />
             </FFormStackPanel>
             <div className="border border-bottom-0 border-dark text-center">
                 <FLabel fontSize="6" textAlignment="start">Form S-438 Rev.08/2017</FLabel>

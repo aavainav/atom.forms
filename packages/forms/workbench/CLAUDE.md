@@ -13,6 +13,7 @@ Module dependencies: `ReactModule`, `ReactRouterModule`. Package dependencies: `
 | [src/module.ts](src/module.ts) | `WorkbenchModule`, `IWorkbenchConfiguration` (`registerRoute`), and `appRouteId`. |
 | [src/bootstrapper.ts](src/bootstrapper.ts) | `WorkbenchBootstrapper.start(options)`, `IModuleBootstrapper`, `ModuleImportFunction`, `IWorkbenchBootstrapperOptions`. |
 | [src/components/app-layout.tsx](src/components/app-layout.tsx) · [not-found.tsx](src/components/not-found.tsx) | The root route's bare `<Outlet />`, and the catch-all page. |
+| [src/components/app-loading.tsx](src/components/app-loading.tsx) | The root route's `HydrateFallback`, a spinner shown while the first page's lazy routes load. `module.ts` imports it from its own file rather than the lazily loaded `components` barrel, since it has to be there before that loads. |
 | [src/index.ts](src/index.ts) | Barrel. |
 
 ## Startup order — the whole point of this package

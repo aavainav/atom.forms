@@ -16,13 +16,9 @@ export default function TrialViolationSection({ binding }: ITrialViolationSectio
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getSectionNumber()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.sectionNumber, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getDescription()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.description, value)} />
-                </div>
-                <FBorder borderEdges={["left", "top", "right"]}>
+                <FTextField field={section.getSectionNumber()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.sectionNumber, value)} />
+                <FTextField field={section.getDescription()} width={244} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.description, value)} />
+                <FBorder width={148} borderEdges={["left", "top", "right"]}>
                     <FLabel fontSize="6">Court Appearance Required</FLabel>
                     <FBorder border="hidden" contentJustify="evenly">
                         <CheckboxField field={section.getCourtAppearanceRequiredYes()} onChange={(checked) => binding.setValue(section.courtAppearanceRequiredYes, checked)} />
@@ -31,18 +27,10 @@ export default function TrialViolationSection({ binding }: ITrialViolationSectio
                 </FBorder>
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getDateOfViolation()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfViolation, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getTimeOfViolation()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.timeOfViolation, value)} />
-                </div>
-                <div className="w-100">
-                    <FNumberField field={section.getScPoints()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.scPoints, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getBloodAlcoholLevel()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bloodAlcoholLevel, value)} />
-                </div>
+                <FTextField field={section.getDateOfViolation()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfViolation, value)} />
+                <FTextField field={section.getTimeOfViolation()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.timeOfViolation, value)} />
+                <FNumberField field={section.getScPoints()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.scPoints, value)} />
+                <FTextField field={section.getBloodAlcoholLevel()} width={147} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.bloodAlcoholLevel, value)} />
             </FFormStackPanel>
         </FSection>
     );

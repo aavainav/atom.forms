@@ -5,6 +5,9 @@ import { IReactConfiguration, ReactModule, ServicesContext } from "@common/react
 import { IReactRouterService, ReactRouterModule } from "@common/react-router";
 import { createConfig, IModule, IModuleConfigurator, IModuleInitializer } from "@shrub/core";
 
+// imported from its own file rather than the barrel, which is lazy loaded -- the fallback is what shows while that loads
+import AppLoading from "./components/app-loading";
+
 /** The id of the app's root route. A host registers its own routes as children of this one. */
 export const appRouteId = "app";
 
@@ -43,6 +46,8 @@ export class WorkbenchModule implements IModule {
         routerService.addRoute({
             id: appRouteId,
             path: "/",
+            // shown while the first page's lazy routes load; it cannot come from lazy, which is what it waits on
+            HydrateFallback: AppLoading,
             lazy: () => import("./components").then(module => ({ Component: module.AppLayout }))
         });
 

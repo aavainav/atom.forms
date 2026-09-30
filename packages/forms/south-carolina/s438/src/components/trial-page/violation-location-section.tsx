@@ -15,23 +15,13 @@ export default function TrialViolationLocationSection({ binding }: ITrialViolati
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getLocation()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.location, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getCounty()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.county, value)} />
-                </div>
+                <FTextField field={section.getLocation()} width={392} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.location, value)} />
+                <FTextField field={section.getCounty()} width={196} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.county, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getLatitude()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.latitude, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getLongitude()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.longitude, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getCity()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.city, value)} />
-                </div>
+                <FTextField field={section.getLatitude()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.latitude, value)} />
+                <FTextField field={section.getLongitude()} width={196} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.longitude, value)} />
+                <FTextField field={section.getCity()} width={196} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.city, value)} />
             </FFormStackPanel>
         </FSection>
     );

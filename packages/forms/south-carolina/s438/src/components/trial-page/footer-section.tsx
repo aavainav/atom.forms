@@ -15,15 +15,11 @@ export default function TrialFooterSection({ binding }: ITrialFooterSectionProps
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FBorder borderEdges="all">
-                        <FLabel fontSize="6"><span className="fw-bold">Electronic Copy - Trial</span></FLabel>
-                        <FLabel fontSize="6"><span className="fw-bold">Officer / Driver's Record</span></FLabel>
-                    </FBorder>
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getTicketNumber()} borderEdges={["top", "right", "bottom"]} onChange={(value) => binding.setValue(section.ticketNumber, value)} />
-                </div>
+                <FBorder width={294} borderEdges="all">
+                    <FLabel fontSize="6"><span className="fw-bold">Electronic Copy - Trial</span></FLabel>
+                    <FLabel fontSize="6"><span className="fw-bold">Officer / Driver's Record</span></FLabel>
+                </FBorder>
+                <FTextField field={section.getTicketNumber()} width={294} borderEdges={["top", "right", "bottom"]} onChange={(value) => binding.setValue(section.ticketNumber, value)} />
             </FFormStackPanel>
         </FSection>
     );

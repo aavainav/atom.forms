@@ -16,20 +16,12 @@ export default function TrialVehicleSection({ binding }: ITrialVehicleSectionPro
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getLicenseNumber()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.licenseNumber, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getLicenseState()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.licenseState, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getMake()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.make, value)} />
-                </div>
-                <div className="w-100">
-                    <FNumberField field={section.getYear()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.year, value)} />
-                </div>
+                <FTextField field={section.getLicenseNumber()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.licenseNumber, value)} />
+                <FTextField field={section.getLicenseState()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.licenseState, value)} />
+                <FTextField field={section.getMake()} width={147} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.make, value)} />
+                <FNumberField field={section.getYear()} width={147} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.year, value)} />
             </FFormStackPanel>
-            <FBorder borderEdges={["left", "top", "right"]} contentJustify="evenly">
+            <FBorder width={588} borderEdges={["left", "top", "right"]} contentJustify="evenly">
                 <CheckboxField field={section.getHazardousMaterials()} onChange={(checked) => binding.setValue(section.hazardousMaterials, checked)} />
                 <CheckboxField field={section.getAuto()} onChange={(checked) => binding.setValue(section.auto, checked)} />
                 <CheckboxField field={section.getBicycle()} onChange={(checked) => binding.setValue(section.bicycle, checked)} />

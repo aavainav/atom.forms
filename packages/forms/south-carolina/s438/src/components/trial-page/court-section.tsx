@@ -15,29 +15,15 @@ export default function TrialCourtSection({ binding }: ITrialCourtSectionProps):
     return (
         <FSection>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getCourtName()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.courtName, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getStreetAddress()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.streetAddress, value)} />
-                </div>
+                <FTextField field={section.getCourtName()} width={294} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.courtName, value)} />
+                <FTextField field={section.getStreetAddress()} width={294} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.streetAddress, value)} />
             </FFormStackPanel>
             <FFormStackPanel direction="horizontal">
-                <div className="w-100">
-                    <FTextField field={section.getDateOfTrial()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfTrial, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getTimeOfTrial()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.timeOfTrial, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getCity()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getState()} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.state, value)} />
-                </div>
-                <div className="w-100">
-                    <FTextField field={section.getZipCode()} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.zipCode, value)} />
-                </div>
+                <FTextField field={section.getDateOfTrial()} width={118} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.dateOfTrial, value)} />
+                <FTextField field={section.getTimeOfTrial()} width={118} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.timeOfTrial, value)} />
+                <FTextField field={section.getCity()} width={118} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.city, value)} />
+                <FTextField field={section.getState()} width={117} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.state, value)} />
+                <FTextField field={section.getZipCode()} width={117} borderEdges={["left", "top", "right"]} onChange={(value) => binding.setValue(section.zipCode, value)} />
             </FFormStackPanel>
         </FSection>
     );
