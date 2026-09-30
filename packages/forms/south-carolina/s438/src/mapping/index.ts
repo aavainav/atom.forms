@@ -1,2 +1,2 @@
-export type { IS438Data, IS438ViolationData } from "./s438-data";
+export type { IS438Data, IS438TrialViolationData, IS438ViolationData, S438CitationType } from "./s438-data";
 export { S438Mapper } from "./s438-mapper";

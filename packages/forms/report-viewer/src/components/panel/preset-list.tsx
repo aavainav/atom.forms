@@ -11,6 +11,8 @@ interface IPresetListProps {
     readonly presets: ReadonlyArray<IReportPreset<any>>;
     /** The id of the preset chosen, if one is. */
     readonly selected?: string;
+    /** The presets that cannot be chosen, by id, with why: those for another variant of the form. */
+    readonly unavailable?: ReadonlyMap<string, string>;
 
     /** Invoked with the id of the preset chosen. */
     onSelect: (id: string) => void;
@@ -44,7 +46,7 @@ function toSections(presets: ReadonlyArray<IReportPreset<any>>): ReadonlyArray<I
 }
 
 /** Renders the searchable list of presets, grouped, one of which is chosen. */
-export const PresetList = ({ presets, selected, onSelect }: IPresetListProps): React.JSX.Element => {
+export const PresetList = ({ presets, selected, unavailable, onSelect }: IPresetListProps): React.JSX.Element => {
     const [term, setTerm] = useState("");
 
     const sections = useMemo(() => toSections(filter(presets, term)), [presets, term]);
@@ -63,12 +65,18 @@ export const PresetList = ({ presets, selected, onSelect }: IPresetListProps): R
                     {sections.map(({ heading, presets: members }) => (
                         <Fragment key={heading ?? ""}>
                             {heading && <FListGroupHeading>{heading}</FListGroupHeading>}
-                            {members.map(preset => (
-                                <FListGroupItem key={preset.id} id={`preset-${preset.id}`} active={preset.id === selected} onClick={() => onSelect(preset.id)}>
-                                    <div><strong>{preset.title}</strong></div>
-                                    {preset.description && <div><small>{preset.description}</small></div>}
-                                </FListGroupItem>
-                            ))}
+                            {members.map(preset => {
+                                const reason = unavailable?.get(preset.id);
+
+                                // a disabled row ignores clicks and takes no pointer, so why it is closed is said in it, not in a tooltip
+                                return (
+                                    <FListGroupItem key={preset.id} id={`preset-${preset.id}`} active={preset.id === selected} disabled={!!reason} onClick={() => onSelect(preset.id)}>
+                                        <div><strong>{preset.title}</strong></div>
+                                        {preset.description && <div><small>{preset.description}</small></div>}
+                                        {reason && <div><small>{reason}</small></div>}
+                                    </FListGroupItem>
+                                );
+                            })}
                         </Fragment>
                     ))}
                 </FListGroup>

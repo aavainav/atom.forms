@@ -3,11 +3,11 @@ import { IImportablePerson } from "@forms/core";
 
 import { TrialPageModel } from "../../../../src/models/trial-page/trial-page";
 import { TrialPageViolatorDropzone } from "../../../../src/models/trial-page/dropzones/trial-page-violator-dropzone";
-import { createForm } from "../../../fixtures/form";
+import { createTrialForm } from "../../../fixtures/form";
 
 describe("TrialPageViolatorDropzone", () => {
     it("maps every dropped field onto its own trial violator section field", async () => {
-        const form = await createForm();
+        const form = await createTrialForm();
         const page = form.getTrialPageCollection().getFirstPage<TrialPageModel>();
 
         const data: IImportablePerson = {

@@ -1,3 +1,6 @@
+/** Which copy a citation is written on: the front pages, returned to court, or the trial pages, set for trial. */
+export type S438CitationType = "court" | "trial";
+
 /**
  * One further violation the citation was written for, beyond the one the flat fields carry. The S438 prints one
  * charge per ticket, so three charges produce three front pages; violator, vehicle, owner, court, location and
@@ -26,8 +29,34 @@ export interface IS438ViolationData {
     readonly violationTimeOfViolation?: string;
 }
 
+/** One further violation on a trial citation, beyond the one the flat `trialViolation*` fields carry; a trial page of its own, as `IS438ViolationData` is a front page of its own. */
+export interface IS438TrialViolationData {
+    /** The blood alcohol level recorded for the violation. */
+    readonly trialViolationBloodAlcoholLevel?: string;
+    /** Checked when no court appearance is required for the violation. */
+    readonly trialViolationCourtAppearanceRequiredNo?: boolean;
+    /** Checked when a court appearance is required for the violation. */
+    readonly trialViolationCourtAppearanceRequiredYes?: boolean;
+    /** The date of the violation. */
+    readonly trialViolationDateOfViolation?: string;
+    /** The description of the violation. */
+    readonly trialViolationDescription?: string;
+    /** The South Carolina points the violation carries. */
+    readonly trialViolationScPoints?: number | null;
+    /** The section number of the violation. */
+    readonly trialViolationSectionNumber?: string;
+    /** The recorded speed, for a speeding violation. An unanswered speed is null. */
+    readonly trialViolationSpeed?: number | null;
+    /** The legal speed limit, for a speeding violation. An unanswered limit is null. */
+    readonly trialViolationSpeedLimit?: number | null;
+    /** The time of the violation. */
+    readonly trialViolationTimeOfViolation?: string;
+}
+
 /** Represents the data contract for the SC S438 (Uniform Traffic Ticket) citation record. */
 export interface IS438Data {
+    /** The violations beyond the first on a trial citation, one per further trial page, as `additionalViolations` is for the front pages. */
+    readonly additionalTrialViolations?: ReadonlyArray<IS438TrialViolationData>;
     /** The violations beyond the first, one per further front page. The first stays in the flat `violation*` fields, so a record written before a citation could carry more than one charge round-trips unchanged. */
     readonly additionalViolations?: ReadonlyArray<IS438ViolationData>;
     /** The bail deposited with the arresting officer. */
@@ -276,6 +305,8 @@ export interface IS438Data {
     readonly trialViolatorWeight?: number | null;
     /** The violator's zip code, as the trial copy records it. */
     readonly trialViolatorZipCode?: string;
+    /** Which copy the citation is written on: the form's variant. Its default variant, a court citation, when omitted. */
+    readonly variant?: S438CitationType;
     /** Checked when the vehicle is an automobile. */
     readonly vehicleAuto?: boolean;
     /** Checked when the vehicle is a bicycle. */

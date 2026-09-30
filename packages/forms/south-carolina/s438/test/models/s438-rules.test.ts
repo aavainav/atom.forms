@@ -24,6 +24,11 @@ async function validate(data: IS438Data = {}): Promise<Array<IIssue>> {
     return rules.getIssueCollection().getIssues().map(issue => ({ field: issue.field.name, message: issue.message }));
 }
 
+/** Validates a trial citation populated with the data, the trial pages standing in for the front pages. */
+function validateTrial(data: IS438Data = {}): Promise<Array<IIssue>> {
+    return validate({ ...data, variant: "trial" });
+}
+
 function messagesOn(issues: Array<IIssue>, field: string): Array<string> {
     return issues.filter(issue => issue.field === field).map(issue => issue.message);
 }
@@ -63,12 +68,21 @@ describe("the S438 rules", () => {
         });
     });
 
+    describe("the copy the citation is on", () => {
+        /** The copy a citation is not on has no pages, so none of its rules has anything to run against. */
+        it("asks nothing of the trial copy on a court citation", async () => {
+            expect((await validate()).filter(issue => issue.field.startsWith("trial-"))).toEqual([]);
+        });
+
+        it("asks nothing of the front page on a trial citation", async () => {
+            expect((await validateTrial()).filter(issue => !issue.field.startsWith("trial-"))).toEqual([]);
+        });
+    });
+
     describe("the violator", () => {
         it("requires the name, on the front page and the trial copy alike", async () => {
-            const issues = await validate();
-
-            expect(messagesOn(issues, "violator-first-name")).toContain("Name is required");
-            expect(messagesOn(issues, "trial-violator-first-name")).toContain("Name is required");
+            expect(messagesOn(await validate(), "violator-first-name")).toContain("Name is required");
+            expect(messagesOn(await validateTrial(), "trial-violator-first-name")).toContain("Name is required");
         });
 
         it("refuses a PO Box for a street", async () => {
@@ -105,10 +119,8 @@ describe("the S438 rules", () => {
 
         /** The front page does not draw race or sex yet, so requiring them there would fail a citation the officer had no way to finish. */
         it("requires race and sex on the trial copy, which draws them, but not on the front page", async () => {
-            const issues = await validate();
-
-            expect(messagesOn(issues, "trial-violator-race")).toContain("Race is required");
-            expect(messagesOn(issues, "violator-race")).toEqual([]);
+            expect(messagesOn(await validateTrial(), "trial-violator-race")).toContain("Race is required");
+            expect(messagesOn(await validate(), "violator-race")).toEqual([]);
         });
     });
 
@@ -118,15 +130,15 @@ describe("the S438 rules", () => {
         });
 
         it("asks for the owner when a vehicle is involved, and not for a pedestrian", async () => {
-            expect(messagesOn(await validate(), "trial-owner-first-name")).toContain("Owner first name is required");
-            expect(messagesOn(await validate({ trialVehiclePedestrian: true }), "trial-owner-first-name")).toEqual([]);
+            expect(messagesOn(await validateTrial(), "trial-owner-first-name")).toContain("Owner first name is required");
+            expect(messagesOn(await validateTrial({ trialVehiclePedestrian: true }), "trial-owner-first-name")).toEqual([]);
         });
 
         it("requires a vehicle type on the trial copy, which draws them, but not on the front page", async () => {
-            const issues = await validate();
+            const message = "At least one vehicle type is required";
 
-            expect(issues.some(issue => issue.message === "At least one vehicle type is required" && issue.field.startsWith("trial-"))).toBe(true);
-            expect(issues.some(issue => issue.message === "At least one vehicle type is required" && !issue.field.startsWith("trial-"))).toBe(false);
+            expect((await validateTrial()).some(issue => issue.message === message && issue.field.startsWith("trial-"))).toBe(true);
+            expect((await validate()).some(issue => issue.message === message)).toBe(false);
         });
     });
 
@@ -160,8 +172,8 @@ describe("the S438 rules", () => {
         it("stops holding the trial copy's date of trial to the future once a disposition is recorded", async () => {
             const field = "trial-court-date-of-trial";
 
-            expect(messagesOn(await validate({ trialCourtDateOfTrial: "01/01/2000" }), field)).toContain("Date of trial must be in the future");
-            expect(messagesOn(await validate({ trialCourtDateOfTrial: "01/01/2000", trialCourtInformationDispositionDate: "01/02/2000" }), field)).toEqual([]);
+            expect(messagesOn(await validateTrial({ trialCourtDateOfTrial: "01/01/2000" }), field)).toContain("Date of trial must be in the future");
+            expect(messagesOn(await validateTrial({ trialCourtDateOfTrial: "01/01/2000", trialCourtInformationDispositionDate: "01/02/2000" }), field)).toEqual([]);
         });
     });
 
@@ -169,12 +181,12 @@ describe("the S438 rules", () => {
         const message = "Choose two other vehicle types with Comb.";
 
         it("needs two other vehicle types chosen with it", async () => {
-            expect(messagesOn(await validate({ trialVehicleCombination: true, trialVehicleAuto: true }), "trial-vehicle-combination")).toContain(message);
-            expect(messagesOn(await validate({ trialVehicleCombination: true, trialVehicleAuto: true, trialVehicleCommercialVehicle: true }), "trial-vehicle-combination")).toEqual([]);
+            expect(messagesOn(await validateTrial({ trialVehicleCombination: true, trialVehicleAuto: true }), "trial-vehicle-combination")).toContain(message);
+            expect(messagesOn(await validateTrial({ trialVehicleCombination: true, trialVehicleAuto: true, trialVehicleCommercialVehicle: true }), "trial-vehicle-combination")).toEqual([]);
         });
 
         it("asks nothing of the other types when it is not chosen", async () => {
-            expect(messagesOn(await validate({ trialVehicleAuto: true }), "trial-vehicle-combination")).toEqual([]);
+            expect(messagesOn(await validateTrial({ trialVehicleAuto: true }), "trial-vehicle-combination")).toEqual([]);
         });
     });
 
@@ -205,7 +217,7 @@ describe("the S438 rules", () => {
         });
 
         it("checks the trial copy's speeds against its own statute", async () => {
-            expect(messagesOn(await validate({ trialViolationSectionNumber: "56-05-1520(G)(2)", trialViolationSpeed: 40, trialViolationSpeedLimit: 35 }), "trial-violation-section-number")).toContain(message);
+            expect(messagesOn(await validateTrial({ trialViolationSectionNumber: "56-05-1520(G)(2)", trialViolationSpeed: 40, trialViolationSpeedLimit: 35 }), "trial-violation-section-number")).toContain(message);
         });
     });
 
@@ -214,8 +226,8 @@ describe("the S438 rules", () => {
         it("asks which court the case went before only once a disposition date is entered", async () => {
             const field = "trial-court-information-case-before-magistrate";
 
-            expect(messagesOn(await validate(), field)).toEqual([]);
-            expect(messagesOn(await validate({ trialCourtInformationDispositionDate: "03/09/2026" }), field)).toContain("Choose the court the case went before");
+            expect(messagesOn(await validateTrial(), field)).toEqual([]);
+            expect(messagesOn(await validateTrial({ trialCourtInformationDispositionDate: "03/09/2026" }), field)).toContain("Choose the court the case went before");
         });
     });
 });

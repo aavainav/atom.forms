@@ -1,15 +1,14 @@
-import { createElement } from "react";
+import { act, createElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { ServicesContext } from "@common/react";
 import { ControllerManager } from "@forms/core";
 import { IServiceCollection } from "@shrub/core";
 
 import TrialPage from "../../../src/components/trial-page/trial-page";
-import { FrontPageModel } from "../../../src/models/front-page/front-page";
 import { S438FormModel } from "../../../src/models/s438-form";
 import { TrialPageModel } from "../../../src/models/trial-page/trial-page";
 import { IS438CitationService, S438CitationService } from "../../../src/services";
-import { createForm } from "../../fixtures/form";
+import { createTrialForm } from "../../fixtures/form";
 import { getFieldIds, getInput, mount, type, unmountAll } from "../../fixtures/mount";
 
 afterEach(unmountAll);
@@ -17,7 +16,7 @@ afterEach(unmountAll);
 /** Renders the trial page of a real form, bound through a real form controller. */
 async function mountPage() {
     const controllers = new ControllerManager();
-    controllers.loadForm(await createForm());
+    controllers.loadForm(await createTrialForm());
 
     const controller = controllers.getFormController<S438FormModel>();
     const page = controller.form.getTrialPageCollection().getFirstPage<TrialPageModel>();
@@ -40,13 +39,24 @@ describe("TrialPage", () => {
         sections.forEach(definition => getFieldIds(page.get(definition), definition).forEach(id => expect(() => getInput(id)).not.toThrow()));
     });
 
-    it("writes what is typed onto the trial page, and leaves the front page alone", async () => {
+    it("writes what is typed onto the trial page", async () => {
         const { controller, page } = await mountPage();
 
         type(getInput(page.getViolatorSection().getFirstName().id), "Casey");
 
-        const form = controller.form;
-        expect(form.getTrialPageCollection().getFirstPage<TrialPageModel>().getViolatorSection().getFirstName().getValue()).toBe("Casey");
-        expect(form.getFrontPageCollection().getFirstPage<FrontPageModel>().getViolatorSection().getFirstName().getValue()).toBe("");
+        expect(controller.form.getTrialPageCollection().getFirstPage<TrialPageModel>().getViolatorSection().getFirstName().getValue()).toBe("Casey");
+    });
+
+    it("shares everything but the charge with the trial pages added after it, as the front pages do", async () => {
+        const { controller, page } = await mountPage();
+
+        await act(async () => { await controller.addPage(controller.form.trialPage); });
+        type(getInput(page.getViolatorSection().getFirstName().id), "Casey");
+        type(getInput(page.getViolationSection().getDescription().id), "Speeding");
+
+        const [first, second] = controller.form.getTrialPageCollection().getPages<TrialPageModel>();
+        expect(second.getViolatorSection().getFirstName().getValue()).toBe("Casey");
+        expect(first.getViolationSection().getDescription().getValue()).toBe("Speeding");
+        expect(second.getViolationSection().getDescription().getValue()).toBe("");
     });
 });

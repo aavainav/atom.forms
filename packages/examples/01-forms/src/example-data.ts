@@ -148,12 +148,25 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
         presets: [
             // a second form locking a field, on a different section, to show that locking follows whichever keys a
             // host names rather than being wired up per form: this agency's citations are always returnable to the
-            // one municipal court, so its name is stamped and locked while the trial date and time stay editable.
+            // one municipal court, so its name is stamped and locked while the trial date and time stay editable. it is
+            // laid under whichever blank form the officer picks, so it names the court on both copies.
             {
                 id: "columbia-court",
                 title: "Columbia Municipal Court",
-                data: { courtName: "Columbia Municipal Court", courtCity: "Columbia", courtState: "SC" },
-                readOnlyFields: { courtName: true }
+                variants: ["court", "trial"],
+                data: {
+                    courtName: "Columbia Municipal Court", courtCity: "Columbia", courtState: "SC",
+                    trialCourtName: "Columbia Municipal Court", trialCourtCity: "Columbia", trialCourtState: "SC"
+                },
+                readOnlyFields: { courtName: true, trialCourtName: true }
+            },
+            // the trial copy alone holds the time the court sits, so this one is for trial citations and greyed out on a court one
+            {
+                id: "morning-session",
+                title: "Morning session",
+                description: "The court sits at 0900.",
+                variants: ["trial"],
+                data: { trialCourtTimeOfTrial: "0900" }
             }
         ],
         templates: [
@@ -173,8 +186,16 @@ const forms: ReadonlyArray<IExampleForm<any>> = [
             }
         ],
         // the ticket number is the host's to give, so every new citation is dealt the next in the sequence, and it is
-        // locked: an officer cannot correct a number that was issued. the form stamps none of its own.
-        assign: identity => ({ data: { footerTicketNumber: nextTicketNumber(identity) }, readOnlyFields: { footerTicketNumber: true } }),
+        // locked: an officer cannot correct a number that was issued. the form stamps none of its own. the host isn't
+        // told which blank form the officer picked, so the number goes onto both copies and the form keeps the one it is on.
+        assign: identity => {
+            const ticketNumber = nextTicketNumber(identity);
+
+            return {
+                data: { footerTicketNumber: ticketNumber, trialFooterTicketNumber: ticketNumber },
+                readOnlyFields: { footerTicketNumber: true, trialFooterTicketNumber: true }
+            };
+        },
         held: getCitationReport
     })
 ];

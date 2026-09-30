@@ -20,3 +20,8 @@ new S438FormSchema();
 export function createForm(): Promise<S438FormModel> {
     return new S438FormModel().initialize();
 }
+
+/** Builds a trial citation: the trial page in place of the front page, as the Trial blank form starts. */
+export async function createTrialForm(): Promise<S438FormModel> {
+    return (await createForm()).setCitationType("trial");
+}

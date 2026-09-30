@@ -56,6 +56,31 @@ describe("FormModel", () => {
         });
     });
 
+    describe("variants", () => {
+        it("has none unless the form declares them, and refuses to apply one", async () => {
+            expect(form.variants).toEqual([]);
+            await expect(form.applyVariant("trial")).rejects.toThrow(`"${form.name}" has no variant called "trial".`);
+        });
+
+        it("has no default and is in no variant when it declares none", () => {
+            expect(form.getDefaultVariant()).toBeUndefined();
+            expect(form.getVariant()).toBeUndefined();
+        });
+
+        it("answers with the variant flagged as the default, wherever it is listed", () => {
+            const court = { id: "court", title: "Court" };
+            const trial = { id: "trial", isDefault: true, title: "Trial" };
+
+            expect(Object.assign(Object.create(form), { variants: [court, trial] }).getDefaultVariant()).toBe(trial);
+        });
+
+        it.each([["none", []], ["two", [true, true]]])("refuses to guess when %s of its variants are flagged as the default", (_, flags) => {
+            const variants = [{ id: "court", isDefault: flags[0], title: "Court" }, { id: "trial", isDefault: flags[1], title: "Trial" }];
+
+            expect(() => Object.assign(Object.create(form), { variants }).getDefaultVariant()).toThrow("must flag exactly one of its variants as the default");
+        });
+    });
+
     describe("addPage and removePage", () => {
         it("returns a new form with the page appended", async () => {
             const withTwo = await addCitationPage(form);

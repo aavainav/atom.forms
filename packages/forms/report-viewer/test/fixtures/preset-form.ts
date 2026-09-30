@@ -1,9 +1,18 @@
 import { vi } from "vitest";
 
-import { FormModel } from "@forms/core";
+import { FormModel, IFormVariant } from "@forms/core";
 
 /** The identity every report stub carries. */
 export const identity = { name: "Stub Form", status: "draft", type: "none", version: "1.0" } as const;
+
+/**
+ * Every field the stub form has, left blank. A real form reports each of its fields, answered or not, and the preset
+ * service leaves out a field a report does not carry, as one the form does not have.
+ */
+export const blankFields = { agencyCity: "", agencyName: "", agencyPhone: "", notes: "", vehicleMake: { description: "", value: "" }, vehicleYear: 0 } as const;
+
+/** The two shapes a variant stub comes in, Court the default, as S438's do. */
+export const variants: ReadonlyArray<IFormVariant> = [{ id: "court", isDefault: true, title: "Court" }, { id: "trial", title: "Trial" }];
 
 /** What a form is asked to populate itself from. */
 export interface IPopulateInput {
@@ -28,9 +37,10 @@ export function stubForm(answers: Record<string, unknown> = {}, readOnlyFields?:
         mode: "editable",
         readOnlyFields,
         clean() { return this; },
-        extractData: () => ({ ...identity, ...answers }),
+        extractData: () => ({ ...identity, ...blankFields, ...answers }),
         getIsDirty: () => false,
         mapper: { extract: (source: { answers: Record<string, unknown> }) => ({ ...source.answers }) },
+        variants: [],
         populate: async (input: IPopulateInput) => {
             populated(input);
 
@@ -43,4 +53,9 @@ export function stubForm(answers: Record<string, unknown> = {}, readOnlyFields?:
             return stubForm({ ...answers, ...kept }, { ...readOnlyFields, ...input.readOnlyFields });
         }
     });
+}
+
+/** A stub form that comes in two variants, Court and Trial, and is in the one given. */
+export function variantForm(current: string, answers: Record<string, unknown> = {}): FormModel<any> {
+    return Object.assign(stubForm(answers), { variants, getVariant: () => current });
 }

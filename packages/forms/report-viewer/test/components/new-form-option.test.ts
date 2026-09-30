@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ServicesContext } from "@common/react";
 import type { AuditRecord } from "@forms/audit";
 import { ControllerManager } from "@forms/core";
-import type { FormModel } from "@forms/core";
+import type { FormModel, IFormVariant } from "@forms/core";
 import type { IReviewComment } from "@forms/review";
 import type { IServiceCollection } from "@shrub/core";
 
@@ -18,10 +18,10 @@ import type { IReportTemplate, IReportViewerDataManager } from "../../src/servic
 
 const mounted: Array<() => void> = [];
 
-function stubForm(id: string, isDirty: boolean, revision = 0): FormModel<any> {
+function stubForm(id: string, isDirty: boolean, revision = 0, variants: ReadonlyArray<IFormVariant> = []): FormModel<any> {
     return {
-        history: [], id, mode: "editable", name: "Stub Form", revision, status: "draft", version: "1.0",
-        clean() { return this; }, getIsDirty: () => isDirty, incrementRevision() { return stubForm(id, isDirty, revision + 1); }
+        history: [], id, mode: "editable", name: "Stub Form", revision, status: "draft", variants, version: "1.0",
+        clean() { return this; }, getDefaultVariant: () => variants.find(variant => variant.isDefault), getIsDirty: () => isDirty, incrementRevision() { return stubForm(id, isDirty, revision + 1, variants); }
     } as unknown as FormModel<any>;
 }
 
@@ -36,12 +36,14 @@ interface IMountOptions {
     readonly isDirty?: boolean;
     /** What the host lists as its templates; a host that lists none has no `readTemplates` at all. */
     readonly readTemplates?: () => Promise<ReadonlyArray<IReportTemplate>>;
+    /** The blank forms the form declares. */
+    readonly variants?: ReadonlyArray<IFormVariant>;
 }
 
 function mount(options: IMountOptions = {}) {
-    const { canSave = false, isDirty = false, readTemplates } = options;
+    const { canSave = false, isDirty = false, readTemplates, variants } = options;
     const controllers = new ControllerManager();
-    controllers.loadForm(stubForm("form-1", isDirty));
+    controllers.loadForm(stubForm("form-1", isDirty, 0, variants));
 
     const newForm = stubForm("form-2", false);
     const loaded = { audit: [previousAudit], comments: [previousComment], form: newForm };
@@ -73,7 +75,7 @@ function mount(options: IMountOptions = {}) {
         const options = showModal.mock.calls.at(-1)![0];
         const press = async (title: string): Promise<void> => { await act(async () => { await options.actions.find((action: { title: string }) => action.title === title).invoke(); }); };
 
-        return { cancel: () => press("Cancel"), choose: (id?: string) => options.contentProps.onChange(id), close: () => act(async () => { await options.close.invoke(); }), contentProps: options.contentProps, start: () => press("Start"), title: options.title };
+        return { cancel: () => press("Cancel"), choose: (template?: string, variant?: string) => options.contentProps.onChange({ template, variant }), close: () => act(async () => { await options.close.invoke(); }), contentProps: options.contentProps, start: () => press("Start"), title: options.title };
     };
 
     return { click, controllers, dataManager, loaded, loadForm, picker, openForm, save, showConfirmModal, showModal, showNotification, showSaveChangesModal };
@@ -90,7 +92,7 @@ describe("NewFormOption", () => {
 
             await click();
 
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined);
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined, undefined);
         });
 
         it("has the service put the new form in place of the old, with what the host held for it", async () => {
@@ -197,7 +199,7 @@ describe("NewFormOption", () => {
             await click();
 
             expect(showModal).not.toHaveBeenCalled();
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined);
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined, undefined);
         });
 
         it("starts from the host's default without asking when it is the only thing to start from", async () => {
@@ -206,7 +208,7 @@ describe("NewFormOption", () => {
             await click();
 
             expect(showModal).not.toHaveBeenCalled();
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "standard");
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "standard", undefined);
         });
 
         it("asks what to start from, and starts nothing yet, when there is more than one thing", async () => {
@@ -224,7 +226,7 @@ describe("NewFormOption", () => {
 
             await click();
 
-            expect(picker().contentProps).toMatchObject({ includeBlank: true, selected: undefined, templates: [speeding] });
+            expect(picker().contentProps).toMatchObject({ includeBlank: true, selected: { template: undefined }, templates: [speeding] });
         });
 
         it("leaves out the form's own default, and selects the host's, when the host names one", async () => {
@@ -232,7 +234,7 @@ describe("NewFormOption", () => {
 
             await click();
 
-            expect(picker().contentProps).toMatchObject({ includeBlank: false, selected: "standard", templates: [speeding, standard] });
+            expect(picker().contentProps).toMatchObject({ includeBlank: false, selected: { template: "standard" }, templates: [speeding, standard] });
         });
 
         it("starts from the template chosen when Start is pressed", async () => {
@@ -242,7 +244,7 @@ describe("NewFormOption", () => {
             picker().choose("speeding");
             await picker().start();
 
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "speeding");
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "speeding", undefined);
         });
 
         it("starts from the one it was left on when Start is pressed without choosing", async () => {
@@ -251,7 +253,7 @@ describe("NewFormOption", () => {
             await click();
             await picker().start();
 
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "standard");
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "standard", undefined);
         });
 
         it("starts from the form's own default when that is what was chosen", async () => {
@@ -262,7 +264,7 @@ describe("NewFormOption", () => {
             picker().choose(undefined);
             await picker().start();
 
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined);
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", undefined, undefined);
         });
 
         it("has the service put the new form in place of the old once one is chosen", async () => {
@@ -320,7 +322,7 @@ describe("NewFormOption", () => {
 
             await act(async () => { await showConfirmModal.mock.calls[0][0].onConfirm(); });
 
-            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "speeding");
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "speeding", undefined);
         });
 
         it("says so, and starts nothing, when the templates could not be listed", async () => {
@@ -331,6 +333,51 @@ describe("NewFormOption", () => {
             expect(showNotification).toHaveBeenCalledWith({ type: "danger", message: "The templates could not be loaded." });
             expect(showModal).not.toHaveBeenCalled();
             expect(loadForm).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("with blank forms of its own", () => {
+        const court: IFormVariant = { id: "court", isDefault: true, title: "Court" };
+        const trial: IFormVariant = { id: "trial", title: "Trial" };
+
+        it("asks, with its default blank form selected, even when the host lists no templates", async () => {
+            const { click, loadForm, picker } = mount({ variants: [court, trial] });
+
+            await click();
+
+            expect(picker().contentProps).toMatchObject({ includeBlank: false, selected: { template: undefined, variant: "court" }, templates: [], variants: [court, trial] });
+            expect(loadForm).not.toHaveBeenCalled();
+        });
+
+        it("selects the blank form flagged as the default, though it is not the first", async () => {
+            const { click, picker } = mount({ variants: [{ id: "court", title: "Court" }, { id: "trial", isDefault: true, title: "Trial" }] });
+
+            await click();
+
+            expect(picker().contentProps.selected).toEqual({ template: undefined, variant: "trial" });
+        });
+
+        it("lays the host's default under the blank form picked, and leaves the default out of the list", async () => {
+            const { click, dataManager, loadForm, picker } = mount({ readTemplates: async () => [speeding, standard], variants: [court, trial] });
+
+            await click();
+
+            expect(picker().contentProps).toMatchObject({ baseTemplate: "standard", templates: [speeding] });
+
+            picker().choose("standard", "trial");
+            await picker().start();
+
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "standard", "trial");
+        });
+
+        it("starts from a host template alone when that is what was chosen", async () => {
+            const { click, dataManager, loadForm, picker } = mount({ readTemplates: async () => [speeding, standard], variants: [court, trial] });
+
+            await click();
+            picker().choose("speeding");
+            await picker().start();
+
+            expect(loadForm).toHaveBeenCalledWith({ name: "Stub Form", version: "1.0" }, dataManager, "new", "speeding", undefined);
         });
     });
 });

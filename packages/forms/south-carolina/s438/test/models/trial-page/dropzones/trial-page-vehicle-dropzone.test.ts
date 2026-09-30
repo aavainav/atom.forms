@@ -3,13 +3,13 @@ import { IImportableVehicle } from "@forms/core";
 
 import { TrialPageModel } from "../../../../src/models/trial-page/trial-page";
 import { TrialPageVehicleDropzone } from "../../../../src/models/trial-page/dropzones/trial-page-vehicle-dropzone";
-import { createForm } from "../../../fixtures/form";
+import { createTrialForm } from "../../../fixtures/form";
 
 describe("TrialPageVehicleDropzone", () => {
     const data: IImportableVehicle = { make: "Toyota", model: "Camry", year: 2021 };
 
     async function getDropzone(): Promise<TrialPageVehicleDropzone> {
-        const form = await createForm();
+        const form = await createTrialForm();
         return form.getTrialPageCollection().getFirstPage<TrialPageModel>().getDropzone(TrialPageVehicleDropzone);
     }
 

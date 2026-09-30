@@ -11,7 +11,7 @@ import { IModalService } from "../../src/services/modal";
 import { IPresetService, PresetService } from "../../src/services/preset";
 import { IPresetSelectorService, PresetSelectorService } from "../../src/services/preset-selector";
 import { IReportPreset, IReportViewerDataManager } from "../../src/services/report-viewer";
-import { identity, populated, stubForm } from "../fixtures/preset-form";
+import { identity, populated, stubForm, variantForm } from "../fixtures/preset-form";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -511,6 +511,35 @@ describe("PresetsPanel", () => {
             await act(async () => { await showConfirmModal.mock.calls[0][0].onConfirm(); });
 
             expect(onError).toHaveBeenCalledWith("offline");
+        });
+    });
+
+    describe("on a form with variants", () => {
+        const trialDate: IReportPreset<any> = { data: { agencyCity: "Columbia" }, id: "trial-date", title: "Trial date", variants: ["trial"] };
+        const both: IReportPreset<any> = { data: { agencyCity: "Columbia" }, id: "both", title: "Both", variants: ["court", "trial"] };
+        const untagged: IReportPreset<any> = { data: { agencyCity: "Columbia" }, id: "untagged", title: "Untagged" };
+
+        it("greys out a preset for another variant, says which it is for, and will not choose it", async () => {
+            const { byId, choose, open } = mount({ form: variantForm("court"), presets: [trialDate, both] });
+
+            await open();
+            choose("trial-date");
+
+            expect(byId("preset-trial-date")!.classList).toContain("disabled");
+            expect(byId("preset-trial-date")!.textContent).toContain("For the Trial form");
+            expect(byId("preset-trial-date")!.classList).not.toContain("active");
+            expect(byId("preset-both")!.classList).not.toContain("disabled");
+        });
+
+        it("takes a preset naming no variant to be for the default, closing it on another", async () => {
+            const court = mount({ form: variantForm("court"), presets: [untagged] });
+            await court.open();
+            expect(court.byId("preset-untagged")!.classList).not.toContain("disabled");
+
+            const trial = mount({ form: variantForm("trial"), presets: [untagged] });
+            await trial.open();
+            expect(trial.byId("preset-untagged")!.classList).toContain("disabled");
+            expect(trial.byId("preset-untagged")!.textContent).toContain("For the Court form");
         });
     });
 });

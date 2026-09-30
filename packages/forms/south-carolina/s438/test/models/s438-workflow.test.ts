@@ -5,7 +5,7 @@ import { WorkflowService } from "@forms/workflow";
 
 import { S438FormModel } from "../../src/models/s438-form";
 import { S438FormSchema } from "../../src/models/s438-form-schema";
-import { createForm } from "../fixtures/form";
+import { createForm, createTrialForm } from "../fixtures/form";
 
 const schema = FormModel.getSchema<S438FormSchema>(S438FormModel);
 const officer: IActor = { id: "officer-1", name: "Officer One" };
@@ -90,6 +90,17 @@ describe("the S438 workflow", () => {
             expect(workflow?.history).toHaveLength(1);
             expect(workflow?.history[0]).toMatchObject({ by: officer, from: "draft", to: "issued", transition: "issue" });
         });
+    });
+
+    it("closes a trial citation the same way: its violations, where they were, and its set of trial pages", async () => {
+        const issued = service.transition(await createTrialForm(), "issue", officer, { issues: noIssues });
+        const page = issued.getPagesFor(schema.trialPage)[0];
+
+        expect(issued.isSectionLocked(schema.trialViolationSection)).toBe(true);
+        expect(issued.isSectionLocked(schema.trialViolationLocationSection)).toBe(true);
+        expect(issued.isPageSetLocked(schema.trialPage)).toBe(true);
+        expect(page.get<SectionModel>(schema.trialViolationSection).get<FieldModel<TValueType>>(schema.trialViolationFields.trialViolationDescription).getIsEnabled()).toBe(false);
+        expect(page.get<SectionModel>(schema.trialViolatorSection).get<FieldModel<TValueType>>(schema.trialViolatorFields.trialViolatorFirstName).getIsEnabled()).toBe(true);
     });
 
     it("closes the violations on every front page of a citation that has more than one", async () => {

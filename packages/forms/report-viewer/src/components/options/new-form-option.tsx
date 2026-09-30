@@ -2,14 +2,8 @@ import React from "react";
 import { useService } from "@common/react";
 import { FButton, FIcon, FTooltip } from "@forms/core";
 
-import { TemplatePicker } from "./template-picker";
+import { TemplatePicker, ITemplateChoice } from "./template-picker";
 import { IModalService, INotificationService, IReportTemplate, IReportViewerOptionProps, IReportViewerService } from "../../services";
-
-/** What a new form is to start from. */
-interface IChoice {
-    /** The template picked; undefined starts from the form's own default. */
-    readonly template?: string;
-}
 
 /**
  * Defines the option for resetting the current form to a blank instance, applying whatever defaults the data manager
@@ -21,7 +15,8 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
     const reportViewerService = useService<IReportViewerService>(IReportViewerService);
 
     /** Finds out what to start from, asking the user only when there is more than one thing to start from. Undefined when they cancelled. */
-    const chooseTemplate = async (): Promise<IChoice | undefined> => {
+    const chooseTemplate = async (): Promise<ITemplateChoice | undefined> => {
+        const { variants } = controllers.getFormController().form;
         let templates: ReadonlyArray<IReportTemplate>;
 
         try {
@@ -35,25 +30,35 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
         // the host's default replaces the form's own, so the form's own is on offer only when the host names none
         const selected = templates.find(entry => entry.isDefault)?.id;
         const hasDefault = selected !== undefined;
+        const hasVariants = variants.length > 0;
 
-        if (templates.length === 0) {
+        if (templates.length === 0 && !hasVariants) {
             return {};
         }
 
-        if (hasDefault && templates.length === 1) {
+        if (hasDefault && templates.length === 1 && !hasVariants) {
             return { template: selected };
         }
 
-        let chosen = selected;
+        // a form with variants always asks, with its default variant selected: the variant shapes the pages, and the
+        // host's default template is laid over whichever is picked, so that template isn't listed on its own
+        let chosen: ITemplateChoice = hasVariants ? { template: selected, variant: controllers.getFormController().form.getDefaultVariant()!.id } : { template: selected };
 
         return new Promise(resolve => {
             modalService.showModal({
                 title: "Start a new form",
                 content: TemplatePicker,
-                contentProps: { includeBlank: !hasDefault, selected, templates, onChange: (id?: string) => { chosen = id; } },
+                contentProps: {
+                    baseTemplate: selected,
+                    includeBlank: !hasDefault && !hasVariants,
+                    selected: chosen,
+                    templates: hasVariants ? templates.filter(entry => !entry.isDefault) : templates,
+                    variants,
+                    onChange: (choice: ITemplateChoice) => { chosen = choice; }
+                },
                 actions: [
                     { title: "Cancel", invoke: async () => { resolve(undefined); return { result: true }; } },
-                    { title: "Start", primary: true, invoke: async () => { resolve({ template: chosen }); return { result: true }; } }
+                    { title: "Start", primary: true, invoke: async () => { resolve(chosen); return { result: true }; } }
                 ],
                 close: { invoke: async () => { resolve(undefined); return { result: true }; } },
                 persistent: true
@@ -61,9 +66,9 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
         });
     };
 
-    const startNew = async (template?: string): Promise<void> => {
+    const startNew = async ({ template, variant }: ITemplateChoice): Promise<void> => {
         try {
-            const loaded = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new", template);
+            const loaded = await reportViewerService.loadForm({ name: catalogItem.name, version: catalogItem.version }, dataManager, "new", template, variant);
 
             reportViewerService.openForm(controllers, loaded);
         }
@@ -80,7 +85,7 @@ export const NewFormOption = ({ catalogItem, controllers, dataManager, title }: 
             return;
         }
 
-        const start = (): Promise<void> => startNew(choice.template);
+        const start = (): Promise<void> => startNew(choice);
         const form = controllers.getFormController().form;
 
         if (!form.getIsDirty()) {

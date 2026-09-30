@@ -1,6 +1,6 @@
 import { IPopulateData, FormMapper, FormValues, ReadOnlyFields } from "@forms/core";
 
-import { IS438Data, IS438ViolationData } from "./s438-data";
+import { IS438Data, IS438TrialViolationData, IS438ViolationData } from "./s438-data";
 
 import { ArrestingOfficerSectionModel } from "../models/front-page/arresting-officer-section";
 import { CourtSectionModel } from "../models/front-page/court-section";
@@ -31,11 +31,42 @@ import { TrialViolatorSectionModel } from "../models/trial-page/violator-section
  * its own and so appears in neither direction.
  */
 export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
-    /** Returns the form's current values, emitting only the fields it owns. Shared sections are read from the first page alone, since every front page holds the same values there. */
+    /**
+     * Returns the form's current values, emitting only the fields it owns: which copy the citation is on, and that
+     * copy's fields alone. Shared sections are read from the first page, since every page of a copy holds the same
+     * values there.
+     */
     public extract(form: S438FormModel): IS438Data {
-        const pages = form.getFrontPageCollection().getPages<FrontPageModel>();
+        const citationType = form.getCitationType();
+        const data: FormValues<IS438Data> = { variant: citationType };
+
+        if (citationType === "trial") {
+            this.extractTrialPages(form.getTrialPageCollection().getPages<TrialPageModel>(), data);
+        }
+        else {
+            this.extractFrontPages(form.getFrontPageCollection().getPages<FrontPageModel>(), data);
+        }
+
+        return data;
+    }
+
+    /**
+     * Returns a new form with the data applied to whichever copy it is on, reshaped first when the data names the
+     * other. Async, since creating a page means awaiting its `initialize`. A field the data omits keeps its current
+     * value -- how the date and time of violation the form stamps on itself survive a partial record.
+     */
+    public async populate(form: S438FormModel, { data, readOnlyFields }: IPopulateData<IS438Data>): Promise<S438FormModel> {
+        // a record naming its copy reshapes the form first; one that doesn't keeps the copy it was started as
+        const updated = data.variant ? await form.setCitationType(data.variant) : form;
+
+        return updated.getCitationType() === "trial"
+            ? this.populateTrialPages(updated, data, readOnlyFields)
+            : this.populateFrontPages(updated, data, readOnlyFields);
+    }
+
+    /** Reads a court citation's front pages: the first in full, and the charge alone from each after it. */
+    private extractFrontPages(pages: ReadonlyArray<FrontPageModel>, data: FormValues<IS438Data>): void {
         const page = pages[0];
-        const data: FormValues<IS438Data> = {};
 
         this.extractViolator(page.getViolatorSection(), data);
         this.extractVehicle(page.getVehicleSection(), data);
@@ -46,35 +77,37 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.extractArrestingOfficer(page.getArrestingOfficerSection(), data);
         this.extractFooter(page.getFooterSection(), data);
 
-        // the trial page holds its own copy of everything, so it is read in full rather than from the front page
-        const trial = form.getTrialPageCollection().getFirstPage<TrialPageModel>();
-
-        this.extractTrialHeader(trial.getHeaderSection(), data);
-        this.extractTrialViolator(trial.getViolatorSection(), data);
-        this.extractTrialVehicle(trial.getVehicleSection(), data);
-        this.extractTrialOwner(trial.getOwnerSection(), data);
-        this.extractTrialCourt(trial.getCourtSection(), data);
-        this.extractTrialViolation(trial.getViolationSection(), data);
-        this.extractTrialViolationLocation(trial.getViolationLocationSection(), data);
-        this.extractTrialArrestingOfficer(trial.getArrestingOfficerSection(), data);
-        this.extractTrialCourtInformation(trial.getCourtInformationSection(), data);
-        this.extractTrialFooter(trial.getFooterSection(), data);
-
         if (pages.length > 1) {
             data.additionalViolations = pages.slice(1).map(additional => this.extractAdditionalViolation(additional.getViolationSection()));
         }
+    }
 
-        return data;
+    /** Reads a trial citation's trial pages: the first in full, and the charge alone from each after it. */
+    private extractTrialPages(pages: ReadonlyArray<TrialPageModel>, data: FormValues<IS438Data>): void {
+        const page = pages[0];
+
+        this.extractTrialHeader(page.getHeaderSection(), data);
+        this.extractTrialViolator(page.getViolatorSection(), data);
+        this.extractTrialVehicle(page.getVehicleSection(), data);
+        this.extractTrialOwner(page.getOwnerSection(), data);
+        this.extractTrialCourt(page.getCourtSection(), data);
+        this.extractTrialViolation(page.getViolationSection(), data);
+        this.extractTrialViolationLocation(page.getViolationLocationSection(), data);
+        this.extractTrialArrestingOfficer(page.getArrestingOfficerSection(), data);
+        this.extractTrialCourtInformation(page.getCourtInformationSection(), data);
+        this.extractTrialFooter(page.getFooterSection(), data);
+
+        if (pages.length > 1) {
+            data.additionalTrialViolations = pages.slice(1).map(additional => this.extractAdditionalTrialViolation(additional.getViolationSection()));
+        }
     }
 
     /**
-     * Returns a new form with the data applied to its front pages, creating a page per further violation. Async,
-     * since creating a page means awaiting its `initialize`. Pages beyond `additionalViolations` are left alone
-     * rather than removed, so a record naming fewer violations never silently discards a page an officer added.
-     * A field the data omits keeps its current value -- how the date and time of violation the form stamps on
-     * itself survive a partial record.
+     * Returns a new form with the data applied to its front pages, creating a page per further violation. Pages
+     * beyond `additionalViolations` are left alone rather than removed, so a record naming fewer violations never
+     * silently discards a page an officer added.
      */
-    public async populate(form: S438FormModel, { data, readOnlyFields }: IPopulateData<IS438Data>): Promise<S438FormModel> {
+    private async populateFrontPages(form: S438FormModel, data: IS438Data, readOnlyFields?: ReadOnlyFields<IS438Data>): Promise<S438FormModel> {
         const additional = data.additionalViolations ?? [];
 
         let updated = form;
@@ -107,23 +140,46 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
             collection = collection.replace(index, result);
         });
 
-        const trialCollection = updated.getTrialPageCollection();
-        const trial = trialCollection.getFirstPage<TrialPageModel>();
+        return updated.set(updated.frontPage, collection);
+    }
 
-        let trialResult = trial.set(trial.headerSection, this.populateTrialHeader(trial.getHeaderSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.violatorSection, this.populateTrialViolator(trialResult.getViolatorSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.vehicleSection, this.populateTrialVehicle(trialResult.getVehicleSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.ownerSection, this.populateTrialOwner(trialResult.getOwnerSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.courtSection, this.populateTrialCourt(trialResult.getCourtSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.violationSection, this.populateTrialViolation(trialResult.getViolationSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.violationLocationSection, this.populateTrialViolationLocation(trialResult.getViolationLocationSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.arrestingOfficerSection, this.populateTrialArrestingOfficer(trialResult.getArrestingOfficerSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.courtInformationSection, this.populateTrialCourtInformation(trialResult.getCourtInformationSection(), data, readOnlyFields));
-        trialResult = trialResult.set(trialResult.footerSection, this.populateTrialFooter(trialResult.getFooterSection(), data, readOnlyFields));
+    /** Returns a new form with the data applied to its trial pages, creating a page per further violation, as the front pages are. */
+    private async populateTrialPages(form: S438FormModel, data: IS438Data, readOnlyFields?: ReadOnlyFields<IS438Data>): Promise<S438FormModel> {
+        const additional = data.additionalTrialViolations ?? [];
 
-        return updated
-            .set(updated.frontPage, collection)
-            .set(updated.trialPage, trialCollection.replace(0, trialResult));
+        let updated = form;
+
+        // initialize must be awaited, since it is what creates the page's sections and registers its dropzones
+        while (updated.getTrialPageCollection().pages.length < additional.length + 1) {
+            updated = updated.addPage(await updated.trialPage.createPage(updated).initialize(), updated.trialPage);
+        }
+
+        let collection = updated.getTrialPageCollection();
+
+        collection.getPages<TrialPageModel>().forEach((page, index) => {
+            // the shared sections are written onto every page, as the front pages' are
+            let result = page.set(page.headerSection, this.populateTrialHeader(page.getHeaderSection(), data, readOnlyFields));
+            result = result.set(result.violatorSection, this.populateTrialViolator(result.getViolatorSection(), data, readOnlyFields));
+            result = result.set(result.vehicleSection, this.populateTrialVehicle(result.getVehicleSection(), data, readOnlyFields));
+            result = result.set(result.ownerSection, this.populateTrialOwner(result.getOwnerSection(), data, readOnlyFields));
+            result = result.set(result.courtSection, this.populateTrialCourt(result.getCourtSection(), data, readOnlyFields));
+            result = result.set(result.violationLocationSection, this.populateTrialViolationLocation(result.getViolationLocationSection(), data, readOnlyFields));
+            result = result.set(result.arrestingOfficerSection, this.populateTrialArrestingOfficer(result.getArrestingOfficerSection(), data, readOnlyFields));
+            result = result.set(result.courtInformationSection, this.populateTrialCourtInformation(result.getCourtInformationSection(), data, readOnlyFields));
+            result = result.set(result.footerSection, this.populateTrialFooter(result.getFooterSection(), data, readOnlyFields));
+
+            // the violation differs page to page; the first comes from the flat fields and the rest from the array
+            if (index === 0) {
+                result = result.set(result.violationSection, this.populateTrialViolation(result.getViolationSection(), data, readOnlyFields));
+            }
+            else if (additional[index - 1]) {
+                result = result.set(result.violationSection, this.populateTrialViolation(result.getViolationSection(), additional[index - 1]));
+            }
+
+            collection = collection.replace(index, result);
+        });
+
+        return updated.set(updated.trialPage, collection);
     }
 
     private extractViolator(section: ViolatorSectionModel, data: FormValues<IS438Data>): void {
@@ -462,7 +518,7 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         return this.write(updated, section.zipCode, data, "trialCourtZipCode", readOnlyFields);
     }
 
-    private extractTrialViolation(section: TrialViolationSectionModel, data: FormValues<IS438Data>): void {
+    private extractTrialViolation(section: TrialViolationSectionModel, data: FormValues<IS438TrialViolationData>): void {
         this.read(data, "trialViolationBloodAlcoholLevel", section.getBloodAlcoholLevel());
         this.read(data, "trialViolationCourtAppearanceRequiredNo", section.getCourtAppearanceRequiredNo());
         this.read(data, "trialViolationCourtAppearanceRequiredYes", section.getCourtAppearanceRequiredYes());
@@ -475,7 +531,17 @@ export class S438Mapper extends FormMapper<S438FormModel, IS438Data> {
         this.read(data, "trialViolationTimeOfViolation", section.getTimeOfViolation());
     }
 
-    private populateTrialViolation(section: TrialViolationSectionModel, data: IS438Data, readOnlyFields?: ReadOnlyFields<IS438Data>): TrialViolationSectionModel {
+    /** Returns one further trial violation's values, as the record carried for each trial page beyond the first. */
+    private extractAdditionalTrialViolation(section: TrialViolationSectionModel): IS438TrialViolationData {
+        const violation: FormValues<IS438TrialViolationData> = {};
+
+        this.extractTrialViolation(section, violation);
+
+        return violation;
+    }
+
+    /** Takes the violation half of the contract, so the same method serves the flat first violation and the rest in `additionalTrialViolations`. */
+    private populateTrialViolation(section: TrialViolationSectionModel, data: IS438TrialViolationData, readOnlyFields?: ReadOnlyFields<IS438TrialViolationData>): TrialViolationSectionModel {
         let updated = this.write(section, section.bloodAlcoholLevel, data, "trialViolationBloodAlcoholLevel", readOnlyFields);
         updated = this.write(updated, section.courtAppearanceRequiredNo, data, "trialViolationCourtAppearanceRequiredNo", readOnlyFields);
         updated = this.write(updated, section.courtAppearanceRequiredYes, data, "trialViolationCourtAppearanceRequiredYes", readOnlyFields);

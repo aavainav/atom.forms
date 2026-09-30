@@ -142,8 +142,6 @@ export interface IS438FormSchema extends ISchema {
         readonly footerTicketNumber: FieldDefinition<StringFieldModel>;
     };
 
-    readonly noticePage: PageDefinition<NoticePageModel>;
-
     readonly trialPage: PageDefinition<TrialPageModel>;
 
     readonly trialHeaderSection: SectionDefinition<TrialHeaderSectionModel>;
@@ -288,6 +286,8 @@ export interface IS438FormSchema extends ISchema {
         readonly trialFooterTicketNumber: FieldDefinition<StringFieldModel>;
     };
 
+    readonly noticePage: PageDefinition<NoticePageModel>;
+
     readonly ruleCollection: RuleCollection;
 }
 
@@ -399,19 +399,17 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         footerTicketNumber: { label: "Ticket Number", ctor: StringFieldModel }
     });
 
-    readonly noticePage: PageDefinition<NoticePageModel> = DefinitionFactory.page<NoticePageModel>("notice-page", this.formDefinition, NoticePageModel);
-
-    // the court's copy of the ticket: one for the whole citation, holding its own copy of everything the front page
-    // prints, plus the court's disposition
+    // the court's copy of the ticket, written in place of the front pages on a trial citation: one page per charge,
+    // as the front pages are, holding its own copy of everything the front page prints, plus the court's disposition
     readonly trialPage: PageDefinition<TrialPageModel> = DefinitionFactory.page<TrialPageModel>("trial-page", this.formDefinition, TrialPageModel);
 
-    readonly trialHeaderSection: SectionDefinition<TrialHeaderSectionModel> = DefinitionFactory.section<TrialHeaderSectionModel>("trial-header-section", this.trialPage, TrialHeaderSectionModel);
+    readonly trialHeaderSection: SectionDefinition<TrialHeaderSectionModel> = DefinitionFactory.section<TrialHeaderSectionModel>("trial-header-section", this.trialPage, TrialHeaderSectionModel, { isShared: true });
     readonly trialHeaderFields = defineFields(this.trialHeaderSection, {
         trialHeaderNotes: { label: "Notes", ctor: StringFieldModel },
         trialHeaderVoid: { label: "Void", ctor: BooleanFieldModel }
     });
 
-    readonly trialViolatorSection: SectionDefinition<TrialViolatorSectionModel> = DefinitionFactory.section<TrialViolatorSectionModel>("trial-violator-section", this.trialPage, TrialViolatorSectionModel);
+    readonly trialViolatorSection: SectionDefinition<TrialViolatorSectionModel> = DefinitionFactory.section<TrialViolatorSectionModel>("trial-violator-section", this.trialPage, TrialViolatorSectionModel, { isShared: true });
     readonly trialViolatorFields = defineFields(this.trialViolatorSection, {
         trialViolatorFirstName: { label: "First Name", ctor: StringFieldModel },
         trialViolatorMiddleName: { label: "Middle Name", ctor: StringFieldModel },
@@ -434,7 +432,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialViolatorEyeColor: { label: "Eye Color", ctor: StringFieldModel }
     });
 
-    readonly trialVehicleSection: SectionDefinition<TrialVehicleSectionModel> = DefinitionFactory.section<TrialVehicleSectionModel>("trial-vehicle-section", this.trialPage, TrialVehicleSectionModel);
+    readonly trialVehicleSection: SectionDefinition<TrialVehicleSectionModel> = DefinitionFactory.section<TrialVehicleSectionModel>("trial-vehicle-section", this.trialPage, TrialVehicleSectionModel, { isShared: true });
     readonly trialVehicleFields = defineFields(this.trialVehicleSection, {
         trialVehicleLicenseNumber: { label: "License Number", ctor: StringFieldModel },
         trialVehicleLicenseState: { label: "License State", ctor: StringFieldModel },
@@ -451,7 +449,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialVehicleOther: { label: "Other", ctor: BooleanFieldModel }
     });
 
-    readonly trialOwnerSection: SectionDefinition<TrialOwnerSectionModel> = DefinitionFactory.section<TrialOwnerSectionModel>("trial-owner-section", this.trialPage, TrialOwnerSectionModel);
+    readonly trialOwnerSection: SectionDefinition<TrialOwnerSectionModel> = DefinitionFactory.section<TrialOwnerSectionModel>("trial-owner-section", this.trialPage, TrialOwnerSectionModel, { isShared: true });
     readonly trialOwnerFields = defineFields(this.trialOwnerSection, {
         trialOwnerFirstName: { label: "First Name", ctor: StringFieldModel },
         trialOwnerMiddleName: { label: "Middle Name", ctor: StringFieldModel },
@@ -462,7 +460,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialOwnerZipCode: { label: "Zip Code", ctor: StringFieldModel }
     });
 
-    readonly trialCourtSection: SectionDefinition<TrialCourtSectionModel> = DefinitionFactory.section<TrialCourtSectionModel>("trial-court-section", this.trialPage, TrialCourtSectionModel);
+    readonly trialCourtSection: SectionDefinition<TrialCourtSectionModel> = DefinitionFactory.section<TrialCourtSectionModel>("trial-court-section", this.trialPage, TrialCourtSectionModel, { isShared: true });
     readonly trialCourtFields = defineFields(this.trialCourtSection, {
         trialCourtName: { label: "Name of Trial Court", ctor: StringFieldModel },
         trialCourtStreetAddress: { label: "Street Address", ctor: StringFieldModel },
@@ -487,7 +485,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialViolationSpeedLimit: { label: "Limit", ctor: NumberFieldModel }
     });
 
-    readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel> = DefinitionFactory.section<TrialViolationLocationSectionModel>("trial-violation-location-section", this.trialPage, TrialViolationLocationSectionModel);
+    readonly trialViolationLocationSection: SectionDefinition<TrialViolationLocationSectionModel> = DefinitionFactory.section<TrialViolationLocationSectionModel>("trial-violation-location-section", this.trialPage, TrialViolationLocationSectionModel, { isShared: true });
     readonly trialViolationLocationFields = defineFields(this.trialViolationLocationSection, {
         trialViolationLocation: { label: "Violation Location", ctor: StringFieldModel },
         trialViolationLocationCounty: { label: "County", ctor: StringFieldModel },
@@ -496,7 +494,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialViolationLocationCity: { label: "City", ctor: StringFieldModel }
     });
 
-    readonly trialArrestingOfficerSection: SectionDefinition<TrialArrestingOfficerSectionModel> = DefinitionFactory.section<TrialArrestingOfficerSectionModel>("trial-arresting-officer-section", this.trialPage, TrialArrestingOfficerSectionModel);
+    readonly trialArrestingOfficerSection: SectionDefinition<TrialArrestingOfficerSectionModel> = DefinitionFactory.section<TrialArrestingOfficerSectionModel>("trial-arresting-officer-section", this.trialPage, TrialArrestingOfficerSectionModel, { isShared: true });
     readonly trialArrestingOfficerFields = defineFields(this.trialArrestingOfficerSection, {
         trialArrestingOfficerName: { label: "Name and Rank of Arresting Officer", ctor: StringFieldModel },
         trialArrestingOfficerRank: { label: "Rank", ctor: StringFieldModel },
@@ -508,7 +506,7 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialArrestingOfficerBailReceivedBy: { label: "By", ctor: StringFieldModel }
     });
 
-    readonly trialCourtInformationSection: SectionDefinition<TrialCourtInformationSectionModel> = DefinitionFactory.section<TrialCourtInformationSectionModel>("trial-court-information-section", this.trialPage, TrialCourtInformationSectionModel);
+    readonly trialCourtInformationSection: SectionDefinition<TrialCourtInformationSectionModel> = DefinitionFactory.section<TrialCourtInformationSectionModel>("trial-court-information-section", this.trialPage, TrialCourtInformationSectionModel, { isShared: true });
     readonly trialCourtInformationFields = defineFields(this.trialCourtInformationSection, {
         trialCourtInformationCaseBeforeMagistrate: { label: "Magistrate", ctor: BooleanFieldModel },
         trialCourtInformationCaseBeforeMunicipalCourt: { label: "Mun. Court", ctor: BooleanFieldModel },
@@ -542,10 +540,13 @@ export class S438FormSchema extends Schema implements IS438FormSchema {
         trialCourtInformationArrestResultOfCollision: { label: "Arrest as Result of Collision", ctor: BooleanFieldModel }
     });
 
-    readonly trialFooterSection: SectionDefinition<TrialFooterSectionModel> = DefinitionFactory.section<TrialFooterSectionModel>("trial-footer-section", this.trialPage, TrialFooterSectionModel);
+    readonly trialFooterSection: SectionDefinition<TrialFooterSectionModel> = DefinitionFactory.section<TrialFooterSectionModel>("trial-footer-section", this.trialPage, TrialFooterSectionModel, { isShared: true });
     readonly trialFooterFields = defineFields(this.trialFooterSection, {
         trialFooterTicketNumber: { label: "Ticket #", ctor: StringFieldModel }
     });
+
+    // declared after the front and trial pages, so whichever of them the citation is on comes before it
+    readonly noticePage: PageDefinition<NoticePageModel> = DefinitionFactory.page<NoticePageModel>("notice-page", this.formDefinition, NoticePageModel);
 
     readonly ruleCollection: RuleCollection = createRuleCollection(this);
 }

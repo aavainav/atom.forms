@@ -1,5 +1,5 @@
 import { getAuditController, IPresetSkip } from "@forms/audit";
-import { isRecord, IControllerManager, IReportData, ReadOnlyFields } from "@forms/core";
+import { isRecord, FormModel, IControllerManager, IReportData, ReadOnlyFields } from "@forms/core";
 import { createService, Singleton } from "@shrub/core";
 
 import { IReportPreset, IReportViewerDataManager } from "./report-viewer";
@@ -89,6 +89,8 @@ export interface IPresetService {
      * the report cannot take it or was edited while it was being applied.
      */
     apply(controllers: IControllerManager, preset: IReportPreset, overwrite: boolean): Promise<IPresetPlan>;
+    /** Whether the preset is for the variant the form is in. A preset naming none is for the form's default; every preset is for a form with no variants. */
+    fitsVariant(preset: IReportPreset, form: FormModel<any>): boolean;
     /** The lists of pages the report has, so a preset can keep the number of pages of one. */
     getPageLists(current: IReportData): ReadonlyArray<IPageList>;
     /** What a preset could be saved from, grouped by where it sits: answered, not locked, and not the report's own identity. */
@@ -128,7 +130,8 @@ interface IContext {
     readonly written: Array<string>;
 }
 
-const identityKeys: ReadonlySet<string> = new Set(["id", "name", "revision", "status", "type", "version", "workflow"]);
+// the report's variant is its identity too, not a field a preset could be saved from
+const identityKeys: ReadonlySet<string> = new Set(["id", "name", "revision", "status", "type", "variant", "version", "workflow"]);
 
 /** Matches the page a path sits on, such as `persons[1].`, at the start of it. */
 const pageOf = /^(\w+)\[(\d+)\]\./;
@@ -206,6 +209,15 @@ function cut(wanted: unknown, current: unknown, locked: unknown, path: string, c
     return wanted;
 }
 
+/**
+ * Leaves out the preset's fields the report does not carry at all. A form reports every field it has, answered or not,
+ * so one missing is a field it does not have -- the other copy's, on a form that comes in two shapes. A list of pages
+ * is kept, since a report can lack a list it can still be given pages of.
+ */
+function onForm(data: Record<string, unknown>, current: IReportData): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(data).filter(([key, value]) => key in current || isList(value)));
+}
+
 /** Cuts the locks down to the fields still there to lock. */
 function cutLocks(locks: unknown, kept: unknown): unknown {
     if (kept === undefined) {
@@ -260,6 +272,12 @@ export class PresetService implements IPresetService {
     async apply(controllers: IControllerManager, preset: IReportPreset, overwrite: boolean): Promise<IPresetPlan> {
         const controller = controllers.getFormController();
         const base = controller.form;
+
+        // the panel offers no such preset, but a host applying one from its own launcher is refused too
+        if (!this.fitsVariant(preset, base)) {
+            throw new Error(`"${preset.title}" is not for this version of the form.`);
+        }
+
         // planned against the form as it stands now, since that is what it is applied to
         const plan = this.plan(preset, base.extractData(), base.readOnlyFields, overwrite);
 
@@ -280,6 +298,12 @@ export class PresetService implements IPresetService {
         getAuditController(controllers).recordPresetSkipped(preset.id, plan.skipped);
 
         return plan;
+    }
+
+    fitsVariant(preset: IReportPreset, form: FormModel<any>): boolean {
+        const current = form.getVariant();
+
+        return current === undefined || (preset.variants ?? [form.getDefaultVariant()!.id]).includes(current);
     }
 
     getPageLists(current: IReportData): ReadonlyArray<IPageList> {
@@ -337,7 +361,7 @@ export class PresetService implements IPresetService {
 
     plan(preset: IReportPreset, current: IReportData, locked: ReadOnlyFields<IReportData> | undefined, overwrite: boolean): IPresetPlan {
         const context: IContext = { overwrite, pages: [], rules: this, skipped: [], written: [] };
-        const cutDown = cut(preset.data, current, locked, "", context);
+        const cutDown = cut(onForm(preset.data, current), current, locked, "", context);
         const data = isRecord(cutDown) ? cutDown : {};
 
         return {
@@ -364,8 +388,11 @@ export class PresetService implements IPresetService {
             throw new Error("The host cannot keep presets.");
         }
 
-        const current = controllers.getFormController().form.extractData();
-        const saved: IReportPreset = { data: this.toPresetData(current, selected, pageCounts), id: crypto.randomUUID(), isPersonal: true, title };
+        const form = controllers.getFormController().form;
+        const current = form.extractData();
+        const variant = form.getVariant();
+        // stamped with the variant it was saved from, since its data holds only that variant's fields
+        const saved: IReportPreset = { data: this.toPresetData(current, selected, pageCounts), id: crypto.randomUUID(), isPersonal: true, title, ...(variant ? { variants: [variant] } : {}) };
 
         await dataManager.writePreset(saved);
         getAuditController(controllers).recordPresetSaved(saved.id, [...selected, ...pageCounts]);

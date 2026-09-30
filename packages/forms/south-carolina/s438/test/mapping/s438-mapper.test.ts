@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import type { IS438Data, IS438ViolationData } from "../../src/mapping/s438-data";
+import type { IS438Data, IS438TrialViolationData, IS438ViolationData, S438CitationType } from "../../src/mapping/s438-data";
 import { S438Mapper } from "../../src/mapping/s438-mapper";
 import { S438FormModel } from "../../src/models/s438-form";
-import { createForm } from "../fixtures/form";
+import { createForm, createTrialForm } from "../fixtures/form";
 
 /**
  * A value for every field the contract publishes.
@@ -28,7 +28,21 @@ const violation: Required<IS438ViolationData> = {
     violationTimeOfViolation: "14:05"
 };
 
+const trialViolation: Required<IS438TrialViolationData> = {
+    trialViolationBloodAlcoholLevel: "0.04",
+    trialViolationCourtAppearanceRequiredNo: true,
+    trialViolationCourtAppearanceRequiredYes: true,
+    trialViolationDateOfViolation: "02/15/2026",
+    trialViolationDescription: "Improper lane change",
+    trialViolationScPoints: 2,
+    trialViolationSectionNumber: "56-5-1900",
+    trialViolationSpeed: 50,
+    trialViolationSpeedLimit: 45,
+    trialViolationTimeOfViolation: "15:10"
+};
+
 const data: Required<IS438Data> = {
+    additionalTrialViolations: [trialViolation],
     additionalViolations: [violation],
     arrestingOfficerBailDeposited: "150.00",
     arrestingOfficerBondAmountRequested: "500.00",
@@ -153,6 +167,7 @@ const data: Required<IS438Data> = {
     trialViolatorStreetAddress: "300 Park Road",
     trialViolatorWeight: 180,
     trialViolatorZipCode: "29072",
+    variant: "court",
     vehicleAuto: true,
     vehicleBicycle: true,
     vehicleCombination: true,
@@ -202,6 +217,21 @@ const data: Required<IS438Data> = {
     violatorZipCode: "29201"
 };
 
+/** Whether a key of the contract belongs to the trial pages rather than the front pages. */
+function isTrialKey(key: string): boolean {
+    return key.startsWith("trial") || key === "additionalTrialViolations";
+}
+
+/** The part of the full contract one copy carries, since a citation is written on the front pages or the trial pages and never both. */
+function forCopy(citationType: S438CitationType): IS438Data {
+    const fields = Object.entries(data).filter(([key]) => key !== "variant" && isTrialKey(key) === (citationType === "trial"));
+
+    return { ...Object.fromEntries(fields), variant: citationType };
+}
+
+const courtData = forCopy("court");
+const trialData = forCopy("trial");
+
 describe("S438Mapper", () => {
     const mapper = new S438Mapper();
     let form: S438FormModel;
@@ -215,23 +245,40 @@ describe("S438Mapper", () => {
          * The pair is what a mapper exists for: everything answered on the form has to survive being written out
          * and read back. A field wired into one direction and missed in the other shows up here.
          */
-        it("returns every field it was given", async () => {
-            expect(mapper.extract(await mapper.populate(form, { data }))).toEqual(data);
+        it("returns every field it was given, on a court citation", async () => {
+            expect(mapper.extract(await mapper.populate(form, { data: courtData }))).toEqual(courtData);
+        });
+
+        it("returns every field it was given, on a trial citation", async () => {
+            expect(mapper.extract(await mapper.populate(form, { data: trialData }))).toEqual(trialData);
         });
 
         it("survives a second trip unchanged", async () => {
-            const once = mapper.extract(await mapper.populate(form, { data }));
-            const twice = mapper.extract(await mapper.populate(await createForm(), { data: once }));
+            for (const record of [courtData, trialData]) {
+                const once = mapper.extract(await mapper.populate(form, { data: record }));
+                const twice = mapper.extract(await mapper.populate(await createForm(), { data: once }));
 
-            expect(twice).toEqual(once);
+                expect(twice).toEqual(once);
+            }
         });
     });
 
     describe("extract", () => {
-        it("includes every field the contract publishes, whether answered or not", () => {
+        it("includes every field a court citation publishes, whether answered or not, and none of the trial copy's", () => {
             const extracted = mapper.extract(form);
 
-            expect(Object.keys(extracted).sort()).toEqual(Object.keys(data).filter(key => key !== "additionalViolations").sort());
+            expect(Object.keys(extracted).sort()).toEqual(Object.keys(courtData).filter(key => key !== "additionalViolations").sort());
+        });
+
+        it("includes every field a trial citation publishes, whether answered or not, and none of the front page's", async () => {
+            const extracted = mapper.extract(await createTrialForm());
+
+            expect(Object.keys(extracted).sort()).toEqual(Object.keys(trialData).filter(key => key !== "additionalTrialViolations").sort());
+        });
+
+        it("says which copy the citation is on", async () => {
+            expect(mapper.extract(form).variant).toBe("court");
+            expect(mapper.extract(await createTrialForm()).variant).toBe("trial");
         });
 
         it("reports an untouched field at its type's default", () => {
@@ -304,12 +351,36 @@ describe("S438Mapper", () => {
             expect(names).toEqual(["Dana", "Dana"]);
         });
 
-        /** The trial copy holds its own fields, so the front page's values are never copied across to it. */
-        it("keeps the trial page's fields apart from the front page's", async () => {
-            const extracted = mapper.extract(await mapper.populate(form, { data: { violatorFirstName: "Dana" } }));
+        it("reshapes the form as the copy the record names", async () => {
+            const populated = await mapper.populate(form, { data: { variant: "trial", trialViolatorFirstName: "Dana" } });
 
-            expect(extracted.violatorFirstName).toBe("Dana");
-            expect(extracted.trialViolatorFirstName).toBe("");
+            expect(populated.getCitationType()).toBe("trial");
+            expect(populated.getFrontPageCollection().pages).toHaveLength(0);
+            expect(mapper.extract(populated).trialViolatorFirstName).toBe("Dana");
+        });
+
+        /** A host template names no copy, so the blank form the officer picked decides it. */
+        it("keeps the copy the form was started as when the record names none", async () => {
+            const populated = await mapper.populate(await createTrialForm(), { data: { trialViolatorFirstName: "Dana" } });
+
+            expect(populated.getCitationType()).toBe("trial");
+            expect(mapper.extract(populated).trialViolatorFirstName).toBe("Dana");
+        });
+
+        it("ignores the other copy's fields", async () => {
+            const extracted = mapper.extract(await mapper.populate(form, { data: { trialViolatorFirstName: "Dana", violatorFirstName: "Casey" } }));
+
+            expect(extracted.violatorFirstName).toBe("Casey");
+            expect(extracted).not.toHaveProperty("trialViolatorFirstName");
+        });
+
+        it("creates a trial page per further trial violation, sharing the rest across them", async () => {
+            const populated = await mapper.populate(form, { data: { variant: "trial", trialViolatorFirstName: "Dana", trialViolationDescription: "Speeding", additionalTrialViolations: [trialViolation] } });
+            const extracted = mapper.extract(populated);
+
+            expect(populated.getTrialPageCollection().pages).toHaveLength(2);
+            expect(extracted.trialViolationDescription).toBe("Speeding");
+            expect(extracted.additionalTrialViolations?.[0].trialViolationDescription).toBe("Improper lane change");
         });
 
         it("keeps the first violation in the flat fields and the rest in the array", async () => {

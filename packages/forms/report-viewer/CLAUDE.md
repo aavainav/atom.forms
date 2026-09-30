@@ -131,18 +131,19 @@ interface IReadDataResult<TData extends object = IReportData> extends IPopulateD
 `loadForm(identity, dataManager?)`:
 1. `formCatalogService.get(identity)` — resolves and caches the catalog item, calling its `load()` at most once per
    identity, ever.
-2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages.
+2. `let form = await new catalogItem.ctor().initialize()` — builds the form and every one of its pages; then, for a
+   new form started as one of the form's `variants`, `form = await form.applyVariant(variant)`.
 3. `await dataManager?.read(reason, template)`; if it answered, `form = await form.populate(result)` -- the form's own `populate`
    decides for itself whether it has a mapper to run (awaited either way, since a repeating-page mapper must create
    pages, which is async; a form with no mapper just returns itself unchanged) -- then
    `form = workflowService.restoreWorkflow(form, result.status, result.workflow)`, the explicit second step that
    restores the record's status and workflow history and applies the lock its status carries. Safe to call
    unconditionally, even for a form with no workflow: see [`@forms/workflow`](../workflow/CLAUDE.md#restoreworkflow--the-two-step-load).
-4. → `IInitialForm { audit?, catalogItem, comments?, form, hasRecord, reason, template?, Component }`: the audit history
+4. → `IInitialForm { audit?, catalogItem, comments?, form, hasRecord, reason, template?, variant?, Component }`: the audit history
    and the comments the read returned ride along, and `ReportViewerForm` loads them onto the controllers. `hasRecord`
    (the read answered), `reason` (`open` or `new`) and `template` (the one a new form was started from) say how the
    form came to be, which `getArrival(initialForm)` turns into the `FormArrival` the audit reports: loaded, with the
-   counts of what came with the record, or started -- naming the template when there was one, and only then. A new
+   counts of what came with the record, or started -- naming the template and the variant when there was one, and only then. A new
    form is started even when the host gave it defaults or a template.
 
 **The form is self-describing -- its own `mapper`, `valueListIds` and `violationListId` travel with it.** Nothing
@@ -205,6 +206,13 @@ templates cheaply and fetches the one chosen.
 - **Composition is the host's.** A template built from several pieces of data -- a preset for the agency, another for
   the road conditions -- is put together by the host, which answers `read` with one finished record. The report
   viewer has no notion of a template's parts; see `createExampleDataManager` in the sandbox for one way to do it.
+- **A form can have blank forms of its own.** A form that comes in more than one shape declares `variants`
+  (`IFormVariant`: `{ id, title, description? }`), and the picker lists them first, under a "Blank forms" heading,
+  in place of "Blank" -- the picker then always opens, with the variant flagged `isDefault` selected. A variant only decides the
+  form's shape: the host's default template is laid under whichever is picked (`read("new", defaultId)`), and is not
+  listed on its own; the host's other templates are listed after, and start the form's first shape. `loadForm`'s
+  `variant` argument calls `form.applyVariant(variant)` after `initialize()` and **before** populate, so a record
+  naming its own shape still wins. The host is not told the variant. S438 (Court / Trial) is the example.
 - **A host's own launcher starts one with the `template` prop** on `ReportViewer`, which loads with `"new"` and the id
   in place of `"open"`, so the audit says `form-started` from that template rather than a load.
 
@@ -242,6 +250,17 @@ report's adds pages. The mapper adds them, from the array's length; it never rem
     description: "" }`, which cannot be told from an answer, and counting them as answers would leave every such
     field forever "answered" on a real form;
   - a field already holding what the preset sets is neither written nor skipped;
+  - a report-level field the report **does not carry at all** is left out, neither written nor skipped (`onForm`): a
+    form reports every field it has, answered or not, so a missing key is a field it does not have -- the other
+    copy's, on S438, whose court and trial citations each report only their own. A list of pages is exempt, since a
+    report can lack a list it can still be given pages of. Test reports carry every field the stub form has
+    (`blankFields` in `test/fixtures/preset-form.ts`) for the same reason;
+  - a preset is for the variants it names in `variants`, or the form's default variant when it names none; `fitsVariant(preset, form)`
+    says whether it is for the one the form is in (always, on a form with no variants). The panel lists a preset for another
+    variant **greyed out**, with "For the Trial form" in the row -- a disabled row takes no pointer, so not a tooltip -- and it
+    cannot be chosen; `apply` refuses one too, for a host applying it from its own launcher. A preset saved from the report
+    is stamped with the variant it was saved from, since it holds only that variant's fields. `variant` is identity, not a
+    savable field;
   - an option box's `{ value, description }` is one field, and is named as itself (`isRecord` in `@forms/core`);
   - a mark on a whole list, or a whole page, locks everything on it; a page is found in the marks by position.
   It answers with the data left to write, the paths it sets, the pages it adds (`pages`), the preset's own locks cut

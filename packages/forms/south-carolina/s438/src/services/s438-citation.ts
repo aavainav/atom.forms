@@ -1,4 +1,4 @@
-import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, PageCollection, TValueType } from "@forms/core";
+import { Dropzone, FieldModel, FormModel, FormModelConstructor, IControllerManager, PageCollection, PageDefinition, PageModel, SectionModel, TValueType } from "@forms/core";
 import { IViolation } from "@forms/violations";
 import { createService, Singleton } from "@shrub/core";
 
@@ -16,7 +16,7 @@ export interface IS438CitationService {
     applyTrialOwnerDropzone(page: TrialPageModel, dropzone: Dropzone): TrialPageModel;
     /** Returns a new trial page with the dropped vehicle data applied to its vehicle section. */
     applyTrialVehicleDropzone(page: TrialPageModel, dropzone: Dropzone): TrialPageModel;
-    /** Returns a new trial page with the dropped violation data applied to its violation section. Unlike the front page's, the boxes stay open: nothing takes the trial copy's charge off it but typing over it. */
+    /** Returns a new trial page with the dropped violation data applied to its violation section, its boxes locked as the front page's are. */
     applyTrialViolationDropzone(page: TrialPageModel, dropzone: Dropzone): TrialPageModel;
     /** Returns a new trial page with the dropped person data applied to its violator section. */
     applyTrialViolatorDropzone(page: TrialPageModel, dropzone: Dropzone): TrialPageModel;
@@ -24,9 +24,9 @@ export interface IS438CitationService {
     applyVehicleDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
     /** Returns a new page with the dropped violation data applied to the citation's violation section. */
     applyViolationDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
-    /** Writes the chosen violations onto the form, one front page each, and adds the pages the extra ones need. */
+    /** Writes the chosen violations onto the form, one page each of whichever copy it is on, and adds the pages the extra ones need. */
     applyViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): Promise<void>;
-    /** Narrows the given violations to those the citation's front pages already carry. */
+    /** Narrows the given violations to those the citation's pages already carry, front or trial. */
     getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation>;
     /** Returns a new page with the dropped person data applied to the citation's violator section. */
     applyViolatorDropzone(page: FrontPageModel, dropzone: Dropzone): FrontPageModel;
@@ -83,7 +83,13 @@ export class S438CitationService implements IS438CitationService {
             points: violationSection.scPoints
         });
 
-        return page.set(page.violationSection, updatedSection).setDropzone(dropzone);
+        // the trial pages carry the charges on a trial citation, so a dropped violation locks as the front page's does
+        const locked = updatedSection
+            .set(updatedSection.sectionNumber, lock(updatedSection.getSectionNumber()))
+            .set(updatedSection.description, lock(updatedSection.getDescription()))
+            .set(updatedSection.scPoints, lock(updatedSection.getScPoints()));
+
+        return page.set(page.violationSection, locked).setDropzone(dropzone);
     }
 
     applyTrialViolatorDropzone(page: TrialPageModel, dropzone: Dropzone): TrialPageModel {
@@ -133,10 +139,11 @@ export class S438CitationService implements IS438CitationService {
             return;
         }
 
-        const controller = controllers.getFormController();
+        const controller = controllers.getFormController<S438FormModel>();
         const formSchema = FormModel.getSchema<S438FormSchema>(formCtor);
+        const pageDefinition = getChargePageDefinition(controller.form, formSchema);
 
-        const pages = controller.form.get<PageCollection>(formSchema.frontPage).getPages<FrontPageModel>();
+        const pages = controller.form.get<PageCollection>(pageDefinition).getPages<ChargePage>();
 
         // the chosen violations go into the first page with no charge on it, and then onto pages after that.
         // picking again therefore adds to the citation rather than rewriting it, while the first pick still fills
@@ -148,46 +155,49 @@ export class S438CitationService implements IS438CitationService {
         // page's sections, and writing into a page that has none would throw. addPage copies the shared sections
         // across as it goes, so the violator, vehicle and officer details are already on the new page.
         for (let index = pages.length; index < start + violations.length; index++) {
-            await controller.addPage(formSchema.frontPage);
+            await controller.addPage(pageDefinition);
         }
 
         // the date and time of the violation sit in the violation section alongside the charge, so they are not
         // carried across by the shared-section copy; one stop produces one date and time however many charges come
         // out of it, so they are taken from the first page rather than left for the officer to key in per page
-        const first = controller.form.get<PageCollection>(formSchema.frontPage).pages[0] as FrontPageModel;
+        const first = controller.form.get<PageCollection>(pageDefinition).getFirstPage<ChargePage>();
         const date = first.getViolationSection().getDateOfViolation().getValue();
         const time = first.getViolationSection().getTimeOfViolation().getValue();
 
         controller.update({ update: form => {
-            let collection = form.get<PageCollection>(formSchema.frontPage);
+            let collection = form.get<PageCollection>(pageDefinition);
 
             violations.forEach((violation, offset) => {
                 const index = start + offset;
-                const page = collection.pages[index] as FrontPageModel;
-                const section = page.getViolationSection();
+                const page = collection.getPages<ChargePage>()[index];
+                const charge = page.getViolationSection();
+                // widened to the base types, since `set` can't be called on a union of the two copies' models
+                const section: SectionModel = charge;
+                const target: PageModel = page;
 
                 // the boxes the violation fills are disabled with it: the charge came from the code list and is
                 // taken off by deleting its page, not by typing over it. the date and time are not part of the
                 // charge and stay as they were.
                 const updated = section
-                    .set(section.sectionNumber, lock(section.getSectionNumber().setValue(violation.statute ?? violation.code)))
-                    .set(section.description, lock(section.getDescription().setValue(violation.description)))
-                    .set(section.scPoints, lock(section.getScPoints().setValue(violation.points ?? null)))
-                    .set(section.courtAppearanceRequiredYes, lock(section.getCourtAppearanceRequiredYes().setValue(violation.requiresCourtAppearance === true)))
-                    .set(section.courtAppearanceRequiredNo, lock(section.getCourtAppearanceRequiredNo().setValue(violation.requiresCourtAppearance === false)))
-                    .set(section.dateOfViolation, section.getDateOfViolation().setValue(date))
-                    .set(section.timeOfViolation, section.getTimeOfViolation().setValue(time));
+                    .set(charge.sectionNumber, lock(charge.getSectionNumber().setValue(violation.statute ?? violation.code)))
+                    .set(charge.description, lock(charge.getDescription().setValue(violation.description)))
+                    .set(charge.scPoints, lock(charge.getScPoints().setValue(violation.points ?? null)))
+                    .set(charge.courtAppearanceRequiredYes, lock(charge.getCourtAppearanceRequiredYes().setValue(violation.requiresCourtAppearance === true)))
+                    .set(charge.courtAppearanceRequiredNo, lock(charge.getCourtAppearanceRequiredNo().setValue(violation.requiresCourtAppearance === false)))
+                    .set(charge.dateOfViolation, charge.getDateOfViolation().setValue(date))
+                    .set(charge.timeOfViolation, charge.getTimeOfViolation().setValue(time));
 
-                collection = collection.replace(index, page.set(page.violationSection, updated));
+                collection = collection.replace(index, target.set(page.violationSection, updated));
             });
 
-            return form.set(formSchema.frontPage, collection);
+            return form.set(pageDefinition, collection);
         }, reason: { kind: "violations-added", codes: violations.map(violation => violation.statute ?? violation.code) } });
     }
 
     getAppliedViolations(controllers: IControllerManager, violations: ReadonlyArray<IViolation>, formCtor: FormModelConstructor<S438FormModel>): ReadonlyArray<IViolation> {
-        const formSchema = FormModel.getSchema<S438FormSchema>(formCtor);
-        const pages = controllers.getFormController().form.get<PageCollection>(formSchema.frontPage).getPages<FrontPageModel>();
+        const form = controllers.getFormController<S438FormModel>().form;
+        const pages = form.get<PageCollection>(getChargePageDefinition(form, FormModel.getSchema<S438FormSchema>(formCtor))).getPages<ChargePage>();
 
         // the statute alone can't tell two same-coded offense variants apart (1st/2nd/3rd offense print the same
         // code), but the description is written onto the page right alongside it, so the pair together is what
@@ -215,13 +225,21 @@ export class S438CitationService implements IS438CitationService {
     }
 }
 
+/** A page one charge is written on: a court citation's front pages, or a trial citation's trial pages. Their violation sections share every member a charge touches. */
+type ChargePage = FrontPageModel | TrialPageModel;
+
+/** The pages the citation's charges are written on, by which copy it is. */
+function getChargePageDefinition(form: S438FormModel, formSchema: S438FormSchema): PageDefinition {
+    return form.getCitationType() === "trial" ? formSchema.trialPage : formSchema.frontPage;
+}
+
 /** Returns the field disabled, which is how a box filled in from the violation list is marked as not hand-editable. */
 function lock<TField extends FieldModel<TValueType>>(field: TField): TField {
     return field.setIsEnabled(false);
 }
 
 /** Whether the page carries no charge yet. Section number and description identify the charge; date and time are stamped by the form itself, so a page holding only those is still unwritten. */
-function isChargeEmpty(page: FrontPageModel): boolean {
+function isChargeEmpty(page: ChargePage): boolean {
     const section = page.getViolationSection();
 
     return section.getSectionNumber().getIsEmpty() && section.getDescription().getIsEmpty();

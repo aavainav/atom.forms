@@ -71,6 +71,8 @@ export interface IReportPreset<TData extends object = IReportData> {
     readonly readOnlyFields?: ReadOnlyFields<TData>;
     /** What the preset is called in the panel. */
     readonly title: string;
+    /** The variants of the form the preset is for, by id. The form's default variant when omitted; ignored for a form with no variants. */
+    readonly variants?: ReadonlyArray<string>;
 }
 
 /** A starting point the host offers for a new report; the data behind it comes from `read`. */
@@ -117,6 +119,8 @@ export interface IInitialForm {
     readonly reason: ReadReason;
     /** The template a new form was started from, if the user picked one. */
     readonly template?: string;
+    /** The variant a new form was started as, if the form has them and the user picked one. */
+    readonly variant?: string;
     /** The component used to render the form. */
     readonly Component: ComponentType<IFormComponentProps>;
 }
@@ -130,7 +134,7 @@ export interface IReportViewerService {
     canSaveForm: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => boolean;
     /** Extracts the form's published data, unpersisted -- what `save` sends to the data manager. */
     extractData: (form: FormModel<any>) => IReportData;
-    /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one, from the template the user picked if they did. A new form is started even when the host gave it defaults to start from. */
+    /** How a loaded form arrived, for the audit to say of it: read from a record the host held, or started without one, from the template and as the variant the user picked if they did. A new form is started even when the host gave it defaults to start from. */
     getArrival: (initialForm: IInitialForm) => FormArrival;
     /** Gathers everything held about the report -- its data, the audit history and the review comments -- into one object, unpersisted. */
     getBundle: (form: FormModel<any>, controllers: IControllerManager) => IReportBundle;
@@ -138,10 +142,10 @@ export interface IReportViewerService {
     getOptions: (form: FormModel<any>, dataManager?: IReportViewerDataManager<any>) => Array<IReportViewerOption>;
     /**
      * Resolves, builds and populates the identified form. `reason` and `template` pass through to the data manager --
-     * `"open"` for a first load, `"new"` for a reset, from the template the user picked if they did. Nothing to
-     * populate leaves the form as its constructor built it.
+     * `"open"` for a first load, `"new"` for a reset, from the template the user picked if they did. `variant`
+     * reshapes the blank form before the data goes in. Nothing to populate leaves the form as its constructor built it.
      */
-    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason, template?: string) => Promise<IInitialForm>;
+    loadForm: <TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason?: ReadReason, template?: string, variant?: string) => Promise<IInitialForm>;
     /**
      * Puts a loaded form in place of the one the controllers hold, with the history the host held for it. How it
      * arrived is said first, so the audit records it as the form goes in.
@@ -237,12 +241,12 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return form.extractData();
     }
 
-    getArrival({ audit, comments, form, hasRecord, reason, template }: IInitialForm): FormArrival {
+    getArrival({ audit, comments, form, hasRecord, reason, template, variant }: IInitialForm): FormArrival {
         const formId = form.id ?? "";
 
         return hasRecord && reason === "open"
             ? { kind: "loaded", formId, auditRecords: audit?.length ?? 0, comments: comments?.length ?? 0, transitions: form.history.length }
-            : { kind: "started", formId, reason, ...(template ? { template } : {}) };
+            : { kind: "started", formId, reason, ...(template ? { template } : {}), ...(variant ? { variant } : {}) };
     }
 
     getBundle(form: FormModel<any>, controllers: IControllerManager): IReportBundle {
@@ -259,11 +263,16 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
         return Array.from(this.options.values()).filter(option => !option.canShow || option.canShow(form, dataManager));
     }
 
-    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open", template?: string): Promise<IInitialForm> {
+    async loadForm<TData extends object>(identity: IFormIdentity, dataManager?: IReportViewerDataManager<TData>, reason: ReadReason = "open", template?: string, variant?: string): Promise<IInitialForm> {
         const catalogItem = await this.formCatalogService.get(identity);
         const result = await dataManager?.read(reason, template);
         const record = result?.data as IReportData | undefined;
         let form = await new catalogItem.ctor(record?.id, record?.revision).initialize();
+
+        // the variant shapes the blank before the host's data goes in, so a record naming its own shape still wins
+        if (variant) {
+            form = await form.applyVariant(variant);
+        }
 
         if (result) {
             form = await form.populate(<IPopulateData<IReportData>>result);
@@ -275,7 +284,7 @@ export class ReportViewerService implements IReportViewerService, IReportViewerO
             form = this.workflowService.restoreWorkflow(form, result.status, result.workflow);
         }
 
-        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, template, Component: catalogItem.component };
+        return { audit: result?.audit, catalogItem, comments: result?.comments, form: form.clean(), hasRecord: !!result, reason, template, variant, Component: catalogItem.component };
     }
 
     openForm(controllers: IControllerManager, initialForm: IInitialForm): void {

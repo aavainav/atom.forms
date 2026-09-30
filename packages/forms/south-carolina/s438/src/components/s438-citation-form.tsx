@@ -3,15 +3,15 @@ import { FForm, FPageCollection, IControllerManager, useForm } from "@forms/core
 import { S438FormModel } from "../models/s438-form";
 
 import FrontPage from "./front-page/front-page";
-import NoticePage from "./notice-page/notice-page";
 import TrialPage from "./trial-page/trial-page";
+import NoticePage from "./notice-page/notice-page";
 
 interface IS438FormProps {
     /** The controllers belonging to this form. The form controller owns the form model. */
     readonly controllers: IControllerManager;
 }
 
-/** Defines the S438 citation form. */
+/** Defines the S438 citation form: its front or trial pages, whichever it is on, and then the notice page. */
 export default function S438Form({ controllers }: IS438FormProps): React.JSX.Element {
     const controller = controllers.getFormController<S438FormModel>();
     const form = useForm(controller);
@@ -26,12 +26,12 @@ export default function S438Form({ controllers }: IS438FormProps): React.JSX.Ele
                         children: (binding) => <FrontPage controllers={controllers} binding={binding} />
                     },
                     {
-                        pageDefinition: form.noticePage,
-                        children: (binding) => <NoticePage noticePage={binding.get()} />
-                    },
-                    {
                         pageDefinition: form.trialPage,
                         children: (binding) => <TrialPage controllers={controllers} binding={binding} />
+                    },
+                    {
+                        pageDefinition: form.noticePage,
+                        children: (binding) => <NoticePage noticePage={binding.get()} />
                     }
                 ]}
             />

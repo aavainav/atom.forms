@@ -5,11 +5,11 @@ import { ControllerManager, FormModel, IReportData } from "@forms/core";
 
 import { IReportPreset, IReportViewerDataManager } from "../../src/services/report-viewer";
 import { ISaveRequest, PresetService } from "../../src/services/preset";
-import { identity, populated, stubForm } from "../fixtures/preset-form";
+import { blankFields, identity, populated, stubForm, variantForm } from "../fixtures/preset-form";
 
-/** A report as it stands: its identity, and whatever else has been answered. */
+/** A report as it stands: its identity, every field the stub form has, and whatever of them has been answered. */
 function report(answers: Record<string, unknown> = {}): IReportData {
-    return { id: "report-1", name: "Stub Form", revision: 3, status: "draft", type: "none", version: "1.0", ...answers };
+    return { id: "report-1", name: "Stub Form", revision: 3, status: "draft", type: "none", version: "1.0", ...blankFields, ...answers };
 }
 
 /** A preset that sets what it is given, and locks what it says to. */
@@ -97,6 +97,21 @@ describe("PresetService", () => {
 
             it.each([["blank text", ""], ["nothing", undefined], ["an unchecked box", false], ["a list of nothing", []]])("is one holding %s", (_, held) => {
                 expect(service.plan(preset({ agencyCity: "Columbia" }), report({ agencyCity: held }), undefined, false).fields).toEqual(["agencyCity"]);
+            });
+        });
+
+        describe("a field the report does not carry", () => {
+            /** A form reports every field it has, so one missing is a field it does not have, such as the other copy's on S438. */
+            it("is left out, neither written nor said to be skipped, as one the form does not have", () => {
+                const plan = service.plan(preset({ agencyCity: "Columbia", trialCourtName: "Columbia Municipal Court" }), report(), undefined, false);
+
+                expect(plan.data).toEqual({ agencyCity: "Columbia" });
+                expect(plan.fields).toEqual(["agencyCity"]);
+                expect(plan.skipped).toEqual([]);
+            });
+
+            it("drops its lock with it", () => {
+                expect(service.plan(preset({ trialCourtName: "Columbia Municipal Court" }, { trialCourtName: true }), report(), undefined, false).readOnlyFields).toBeUndefined();
             });
         });
 
@@ -305,6 +320,26 @@ describe("PresetService", () => {
         });
     });
 
+    describe("fitsVariant", () => {
+        const forTrial = preset({ agencyCity: "Columbia" });
+
+        it("fits every preset to a form with no variants", () => {
+            expect(service.fitsVariant({ ...forTrial, variants: ["trial"] }, stubForm())).toBe(true);
+        });
+
+        it("fits a preset naming the variant the form is in, and not one naming only another", () => {
+            expect(service.fitsVariant({ ...forTrial, variants: ["trial"] }, variantForm("trial"))).toBe(true);
+            expect(service.fitsVariant({ ...forTrial, variants: ["court", "trial"] }, variantForm("trial"))).toBe(true);
+            expect(service.fitsVariant({ ...forTrial, variants: ["trial"] }, variantForm("court"))).toBe(false);
+        });
+
+        /** A host serving presets it never tagged gets the form's default, as a record naming no variant opens as it. */
+        it("takes a preset naming no variant to be for the form's default", () => {
+            expect(service.fitsVariant(forTrial, variantForm("court"))).toBe(true);
+            expect(service.fitsVariant(forTrial, variantForm("trial"))).toBe(false);
+        });
+    });
+
     describe("getSavableGroups", () => {
         it("groups the report's own single fields together", () => {
             const groups = service.getSavableGroups(report({ agencyCity: "Columbia", agencyName: "Columbia PD" }), undefined);
@@ -316,7 +351,7 @@ describe("PresetService", () => {
         });
 
         it("leaves out the report's own identity, which is not something a preset sets", () => {
-            const keys = service.getSavableGroups(report({ agencyCity: "Columbia", workflow: { history: [], id: "w", version: "1" } }), undefined).flatMap(group => group.fields.map(field => field.key));
+            const keys = service.getSavableGroups(report({ agencyCity: "Columbia", variant: "trial", workflow: { history: [], id: "w", version: "1" } }), undefined).flatMap(group => group.fields.map(field => field.key));
 
             expect(keys).toEqual(["agencyCity"]);
         });
@@ -552,6 +587,25 @@ describe("PresetService", () => {
         afterEach(() => populated.mockClear());
 
         describe("apply", () => {
+            it("changes and records nothing when every field the preset sets is one the form does not have", async () => {
+                const { controllers, kinds } = open();
+                const other = { data: { trialCourtName: "Columbia Municipal Court" }, id: "other-copy", title: "Other copy" } as IReportPreset;
+
+                const plan = await service.apply(controllers, other, false);
+
+                expect(plan.fields).toEqual([]);
+                expect(populated).not.toHaveBeenCalled();
+                expect(kinds()).toEqual(["form-opened"]);
+            });
+
+            it("refuses a preset for another variant of the form, and changes and records nothing", async () => {
+                const { controllers, kinds } = open(undefined, undefined, variantForm("court"));
+
+                await expect(service.apply(controllers, { ...columbia, variants: ["trial"] }, false)).rejects.toThrow("\"Columbia PD\" is not for this version of the form.");
+                expect(populated).not.toHaveBeenCalled();
+                expect(kinds()).toEqual(["form-opened"]);
+            });
+
             it("writes what the preset sets into the report, with the report's own identity", async () => {
                 const { controllers, form$ } = open();
 
@@ -728,6 +782,18 @@ describe("PresetService", () => {
                 expect(manager.writePreset).toHaveBeenCalledTimes(1);
                 expect(manager.writePreset).toHaveBeenCalledWith({ data: { persons: [{}, { first: "Riley" }] }, id: expect.any(String), isPersonal: true, title: "Rileys page" });
                 expect(saved).toBe(vi.mocked(manager.writePreset!).mock.calls[0][0]);
+            });
+
+            it("stamps a preset with the variant it was saved from, since it holds only that variant's fields", async () => {
+                const { controllers } = open(undefined, undefined, variantForm("trial", answers));
+
+                expect((await service.save(controllers, host(), request(["agencyCity"]))).variants).toEqual(["trial"]);
+            });
+
+            it("names no variant on a preset saved from a form with none", async () => {
+                const { controllers } = open(answers);
+
+                expect(await service.save(controllers, host(), request(["agencyCity"]))).not.toHaveProperty("variants");
             });
 
             it("gives each preset an id of its own", async () => {

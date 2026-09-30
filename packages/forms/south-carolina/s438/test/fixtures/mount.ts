@@ -5,7 +5,7 @@ import { ISectionBinding, FieldDefinition, FieldModel, PageModel, SectionDefinit
 
 import { FrontPageModel } from "../../src/models/front-page/front-page";
 import { TrialPageModel } from "../../src/models/trial-page/trial-page";
-import { createForm } from "./form";
+import { createForm, createTrialForm } from "./form";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -54,7 +54,7 @@ export async function mountFrontSection<TSection extends SectionModel>(
 export async function mountTrialSection<TSection extends SectionModel>(
     select: (page: TrialPageModel) => SectionDefinition<TSection>,
     component: SectionComponent<TSection>): Promise<IMountedSection<TSection>> {
-    const page = (await createForm()).getTrialPageCollection().getFirstPage<TrialPageModel>();
+    const page = (await createTrialForm()).getTrialPageCollection().getFirstPage<TrialPageModel>();
 
     return mountSection(page, select(page), component);
 }

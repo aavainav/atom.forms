@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useService } from "@common/react";
-import { useForm, IControllerManager, FButton, FListGroup, FListGroupCheckbox, FOffCanvas } from "@forms/core";
+import { useForm, FormModel, IControllerManager, FButton, FListGroup, FListGroupCheckbox, FOffCanvas } from "@forms/core";
 
 import { PresetList } from "./preset-list";
 import { PresetPreview } from "./preset-preview";
@@ -14,6 +14,14 @@ interface IPresetsPanelProps {
     readonly dataManager: IReportViewerDataManager<any>;
     /** Invoked when the presets cannot be loaded, or one cannot be applied, saved or deleted. */
     readonly onError: (message: string) => void;
+}
+
+/** Names the variants a preset is for, by their titles, as the list says it: "For the Trial form". */
+function describeVariants(preset: IReportPreset<any>, form: FormModel<any>): string {
+    const ids = preset.variants ?? [form.getDefaultVariant()!.id];
+    const titles = form.variants.filter(variant => ids.includes(variant.id)).map(variant => variant.title);
+
+    return `For the ${titles.join(" or ")} form`;
 }
 
 /** Defines the panel a preset is chosen and applied from, beside the form so that it fills in as presets are applied. */
@@ -61,6 +69,10 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
     // what the save step lists is worked out only while it is showing, since on a large report it runs to hundreds of rows
     const groups = useMemo(() => isSaving ? presetService.getSavableGroups(current, form.readOnlyFields) : [], [isSaving, presetService, current, form]);
     const lists = useMemo(() => isSaving ? presetService.getPageLists(current) : [], [isSaving, presetService, current]);
+    // a preset for another variant of the form is listed but cannot be chosen, and says which it is for
+    const unavailable = useMemo(() => new Map(presets
+        .filter(entry => !presetService.fitsVariant(entry, form))
+        .map(entry => [entry.id, describeVariants(entry, form)])), [presets, presetService, form]);
     const blocker = getSaveBlocker(draft);
     const canApply = !!plan && (plan.fields.length > 0 || plan.pages.length > 0) && !isApplying;
 
@@ -139,7 +151,7 @@ export function PresetsPanel({ controllers, dataManager, onError }: IPresetsPane
                     ? <PresetSaveForm groups={groups} lists={lists} value={draft} onChange={setDraft} />
                     : (
                         <>
-                            <PresetList presets={presets} selected={selected} onSelect={setSelected} />
+                            <PresetList presets={presets} selected={selected} unavailable={unavailable} onSelect={setSelected} />
                             {plan && <PresetPreview plan={plan} />}
                         </>
                     )}

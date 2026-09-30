@@ -67,7 +67,7 @@ export default function TrialPage({ controllers, binding }: ITrialPageProps): Re
             <FDropzone
                 controller={dragAndDropController}
                 dropzone={trialPage.getDropzone(TrialPageViolationDropzone)}
-                onDrop={!isEditable ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={!isEditable || binding.isSectionLocked(trialPage.violationSection) ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <TrialViolationSection binding={binding.getSection(trialPage.violationSection)} />
             </FDropzone>

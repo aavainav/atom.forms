@@ -3,6 +3,7 @@ import { Entity, EntityConstructor, IEntity } from "./entity";
 import { FieldModel, TValueType } from "./field";
 import { FieldDefinition } from "./field-definition";
 import { IFieldPlacement } from "./field-placement";
+import { IFormVariant } from "./form-variant";
 
 import { PageModel } from "./page";
 import { PageCollection } from "./page-collection";
@@ -75,6 +76,8 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
     readonly type: FormType;
     /** The ids of the value lists this form's option fields draw on. */
     readonly valueListIds?: ReadonlyArray<string>;
+    /** The blank forms a new report can start as, one of them flagged `isDefault`. Empty for a form with one shape. */
+    readonly variants: ReadonlyArray<IFormVariant>;
     /** The version of the form definition. */
     readonly version: string;
     /** The violation list this citation draws its charges from, if any. */
@@ -84,6 +87,12 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
 
     /** Creates and initializes a page for each child page definition, adding it to the form. */
     initialize(): Promise<this>;
+    /** Returns a form reshaped as the given variant. Throws for an id the form does not declare. */
+    applyVariant(id: string): Promise<this>;
+    /** The variant flagged as the default; undefined for a form with no variants. Throws unless exactly one is flagged. */
+    getDefaultVariant(): IFormVariant | undefined;
+    /** The id of the variant the form is in; undefined for a form with no variants. */
+    getVariant(): string | undefined;
     /** Adds a page to the page collection for the specified page definition. */
     addPage(page: PageModel, pageDefinition: PageDefinition): this;
     /** Adds a rule collection used to validate the form. */
@@ -139,15 +148,16 @@ export interface IFormModel<TData extends object> extends IEntity<PageDefinition
 
 /** Represents a form model that manages pages and their definitions within a form. */
 export class FormModel<TData extends object> extends Entity<PageDefinition> implements IFormModel<TData> {
-    public readonly name: string;
     public readonly description?: string;
     public readonly history: ReadonlyArray<IWorkflowEntry> = [];
     public readonly mapper?: IFormMapper<FormModel<TData>, TData>;
     public readonly mode: FormMode = "editable";
+    public readonly name: string;
     public readonly readOnlyFields?: ReadOnlyFields<TData>;
     public readonly status: FormStatus = "draft";
     public readonly type: FormType;
     public readonly valueListIds?: ReadonlyArray<string>;
+    public readonly variants: ReadonlyArray<IFormVariant> = [];
     public readonly version: string;
     public readonly violationListId?: string;
     public readonly workflow?: IWorkflow;
@@ -167,6 +177,28 @@ export class FormModel<TData extends object> extends Entity<PageDefinition> impl
         }
 
         return form;
+    }
+
+    public async applyVariant(id: string): Promise<this> {
+        throw new Error(`"${this.name}" has no variant called "${id}".`);
+    }
+
+    public getDefaultVariant(): IFormVariant | undefined {
+        if (this.variants.length === 0) {
+            return undefined;
+        }
+
+        const defaults = this.variants.filter(variant => variant.isDefault);
+
+        if (defaults.length !== 1) {
+            throw new Error(`"${this.name}" must flag exactly one of its variants as the default, and flags ${defaults.length}.`);
+        }
+
+        return defaults[0];
+    }
+
+    public getVariant(): string | undefined {
+        return undefined;
     }
 
     public addPage(page: PageModel, pageDefinition: PageDefinition): this {

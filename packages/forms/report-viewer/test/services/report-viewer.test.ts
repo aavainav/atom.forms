@@ -223,6 +223,40 @@ describe("ReportViewerService", () => {
             expect(read).toHaveBeenCalledWith("new", undefined);
             expect(initialForm.template).toBeUndefined();
         });
+
+        it("reshapes the form as the variant asked for before the data goes in, and says which it was", async () => {
+            const order: Array<string> = [];
+            const populate = stubMapper().mockImplementation(async (form: StubFormModel) => { order.push("populate"); return form; });
+            const applyVariant = vi.spyOn(StubFormModel.prototype, "applyVariant").mockImplementation(async function (this: StubFormModel) { order.push("variant"); return this; });
+            const service = createService(catalogItem);
+
+            try {
+                const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => ({ data: record("Stub") }) }, "new", "speeding", "trial");
+
+                expect(applyVariant).toHaveBeenCalledWith("trial");
+                expect(populate).toHaveBeenCalled();
+                expect(order).toEqual(["variant", "populate"]);
+                expect(initialForm.variant).toBe("trial");
+            }
+            finally {
+                applyVariant.mockRestore();
+            }
+        });
+
+        it("leaves the form as it was built when no variant was asked for", async () => {
+            const applyVariant = vi.spyOn(StubFormModel.prototype, "applyVariant");
+            const service = createService(catalogItem);
+
+            try {
+                const initialForm = await service.loadForm({ name: "Stub" }, { read: async () => undefined }, "new");
+
+                expect(applyVariant).not.toHaveBeenCalled();
+                expect(initialForm.variant).toBeUndefined();
+            }
+            finally {
+                applyVariant.mockRestore();
+            }
+        });
     });
 
     describe("getArrival", () => {
@@ -276,6 +310,14 @@ describe("ReportViewerService", () => {
             const base = await load(service);
 
             expect(service.getArrival({ ...base, hasRecord: true, reason: "new", template: "speeding" })).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "new", template: "speeding" });
+        });
+
+        it("names the variant a new form was started as, and none when it had none", async () => {
+            const service = createService(catalogItem);
+            const base = await load(service);
+
+            expect(service.getArrival({ ...base, reason: "new", variant: "trial" })).toEqual({ formId: base.form.id ?? "", kind: "started", reason: "new", variant: "trial" });
+            expect(service.getArrival({ ...base, reason: "new" })).not.toHaveProperty("variant");
         });
 
         it("names no template when the form was not started from one, rather than an empty one", async () => {

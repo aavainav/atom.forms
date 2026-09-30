@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ControllerManager, FormModel, PageCollection } from "@forms/core";
 import { IViolation } from "@forms/violations";
 
-import { createForm } from "../fixtures/form";
+import { createForm, createTrialForm } from "../fixtures/form";
 
 import { FrontPageModel } from "../../src/models/front-page/front-page";
 import { TrialPageModel } from "../../src/models/trial-page/trial-page";
@@ -111,8 +111,48 @@ describe("S438CitationService", () => {
         });
     });
 
+    describe("applyViolations on a trial citation", () => {
+        const first: IViolation = { id: "dui", code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 };
+        const second: IViolation = { id: "blue-light", code: "56-5-750", description: "Failure to stop for a blue light", statute: "56-5-750", points: 6 };
+
+        beforeEach(async () => {
+            controllers.loadForm(await createTrialForm());
+        });
+
+        function getTrialPages(): Array<TrialPageModel> {
+            return controllers.getFormController<S438FormModel>().form.getTrialPageCollection().getPages<TrialPageModel>();
+        }
+
+        it("writes each violation onto a trial page of its own, locked as the front page's are, and adds no front page", async () => {
+            await service.applyViolations(controllers, [first, second], S438FormModel);
+
+            const pages = getTrialPages();
+            expect(pages.map(page => page.getViolationSection().getDescription().getValue())).toEqual(["Failure to yield", "Failure to stop for a blue light"]);
+            expect(pages[0].getViolationSection().getSectionNumber().getIsEnabled()).toBe(false);
+            expect(controllers.getFormController<S438FormModel>().form.getFrontPageCollection().pages).toHaveLength(0);
+        });
+
+        it("carries the first page's date of violation onto the pages it adds", async () => {
+            await service.applyViolations(controllers, [first, second], S438FormModel);
+
+            const [page, added] = getTrialPages();
+            expect(added.getViolationSection().getDateOfViolation().getValue()).toBe(page.getViolationSection().getDateOfViolation().getValue());
+            expect(added.getViolationSection().getDateOfViolation().getValue()).not.toBe("");
+        });
+
+        it("names the violations its trial pages carry", async () => {
+            await service.applyViolations(controllers, [first], S438FormModel);
+
+            expect(service.getAppliedViolations(controllers, [first, second], S438FormModel)).toEqual([first]);
+        });
+    });
+
     describe("the trial page's dropzones", () => {
         const person = { firstName: "James", middleName: "Robert", lastName: "Whitfield", address: "412 Meeting Street", city: "Charleston", state: "SC", zipCode: "29403" };
+
+        beforeEach(async () => {
+            controllers.loadForm(await createTrialForm());
+        });
 
         function getTrialPage(): TrialPageModel {
             return controllers.getFormController<S438FormModel>().form.getTrialPageCollection().getFirstPage<TrialPageModel>();
@@ -143,8 +183,8 @@ describe("S438CitationService", () => {
             expect(section.getYear().getValue()).toBe(2021);
         });
 
-        /** Nothing takes the trial copy's charge off it but typing over it, so, unlike the front page's, its boxes are left open. */
-        it("writes a dropped violation onto the trial page's violation section and leaves the boxes open", () => {
+        /** The trial pages carry a trial citation's charges, so a dropped one locks as it does on the front page. */
+        it("writes a dropped violation onto the trial page's violation section and locks its boxes", () => {
             const page = getTrialPage();
             const dropped = page.getDropzone(TrialPageViolationDropzone).onDrop({ code: "56-5-2930", description: "Failure to yield", statute: "56-5-2930", points: 4 });
             const section = service.applyTrialViolationDropzone(page, dropped).getViolationSection();
@@ -152,14 +192,8 @@ describe("S438CitationService", () => {
             expect(section.getSectionNumber().getValue()).toBe("56-5-2930");
             expect(section.getDescription().getValue()).toBe("Failure to yield");
             expect(section.getScPoints().getValue()).toBe(4);
-            expect(section.getSectionNumber().getIsEnabled()).toBe(true);
-        });
-
-        it("leaves the front page alone", () => {
-            const page = getTrialPage();
-            service.applyTrialViolatorDropzone(page, page.getDropzone(TrialPageViolatorDropzone).onDrop(person));
-
-            expect(getFrontPage().getViolatorSection().getFirstName().getValue()).toBe("");
+            expect(section.getSectionNumber().getIsEnabled()).toBe(false);
+            expect(section.getDescription().getIsEnabled()).toBe(false);
         });
     });
 });
