@@ -102,8 +102,11 @@ async function getFormLinks(catalogItems: Map<string, IFormCatalogItem>): Promis
 function HomeLink({ className, description, disabledReason, isTemplate, path, title, version }: IHomeLinkProps): React.JSX.Element {
     const navigate = useNavigate();
 
-    const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
-        if (event.ctrlKey || event.metaKey || event.shiftKey) {
+    const handleClick = (event: React.SyntheticEvent<HTMLElement>): void => {
+        const { nativeEvent } = event;
+
+        // a modified click opens the link the browser's own way, in a new tab or window
+        if ((nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent) && (nativeEvent.ctrlKey || nativeEvent.metaKey || nativeEvent.shiftKey)) {
             return;
         }
 
