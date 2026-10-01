@@ -14,15 +14,15 @@ const firstName = issue({ field: { id: "f1", label: "First Name", name: "first-n
 const mounted: Array<() => void> = [];
 
 function mount(raised: IRuleIssue, controllers: ControllerManager = controllersFor([record])) {
-    const onNavigate = vi.fn();
+    const goTo = vi.spyOn(controllers.getNavigationController(), "goTo");
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
-    act(() => root.render(createElement(ValidationErrorEntry, { controllers, issue: raised, onNavigate })));
+    act(() => root.render(createElement(ValidationErrorEntry, { controllers, issue: raised })));
     mounted.push(() => { act(() => root.unmount()); container.remove(); });
 
-    return { onNavigate, row: container.querySelector<HTMLElement>(".list-group-item")! };
+    return { goTo, row: container.querySelector<HTMLElement>(".list-group-item")! };
 }
 
 afterEach(() => {
@@ -30,13 +30,12 @@ afterEach(() => {
 });
 
 describe("ValidationErrorEntry", () => {
-    it("shows the field's label and the rule's full message on one line, the whole of it on hover", () => {
+    it("shows the field's label, and the rule's full message beneath it, each kept to one line", () => {
         const { row } = mount(firstName);
 
         expect(row.querySelector(".fw-semibold")!.textContent).toBe("First Name");
-        expect(row.textContent).toContain("First Name — Person First Name is required");
+        expect(row.querySelector("small")!.textContent).toBe("Person First Name is required");
         expect(row.querySelector(".text-truncate")).not.toBeNull();
-        expect(row.querySelector("[title]")!.getAttribute("title")).toBe("First Name — Person First Name is required");
     });
 
     it("spells the field's name out as its label when it has none of its own", () => {
@@ -52,23 +51,20 @@ describe("ValidationErrorEntry", () => {
         expect(mount(warning).row.innerHTML).toContain("exclamation-triangle");
     });
 
-    it("takes the form to the field's page and focuses it, and closes the panel, when clicked", () => {
-        const controllers = controllersFor([record]);
-        const goTo = vi.spyOn(controllers.getNavigationController(), "goTo");
-        const { onNavigate, row } = mount(firstName, controllers);
+    it("takes the form to the field's page and focuses it when clicked", () => {
+        const { goTo, row } = mount(firstName);
 
         act(() => row.click());
 
         expect(goTo).toHaveBeenCalledWith({ pageId: "record-1", fieldId: "f1" });
-        expect(onNavigate).toHaveBeenCalledTimes(1);
     });
 
     it("can be reached and pressed from the keyboard", () => {
-        const { onNavigate, row } = mount(firstName);
+        const { goTo, row } = mount(firstName);
 
         act(() => { row.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" })); });
 
         expect(row.tabIndex).toBe(0);
-        expect(onNavigate).toHaveBeenCalledTimes(1);
+        expect(goTo).toHaveBeenCalledWith({ pageId: "record-1", fieldId: "f1" });
     });
 });

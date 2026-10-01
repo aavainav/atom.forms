@@ -18,12 +18,12 @@ const unusual = issue({ field: { id: "f4", label: "RT. # / Name", name: "route-n
 
 const mounted: Array<() => void> = [];
 
-function mount(issues: ReadonlyArray<IRuleIssue>, pages: ReadonlyArray<IStubPage> = [record]) {
+function mount(issues: ReadonlyArray<IRuleIssue>, pages: ReadonlyArray<IStubPage> = [record], onClose = vi.fn()) {
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
 
-    act(() => root.render(createElement(Validation, { controllers: controllersFor(pages), issues, isOpen: true, onClose: vi.fn() })));
+    act(() => root.render(createElement(Validation, { controllers: controllersFor(pages), issues, isOpen: true, onClose })));
     mounted.push(() => { act(() => root.unmount()); container.remove(); });
 
     return container;
@@ -76,6 +76,16 @@ describe("Validation", () => {
     it("leaves a severity with no issues out of the count, and says one in the singular", () => {
         expect(mount([firstName]).querySelector("#validation-summary")!.textContent).toBe("1 error");
         expect(mount([unusual]).querySelector("#validation-summary")!.textContent).toBe("1 warning");
+    });
+
+    /** Taking the form to a field leaves the list up, so the next issue is a click away. */
+    it("stays open when an entry is clicked", () => {
+        const onClose = vi.fn();
+        const container = mount([firstName, lastName], [record], onClose);
+
+        act(() => container.querySelector<HTMLElement>(".list-group-item-action")!.click());
+
+        expect(onClose).not.toHaveBeenCalled();
     });
 
     it("says there are no issues when there are none", () => {

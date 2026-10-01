@@ -7,8 +7,6 @@ interface IValidationErrorEntryProps {
     readonly controllers: IControllerManager;
     /** The rule issue to display. */
     readonly issue: IRuleIssue;
-    /** Invoked after the entry navigates the form to its field. */
-    readonly onNavigate: () => void;
 }
 
 /** Spells a field's name out as a label, for a field with none of its own: "latitude" reads "Latitude". */
@@ -16,8 +14,8 @@ function toLabel(name: string): string {
     return name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
 
-/** Defines one issue in the validation panel: its field and its message, on one line. Clicking it shows the field's page and focuses it. */
-export const ValidationErrorEntry = ({ controllers, issue, onNavigate }: IValidationErrorEntryProps): React.JSX.Element => {
+/** Defines one issue in the validation panel: its field and its message, on one line. Clicking it shows the field's page and focuses it, leaving the panel open to work down the list. */
+export const ValidationErrorEntry = ({ controllers, issue }: IValidationErrorEntryProps): React.JSX.Element => {
     const isErrorSeverity = issue.severity === RuleIssueSeverity.error;
     const label = issue.field.label || toLabel(issue.field.name);
 

@@ -67,7 +67,7 @@ export default function Validation({ controllers, issues, isOpen, onClose }: IVa
                                     <FListGroup>
                                         <FListGroupHeading>{heading} ({members.length})</FListGroupHeading>
                                         {members.map((issue, index) => (
-                                            <ValidationErrorEntry key={index} controllers={controllers} issue={issue} onNavigate={onClose} />
+                                            <ValidationErrorEntry key={index} controllers={controllers} issue={issue} />
                                         ))}
                                     </FListGroup>
                                 </div>
