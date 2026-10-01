@@ -8,7 +8,8 @@ interface IFListGroupItemProps {
     readonly href?: string;
     readonly preventDefault?: boolean;
     readonly className?: string;
-    onClick?: (event: React.MouseEvent<HTMLElement>) => void;
+    /** Invoked when the item is clicked, or pressed with Enter or Space. */
+    onClick?: (event: React.SyntheticEvent<HTMLElement>) => void;
 }
 
 export default function FListGroupItem({
@@ -21,7 +22,7 @@ export default function FListGroupItem({
     children,
     onClick
 }: React.PropsWithChildren<IFListGroupItemProps>): React.JSX.Element {
-    const handleClick = (event: React.MouseEvent<HTMLElement>): void => {
+    const handleClick = (event: React.SyntheticEvent<HTMLElement>): void => {
         if (preventDefault) {
             event.preventDefault();
         }
@@ -35,6 +36,14 @@ export default function FListGroupItem({
         onClick?.(event);
     };
 
+    // a row that acts on a click is reached and pressed from the keyboard as a button is; an anchor already is
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>): void => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleClick(event);
+        }
+    };
+
     const classes = buildClasses(className, "list-group-item", active ? "active" : "", disabled ? "disabled" : "", href || onClick ? "list-group-item-action" : "");
 
     if (href) {
@@ -46,7 +55,15 @@ export default function FListGroupItem({
     }
 
     return (
-        <div id={id} className={classes} aria-disabled={disabled || undefined} onClick={handleClick}>
+        <div
+            id={id}
+            className={classes}
+            aria-disabled={disabled || undefined}
+            role={onClick ? "button" : undefined}
+            tabIndex={onClick && !disabled ? 0 : undefined}
+            onClick={handleClick}
+            onKeyDown={onClick ? handleKeyDown : undefined}
+        >
             {children}
         </div>
     );

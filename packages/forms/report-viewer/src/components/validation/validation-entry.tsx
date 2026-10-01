@@ -1,6 +1,6 @@
 import React from "react";
 
-import { IControllerManager, IRuleIssue, FGrid, FIcon, RuleIssueSeverity } from "@forms/core";
+import { FGrid, FIcon, FListGroupItem, IControllerManager, IRuleIssue, RuleIssueSeverity } from "@forms/core";
 
 interface IValidationErrorEntryProps {
     /** The controllers belonging to the form this issue is for, so the entry can navigate to its field. */
@@ -11,10 +11,15 @@ interface IValidationErrorEntryProps {
     readonly onNavigate: () => void;
 }
 
-/** Defines a validation error entry for a field. Clicking it shows the field's page and focuses it. */
+/** Spells a field's name out as a label, for a field with none of its own: "latitude" reads "Latitude". */
+function toLabel(name: string): string {
+    return name.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
+
+/** Defines one issue in the validation panel: its field and its message, on one line. Clicking it shows the field's page and focuses it. */
 export const ValidationErrorEntry = ({ controllers, issue, onNavigate }: IValidationErrorEntryProps): React.JSX.Element => {
-    const page = issue.section.getPageDefinition();
     const isErrorSeverity = issue.severity === RuleIssueSeverity.error;
+    const label = issue.field.label || toLabel(issue.field.name);
 
     const handleClick = (): void => {
         const pageId = controllers.getFormController().form.getPageIdForIssue(issue);
@@ -22,42 +27,24 @@ export const ValidationErrorEntry = ({ controllers, issue, onNavigate }: IValida
         if (pageId && issue.field.id) {
             controllers.getNavigationController().goTo({ pageId, fieldId: issue.field.id });
         }
-
-        onNavigate();
-    };
-
-    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            handleClick();
-        }
     };
 
     return (
-        <div
-            className="border-bottom mb-2 pb-2"
-            role="button"
-            tabIndex={0}
-            style={{ cursor: "pointer" }}
-            onClick={handleClick}
-            onKeyDown={handleKeyDown}
-        >
+        <FListGroupItem onClick={handleClick}>
             <FGrid>
                 <FGrid.Row>
                     <FGrid.Column auto>
                         <FIcon
                             icon={isErrorSeverity ? "exclamation-circle" : "exclamation-triangle"}
-                            size="md"
                             variant={isErrorSeverity ? "danger" : "warning"}
                         />
                     </FGrid.Column>
-                    <FGrid.Column auto>
-                        <div className="text-muted small">{page.title} &rsaquo; {issue.section.title}</div>
-                        <div className="fw-bold">{issue.field.label}</div>
-                        <div className={isErrorSeverity ? "text-danger" : "text-warning"}>{issue.message}</div>
+                    <FGrid.Column truncate>
+                        <div><span className="fs-6 fw-semibold">{label}</span></div>
+                        <div><small className="fw-light text-muted">{issue.message}</small></div>
                     </FGrid.Column>
                 </FGrid.Row>
             </FGrid>
-        </div>
+        </FListGroupItem>
     );
-}
+};

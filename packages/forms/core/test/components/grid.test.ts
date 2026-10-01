@@ -56,4 +56,9 @@ describe("FGrid.Column", () => {
     it("can fill the height", () => {
         expect(renderToStaticMarkup(createElement(FGrid.Column, { fill: true }))).toContain("col h-100");
     });
+
+    it("can keep its content to one line, cut off with an ellipsis", () => {
+        expect(renderToStaticMarkup(createElement(FGrid.Column, { truncate: true }))).toContain("col text-truncate");
+        expect(renderToStaticMarkup(createElement(FGrid.Column))).not.toContain("text-truncate");
+    });
 });

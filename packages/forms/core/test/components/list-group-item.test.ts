@@ -108,4 +108,57 @@ describe("FListGroupItem", () => {
             expect(event.defaultPrevented).toBe(false);
         });
     });
+
+    describe("from the keyboard", () => {
+        /** Presses a key on the element the way a user would. */
+        function press(element: HTMLElement, key: string): KeyboardEvent {
+            const event = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key });
+
+            act(() => { element.dispatchEvent(event); });
+
+            return event;
+        }
+
+        it("is a button that can be tabbed to when it has a click handler", () => {
+            const element = mount({ onClick: vi.fn() });
+
+            expect(element.getAttribute("role")).toBe("button");
+            expect(element.tabIndex).toBe(0);
+        });
+
+        it.each([["Enter"], [" "]])("acts when %j is pressed, and keeps the key from doing anything else", key => {
+            const onClick = vi.fn();
+            const element = mount({ onClick });
+
+            const event = press(element, key);
+
+            expect(onClick).toHaveBeenCalledTimes(1);
+            expect(event.defaultPrevented).toBe(true);
+        });
+
+        it("ignores other keys", () => {
+            const onClick = vi.fn();
+
+            press(mount({ onClick }), "a");
+
+            expect(onClick).not.toHaveBeenCalled();
+        });
+
+        it("cannot be tabbed to or pressed while disabled", () => {
+            const onClick = vi.fn();
+            const element = mount({ disabled: true, onClick });
+
+            press(element, "Enter");
+
+            expect(element.hasAttribute("tabindex")).toBe(false);
+            expect(onClick).not.toHaveBeenCalled();
+        });
+
+        it("is neither a button nor tabbed to when it cannot be acted on", () => {
+            const element = mount({});
+
+            expect(element.hasAttribute("role")).toBe(false);
+            expect(element.hasAttribute("tabindex")).toBe(false);
+        });
+    });
 });

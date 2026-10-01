@@ -361,7 +361,7 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   does that for any `[data-field-id]` holding one. An empty marker is hidden until its control is hovered or focused,
   but stays a real button, since a disabled input swallows the pointer and a reviewer on a locked form still has to
   reach it by keyboard.
-- Lists/chrome: `FListGroup`, `FListGroupItem`, `FListGroupCheckbox`, `FListGroupHeading` (a row titling the items
+- Lists/chrome: `FListGroup`, `FListGroupItem` (with `onClick` and no `href`, a `role="button"` row reached by Tab and pressed with Enter or Space; not while disabled), `FListGroupCheckbox`, `FListGroupHeading` (a row titling the items
   beneath it, which cannot be acted on), `FBadge`, `FButton`, `FCode`, `FIcon`, `FModal`,
   `FOffCanvas`, `FNotification`, `FLoadingIndicator`, `FAsyncLoader`. `FCode` is a `<pre><code>` panel whose
   colors are bootstrap's theme-aware custom properties, so it follows the day/night toggle. `FBadge` is a bootstrap

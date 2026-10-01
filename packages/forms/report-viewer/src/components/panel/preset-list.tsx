@@ -53,7 +53,7 @@ export const PresetList = ({ presets, selected, unavailable, onSelect }: IPreset
 
     return (
         <>
-            <FFieldControl border="visible" borderEdges={["bottom"]}>
+            <FFieldControl border="visible" borderEdges={["bottom"]} margin={{ bottom: 5 }}>
                 <FFieldInput id="preset-search" autocomplete="off" enableClear placeholder="Search presets..." value={term} onChange={value => setTerm((value as string | undefined) ?? "")} />
             </FFieldControl>
 

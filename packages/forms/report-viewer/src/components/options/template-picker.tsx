@@ -90,10 +90,12 @@ export const TemplatePicker = ({ baseTemplate, includeBlank, selected, templates
     return (
         <>
             {blanks.length > 0 && (
-                <FListGroup id="template-blank-forms">
-                    <FListGroupHeading>Blank forms</FListGroupHeading>
-                    {blanks.map(renderEntry)}
-                </FListGroup>
+                <div className="mb-2">
+                    <FListGroup id="template-blank-forms">
+                        <FListGroupHeading>Blank forms</FListGroupHeading>
+                        {blanks.map(renderEntry)}
+                    </FListGroup>
+                </div>
             )}
             {entries.length > 0 && (
                 <FListGroup id="template-picker">
