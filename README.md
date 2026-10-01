@@ -10,6 +10,10 @@ in for — so what an officer fills in on screen is recognisably the form they w
 Six forms across three states are implemented today, along with the engine, the registries they draw on, and a
 sandbox app to run them in.
 
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ## Quick start
 
 ```bash
@@ -49,11 +53,11 @@ A yarn-workspaces monorepo of 19 packages, with lerna as the task runner. Nothin
 | --- | --- |
 | [`@forms/core`](packages/forms/core/) | The engine. Definition/entity trees, field models, validation, the controllers that hold mutable state, and the `F*` React components. |
 | [`@forms/catalog`](packages/forms/catalog/) | The registry of forms, keyed by name and version. Definition data only. |
-| [`@forms/report-viewer`](packages/forms/report-viewer/) | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications and the mapper registry. |
+| [`@forms/report-viewer`](packages/forms/report-viewer/) | Loads a catalog form, populates it from host data, renders it, saves it back. Owns routing, modals, notifications and the mapper registr[...]
 | [`@forms/value-lists`](packages/forms/value-lists/) | The registry and code generator for the lists behind option fields, plus the national ones. |
 | [`@forms/violations`](packages/forms/violations/) | The registry of violations a citation is written for, plus the selector that puts them on a form. |
 | [`@forms/printing`](packages/forms/printing/) | The copies a form publishes, the print dialog and the `@page` rules. No PDF library — a print stylesheet and `window.print()`. |
-| [`@forms/audit`](packages/forms/audit/) | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never values. |
+| [`@forms/audit`](packages/forms/audit/) | Records what happens to a form (opened, edited, validated, printed, saved) as typed records a host subscribes to. Field paths and identity only, never v[...]
 | [`@forms/workbench`](packages/forms/workbench/) | Standalone app host: React root, router, bootstrapper. |
 | `packages/forms/<state>/<form>/` | One package per form. Six of them. |
 | `packages/common/*` | `@common/event-emitter`, `@common/react`, `@common/react-router`, `@common/zod`. |
@@ -120,7 +124,7 @@ There is no test runner configured. Verification today is the build plus the san
 
 ## Using the ReportViewer component
 
-`<ReportViewer />` is the top-level component a host app renders to display and edit a form. It resolves the form from the catalog, builds the model, populates it with data, and mounts all available options and panels (validate, review, violations, presets, report data, print, theme toggle) and workflow actions (save, status transitions).
+`<ReportViewer />` is the top-level component a host app renders to display and edit a form. It resolves the form from the catalog, builds the model, populates it with data, and mounts all available toolbars and editors.
 
 ### Basic usage
 
