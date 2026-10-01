@@ -402,7 +402,8 @@ function createVehicleRules(vehicle: IVehicleFields, options: ITicketOptions): A
         new MaxLengthFieldRule(vehicle.licenseState, 0, 2, "Vehicle state cannot be more than 2 characters"),
         new RequiredFieldRule(vehicle.make, "Make of vehicle is required").when(isVehicleInvolved),
         new MaxLengthFieldRule(vehicle.make, 0, 4, "Make of vehicle cannot be more than 4 characters"),
-        new RequiredFieldRule(vehicle.year, "Vehicle year is required").when(isVehicleInvolved)
+        new RequiredFieldRule(vehicle.year, "Vehicle year is required").when(isVehicleInvolved),
+        new MaxLengthFieldRule(vehicle.year, 4, 4, "Vehicle year must be four characters long.")
     ];
 
     if (options.drawsVehicleTypes) {

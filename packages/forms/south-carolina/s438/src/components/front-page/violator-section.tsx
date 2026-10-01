@@ -32,7 +32,7 @@ export default function ViolatorSection({ binding }: IViolatorSectionProps): Rea
                 <FTextField field={section.getDriverLicenseNumber()} width={300} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.driverLicenseNumber, value)} />
                 <FTextField field={section.getDriverLicenseClass()} width={80} borderEdges={["left", "top"]} onChange={(value) => binding.setValue(section.driverLicenseClass, value)} />
                 <FBorder width={120} borderEdges={["left", "top", "right"]}>
-                    <FLabel fontSize="6">CDL</FLabel>
+                    <FLabel fontSize="6" margin={{ start: 5 }}>CDL</FLabel>
                     <FBorder border="hidden" contentJustify="evenly">
                         <FCheckboxField field={section.getCommercialDriverLicenseYes()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseYes, checked)} />
                         <FCheckboxField field={section.getCommercialDriverLicenseNo()} onChange={(checked) => binding.setValue(section.commercialDriverLicenseNo, checked)} />

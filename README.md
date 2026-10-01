@@ -19,17 +19,26 @@ yarn dev-forms     # the sandbox app on http://localhost:3002
 ```
 
 The sandbox home page lists every registered form. Open one and you get the real thing: the form rendered, a
-floating options bar in the bottom right to validate, save, print and pick violations, and drag-and-drop targets
-for importing a person or a vehicle onto it.
+floating options bar to validate, review, manage violations and presets, view the data, print, and toggle the theme, and workflow actions above the form to save and transition between statuses.
 
-| Route | Form |
-| --- | --- |
-| `sc/s438` | SC S438 Uniform Traffic Ticket |
-| `sc/tr310` | SC TR-310 Traffic Collision Report |
-| `sc/432` | SC Form 432 Public Contact / Warning |
-| `ok/traffic` | OKC Traffic Citation and Complaint |
-| `ok/parking` | OKC Parking Violation |
-| `ga/utc` | GA Uniform Traffic Citation (Atlanta) |
+### Sandbox demo — https://atom-forms.netlify.app/
+
+The forms sandbox is deployed live at **https://atom-forms.netlify.app/** and updates on every merge to `main`.
+
+### Routes
+
+| Route | Form | What it is |
+| --- | --- | --- |
+| `/` | Home | Lists all available forms and routes. Disabled forms (under construction) are noted. |
+| `/sc/s438` | S438 Citation Form | South Carolina uniform traffic citation with support for court and trial variants. |
+| `/sc/tr310` | SC TR-310 | South Carolina traffic collision report — the largest form in the catalog. |
+| `/sc/432` | SC Form 432 | South Carolina public contact or warning form. |
+
+The following forms are registered in the catalog but deliberately not routed (under construction):
+
+- GA Uniform Traffic Citation (`/ga/utc`)
+- OKC Parking Violation (`/ok/parking`)
+- OKC Traffic Citation (`/ok/traffic`)
 
 ## Layout
 
@@ -109,6 +118,88 @@ each is reached through a dynamic `import()` so its data stays out of the entry 
 
 There is no test runner configured. Verification today is the build plus the sandbox.
 
+## Using the ReportViewer component
+
+`<ReportViewer />` is the top-level component a host app renders to display and edit a form. It resolves the form from the catalog, builds the model, populates it with data, and mounts all available options and panels (validate, review, violations, presets, report data, print, theme toggle) and workflow actions (save, status transitions).
+
+### Basic usage
+
+```tsx
+import { ReportViewer, IReportViewerDataManager } from "@forms/report-viewer";
+
+const dataManager: IReportViewerDataManager = {
+  read: async (reason, template) => {
+    // reason: "open" (load a saved record) or "new" (start a new one)
+    if (reason === "open") {
+      return {
+        data: await fetchSavedRecord(),
+        audit: await fetchAuditHistory(),
+        comments: await fetchReviewComments(),
+      };
+    }
+    return { data: template ? await fetchTemplate(template) : {} };
+  },
+  write: async (data) => {
+    // Called when the user clicks Save
+    await saveToDB(data);
+  },
+};
+
+<ReportViewer
+  identity={{ name: "S438 Citation Form", version: "1.0" }}
+  dataManager={dataManager}
+  settings={{ showOptions: true, user: { id: "officer-1", name: "Officer Smith" } }}
+/>
+```
+
+### Props
+
+- **`identity`** (`IFormIdentity`) — The form to load, by name and optionally version. The catalog resolves the latest version when none is named.
+- **`dataManager`** (`IReportViewerDataManager`, optional) — Where the record is read from and written back to. Without one, the form renders blank and unsaveable.
+- **`settings`** (`IReportViewerSettings`, optional) — How the report renders:
+  - `mode?` — Form mode: `"editable"` (default), `"reviewable"`, `"viewable"`, or `"locked"`.
+  - `showOptions?` — Show the floating options bar (default: true).
+  - `user?` — Who is using the report (`{ id, name }`) — attributed to audit records and review comments.
+- **`template?`** (`string`) — Start a new report from a template id instead of opening one.
+
+### The data manager — where your data lives
+
+The `IReportViewerDataManager` is your contract with the form:
+
+```ts
+interface IReportViewerDataManager<TData extends object = IReportData> {
+  read?(reason: ReadReason, template?: string): Promise<IReadDataResult<TData> | undefined>;
+  readTemplates?(): Promise<ReadonlyArray<IReportTemplate>>;
+  readPresets?(): Promise<ReadonlyArray<IReportPreset<TData>>>;
+  write?(data: IReportData): Promise<void>;
+  writeAudit?(records: ReadonlyArray<AuditRecord>): Promise<void>;
+  writeComments?(comments: ReadonlyArray<IReviewComment>): Promise<void>;
+  writePreset?(preset: IReportPreset<TData>): Promise<void>;
+  deletePreset?(id: string): Promise<void>;
+}
+```
+
+- **`read(reason, template?)`** — Load or start a record. Return the data, optional audit history, and optional review comments. Return `undefined` to load a blank form.
+- **`write(data)`** — Save the form's data when the user clicks Save.
+- **`writeAudit(records)`** — Append-only: receive only the new audit records (form opened, field edited, validated, saved, etc.).
+- **`writeComments(comments)`** — Called when a review comment is added, resolved, or reopened. You get the full list each time.
+- **`readTemplates()`**, **`readPresets()`**, **`writePreset()`**, **`deletePreset()`** — Optional. Offer templates for starting new reports and let officers save and reuse field groups.
+
+### What the form offers
+
+The viewer renders:
+
+- **Workflow Actions** (header, always) — Form title, status, Save button, and transition buttons to move between statuses.
+- **Validate** — Run the form's rules and show violations and warnings.
+- **Review** — Add comments on the form, pages, sections, or fields (when the form is reviewable and comments can be saved).
+- **Violations** — Select and apply violations to the citation (citation forms only).
+- **Presets** — Save and apply groups of field values (when the host offers presets).
+- **Report Data** — View the record's data, audit history, comments, and workflow state as JSON.
+- **Print** — Print the form as one of its defined print copies.
+- **Day/Night Mode** — Toggle the theme.
+
+See [`packages/forms/report-viewer/CLAUDE.md`](packages/forms/report-viewer/CLAUDE.md) for the complete API and implementation details.
+
 ## Documentation
 
 **The real documentation is the `CLAUDE.md` file in each package.** Each carries a file map, the decisions behind
@@ -117,4 +208,5 @@ package you are working in before opening its files:
 
 - [`packages/forms/CLAUDE.md`](packages/forms/CLAUDE.md) — the map of all the form packages and the conventions
   that hold across them. **Start here.**
+- [`packages/forms/report-viewer/CLAUDE.md`](packages/forms/report-viewer/CLAUDE.md) — the ReportViewer component and its API.
 - Then the `CLAUDE.md` of whichever package you are in.
