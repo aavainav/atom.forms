@@ -43,6 +43,11 @@ export class VehicleDropzone extends Dropzone<IImportableVehicle> implements IVe
         );
     }
 
+    /** Names the vehicle by year, make and model: "2021 Toyota Camry". */
+    public describe(fields: Record<string, FieldModel<TValueType> | undefined>): string | undefined {
+        return DropzoneHelper.describe(fields, [VehicleDropzoneFields.year, VehicleDropzoneFields.make, VehicleDropzoneFields.model]);
+    }
+
     public onDrop(data: IImportableVehicle): this {
         if (!data) {
             return this;

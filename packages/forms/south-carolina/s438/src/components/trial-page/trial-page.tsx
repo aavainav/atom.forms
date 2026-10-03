@@ -32,29 +32,31 @@ export default function TrialPage({ controllers, binding }: ITrialPageProps): Re
     const dragAndDropController = controllers.getDragAndDropController();
     const s438CitationService = useService<IS438CitationService>(IS438CitationService);
     const trialPage = binding.get();
-    const isEditable = binding.mode === "editable";
 
     return (
         <>
             <TrialHeaderSection binding={binding.getSection(trialPage.headerSection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={trialPage.getDropzone(TrialPageViolatorDropzone)}
-                onDrop={!isEditable ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolatorDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolatorDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <TrialViolatorSection binding={binding.getSection(trialPage.violatorSection)} />
             </FDropzone>
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={trialPage.getDropzone(TrialPageVehicleDropzone)}
-                onDrop={!isEditable ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialVehicleDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialVehicleDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <TrialVehicleSection binding={binding.getSection(trialPage.vehicleSection)} />
             </FDropzone>
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={trialPage.getDropzone(TrialPageOwnerDropzone)}
-                onDrop={!isEditable ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialOwnerDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialOwnerDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <TrialOwnerSection binding={binding.getSection(trialPage.ownerSection)} />
             </FDropzone>
@@ -65,9 +67,10 @@ export default function TrialPage({ controllers, binding }: ITrialPageProps): Re
             </div>
             <TrialCourtSection binding={binding.getSection(trialPage.courtSection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={trialPage.getDropzone(TrialPageViolationDropzone)}
-                onDrop={!isEditable || binding.isSectionLocked(trialPage.violationSection) ? undefined : (dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => s438CitationService.applyTrialViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <TrialViolationSection binding={binding.getSection(trialPage.violationSection)} />
             </FDropzone>

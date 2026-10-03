@@ -417,6 +417,45 @@ describe("ReportViewerForm", () => {
         });
     });
 
+    describe("replacing a record by a drop", () => {
+        it("asks first, naming whom it would replace and with whom, and answers as the officer does", async () => {
+            const showConfirmModal = vi.spyOn(ModalService.prototype, "showConfirmModal");
+            const { controllers } = mount();
+
+            const answer = controllers.getDragAndDropController().confirmReplace({ current: "James Whitfield", next: "Dana Price", type: "person" });
+            const options = showConfirmModal.mock.lastCall![0];
+            await act(async () => { await options.onConfirm(); });
+
+            expect(options).toMatchObject({ message: "Replace James Whitfield with Dana Price?", title: "Replace the person?" });
+            await expect(answer).resolves.toBe(true);
+            showConfirmModal.mockRestore();
+        });
+
+        it("asks about the record already there when it cannot name both", async () => {
+            const showConfirmModal = vi.spyOn(ModalService.prototype, "showConfirmModal");
+            const { controllers } = mount();
+
+            const answer = controllers.getDragAndDropController().confirmReplace({ next: "2021 Toyota Camry", type: "vehicle" });
+            const options = showConfirmModal.mock.lastCall![0];
+            await act(async () => { await options.onCancel(); });
+
+            expect(options.message).toBe("Replace the vehicle already here?");
+            await expect(answer).resolves.toBe(false);
+            showConfirmModal.mockRestore();
+        });
+
+        it("stops asking once it is gone", async () => {
+            const showConfirmModal = vi.spyOn(ModalService.prototype, "showConfirmModal");
+            const { controllers } = mount();
+
+            mounted.splice(0).forEach(unmount => unmount());
+
+            await expect(controllers.getDragAndDropController().confirmReplace({ type: "person" })).resolves.toBe(true);
+            expect(showConfirmModal).not.toHaveBeenCalled();
+            showConfirmModal.mockRestore();
+        });
+    });
+
     describe("the review panel", () => {
         const panel = (container: HTMLElement): Element | null => container.querySelector("#review-comments__offcanvas");
 

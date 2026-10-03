@@ -34,9 +34,10 @@ export default function DetailPage({ controllers, binding }: IDetailPageProps): 
             <RecordSection binding={binding.getSection(detailPage.recordSection)} />
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={detailPage.getDropzone(DetailPageOwnerDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okParkingService.applyOwnerDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => okParkingService.applyOwnerDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <RegisteredOwnerSection binding={binding.getSection(detailPage.registeredOwnerSection)} />
             </FDropzone>

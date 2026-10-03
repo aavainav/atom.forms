@@ -96,8 +96,8 @@ trial page. Both violation dropzones lock the boxes they fill, as a chosen viola
   the violation-location section, and the set of pages (so no page can be added or removed, which is how a
   violation would otherwise be moved), on the front and trial copies alike. Everything else, the trial copy's
   court-information block included, stays editable and the form stays in `editable` mode. "The court has taken it" is
-  the host's to say, by loading the record `viewable`. The violation dropzone gates ask
-  `binding.isSectionLocked(...violationSection)` rather than the mode, and the same lock is applied again when
+  the host's to say, by loading the record `viewable`. `FDropzone` asks
+  `binding.isSectionLocked` of every zone's section as well as the mode, so the violation zones close with the lock, and the same lock is applied again when
   an issued record is loaded. Georgia and Oklahoma keep the family's whole-form lock.
 - `setTicketNumber` returns the form unchanged -- the citation cannot issue its own number, so it arrives with the data
   a host loads, through the defaults for a new form.

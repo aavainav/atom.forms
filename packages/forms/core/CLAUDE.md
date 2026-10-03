@@ -122,7 +122,7 @@ core reads an activity. `@forms/audit` records each one as it comes.
     `addPage` copies the page definition's **shared** sections from the first page onto the new one, field by
     field — not by carrying the section across, since every field's uuid is the DOM id of the input rendered for
     it and pages print together.
-- **`DragAndDropController`** relays `onDragStart`/`onDragEnd` between `FDraggableItem` and `FDropzone`. Stateless.
+- **`DragAndDropController`** relays `onDragStart`/`onDragEnd` between `FDraggableItem` and `FDropzone`, and holds the host's `ConfirmDropReplace` policy (`setConfirmReplace`), asked by `confirmReplace` before a drop replaces a record; with none set, a drop replaces without asking. `ReportViewerForm` sets it to a confirm modal, as it does `setConfirmDeletePage`.
 - **`PrintController`** holds the `IPrintState` (`layout`, `pageNames`, `scale`) of a print in progress, or
   `undefined` when there is none. `FPageCollection` reads it through `usePrintState` and swaps its tab strip for the
   pages the print is for. It carries no notion of *what* is being printed or why — `@forms/printing` decides that
@@ -369,7 +369,15 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   the theme positions) and a `label` read by assistive technology.
 - Import: `FDraggableItem`, `FDropzone`. `FDraggableItem` takes `disabled` for an item a panel is offering but
   cannot currently be dragged — it clears `draggable` and refuses `dragStart`, which is what stops a panel's
-  locked row reaching the form by the one route a disabled checkbox does not cover.
+  locked row reaching the form by the one route a disabled checkbox does not cover. `FDropzone` takes the page's
+  `binding` and gates itself: closed when the form isn't editable, the zone's section is locked, or it has no `onDrop`,
+  so no page writes its own gate. **A drop replaces the whole record** its zone maps (NCIC: a field the item lacks is
+  cleared, never kept), so when the zone already holds one -- `Dropzone.getIsOccupied(page)`, any mapped field answered
+  on the page as it stands, read through `getCurrentFields(page)` since the dropzone's own `fields` are the snapshot
+  taken when the page was built -- it asks `confirmReplace` first, naming both records with `describe` (person: first
+  and last name; vehicle: year make model; violation: description, else statute). It asks before `onDrop`, which may be
+  async, so a refused replacement never starts a vehicle lookup. Host field locks (`readOnlyFields`) are not checked:
+  no drop target is host-locked today.
 
 `FNotification` closes itself after `duration` milliseconds, counting down in a bar along its bottom edge. **The bar
 is the timer**: the notification calls `onClose` on the bar's `animationend`, so pausing the animation (on hover, on
@@ -422,8 +430,7 @@ strip numbered across all groups combined**. It derives the watermark from `form
 `form.mode === "viewable"`, and wires the page add/delete buttons to the form controller, both only while
 `form.mode === "editable"`. `FormMode` has three values: `"editable"`, `"viewable"` (a locked snapshot, styled like a
 printed record) and `"reviewable"` (viewable that a reviewer can also comment on while it is in review, and so without the watermark, since
-it is being worked on). Everything else that locks a form -- `setMode`, add/delete, the dropzone gates in the form
-packages' page components -- asks whether the mode is *not* `"editable"`, so a new locked mode needs no change to any
+it is being worked on). Everything else that locks a form -- `setMode`, add/delete, `FDropzone`'s own gate -- asks whether the mode is *not* `"editable"`, so a new locked mode needs no change to any
 of them; the watermark is the exception, and a new locked mode gets none until it is added there.
 
 While the print controller holds a state, it renders a second way instead: the pages the print is for, flat, inside

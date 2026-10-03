@@ -39,9 +39,10 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <HeaderSection binding={binding.getSection(complaintPage.headerSection)} />
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageDefendantDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyDefendantDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => okTrafficService.applyDefendantDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <DefendantSection binding={binding.getSection(complaintPage.defendantSection)} />
             </FDropzone>
@@ -50,13 +51,14 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             <DescriptionSection binding={binding.getSection(complaintPage.descriptionSection)} />
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageVehicleDropzone)}
                 // the dropped make and model arrive as names, and turning them into the codes the form stores means
                 // consulting value lists that have to be loaded, so the dropzone is resolved before it is applied
                 // rather than inside the update
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
-                    okTrafficService.resolveVehicleDropzone(dropzone)
+                onDrop={(dropzone) => {
+                    return okTrafficService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update({ update: (page) => okTrafficService.applyVehicleDropzone(page, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >
@@ -64,9 +66,10 @@ export default function ComplaintPage({ controllers, binding }: IComplaintPagePr
             </FDropzone>
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={complaintPage.getDropzone(ComplaintPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okTrafficService.applyViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => okTrafficService.applyViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <ViolationSection binding={binding.getSection(complaintPage.violationSection)} />
             </FDropzone>

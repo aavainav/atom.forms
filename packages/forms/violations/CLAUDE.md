@@ -72,7 +72,7 @@ binding names (`binding.pageName`, since a violation lands as a page). Three pla
   being issued, with no remount.
 - `ViolationsPanel.add` checks again and reports through `onError` instead of applying, because the panel is mounted for
   the life of the form and may already have been open when the form closed.
-- the form's own dropzone gate (in its front page) asks the form's lock directly, for the drag route the panel does not cover.
+- `FDropzone` asks the form's section lock itself, for the drag route the panel does not cover.
 
 A form that declares no binding has nothing to close, so the option is left enabled rather than disabled for a reason
 that does not exist.

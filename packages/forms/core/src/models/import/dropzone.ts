@@ -7,6 +7,7 @@ import { FieldModel, TValueType } from "../field";
 import { FieldDefinition } from "../field-definition";
 import { PageModel } from "../page";
 import { SectionModel } from "../section";
+import { SectionDefinition } from "../section-definition";
 import { withChanges } from "../../utils/clone";
 
 /** Constructs a dropzone; a dropzone's constructor doubles as the key it is registered under on its page. */
@@ -26,8 +27,14 @@ export interface IDropzone<T = IImportablePerson | IImportableVehicle | IImporta
 
     /** Returns a new section with this dropzone's fields applied onto it. */
     applyTo<TSection extends SectionModel>(section: TSection, fieldMap: Record<string, FieldDefinition<FieldModel<TValueType>> | undefined>): TSection;
+    /** Names the record the given fields hold, for a confirmation; undefined when they say nothing useful. */
+    describe(fields: Record<string, FieldModel<TValueType> | undefined>): string | undefined;
+    /** The fields this dropzone writes, as they stand on the given page now, keyed as `fields` is. */
+    getCurrentFields(page: PageModel): Record<string, FieldModel<TValueType> | undefined>;
     /** Gets the fields the dropzone maps dropped data onto. */
     getFields(): Record<string, FieldModel<TValueType> | undefined>;
+    /** Whether any field this dropzone writes is answered on the given page, so a record is already there. */
+    getIsOccupied(page: PageModel): boolean;
     /** Returns whether the dropzone's current fields are valid. */
     getIsValid(): boolean;
     /** Gets the page the dropzone belongs to. */
@@ -74,8 +81,26 @@ export abstract class Dropzone<T = IImportablePerson | IImportableVehicle | IImp
         return updated;
     }
 
+    public describe(_fields: Record<string, FieldModel<TValueType> | undefined>): string | undefined {
+        return undefined;
+    }
+
+    // read off the page given, since `fields` is the snapshot taken when the page was built
+    public getCurrentFields(page: PageModel): Record<string, FieldModel<TValueType> | undefined> {
+        const section = page.get<SectionModel>(this.section.getDefinition<SectionDefinition>());
+
+        return Object.fromEntries(Object.entries(this.fields).map(([key, field]) => [
+            key,
+            field && section.get<FieldModel<TValueType>>(section.getDefinitionByName(field.name) as FieldDefinition<FieldModel<TValueType>>)
+        ]));
+    }
+
     public getFields(): Record<string, FieldModel<TValueType> | undefined> {
         return this.fields;
+    }
+
+    public getIsOccupied(page: PageModel): boolean {
+        return Object.values(this.getCurrentFields(page)).some(field => field && !field.getIsEmpty());
     }
 
     public getIsValid(): boolean {

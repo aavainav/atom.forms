@@ -1,5 +1,5 @@
 import { act, createElement } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ServicesContext } from "@common/react";
 import { ControllerManager } from "@forms/core";
 import { IServiceCollection } from "@shrub/core";
@@ -25,7 +25,16 @@ async function mountPage() {
 
     mount(createElement(ServicesContext.Provider, { value: services }, createElement(TrialPage, { controllers, binding })));
 
-    return { controller, page };
+    return { controller, controllers, page };
+}
+
+/** Drops a person onto the element the way a browser would, the item carried on a data transfer as a drag source puts it. */
+async function dropPerson(element: HTMLElement, firstName: string, lastName: string): Promise<void> {
+    const item = { id: "person-1", type: "person", data: { firstName, lastName } };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: { getData: (type: string) => type === "application/f-importable-person" ? JSON.stringify(item) : "" } });
+
+    await act(async () => { element.dispatchEvent(event); });
 }
 
 describe("TrialPage", () => {
@@ -58,5 +67,45 @@ describe("TrialPage", () => {
         expect(second.getViolatorSection().getFirstName().getValue()).toBe("Casey");
         expect(first.getViolationSection().getDescription().getValue()).toBe("Speeding");
         expect(second.getViolationSection().getDescription().getValue()).toBe("");
+    });
+
+    describe("dropping a person onto the violator", () => {
+        const firstName = (controller: Awaited<ReturnType<typeof mountPage>>["controller"]) => controller.form.getTrialPageCollection().getFirstPage<TrialPageModel>().getViolatorSection().getFirstName().getValue();
+
+        it("fills an empty violator without asking", async () => {
+            const { controller, controllers, page } = await mountPage();
+            const confirm = vi.fn(async () => true);
+            controllers.getDragAndDropController().setConfirmReplace(confirm);
+
+            await dropPerson(getInput(page.getViolatorSection().getFirstName().id), "Dana", "Price");
+
+            expect(confirm).not.toHaveBeenCalled();
+            expect(firstName(controller)).toBe("Dana");
+        });
+
+        /** What the zone holds is read off the page as it stands, so a name typed after the page was built counts. */
+        it("asks before replacing the violator already there, naming both, and keeps them when told not to", async () => {
+            const { controller, controllers, page } = await mountPage();
+            const confirm = vi.fn(async () => false);
+            controllers.getDragAndDropController().setConfirmReplace(confirm);
+            const input = getInput(page.getViolatorSection().getFirstName().id);
+
+            type(input, "Casey");
+            await dropPerson(input, "Dana", "Price");
+
+            expect(confirm).toHaveBeenCalledWith({ current: "Casey", next: "Dana Price", type: "person" });
+            expect(firstName(controller)).toBe("Casey");
+        });
+
+        it("replaces the violator once told to", async () => {
+            const { controller, controllers, page } = await mountPage();
+            controllers.getDragAndDropController().setConfirmReplace(async () => true);
+            const input = getInput(page.getViolatorSection().getFirstName().id);
+
+            type(input, "Casey");
+            await dropPerson(input, "Dana", "Price");
+
+            expect(firstName(controller)).toBe("Dana");
+        });
     });
 });

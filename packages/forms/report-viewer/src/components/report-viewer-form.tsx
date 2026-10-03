@@ -8,6 +8,7 @@ import {
     userPreferenceSchema, 
     IActor, 
     IControllerManager, 
+    IReplaceRecord, 
     IReportData, 
     IRuleIssue, 
     IUserPreferences, 
@@ -160,6 +161,22 @@ export const ReportViewerForm = forwardRef<IReportViewerComponent, IReportViewer
         controller.setConfirmDeletePage(confirmDeletePage);
         return () => controller.setConfirmDeletePage(undefined);
     }, [controller, confirmDeletePage]);
+
+    // a drop replaces the whole record, so the officer is asked before one already there is replaced
+    const confirmDropReplace = useCallback(({ current, next, type }: IReplaceRecord) => new Promise<boolean>(resolve =>
+        modalService.showConfirmModal({
+            title: `Replace the ${type}?`,
+            message: current && next ? `Replace ${current} with ${next}?` : `Replace the ${type} already here?`,
+            onCancel: async () => resolve(false),
+            onConfirm: async () => resolve(true)
+        })), [modalService]);
+
+    useEffect(() => {
+        const dragAndDrop = formControllers.getDragAndDropController();
+
+        dragAndDrop.setConfirmReplace(confirmDropReplace);
+        return () => dragAndDrop.setConfirmReplace(undefined);
+    }, [formControllers, confirmDropReplace]);
 
     return (
         <>

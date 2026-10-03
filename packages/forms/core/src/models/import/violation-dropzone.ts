@@ -3,6 +3,7 @@ import { IDropzone, Dropzone } from "./dropzone";
 import { DropzoneHelper } from "./dropzone-helper";
 import { IImportableViolation } from "./importable-violation";
 
+import { FieldModel, TValueType } from "../field";
 import { BooleanFieldModel } from "./../boolean-field";
 import { NumberFieldModel } from "../number-field";
 import { StringFieldModel } from "../string-field";
@@ -55,6 +56,11 @@ export class ViolationDropzone extends Dropzone<IImportableViolation> implements
                 [ViolationDropzoneFields.requiresCourtAppearance]: requiresCourtAppearance,
             }
         );
+    }
+
+    /** Names the violation by its description, or its statute when it has none. */
+    public describe(fields: Record<string, FieldModel<TValueType> | undefined>): string | undefined {
+        return DropzoneHelper.describe(fields, [ViolationDropzoneFields.description]) ?? DropzoneHelper.describe(fields, [ViolationDropzoneFields.statute]);
     }
 
     public onDrop(data: IImportableViolation): this {

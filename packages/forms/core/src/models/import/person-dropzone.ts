@@ -2,6 +2,7 @@ import { DraggableItemType } from "./draggable-item";
 import { IDropzone, Dropzone } from "./dropzone";
 import { DropzoneHelper } from "./dropzone-helper";
 import { IImportablePerson } from "./importable-person";
+import { FieldModel, TValueType } from "../field";
 import { StringFieldModel } from "../string-field";
 import { PageModel } from "../page";
 import { SectionModel } from "../section";
@@ -48,6 +49,11 @@ export class PersonDropzone extends Dropzone<IImportablePerson> implements IPers
                 [PersonDropzoneFields.zipCode]: zipCode,
             }
         );
+    }
+
+    /** Names the person by first and last name: "Dana Price". */
+    public describe(fields: Record<string, FieldModel<TValueType> | undefined>): string | undefined {
+        return DropzoneHelper.describe(fields, [PersonDropzoneFields.firstName, PersonDropzoneFields.lastName]);
     }
 
     public onDrop(data: IImportablePerson): this {

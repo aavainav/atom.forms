@@ -35,9 +35,10 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             </div>
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageViolationDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => okParkingService.applyViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => okParkingService.applyViolationDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <ViolationSection binding={binding.getSection(citationPage.violationSection)} />
             </FDropzone>
@@ -45,13 +46,14 @@ export default function CitationPage({ controllers, binding }: ICitationPageProp
             <CourtSection binding={binding.getSection(citationPage.courtSection)} />
 
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={citationPage.getDropzone(CitationPageVehicleDropzone)}
                 // the dropped make arrives as a name, and turning it into the code the form stores means consulting
                 // a value list that has to be loaded, so the dropzone is resolved before it is applied rather than
                 // inside the update
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
-                    okParkingService.resolveVehicleDropzone(dropzone)
+                onDrop={(dropzone) => {
+                    return okParkingService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update({ update: (page) => okParkingService.applyVehicleDropzone(page, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >

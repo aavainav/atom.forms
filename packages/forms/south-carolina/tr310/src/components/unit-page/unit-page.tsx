@@ -37,13 +37,14 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
         <>
             <UnitHeaderSection binding={binding.getSection(page.unitHeaderSection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageVehicleDropzone)}
                 // the dropped make and model arrive as names, and turning them into the codes the report stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
-                    tr310Service.resolveVehicleDropzone(dropzone)
+                onDrop={(dropzone) => {
+                    return tr310Service.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update({ update: (current) => tr310Service.applyVehicleDropzone(current, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >
@@ -51,9 +52,10 @@ export default function UnitPage({ controllers, binding }: IUnitPageProps): Reac
             </FDropzone>
             <InsuranceSection binding={binding.getSection(page.insuranceSection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={page.getDropzone(UnitPageOwnerDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (current) => tr310Service.applyOwnerDropzone(current, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (current) => tr310Service.applyOwnerDropzone(current, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <OwnerSection binding={binding.getSection(page.ownerSection)} />
             </FDropzone>

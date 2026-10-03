@@ -37,9 +37,10 @@ export default function RecordPage({ controllers, binding }: IRecordPageProps): 
         <>
             <AgencySection binding={binding.getSection(recordPage.agencySection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPagePersonDropzone)}
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => binding.update({ update: (page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
+                onDrop={(dropzone) => binding.update({ update: (page) => publicContactOrWarningService.applyPersonDropzone(page, dropzone), reason: { kind: "dropped", type: dropzone.type } })}
             >
                 <PersonSection binding={binding.getSection(recordPage.personSection)} />
             </FDropzone>
@@ -52,13 +53,14 @@ export default function RecordPage({ controllers, binding }: IRecordPageProps): 
             <RouteSection binding={binding.getSection(recordPage.routeSection)} />
             <StopSection binding={binding.getSection(recordPage.stopSection)} />
             <FDropzone
+                binding={binding}
                 controller={dragAndDropController}
                 dropzone={recordPage.getDropzone(RecordPageVehicleDropzone)}
                 // the dropped make and model arrive as names, and turning them into the codes the record stores
                 // means consulting value lists that have to be loaded, so the dropzone is resolved before it is
                 // applied rather than inside the update
-                onDrop={binding.mode !== "editable" ? undefined : (dropzone) => {
-                    publicContactOrWarningService.resolveVehicleDropzone(dropzone)
+                onDrop={(dropzone) => {
+                    return publicContactOrWarningService.resolveVehicleDropzone(dropzone)
                         .then((resolved) => binding.update({ update: (page) => publicContactOrWarningService.applyVehicleDropzone(page, resolved), reason: { kind: "dropped", type: dropzone.type } }));
                 }}
             >
