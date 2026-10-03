@@ -1,4 +1,5 @@
 export { FAccordion } from "./components/accordion";
+export { FApplyButton } from "./components/apply-button";
 export { FAsyncLoader } from "./components/async-loader";
 export { FBadge } from "./components/badge";
 export { FBorder } from "./components/border";
@@ -151,7 +152,8 @@ export type {
     IControllerActivityMap, 
     IControllerChangedEventArgs, 
     IControllerManager, 
-    IDragAndDropController, 
+    IDragAndDropController,
+    IDropTarget, 
     IFormActivityEventArgs, 
     IFormActivityMap, 
     IFormController, 
@@ -177,7 +179,7 @@ export type {
     PrintLayout
 } from "./controllers";
 
-export { useActivePageId, useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
+export { useActivePageId, useDropTargets, useForm, useFormController, useNavigationTarget, usePrintState } from "./hooks";
 
 export { setOptionWithDependents } from "./utils/dependent-fields";
 export { getFieldControl, getFieldId } from "./utils/field-control";

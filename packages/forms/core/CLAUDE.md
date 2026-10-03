@@ -378,6 +378,21 @@ Presentational and mostly prop-driven; they do not reach for the form themselves
   and last name; vehicle: year make model; violation: description, else statute). It asks before `onDrop`, which may be
   async, so a refused replacement never starts a vehicle lookup. Host field locks (`readOnlyFields`) are not checked:
   no drop target is host-locked today.
+  While dragging, only a zone that takes the item is styled: `f-dropzone--accepts` (dashed green outline, faint tint),
+  then `f-dropzone--over` with a "Drop to fill" badge once the item is over it (a `dragenter`/`dragleave` count, since
+  moving between inputs inside fires both). A wrong-type zone gets nothing; a closed zone of the right type gets a
+  "Locked" badge on hover. A zone that won't take the drop leaves `dragover` uncancelled with `dropEffect` "none", so the
+  browser shows its refused cursor. While a drag is under way each zone also listens for the window's `drop`, `dragend`
+  and first `pointermove`, so a source removed mid-drag can't leave zones lit. Colours come from `$dropzone-accent-rgb`
+  (`var(--bs-success-rgb)`), outlines rather than borders so nothing moves.
+  **A drop can also be made with a button**, for the keyboard and touch screens: each mounted `FDropzone` registers an
+  `IDropTarget` (`id`, `type`, `title` -- its section's title unless given one -- `pageId`, `isClosed`, and `fill`) with the
+  `DragAndDropController` (`registerTarget`, `targets`, read through `useDropTargets`). A drop and a button both go
+  through the zone's one `fill(item)`, so the replace confirmation, lookups and audit are the same. `FApplyButton`
+  (`controllers`, `item`, `disabled?`) offers the targets of the item's type on the active page (`useActivePageId`,
+  since every page's zones stay mounted): none, a disabled "Nothing here takes a person"; one, "Fill Violator Section"
+  straight away, or "… is locked"; several, "Apply to…" opening an inline list beneath it (closed ones marked "Locked",
+  Escape closes it). The violations panel doesn't use it: tick and Add is already its keyboard route.
 
 `FNotification` closes itself after `duration` milliseconds, counting down in a bar along its bottom edge. **The bar
 is the timer**: the notification calls `onClose` on the bar's `animationend`, so pausing the animation (on hover, on

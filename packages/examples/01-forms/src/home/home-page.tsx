@@ -15,7 +15,7 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         title: "Audit"
     },
     {
-        description: "Drag mock person and vehicle records onto the public contact/warning form's dropzones.",
+        description: "Drag mock person, vehicle and violation records onto the S438 citation's dropzones, or apply them with a button.",
         path: "/demo/dropzone",
         title: "Dropzone"
     },

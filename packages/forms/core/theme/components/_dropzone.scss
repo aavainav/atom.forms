@@ -1,11 +1,35 @@
 @use "../variables";
 
-.dropzone-dragging {
-    pointer-events: auto;
-    background-color: variables.$dropzone-dragging;
+// outlines rather than borders, so a zone lighting up moves nothing on the page
+.f-dropzone {
+    position: relative;
+    transition: background-color .12s, outline-color .12s;
 }
 
-.dropzone-invalid {
+.f-dropzone--accepts {
+    outline: 3px dashed rgba(variables.$dropzone-accent-rgb, .45);
+    outline-offset: -3px;
+    background-color: rgba(variables.$dropzone-accent-rgb, .05);
+}
+
+.f-dropzone--over {
+    outline-style: solid;
+    outline-color: rgb(variables.$dropzone-accent-rgb);
+    background-color: rgba(variables.$dropzone-accent-rgb, .12);
+}
+
+// the badge sits on the zone's top edge, at its end, and lets the drag events it covers through
+.f-dropzone__badge {
+    position: absolute;
+    top: 0;
+    right: .5rem;
+    transform: translateY(-50%);
+    z-index: 1;
     pointer-events: none;
-    background-color: variables.$dropzone-invalid;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-dropzone {
+        transition: none;
+    }
 }

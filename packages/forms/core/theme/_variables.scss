@@ -75,8 +75,7 @@ $device-breakpoint-lg:                          1199.98px;
 // 
 
 // Dropzone
-$dropzone-dragging:                             #b5ffdf;
-$dropzone-invalid:                              #ffb9be;
+$dropzone-accent-rgb:                          var(--bs-success-rgb);
 
 // Page
 $page-padding:                                  25px;
