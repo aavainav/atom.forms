@@ -8,6 +8,7 @@ import { TR310CrashFormBootstrapper } from "@forms/tr310";
 
 import { bootstrapper as AuditDemoBootstrapper } from "./demos/audit";
 import { bootstrapper as DropzoneDemoBootstrapper } from "./demos/dropzone";
+import { bootstrapper as EventsDemoBootstrapper } from "./demos/events";
 import { bootstrapper as FormModeDemoBootstrapper } from "./demos/form-mode";
 import { bootstrapper as PreferencesDemoBootstrapper } from "./demos/preferences";
 import { bootstrapper as PresetsDemoBootstrapper } from "./demos/presets";
@@ -22,6 +23,7 @@ await WorkbenchBootstrapper.start({
     bootstrappers: [
         AuditDemoBootstrapper,
         DropzoneDemoBootstrapper,
+        EventsDemoBootstrapper,
         FormModeDemoBootstrapper,
         FormsBootstrapper,
         GAUTCFormBootstrapper,

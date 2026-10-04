@@ -20,6 +20,11 @@ const demoRoutes: ReadonlyArray<{ readonly description: string; readonly path: s
         title: "Dropzone"
     },
     {
+        description: "Log every hook and event the report viewer offers a host, as the form is worked on.",
+        path: "/demo/events",
+        title: "Host Events"
+    },
+    {
         description: "How a form's mode changes what's on screen: fields disabling, placeholders disappearing, and the watermark each status stamps -- everything a printed copy would show too.",
         path: "/demo/form-mode",
         title: "Form Mode"
